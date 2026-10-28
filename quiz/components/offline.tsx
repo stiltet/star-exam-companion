@@ -1,0 +1,60 @@
+"use client"
+
+import { useEffect, useState } from "react"
+
+// Why the service worker could not be registered, for the Progress page.
+const WORKER_ERROR_KEY = "quiz-worker-error"
+const WORKER_FAILED = "quiz-worker-failed"
+
+// Registers the service worker in a production build over HTTPS or on localhost; browsers allow
+// none on plain HTTP to the LAN address.
+export function OfflineShell() {
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return
+    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error: unknown) => {
+      // Shown on the Progress page, so offline mode never fails silently.
+      try {
+        window.sessionStorage.setItem(WORKER_ERROR_KEY, error instanceof Error ? error.message : String(error))
+      } catch {
+        // Storage blocked: the Progress page still says "Not ready".
+      }
+      window.dispatchEvent(new Event(WORKER_FAILED))
+    })
+  }, [])
+  return null
+}
+
+export type OfflineStatus = { secure: boolean; ready: boolean; error: string | null }
+
+// Secure: the page is on HTTPS (or localhost). Ready: a service worker runs this page and has its pages stored.
+export function useOfflineStatus(): OfflineStatus | null {
+  const [status, setStatus] = useState<OfflineStatus | null>(null)
+  useEffect(() => {
+    let live = true
+    const check = async () => {
+      const secure = window.isSecureContext
+      let ready = false
+      if (secure && "serviceWorker" in navigator && navigator.serviceWorker.controller && "caches" in window) {
+        ready = (await caches.keys()).some((name) => name.startsWith("quiz-pages-"))
+      }
+      let error: string | null = null
+      try {
+        error = window.sessionStorage.getItem(WORKER_ERROR_KEY)
+      } catch {
+        // Storage blocked: no reason to show.
+      }
+      if (live) setStatus({ secure, ready, error })
+    }
+    void check()
+    // The first visit installs the worker after the page has loaded; check again when it takes over.
+    navigator.serviceWorker?.addEventListener("controllerchange", check)
+    // A failed registration is reported after the page has loaded; show its reason when it is.
+    window.addEventListener(WORKER_FAILED, check)
+    return () => {
+      live = false
+      navigator.serviceWorker?.removeEventListener("controllerchange", check)
+      window.removeEventListener(WORKER_FAILED, check)
+    }
+  }, [])
+  return status
+}

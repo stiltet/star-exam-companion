@@ -1,0 +1,29 @@
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
+import { ExamClient } from "@/components/exam-client"
+import { loadPlay } from "@/lib/load"
+import { sectionLabel } from "@/lib/progress"
+import { quizQuestions } from "@/lib/questions"
+import type { Question } from "@/lib/exam-data"
+import { connection } from "next/server"
+
+// Rendered per request, so an edit to glossary.md shows without a rebuild.
+export default async function ExamPage() {
+  await connection()
+  const play = loadPlay()
+  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
+  const sections = [1, 2, 3, 4].map((id) => ({
+    id: String(id),
+    title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),
+    weight: play.ok ? (play.weights[id] ?? 0) : 0,
+  }))
+  return (
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+        <ExamClient questions={questions} sections={sections} />
+      </main>
+      <SiteFooter />
+    </div>
+  )
+}

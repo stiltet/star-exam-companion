@@ -1,0 +1,165 @@
+# Every term the Generative AI Leader exam guide names, as the glossary row's Term.
+# quiz/lib/round.test.ts fails for any line here that no voice scene answers.
+# Rebuild this list whenever the exam guide changes.
+# Exam guide validated: 2026-09-30.
+
+# 1.1
+Artificial intelligence (AI)
+Natural language processing (NLP)
+Machine learning (ML)
+Generative AI
+Foundation model
+Multimodal foundation model
+Diffusion model
+Prompt tuning
+Prompt engineering
+Large language model (LLM)
+Supervised learning
+Unsupervised learning
+Reinforcement learning
+Data ingestion and preparation
+Model training
+Model deployment
+Model management
+Modality
+Context window
+Availability and reliability
+Cost
+Performance
+Fine-tuning
+Customization
+Gen AI use cases
+# 1.2
+Quality data
+Accessible data
+Structured data
+Unstructured data
+Labeled data
+Unlabeled data
+# 1.3
+Infrastructure layer
+Model layer
+Platform layer
+Agent layer
+Application layer
+# 1.4
+Gemini
+Gemma
+Imagen
+Veo
+# 2.1
+AI-first approach
+Enterprise-ready AI platform
+Comprehensive AI ecosystem
+Open approach
+AI Hypercomputer
+Tensor Processing Unit (TPU)
+Graphics Processing Unit (GPU)
+Pre-trained models
+Low-code and no-code tools
+# 2.2
+Gemini app
+Gemini Advanced
+Google AI Pro
+Gems
+Gemini Enterprise
+Gemini Notebook
+Gemini for Google Workspace
+Google Workspace with Gemini
+# 2.3
+Agent Search
+Grounding with Google Search
+Customer Engagement Suite
+Gemini Enterprise for Customer Experience
+Conversational Agents
+Customer Experience Agent Studio
+Agent Assist
+Conversational Insights
+Customer Experience Insights
+Contact Center as a Service (CCaaS)
+# 2.4
+Gemini Enterprise Agent Platform
+Vertex AI
+Model Garden
+Agent Platform AutoML
+RAG APIs
+Agent
+# 2.5
+Extensions
+Functions
+Data stores
+Plugins
+Cloud Storage
+Databases
+Cloud Functions
+Cloud Run functions
+Cloud Run
+Speech-to-Text API
+Text-to-Speech API
+Translation API
+Document Translation API
+Document AI API
+Cloud Vision API
+Cloud Video Intelligence API
+Natural Language API
+Google Cloud API Library
+Agent Studio
+Google AI Studio
+# 3.1
+Data dependency
+Knowledge cutoff
+Bias
+Fairness
+Hallucination
+Edge cases
+Grounding
+Retrieval-augmented generation (RAG)
+Human in the loop (HITL)
+Automatic model upgrades
+Key performance indicators (KPIs)
+Security patches and updates
+Versioning
+Performance tracking
+Drift monitoring
+Agent Platform Feature Store
+# 3.2
+Zero-shot prompting
+One-shot prompting
+Few-shot prompting
+Role prompting
+Prompt chaining
+Chain-of-thought (CoT) prompting
+ReAct prompting
+# 3.3
+Grounding with first-party enterprise data
+Grounding with third-party data
+Grounding with world data
+Token count
+Temperature
+Top-p (nucleus sampling)
+Safety settings
+Output length
+# 4.1
+Gen AI needs
+Gen AI resources
+Steps to integrate gen AI
+Impact
+# 4.2
+Secure AI
+Secure AI Framework (SAIF)
+Secure-by-design infrastructure
+Identity and Access Management (IAM)
+Security Command Center
+Workload monitoring tools
+# 4.3
+Responsible AI
+Transparency
+Privacy
+Data anonymization
+Pseudonymization
+Accountability
+Explainability
+Gemini Notebook API
+Multimodal search
+Google Search
+Prebuilt RAG
