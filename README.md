@@ -8,9 +8,9 @@ questions, timed exams, flashcards, a glossary, read-aloud course text and progr
 Built on [gail-exam-preparation](https://github.com/ludovicobesana/gail-exam-preparation) by
 Ludovico Besana (MIT).
 
-> **Not an official Google product.** Not affiliated with, sponsored or endorsed by Google. Google
-> Cloud and the other Google product names are trademarks of Google LLC. Always check the content
-> against Google's official documentation.
+> **Not an official Google product.** Not affiliated with, sponsored or endorsed by Google. The
+> Google Cloud name and logo and the other Google product names are trademarks of Google LLC.
+> Always check the content against Google's official documentation.
 
 ## Run it
 

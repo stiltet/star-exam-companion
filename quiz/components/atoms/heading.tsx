@@ -5,8 +5,8 @@ import type { ReactNode, Ref } from "react"
 // name, centred between the previous and next arrows. chapter: the "Question N of M" line.
 // title: a reading's own title. page: a page's heading. title and page are h1s.
 // label: a small bold heading over a box or list, such as RULES or QUESTIONS on the exam.
-// hero: the home page's course title, GOOGLE CLOUD over the course name on a phone and
-// beside it from md up (owner, 28 Oct). It grows from a phone so GENERATIVE AI LEADER
+// hero: the home page's course title, the Google Cloud logo over the course name on a phone
+// and beside it from md up (owner, 28 Oct). It grows from a phone so GENERATIVE AI LEADER
 // stays on one line at 375 px.
 // Its look lives here; the parent places it. id lets a region be named by it. A ref makes it
 // a place focus can be moved to.

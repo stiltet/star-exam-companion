@@ -43,8 +43,9 @@ export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
             <a href="/about">ABOUT</a>
           </div>
           <p className="text-muted-foreground">
-            Open-source. Not affiliated with, sponsored or endorsed by Google. Google Cloud is a trademark of
-            Google LLC. Content accuracy not guaranteed. Always verify with official documentation.
+            Open-source. Not affiliated with, sponsored or endorsed by Google. The Google Cloud name and logo
+            are trademarks of Google LLC. Content accuracy not guaranteed. Always verify with official
+            documentation.
           </p>
           {/* On desktop the credit and build stamp sit level with the theme button, right-aligned. */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -71,7 +72,16 @@ export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
                 >
                   gail-exam-preparation
                 </a>{" "}
-                by Ludovico Besana.
+                by{" "}
+                <a
+                  href="https://www.ludovicobesana.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  Ludovico Besana
+                </a>
+                .
               </p>
               <p className="text-muted-foreground">
                 <BuildStamp />

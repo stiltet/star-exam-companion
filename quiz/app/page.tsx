@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
 import { Heading } from "@/components/atoms/heading"
+import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
 import { Text } from "@/components/atoms/text"
 import { SITE_PAGES } from "@/lib/pages"
 import { sectionLabel } from "@/lib/progress"
@@ -24,7 +25,7 @@ export default function HomePage() {
         <section className="border-2 border-foreground p-6 mb-8">
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
           <Heading variant="hero" placement="mb-4">
-            <span className="block">GOOGLE CLOUD</span>
+            <GoogleCloudLogo placement="mb-3 md:mb-0" />
             <span className="block">GENERATIVE AI LEADER</span>
           </Heading>
           {/* The tagline sits over the buttons, and from lg up right of them in the space they leave (owner, 28 Oct). */}

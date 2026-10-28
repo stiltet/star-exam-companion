@@ -12,8 +12,12 @@ parts of `quiz/` that come from gail-exam-preparation.
 
 Google, Google Cloud, Gemini, Vertex AI and the other Google product names used here are trademarks
 of Google LLC. This project is independent: it is not affiliated with, sponsored by or endorsed by
-Google, and it uses those names only to say which exam and products it is about. It uses no Google
-logo.
+Google, and it uses those names only to say which exam and products it is about.
+
+The Google Cloud logo on the home page (`quiz/components/atoms/google-cloud-logo.tsx`) is Google's
+trademark. It is drawn from a Wikimedia Commons copy of Google's artwork, with the cloud in Google's
+colours and the wordmark in the page's text colour, to name the exam the app prepares for. It does
+not imply any relationship with Google, and it is not covered by the MIT licence.
 
 Google's exam guide, study guide and product documentation are cited and linked from `glossary.md`
 and `exam-sections.md`; they are not included here. Many glossary meanings are short summaries of
