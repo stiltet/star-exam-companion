@@ -1,0 +1,26 @@
+# Notices
+
+The MIT licence in `LICENSE` covers this repository's own files. It does not cover the items below.
+
+## quiz/
+
+`quiz/` is a fork of gail-exam-preparation, https://github.com/ludovicobesana/gail-exam-preparation,
+MIT licence, Copyright (c) 2025 Ludovico Besana. That notice stays in `quiz/LICENSE` and covers the
+parts of `quiz/` that come from gail-exam-preparation.
+
+## Google's trademarks and material
+
+Google, Google Cloud, Gemini, Vertex AI and the other Google product names used here are trademarks
+of Google LLC. This project is independent: it is not affiliated with, sponsored by or endorsed by
+Google, and it uses those names only to say which exam and products it is about. It uses no Google
+logo.
+
+Google's exam guide, study guide and product documentation are cited and linked from `glossary.md`
+and `exam-sections.md`; they are not included here. Many glossary meanings are short summaries of
+Google's study guide and documentation, each with its source; Google keeps all rights in its own
+text, and this licence does not cover it.
+
+Read Aloud (`quiz/app/read`) fetches the learning path's course text live from Google's public
+course bundle, and caches spoken clips of it on the machine that runs the quiz. That text is
+Google's and is not included here. Whoever runs the quiz fetches it, for their own study, and is
+responsible for following Google's terms for it.

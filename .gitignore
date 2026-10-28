@@ -1,0 +1,26 @@
+.DS_Store
+
+# Secrets and credentials: never commit these. Data files only, so a project's own source named
+# "secret" stays tracked.
+.env
+.env.*
+!.env*.example
+*.p8
+*.key
+*.pem
+*.p12
+*credentials*.json
+*secret*.json
+*secret*.yaml
+*secret*.yml
+*secret*.txt
+*.secret
+.secrets
+/secrets/
+
+# Personal study data: each person's own answers and their backups.
+quiz/scores.jsonl
+quiz/scores-backups/
+
+# Home-made HTTPS certificates from scripts/make-cert.sh. quiz.key is secret.
+/certs/
