@@ -1,12 +1,57 @@
 # Notices
 
-The MIT licence in `LICENSE` covers this repository's own files. It does not cover the items below.
+Star Exam Companion
+Copyright (c) 2026 the authors of star-exam-companion
 
-## quiz/
+The MIT licence in `LICENSE` covers this repository's own files. It does not cover the items below,
+which keep their own licences, owners and terms.
+
+## Third-party code included in this repository
+
+### gail-exam-preparation
 
 `quiz/` is a fork of gail-exam-preparation, https://github.com/ludovicobesana/gail-exam-preparation,
-MIT licence, Copyright (c) 2025 Ludovico Besana. That notice stays in `quiz/LICENSE` and covers the
-parts of `quiz/` that come from gail-exam-preparation.
+by Ludovico Besana. MIT licence, Copyright (c) 2025 Ludovico Besana. The full notice is in
+`quiz/LICENSE` and covers the parts of `quiz/` that come from gail-exam-preparation.
+
+### shadcn/ui
+
+The components in `quiz/components/ui/` and the hooks in `quiz/hooks/` come from shadcn/ui,
+https://github.com/shadcn-ui/ui, through gail-exam-preparation.
+
+    MIT License
+
+    Copyright (c) 2023 shadcn
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+## Icons
+
+The app icons in `quiz/public/` (the book and star) are original to this project and covered by
+the MIT licence. The Google Cloud logo is not one of them; see below.
+
+## Dependencies
+
+The npm packages listed in `quiz/package.json` and pinned in `quiz/pnpm-lock.yaml` are not included
+in this repository; `pnpm install` fetches each under its own licence. As of the lockfile in this
+commit they are all permissive: MIT (among them Next.js, React, Radix UI, Tailwind CSS, date-fns,
+Recharts and zod), Apache-2.0 (TypeScript, class-variance-authority) and ISC (lucide-react).
 
 ## Google's trademarks and material
 
@@ -28,3 +73,8 @@ Read Aloud (`quiz/app/read`) fetches the learning path's course text live from G
 course bundle, and caches spoken clips of it on the machine that runs the quiz. That text is
 Google's and is not included here. Whoever runs the quiz fetches it, for their own study, and is
 responsible for following Google's terms for it.
+
+## Voices
+
+The spoken voice comes from the macOS text-to-speech voice of the machine that runs the quiz, under
+Apple's terms for that machine. No voice or audio is included in this repository.

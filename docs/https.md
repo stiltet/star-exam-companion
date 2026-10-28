@@ -60,7 +60,8 @@ accepts. The script refuses to overwrite an existing set.
 ## 3. Run the quiz
 
 Build the quiz, then start it on this machine only, telling it which home-network name it may
-answer to. A service worker needs this production build; `pnpm dev` does not give offline mode.
+answer to. A service worker needs this production build; the development server (`next dev`)
+does not give offline mode.
 
 ```bash
 pnpm --dir quiz build
