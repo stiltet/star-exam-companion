@@ -41,7 +41,7 @@ below gets everything working.
 
 ## Why Star Exam Companion
 
-It was built to pass the Google Cloud Generative AI Leader exam, and it did. It turns the exam
+It was built to pass the Google Cloud Generative AI Leader exam, and it did. Stellan Lindell passed the exam on first try. It turns the exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
