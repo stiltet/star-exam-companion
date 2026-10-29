@@ -18,6 +18,11 @@
 > sponsored or endorsed by Google. The Google Cloud name and logo and the other Google product names
 > are trademarks of Google LLC. Always check the content against Google's official documentation.
 
+**[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
+Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
+are core features that need the quiz on your own computer; the [full local setup](#full-local-setup)
+below gets everything working.
+
 ## Contents
 
 - [Why Star Exam Companion](#why-star-exam-companion)
@@ -26,7 +31,7 @@
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
-- [Use it on a phone, offline](#use-it-on-a-phone-offline)
+- [Full local setup](#full-local-setup)
 - [Data and privacy](#data-and-privacy)
 - [Project structure](#project-structure)
 - [Development](#development)
@@ -51,7 +56,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
-| **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#use-it-on-a-phone-offline)) |
+| **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#full-local-setup)) |
 
 ## How it works
 
@@ -118,12 +123,183 @@ in the shell that starts the quiz.
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
-## Use it on a phone, offline
+## Full local setup
 
-A phone needs HTTPS for offline mode. [`docs/https.md`](docs/https.md) walks through every step:
-make a home certificate with `scripts/make-cert.sh`, serve the quiz through nginx, and trust the
-certificate on **iOS, Android, macOS, Windows and Linux**. Then set `QUIZ_LAN_HOST` to your
-machine's address on your network. The examples use `127.0.0.1` as a stand-in for that address.
+This sets the quiz up the way its author runs it, with every feature working: at `http://localhost/`,
+and over HTTPS on your phone, offline, with the voice. It takes about 20 minutes.
+
+**You need** everything under [Requirements](#requirements), plus [nginx](https://nginx.org) and
+`openssl`. The voice needs a Mac. `ADDRESS` below is your machine's address on your home
+network, the one the command in step 2 prints; give it a fixed address in your router so the
+certificate keeps matching.
+
+**1. Clone, install and build.** Run the clone, install and build commands of
+[Quick start](#quick-start), but not its start command.
+
+**2. Tell the quiz your address.** Find it with `ipconfig getifaddr en0` (macOS), `hostname -I`
+(Linux) or `ipconfig` (Windows). If that prints nothing, look under System Settings > Network; if it
+prints several, use the one on your home network, usually starting with 192.168 or 10. Then, with
+`ADDRESS` replaced, add it to `quiz/.env.local` (the `>>` keeps any settings already there):
+
+```bash
+echo "QUIZ_LAN_HOST=ADDRESS" >> quiz/.env.local
+```
+
+**3. Make the certificate** that lets your phone use HTTPS. It is yours alone: the root key that
+could sign other certificates is deleted as soon as it is made. Keep `certs/quiz.key` private, and
+never commit or share it; it is the one secret.
+
+```bash
+bash scripts/make-cert.sh certs ADDRESS
+```
+
+**4. Keep the quiz running** on port 47830, and start it again at login. Build first (step 1): the
+service starts the built app.
+
+On **macOS**, run this from the repository folder, then load it:
+
+```bash
+REPO="$(pwd)"
+mkdir -p ~/Library/LaunchAgents
+cat > ~/Library/LaunchAgents/com.star-exam-companion.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.star-exam-companion</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd "$REPO" &amp;&amp; NEXT_TELEMETRY_DISABLED=1 exec pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>$HOME/Library/Logs/star-exam-companion.log</string>
+  <key>StandardErrorPath</key><string>$HOME/Library/Logs/star-exam-companion.log</string>
+</dict>
+</plist>
+EOF
+```
+
+```bash
+launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.star-exam-companion.plist
+```
+
+On **Linux**, create the folder and save the file below as
+`~/.config/systemd/user/star-exam-companion.service`. Replace `/path/to/star-exam-companion`,
+`/path/to/node/bin` (`dirname "$(command -v node)"` prints it) and `/path/to/pnpm`
+(`command -v pnpm` prints it); a systemd service does not see the `PATH` of your shell.
+
+```bash
+mkdir -p ~/.config/systemd/user
+```
+
+```ini
+[Unit]
+Description=Star Exam Companion
+
+[Service]
+WorkingDirectory=/path/to/star-exam-companion
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=PATH=/path/to/node/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/path/to/pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload && systemctl --user enable --now star-exam-companion
+```
+
+```bash
+loginctl enable-linger "$USER"
+```
+
+The last command keeps the service running when you are logged out.
+
+**Windows** has no ready-made service here. Start the quiz by hand from Git Bash when you want it:
+`NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830`. The certificate
+and nginx steps work on Windows as [`docs/https.md`](docs/https.md) describes.
+
+**5. Put nginx in front, on ports 80 and 443.** Install nginx first if you do not have it; the
+commands for each system are in [`docs/https.md`](docs/https.md#4-serve-it-over-https). Save this as
+`star-exam-companion.conf` with the full path to your `certs/` folder in both certificate lines. [`docs/https.md`](docs/https.md#4-serve-it-over-https)
+says where it goes on macOS, Linux and Windows, and how to load it.
+
+```nginx
+server {
+    listen              80 default_server;
+    server_name         _;
+
+    location / {
+        # This machine and private network ranges only. Anything allowed here can save and
+        # reset answers, so narrow it to your own network's range if you can.
+        allow 127.0.0.1;
+        allow 10.0.0.0/8;
+        allow 172.16.0.0/12;
+        allow 192.168.0.0/16;
+        deny  all;
+        proxy_pass         http://127.0.0.1:47830;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_read_timeout 60s;
+    }
+}
+
+server {
+    listen              443 ssl default_server;
+    server_name         _;
+    ssl_certificate     /full/path/to/certs/quiz.crt;
+    ssl_certificate_key /full/path/to/certs/quiz.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    location / {
+        allow 127.0.0.1;
+        allow 10.0.0.0/8;
+        allow 172.16.0.0/12;
+        allow 192.168.0.0/16;
+        deny  all;
+        proxy_pass         http://127.0.0.1:47830;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_read_timeout 60s;
+    }
+}
+```
+
+If nginx already has a default site on port 80, as Debian and Ubuntu do, remove it or drop
+`default_server` from the first block. Allow ports 80 and 443 through the machine's firewall.
+
+**6. Trust the certificate on each device.** Install `certs/quiz-ca.crt`: step-by-step instructions
+for **iOS, Android, macOS, Windows and Linux** are in
+[`docs/https.md`](docs/https.md#5-trust-the-certificate-on-each-device).
+
+**7. Check it.** Open `https://ADDRESS/` on your phone. It loads with no warning. Add it to the home
+screen, open **Progress**, and check that **Secure** says *Yes* and **Offline** says *Ready*. The
+same address works over plain HTTP at `http://ADDRESS/`, without offline mode.
+
+**Update, restart, stop and remove.** The running server keeps serving the build it started with,
+and building underneath it can break pages, so to update: stop it, `git pull`, install, build,
+start.
+
+| | macOS | Linux |
+|---|---|---|
+| Restart | `launchctl kickstart -k gui/$UID/com.star-exam-companion` | `systemctl --user restart star-exam-companion` |
+| Log | `tail -f ~/Library/Logs/star-exam-companion.log` | `journalctl --user -u star-exam-companion -f` |
+| Stop and remove | `launchctl bootout gui/$UID/com.star-exam-companion`, then delete the plist | `systemctl --user disable --now star-exam-companion`, then delete the unit file |
+
+To go back to an earlier version, check it out with git, install, build and restart. Your answers in
+`quiz/scores.jsonl` are not touched by any of this; copy that file before you re-clone. The
+certificate lasts 825 days; see [Renewing or removing it](docs/https.md#renewing-or-removing-it) in
+the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new certificate.
 
 ## Data and privacy
 
@@ -134,6 +310,9 @@ machine's address on your network. The examples use `127.0.0.1` as a stand-in fo
 - **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores.jsonl`
   after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
+- **The online demo** is hosted by GitHub Pages, which, like any web host, sees visitors' IP
+  addresses. The demo has no accounts, analytics or server of its own, and keeps your answers only
+  in your browser's storage for the github.io site.
 - **Read Aloud** fetches Google's course text live from Google's servers; whoever runs the quiz is
   responsible for following Google's terms for it. See [`NOTICE`](NOTICE).
 
@@ -142,11 +321,13 @@ machine's address on your network. The examples use `127.0.0.1` as a stand-in fo
 ```text
 .
 ├── quiz/                 The Next.js app: pages, components, API routes and tests
+├── pages-static/         The online demo's own files, laid out like quiz/
 ├── glossary.md           Every exam term, one row each, with its source
 ├── exam-sections.md      The four exam sections and their weights
 ├── checks/               The exam guide's term list, used by the tests
 ├── docs/https.md         HTTPS, certificates and offline mode on every platform
-├── scripts/make-cert.sh  Makes the home HTTPS certificate
+├── scripts/              make-cert.sh (HTTPS certificate), build-pages.sh (online demo)
+├── .github/workflows/    Builds and deploys the online demo to GitHub Pages
 ├── LICENSE               MIT, for this repository's own files
 └── NOTICE                Third-party code, dependencies, trademarks and Google's material
 ```
@@ -164,6 +345,12 @@ pnpm --dir quiz build
 Run both from the repository root, after the install step in [Quick start](#quick-start).
 `node --test` runs every unit test; `pnpm --dir quiz build` also type-checks the app. Both must
 pass before a change is proposed.
+
+The online demo is a static export of the same app. `bash scripts/build-pages.sh` builds it into
+`pages-out/`; it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
+Read Aloud and Progress with a panel that says they need the local install, and filters Practice
+in the browser. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
+Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 
 ## Contributing and support
 

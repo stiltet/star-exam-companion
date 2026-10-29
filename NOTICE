@@ -69,6 +69,9 @@ and `exam-sections.md`; they are not included here. Many glossary meanings are s
 Google's study guide and documentation, each with its source; Google keeps all rights in its own
 text, and this licence does not cover it.
 
+The online demo, published on GitHub Pages, serves the same app: the same Google Cloud logo and
+glossary text, under the same terms as above. It stores nothing on a server.
+
 Read Aloud (`quiz/app/read`) fetches the learning path's course text live from Google's public
 course bundle, and caches spoken clips of it on the machine that runs the quiz. That text is
 Google's and is not included here. Whoever runs the quiz fetches it, for their own study, and is

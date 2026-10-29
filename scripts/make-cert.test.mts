@@ -132,7 +132,7 @@ describe('the home certificate', () => {
     assert.match(nginxBlock, /listen\s+443 ssl default_server;/);
     assert.match(nginxBlock, /proxy_set_header\s+Host\s+\$http_host;/);
     assert.match(nginxBlock, /proxy_set_header\s+X-Forwarded-Proto\s+\$scheme;/);
-    assert.match(nginxBlock, /proxy_pass\s+http:\/\/127\.0\.0\.1:3000;/);
+    assert.match(nginxBlock, /proxy_pass\s+http:\/\/127\.0\.0\.1:47830;/);
   });
 
   const nginx = ['/opt/homebrew/bin/nginx', '/usr/local/bin/nginx', '/usr/sbin/nginx'].find((file) => existsSync(file));

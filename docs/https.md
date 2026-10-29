@@ -4,7 +4,7 @@ Offline mode needs HTTPS. Browsers give a service worker only to a page served o
 `http://localhost` on the same machine. So:
 
 - **Only on the machine that runs the quiz:** no certificate needed. Run the production build
-  (`pnpm --dir quiz build`, then start it as in step 3) and `http://localhost:3000/` works offline.
+  (`pnpm --dir quiz build`, then start it as in step 3) and `http://localhost:3000/` (or the port you start it on) works offline.
   The development server (`next dev`) never works offline.
 - **From a phone, tablet or another computer:** serve the quiz over HTTPS with a home-made
   certificate, and install its root on every device that opens it. This page says how.
@@ -69,12 +69,12 @@ pnpm --dir quiz build
 
 ```bash
 # Replace the first 127.0.0.1 with your machine's network address; keep -H 127.0.0.1.
-QUIZ_LAN_HOST=127.0.0.1 NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1
+QUIZ_LAN_HOST=127.0.0.1 NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830
 ```
 
-`-H 127.0.0.1` keeps port 3000 closed to the network, so devices reach the quiz only through nginx
+`-H 127.0.0.1` keeps port 47830 closed to the network, so devices reach the quiz only through nginx
 and its allow list in step 4. (`pnpm --dir quiz start` listens on every network interface
-instead; if you use it, block port 3000 in the machine's firewall.)
+instead, on port 3000; if you use it, block that port in the machine's firewall.)
 
 `QUIZ_LAN_HOST` takes the host name or address only, with no `https://` and no port. Without it
 the quiz answers to `localhost` only, and refuses to save answers sent from any other address.
@@ -84,7 +84,7 @@ on Linux and Windows too.
 
 ## 4. Serve it over HTTPS
 
-[nginx](https://nginx.org) takes HTTPS on port 443 and passes it to the quiz on port 3000. Save
+[nginx](https://nginx.org) takes HTTPS on port 443 and passes it to the quiz on port 47830. Save
 this as `quiz-https.conf`, with the full path to your `certs/` folder in both certificate lines:
 
 ```nginx
@@ -104,7 +104,7 @@ server {
         allow 172.16.0.0/12;
         allow 192.168.0.0/16;
         deny  all;
-        proxy_pass         http://127.0.0.1:3000;
+        proxy_pass         http://127.0.0.1:47830;
         proxy_http_version 1.1;
         # Both are required: the quiz checks that the page's Origin matches this Host, over https.
         proxy_set_header   Host              $http_host;
