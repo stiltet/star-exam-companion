@@ -6,10 +6,12 @@ import { sectionLabel } from "@/lib/progress"
 import { quizQuestions } from "@/lib/questions"
 import type { Question } from "@/lib/exam-data"
 import { connection } from "next/server"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
-// Rendered per request, so an edit to glossary.md shows without a rebuild.
+// Rendered per request, so an edit to glossary.md shows without a rebuild. The online demo is
+// built once, as plain files, so it does not wait for a request.
 export default async function ExamPage() {
-  await connection()
+  if (!STATIC_DEMO) await connection()
   const play = loadPlay()
   const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
   const sections = [1, 2, 3, 4].map((id) => ({

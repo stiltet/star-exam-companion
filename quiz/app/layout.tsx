@@ -9,6 +9,11 @@ import { OfflineShell } from "@/components/offline"
 import { SnapshotPrefetch } from "@/components/snapshot"
 import { AudioUnlock } from "@/components/audio"
 import { ThemeProvider } from "@/components/theme-provider"
+import { DemoBanner } from "@/components/demo-banner"
+
+// Next does not add a sub-path to these links itself. Empty everywhere except the online demo,
+// which is served from /star-exam-companion on GitHub Pages.
+const base = process.env.QUIZ_BASE_PATH ?? ""
 
 export const metadata: Metadata = {
   title: "Star Exam Companion",
@@ -16,9 +21,9 @@ export const metadata: Metadata = {
     "Open-source exam preparation for Google Cloud Generative AI Leader certification. Brutalist. Minimal. Exam-focused.",
   keywords: ["Google Cloud", "Generative AI", "Certification", "Exam Prep", "GCGAI Leader"],
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    icon: `${base}/favicon.png`,
+    shortcut: `${base}/favicon.png`,
+    apple: `${base}/apple-touch-icon.png`,
   },
   appleWebApp: {
     capable: true,
@@ -44,6 +49,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange enableColorScheme={false} storageKey="quiz-theme">
+          <DemoBanner />
           {children}
           <BackButton />
           <DevBadgeStyle />

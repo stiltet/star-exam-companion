@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
 // Why the service worker could not be registered, for the Progress page.
 const WORKER_ERROR_KEY = "quiz-worker-error"
@@ -10,7 +11,8 @@ const WORKER_FAILED = "quiz-worker-failed"
 // none on plain HTTP to the LAN address.
 export function OfflineShell() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return
+    // The online demo has no /sw.js and no server to cache for.
+    if (STATIC_DEMO || process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return
     void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error: unknown) => {
       // Shown on the Progress page, so offline mode never fails silently.
       try {

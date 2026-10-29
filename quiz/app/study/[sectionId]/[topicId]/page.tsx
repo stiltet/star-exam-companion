@@ -10,6 +10,11 @@ type Props = {
   params: Promise<{ sectionId: string; topicId: string }>
 }
 
+// Every topic is known at build time, so the online demo can export its pages.
+export function generateStaticParams() {
+  return EXAM_SECTIONS.flatMap((section) => section.topics.map((topic) => ({ sectionId: section.id, topicId: topic.id })))
+}
+
 export default async function TopicPage({ params }: Props) {
   const { sectionId, topicId } = await params
 

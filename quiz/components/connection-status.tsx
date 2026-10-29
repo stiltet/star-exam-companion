@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { fetchedAt, fetchSnapshot, REFRESHED, useSnapshot } from "@/components/snapshot"
 import { connectionText, forceUpdate, type Connection } from "@/lib/connection"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
 // Asks the browser to fetch the latest worker now. A new build's worker installs and stores its
 // pages before it takes over and drops the old caches, so offline keeps working throughout.
@@ -75,6 +76,8 @@ export function useConnection(): ConnectionState {
 // only when the questions came fresh from the Mac; red otherwise, including while it checks, so
 // an old copy never looks current. Update now is on the Progress page.
 export function ConnectionIcon({ state }: { state: ConnectionState }) {
+  // The online demo has no local server, so a red "cannot reach it" icon would only mislead.
+  if (STATIC_DEMO) return null
   const { from, long } = state
   const live = from === "mac"
   return (

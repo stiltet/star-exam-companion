@@ -40,7 +40,7 @@ export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
               SAMPLE QUESTIONS
             </a>
             <span>|</span>
-            <a href="/about">ABOUT</a>
+            <a href={`${process.env.QUIZ_BASE_PATH ?? ""}/about`}>ABOUT</a>
           </div>
           <p className="text-muted-foreground">
             Open-source. Not affiliated with, sponsored or endorsed by Google. The Google Cloud name and logo

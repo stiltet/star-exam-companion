@@ -6,10 +6,12 @@ import { Names } from "@/components/names"
 import { sectionLabel } from "@/lib/progress"
 import { applyNames, label, plainNames } from "@/lib/sources"
 import { connection } from "next/server"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
-// Rendered per request, so an edit to glossary.md shows without a rebuild.
+// Rendered per request, so an edit to glossary.md shows without a rebuild. The online demo is
+// built once, as plain files, so it does not wait for a request.
 export default async function GlossaryPage() {
-  await connection()
+  if (!STATIC_DEMO) await connection()
   const play = loadPlay()
   const GLOSSARY = play.ok
     ? play.glossary.terms.map((term) => ({

@@ -7,6 +7,7 @@ import type { ScoreLine } from "@/lib/learn"
 import { mergeLines, readOutbox } from "@/lib/outbox"
 import { SNAPSHOT_AT_KEY } from "@/lib/connection"
 import { isSnapshot, readSnapshot, writeSnapshot, type Snapshot } from "@/lib/snapshot"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
 // The same wait the service worker gives the Mac before it falls back to the device.
 const FETCH_TIMEOUT_MS = 2500
@@ -22,6 +23,8 @@ export type SnapshotState = {
 }
 
 export async function fetchSnapshot(): Promise<{ snapshot: Snapshot } | { broken: { row: string; error: string } } | null> {
+  // The online demo has no server to ask.
+  if (STATIC_DEMO) return null
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {

@@ -1,9 +1,12 @@
 import type { SendResult } from "./outbox.ts"
 import type { Answer } from "./score.ts"
+import { STATIC_DEMO } from "./static-demo.ts"
 
 // Sends one batch to the Mac. The Mac's verdict per answer, or null when it did not take the
-// batch: no network, an error status, or a body that is not { ok: true, ... }.
+// batch: no network, an error status, or a body that is not { ok: true, ... }. The online demo has
+// no server, so it sends nothing and the answers stay on the device.
 export async function postAnswers(answers: Answer[], post: typeof fetch = fetch): Promise<SendResult | null> {
+  if (STATIC_DEMO) return null
   try {
     const response = await post("/api/scores", {
       method: "POST",

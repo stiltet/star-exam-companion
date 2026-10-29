@@ -24,3 +24,6 @@ quiz/scores-backups/
 
 # Home-made HTTPS certificates from scripts/make-cert.sh. quiz.key is secret.
 /certs/
+
+# The online demo (scripts/build-pages.sh) and the quiz folder's extra build output.
+/pages-out/
