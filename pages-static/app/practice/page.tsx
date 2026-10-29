@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { Text } from "@/components/atoms/text"
 import { PracticeView } from "@/components/practice-view"
 import { loadPlay } from "@/lib/load"
 import { sectionLabel } from "@/lib/progress"
@@ -28,7 +29,7 @@ export default function PracticePage() {
         <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
         <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
 
-        <Suspense fallback={<div className="border-2 border-foreground p-6 text-center text-muted-foreground">Loading questions…</div>}>
+        <Suspense fallback={<Text variant="notice" role="status">Loading questions…</Text>}>
           <PracticeView questions={questions} sections={sections} />
         </Suspense>
       </main>

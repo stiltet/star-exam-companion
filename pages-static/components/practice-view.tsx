@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { Text } from "@/components/atoms/text"
 import { PracticeQuestionClient } from "@/components/practice-question-client"
 import { PracticeUnanswered, UnansweredCount } from "@/components/practice-unanswered"
 import type { Question } from "@/lib/exam-data"
@@ -68,9 +69,7 @@ export function PracticeView({ questions, sections }: { questions: Question[]; s
       {onlyUnanswered ? (
         <PracticeUnanswered key={key} questions={filtered} filter={key} sectionTitles={sectionTitles} />
       ) : filtered.length === 0 ? (
-        <div className="border-2 border-foreground p-6 text-center text-muted-foreground">
-          No questions available for this filter.
-        </div>
+        <Text variant="notice" role="status">No questions available for this filter.</Text>
       ) : (
         <PracticeQuestionClient key={key} questions={filtered} filter={key} sectionTitles={sectionTitles} />
       )}

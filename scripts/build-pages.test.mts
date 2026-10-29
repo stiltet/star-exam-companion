@@ -64,6 +64,10 @@ describe('the GitHub Pages build', () => {
       assert.ok(existsSync(path.join(root, file)), file);
     }
     assert.match(readFileSync(path.join(root, 'quiz/app/practice/page.tsx'), 'utf8'), /searchParams/);
+    // Both Practice pages say their empty-filter message the same way: a status a screen reader announces.
+    for (const file of ['quiz/app/practice/page.tsx', 'pages-static/components/practice-view.tsx']) {
+      assert.match(readFileSync(path.join(root, file), 'utf8'), /<Text variant="notice" role="status">No questions available/, file);
+    }
   });
 
   test(
@@ -84,6 +88,8 @@ describe('the GitHub Pages build', () => {
       for (const page of ['voice', 'read', 'progress']) {
         assert.match(readFileSync(path.join(out, page, 'index.html'), 'utf8'), /runs on your computer/, page);
       }
+      // The demo's Practice page announces its messages to a screen reader, as the real page does.
+      assert.match(readFileSync(path.join(out, 'practice', 'index.html'), 'utf8'), /role="status"[^>]*>Loading questions/);
       // What a static host can serve is there; what needs a server is not.
       for (const page of ['practice', 'exam', 'flashcards', 'glossary', 'about', 'study/fundamentals']) {
         assert.ok(existsSync(path.join(out, page, 'index.html')), page);
