@@ -1,7 +1,7 @@
 {
   "name": "star-exam-companion",
-  "author": "Ludovico Besana",
-  "version": "0.1.0",
+  "author": "Stellan Lindell",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
