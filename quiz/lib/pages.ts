@@ -15,7 +15,7 @@ export const SITE_PAGES: readonly SitePage[] = [
   { href: "/practice", menu: "PRACTICE", title: "Practice Questions", blurb: "Individual questions with explanations" },
   { href: "/voice", menu: "VOICE QUIZ", title: "Voice Quiz", blurb: "Voice Quiz. An exam question, read aloud" },
   { href: "/read", menu: "READ ALOUD", title: "Read Aloud", blurb: "The official learning path, read aloud" },
-  { href: "/exam", menu: "EXAM", title: "Practice Exam", blurb: "Timed practice exam (90 min, 50 questions)" },
+  { href: "/exam", menu: "EXAM", title: "Practice Exam", blurb: "Timed practice exam (90 min, 60 questions)" },
   { href: "/flashcards", menu: "FLASHCARDS", title: "Flashcards", blurb: "Term recall from official terminology" },
   { href: "/glossary", menu: "GLOSSARY", title: "Glossary", blurb: "All terms linked and categorized" },
   { href: "/progress", menu: "PROGRESS", title: "Progress", blurb: "Track completion and weak areas" },

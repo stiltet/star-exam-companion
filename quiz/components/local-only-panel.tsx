@@ -1,3 +1,4 @@
+import { Heading } from "@/components/atoms/heading"
 import { SETUP_URL } from "@/lib/static-demo"
 
 // What replaces Voice Quiz, Read Aloud and Progress in the online demo: they are core features that
@@ -6,7 +7,7 @@ import { SETUP_URL } from "@/lib/static-demo"
 export function LocalOnlyPanel({ feature, what, voice = false }: { feature: string; what: string; voice?: boolean }) {
   return (
     <section className="border-2 border-foreground p-6">
-      <h1 className="text-2xl font-bold mb-4">{feature} runs on your computer</h1>
+      <Heading variant="page" placement="mb-4">{feature} runs on your computer</Heading>
       <p className="mb-4">
         {feature} is a core feature of Star Exam Companion. It {what}, so it needs the quiz cloned and served on
         your own computer. This online demo cannot do that.

@@ -28,5 +28,5 @@ export async function postScores(request: Request): Promise<Response> {
   const result = storeAnswers(readScores(file).lines, decision.answers)
   if (result.lines.length > 0) appendFileSync(file, result.lines.map((line) => `${JSON.stringify(line)}\n`).join(""))
   // Scores stay local: quiz/scores.jsonl is gitignored.
-  return Response.json({ ok: true, stored: result.stored, duplicate: result.duplicate, rejected: decision.rejected, reasons: decision.reasons })
+  return Response.json({ ok: true, stored: result.stored, duplicate: result.duplicate, rejected: decision.rejected, gone: decision.gone, reasons: decision.reasons })
 }

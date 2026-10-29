@@ -1,5 +1,6 @@
 import { BuildStamp } from "@/components/build-stamp"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { BASE_PATH } from "@/lib/static-demo"
 // flush drops the top margin, for a page whose last line should sit just above the footer.
 export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
   return (
@@ -40,7 +41,7 @@ export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
               SAMPLE QUESTIONS
             </a>
             <span>|</span>
-            <a href={`${process.env.QUIZ_BASE_PATH ?? ""}/about`}>ABOUT</a>
+            <a href={`${BASE_PATH}/about`}>ABOUT</a>
           </div>
           <p className="text-muted-foreground">
             Open-source. Not affiliated with, sponsored or endorsed by Google. The Google Cloud name and logo

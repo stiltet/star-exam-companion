@@ -1,12 +1,17 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { phoneTitle, SITE_PAGES } from "./pages.ts"
+import { MAX_EXAM_QUESTIONS } from "./score.ts"
 
 test("the page list is the menu order, and Read Aloud is in it", () => {
   assert.deepEqual(SITE_PAGES.map((page) => page.href), [
     "/study", "/practice", "/voice", "/read", "/exam", "/flashcards", "/glossary", "/progress",
   ])
   assert.equal(SITE_PAGES.find((page) => page.href === "/read")?.menu, "READ ALOUD")
+})
+
+test("the exam's blurb names the question count the exam asks", () => {
+  assert.match(SITE_PAGES.find((page) => page.href === "/exam")?.blurb ?? "", new RegExp(`\\b${MAX_EXAM_QUESTIONS} questions`))
 })
 
 test("the phone title comes from the page list, Study's own phone title included", () => {

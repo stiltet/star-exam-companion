@@ -47,9 +47,9 @@ test("the actual score handler stores every offered question, including written 
   for (const batch of [practice, round, [exam, cards]]) {
     const response = await postScores(request(batch))
     assert.equal(response.status, 200)
-    assert.deepEqual(await response.json(), { ok: true, stored: batch.map((item) => item.id), duplicate: [], rejected: [], reasons: {} })
+    assert.deepEqual(await response.json(), { ok: true, stored: batch.map((item) => item.id), duplicate: [], rejected: [], gone: [], reasons: {} })
     const duplicate = await postScores(request(batch))
-    assert.deepEqual(await duplicate.json(), { ok: true, stored: [], duplicate: batch.map((item) => item.id), rejected: [], reasons: {} })
+    assert.deepEqual(await duplicate.json(), { ok: true, stored: [], duplicate: batch.map((item) => item.id), rejected: [], gone: [], reasons: {} })
   }
   const saved = readScores(file).lines
   const originals = [...practice, ...round, exam, cards]
@@ -77,6 +77,7 @@ test("the actual handler keeps mode, time and origin validation and explains ind
   assert.equal(response.status, 200)
   assert.deepEqual(body.stored, [])
   assert.deepEqual(body.rejected, invalid.map((item) => item.id))
+  assert.deepEqual(body.gone, [invalid[1]!.id])
   assert.match(body.reasons[invalid[0]!.id], /question bank/)
   assert.match(body.reasons[invalid[2]!.id], /clock/)
   assert.match(body.reasons[invalid[3]!.id], /duration/)

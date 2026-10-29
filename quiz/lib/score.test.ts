@@ -16,6 +16,13 @@ const batch = (answers: unknown[]) => ({ origin, contentType: "application/json"
 
 test("a batch is accepted only as same-origin JSON { answers } of 1 to 500", () => {
   assert.equal(acceptBatch(batch([answer(1)])).ok, true)
+  const unknown = acceptBatch(batch([{ ...answer(1), asked: ["a-removed-question"] }]))
+  assert.deepEqual(unknown.ok && [unknown.rejected, unknown.gone], [[answer(1).id], [answer(1).id]])
+  // A round id the round pool lacks but the bank has is refused and kept, not gone.
+  const narrow = acceptBatch({ ...batch([answer(1, { asked: ["b"] })]), roundIds: new Set(["a"]) })
+  assert.deepEqual(narrow.ok && [narrow.rejected, narrow.gone], [[answer(1).id], []])
+  const invalid = acceptBatch(batch([{ ...answer(1), missed: ["zzz"] }]))
+  assert.deepEqual(invalid.ok && [invalid.rejected, invalid.gone], [[answer(1).id], []])
   assert.equal(acceptBatch({ ...batch([answer(1)]), origin: "http://evil.example" }).ok, false)
   assert.equal(acceptBatch({ ...batch([answer(1)]), contentType: "text/plain" }).ok, false)
   assert.equal(acceptBatch({ ...batch([answer(1)]), body: { answers: [answer(1)], extra: 1 } }).ok, false)

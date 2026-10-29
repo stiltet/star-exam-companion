@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import Link from "next/link"
+import { Text } from "@/components/atoms/text"
 import { PracticeQuestionClient } from "@/components/practice-question-client"
 import { PracticeUnanswered, UnansweredCount } from "@/components/practice-unanswered"
 import { loadPlay } from "@/lib/load"
@@ -82,9 +83,7 @@ export default async function PracticePage({ searchParams }: Props) {
         {onlyUnanswered ? (
           <PracticeUnanswered key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
         ) : filteredQuestions.length === 0 ? (
-          <div className="border-2 border-foreground p-6 text-center text-muted-foreground">
-            No questions available for this filter.
-          </div>
+          <Text variant="notice" role="status">No questions available for this filter.</Text>
         ) : (
           <PracticeQuestionClient key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
         )}

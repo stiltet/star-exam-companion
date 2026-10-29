@@ -19,6 +19,7 @@ export function pageList(sections: { id: string; topics: { id: string }[] }[], p
     for (const topic of section.topics) {
       pages.push(`/study/${encodeURIComponent(section.id)}/${encodeURIComponent(topic.id)}`)
       pages.push(`/practice?topic=${encodeURIComponent(topic.id)}`)
+      pages.push(`/practice?topic=${encodeURIComponent(topic.id)}&unanswered=1`)
     }
   }
   return [...new Set(pages)]

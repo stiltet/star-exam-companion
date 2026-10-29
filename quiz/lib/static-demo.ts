@@ -6,3 +6,7 @@ export const STATIC_DEMO = process.env.NEXT_PUBLIC_QUIZ_STATIC === "1"
 
 // Where the demo's setup instructions live.
 export const SETUP_URL = "https://github.com/stiltet/star-exam-companion#full-local-setup"
+
+// The sub-path the demo is served from, empty everywhere else. Next does not add it to a link or an
+// icon path itself, so a server component that writes one reads it here.
+export const BASE_PATH = process.env.QUIZ_BASE_PATH ?? ""

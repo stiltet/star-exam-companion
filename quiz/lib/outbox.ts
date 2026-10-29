@@ -10,7 +10,7 @@ const REASONS_KEY = "quiz-rejected-reasons"
 
 export type Store = Pick<Storage, "getItem" | "setItem">
 
-export type SendResult = { stored: string[]; duplicate: string[]; rejected: string[]; reasons?: Record<string, string> }
+export type SendResult = { stored: string[]; duplicate: string[]; rejected: string[]; gone?: string[]; reasons?: Record<string, string> }
 export type SendSummary = { sent: number; waiting: number; rejected: number; reached: boolean; storageError: boolean }
 
 // A version 4 UUID from getRandomValues, which works on plain HTTP; randomUUID needs HTTPS.
@@ -89,16 +89,18 @@ export async function sendOutbox(store: Store, post: (answers: Answer[]) => Prom
     }
     const requested = new Set(batch.map((answer) => answer.id))
     const done = new Set([...result.stored, ...result.duplicate].filter((id) => requested.has(id)))
-    const refused = new Set(result.rejected.filter((id) => requested.has(id) && !done.has(id)))
+    // An answer about a removed question is dropped: no retry can ever store it.
+    const gone = new Set((result.gone ?? []).filter((id) => requested.has(id) && !done.has(id)))
+    const refused = new Set(result.rejected.filter((id) => requested.has(id) && !done.has(id) && !gone.has(id)))
     // Re-read: an answer may have been added while the batch was on its way.
     const now = readOutbox(store)
-    const rejected = [...new Map([...readRejected(store), ...now.filter((answer) => refused.has(answer.id))].map((answer) => [answer.id, answer])).values()].filter((answer) => !done.has(answer.id))
+    const rejected = [...new Map([...readRejected(store), ...now.filter((answer) => refused.has(answer.id))].map((answer) => [answer.id, answer])).values()].filter((answer) => !done.has(answer.id) && !gone.has(answer.id))
     // Keep the outbox intact if the refused copy cannot be written.
     if (!writeList(store, REJECTED_KEY, rejected)) {
       storageError = true
       break
     }
-    if (!writeList(store, OUTBOX_KEY, now.filter((answer) => !done.has(answer.id) && !refused.has(answer.id)))) {
+    if (!writeList(store, OUTBOX_KEY, now.filter((answer) => !done.has(answer.id) && !refused.has(answer.id) && !gone.has(answer.id)))) {
       storageError = true
       break
     }

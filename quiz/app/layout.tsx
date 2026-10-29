@@ -10,10 +10,11 @@ import { SnapshotPrefetch } from "@/components/snapshot"
 import { AudioUnlock } from "@/components/audio"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DemoBanner } from "@/components/demo-banner"
+import { BASE_PATH } from "@/lib/static-demo"
 
 // Next does not add a sub-path to these links itself. Empty everywhere except the online demo,
 // which is served from /star-exam-companion on GitHub Pages.
-const base = process.env.QUIZ_BASE_PATH ?? ""
+const base = BASE_PATH
 
 export const metadata: Metadata = {
   title: "Star Exam Companion",

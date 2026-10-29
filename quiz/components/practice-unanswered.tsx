@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Text } from "@/components/atoms/text"
 import { PracticeQuestionClient } from "@/components/practice-question-client"
 import { refreshSnapshot } from "@/components/snapshot"
 import type { Question } from "@/lib/exam-data"
@@ -51,10 +52,10 @@ type Props = {
 // Practice's Unanswered filter: the chosen questions never answered in any mode (owner, 28 Oct).
 export function PracticeUnanswered({ questions, filter, sectionTitles }: Props) {
   const answered = useAnswered()
-  if (!answered) return <div className="border-2 border-foreground p-6 text-center text-muted-foreground">Loading your answers…</div>
-  if (answered === "none") return <div className="border-2 border-foreground p-6 text-center text-muted-foreground">Your answers cannot be loaded: the Mac cannot be reached and none are kept on this device yet. Try again when the Mac is reachable.</div>
+  if (!answered) return <Text variant="notice" role="status">Loading your answers…</Text>
+  if (answered === "none") return <Text variant="notice" role="alert">Your answers cannot be loaded: the Mac cannot be reached and none are kept on this device yet. Try again when the Mac is reachable.</Text>
   const list = questions.filter((q) => !answered.has(q.id))
-  if (list.length === 0) return <div className="border-2 border-foreground p-6 text-center text-muted-foreground">Every question in this filter has been answered at least once.</div>
+  if (list.length === 0) return <Text variant="notice" role="status">Every question in this filter has been answered at least once.</Text>
   return <PracticeQuestionClient questions={list} filter={filter} sectionTitles={sectionTitles} />
 }
 

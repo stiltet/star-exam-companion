@@ -156,7 +156,7 @@ test("a course late to answer reuses the readings it last sent, so the worker st
 
 test("the page list covers every page, section, topic and Practice filter", () => {
   const pages = pageList([{ id: "fundamentals", topics: [{ id: "ml basics" }] }], ["1", "2"])
-  for (const page of ["/", "/voice", "/read", "/read/night", "/progress", "/study/fundamentals", "/study/fundamentals/ml%20basics", "/practice?topic=ml%20basics", "/practice?section=2", "/practice?unanswered=1", "/practice?section=2&unanswered=1"]) {
+  for (const page of ["/", "/voice", "/read", "/read/night", "/progress", "/study/fundamentals", "/study/fundamentals/ml%20basics", "/practice?topic=ml%20basics", "/practice?section=2", "/practice?unanswered=1", "/practice?section=2&unanswered=1", "/practice?topic=ml%20basics&unanswered=1"]) {
     assert.ok(pages.includes(page), page)
   }
   assert.deepEqual(staticList(["chunks/a b.js"], "/_next/static"), ["/_next/static/chunks/a%20b.js"])

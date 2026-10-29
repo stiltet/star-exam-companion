@@ -63,6 +63,23 @@ test("a long outbox goes in batches of 500 and stops at the first the Mac does n
   assert.deepEqual(result, { sent: MAX_BATCH, waiting: MAX_BATCH + 1, rejected: 0, reached: false, storageError: false })
 })
 
+test("an answer about a removed question is dropped, not kept to retry, while a refused one is kept", async () => {
+  const store = memory()
+  const removed = answer(1, "10:00", { mode: "practice", asked: ["q75"] })
+  const bad = answer(2, "10:01")
+  const fine = answer(3, "10:02")
+  store.setItem(OUTBOX_KEY, JSON.stringify([removed, bad, fine]))
+  const result = await sendOutbox(store, async (batch) => ({
+    stored: [fine.id], duplicate: [], rejected: [removed.id, bad.id], gone: [removed.id], reasons: { [removed.id]: "gone", [bad.id]: "invalid" },
+  }))
+  assert.deepEqual(result, { sent: 1, waiting: 0, rejected: 1, reached: true, storageError: false })
+  assert.deepEqual(readRejected(store).map((item) => item.id), [bad.id])
+  assert.deepEqual(readRejectionReasons(store), { [bad.id]: "invalid" })
+  // A refused answer retried later is dropped too once the Mac says its question is gone.
+  const retry = await sendOutbox(store, async (batch) => ({ stored: [], duplicate: [], rejected: batch.map((item) => item.id), gone: batch.map((item) => item.id) }), true)
+  assert.deepEqual(retry, { sent: 0, waiting: 0, rejected: 0, reached: true, storageError: false })
+})
+
 test("14 legacy refused answers recover unchanged, count in the snapshot and never duplicate", async () => {
   const store = memory()
   const original = Array.from({ length: 14 }, (_, n) => answer(n + 1, "10:00", {

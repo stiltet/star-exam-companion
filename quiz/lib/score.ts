@@ -46,7 +46,7 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
     return { id, at, mode, asked: asked as string[], missed: [] }
   }
   const pool = mode === "flashcard" ? known.termNames : mode === "round" ? known.roundIds ?? known.bankIds : known.bankIds
-  if (!asked.every((item) => typeof item === "string" && pool.has(item))) return "A question or term is not in this mode's current question bank."
+  if (!asked.every((item) => typeof item === "string" && pool.has(item))) return NOT_IN_BANK
   if (!missed.every((item) => typeof item === "string" && asked.includes(item))) return "A missed question is not in the saved answer's question list."
   if (new Set(asked).size !== asked.length || new Set(missed).size !== missed.length) return "The saved question lists contain duplicates."
   if (mode === "exam") {
@@ -79,6 +79,19 @@ function examReview(asked: string[], missed: string[], answers: unknown, flagged
   return review
 }
 
+// A question that was removed from the bank after the answer was queued on a device. It never
+// comes back, so the device drops that answer instead of retrying it for ever.
+export const NOT_IN_BANK = "A question or term is not in this mode's current question bank."
+
+// Gone only when no question or term the answer names is known to any mode's pool: a removed
+// question. One a narrower pool lacks, such as a round that offers fewer items than the bank, is
+// refused and kept, as before.
+function removedEverywhere(value: unknown, known: { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string> }): boolean {
+  const asked = (value as { asked?: unknown } | null)?.asked
+  if (!Array.isArray(asked)) return false
+  return asked.some((item) => typeof item === "string" && !known.bankIds.has(item) && !known.roundIds?.has(item) && !known.termNames.has(item))
+}
+
 export function acceptAnswer(value: unknown, known: KnownAnswers, now: number): Answer | null {
   const result = inspectAnswer(value, known, now)
   return typeof result === "string" ? null : result
@@ -94,7 +107,7 @@ export function acceptBatch(input: {
   roundIds?: ReadonlySet<string>
   termNames: ReadonlySet<string>
   now: number
-}): { ok: true; answers: Answer[]; rejected: string[]; reasons: Record<string, string> } | { ok: false } {
+}): { ok: true; answers: Answer[]; rejected: string[]; gone: string[]; reasons: Record<string, string> } | { ok: false } {
   if (input.origin !== input.allowedOrigin) return { ok: false }
   if (input.contentType !== "application/json") return { ok: false }
   if (!input.body || typeof input.body !== "object" || Array.isArray(input.body)) return { ok: false }
@@ -103,6 +116,7 @@ export function acceptBatch(input: {
   if (body.answers.length < 1 || body.answers.length > MAX_BATCH) return { ok: false }
   const answers: Answer[] = []
   const rejected: string[] = []
+  const gone: string[] = []
   const reasons: Record<string, string> = {}
   for (const value of body.answers) {
     const answer = inspectAnswer(value, input, input.now)
@@ -111,11 +125,12 @@ export function acceptBatch(input: {
       const id = (value as { id?: unknown } | null)?.id
       if (typeof id === "string" && UUID.test(id)) {
         rejected.push(id)
+        if (answer === NOT_IN_BANK && removedEverywhere(value, input)) gone.push(id)
         reasons[id] = answer
       }
     }
   }
-  return { ok: true, answers, rejected, reasons }
+  return { ok: true, answers, rejected, gone, reasons }
 }
 
 export function toLine(answer: Answer, session: number): ScoreLine {

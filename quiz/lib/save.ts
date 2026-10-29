@@ -16,10 +16,11 @@ export async function postAnswers(answers: Answer[], post: typeof fetch = fetch)
     const body = (await response.json()) as Partial<SendResult> & { ok?: boolean }
     if (!response.ok || body.ok !== true) return null
     const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id): id is string => typeof id === "string") : [])
+    const gone = ids(body.gone)
     const reasons = body.reasons && typeof body.reasons === "object" && !Array.isArray(body.reasons)
       ? Object.fromEntries(Object.entries(body.reasons).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
       : undefined
-    return { stored: ids(body.stored), duplicate: ids(body.duplicate), rejected: ids(body.rejected), ...(reasons ? { reasons } : {}) }
+    return { stored: ids(body.stored), duplicate: ids(body.duplicate), rejected: ids(body.rejected), ...(gone.length ? { gone } : {}), ...(reasons ? { reasons } : {}) }
   } catch {
     // Not sent: the answers stay in the outbox for the next try.
     return null

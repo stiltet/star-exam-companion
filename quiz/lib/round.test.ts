@@ -50,7 +50,7 @@ test("refuses a cross-site or malformed score", () => {
   assert.equal(acceptBatch({ ...base, origin: "https://evil.example", contentType: "application/json", body: { answers: [answer] } }).ok, false)
   assert.equal(acceptBatch({ ...base, origin: base.allowedOrigin, contentType: "text/plain", body: { answers: [answer] } }).ok, false)
   const malformed = acceptBatch({ ...base, origin: base.allowedOrigin, contentType: "application/json", body: { answers: [{ ...answer, asked: ["nope"], note: "x" }] } })
-  assert.deepEqual(malformed, { ok: true, answers: [], rejected: [answer.id], reasons: { [answer.id]: "The saved answer has unexpected fields." } })
+  assert.deepEqual(malformed, { ok: true, answers: [], rejected: [answer.id], gone: [], reasons: { [answer.id]: "The saved answer has unexpected fields." } })
 })
 
 test("reads aloud with local voices only", () => {
