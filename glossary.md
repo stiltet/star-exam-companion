@@ -29,7 +29,7 @@ only as "also called" (exam guide first, then the newest name). Sub-products fol
 "Agent Platform X": Vertex AI Studio is now Agent Studio and Vertex AI RAG Engine is now RAG
 Engine. Google's full list is the naming table in the release notes.
 
-Names last checked: 2026-10-29
+Names last checked: 2026-11-01
 
 ## Section 1 — Fundamentals of gen AI
 
@@ -111,7 +111,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Gemini for Google Workspace | Now called Google Workspace with Gemini. Exam-guide name for gen AI in Workspace apps. **Renamed:** Gemini for Google Workspace => Google Workspace with Gemini. **Exam guide:** Gemini for Google Workspace. | 2.2 | EG, SG p.5 |
 | Gemini for Google Cloud | AI assistant for Google Cloud. Writes and debugs code, manages and optimises cloud apps, analyses data in BigQuery, strengthens security posture. Its products include Gemini Code Assist and Gemini Cloud Assist. Google's docs overview is now titled "Google Cloud with Gemini". | — | SG p.5, [Google page](https://docs.cloud.google.com/gemini/docs/overview) |
 | Gemini Notebook | Upload your files and it acts as a research assistant: summarises key points, answers questions and generates ideas, grounded in your sources. Formerly called NotebookLM. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | 2.2 | SG p.5, p.11 |
-| NotebookLM | Now called Gemini Notebook. notebooklm.google now redirects to the Gemini Notebook site. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | — | [Google page](https://notebook.google/) |
+| NotebookLM | Now called Gemini Notebook. notebooklm.google.com now redirects to the Gemini Notebook site. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | — | [Google page](https://notebook.google.com/) |
 | Gemini Enterprise | Puts customised search and conversation agents, which understand data from your internal sources, into your organisation's internal websites or dashboards. Exam guide examples: Gemini Notebook API, multimodal search, custom agents. | 2.2 | SG p.5, EG |
 | Gemini Notebook API | Part of Gemini Enterprise: create, list, share and delete notebooks from code instead of in the app (Preview on 19 Oct). Google's page: "Create and manage notebooks (API)", under Gemini Notebook Enterprise. Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/api-notebooks) |
 | Multimodal search | Part of Gemini Enterprise: one search across the company's connected sources, such as Confluence, Jira, SharePoint and ServiceNow, that respects each employee's permissions. Google's page: "a single, multimodal search interface offering permissions-aware access to enterprise information". Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/docs) |

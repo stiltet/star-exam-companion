@@ -244,7 +244,7 @@ export const EXAM_SECTIONS = [
           {
             question: "What is Gemini Notebook (also called NotebookLM) and what is it designed for?",
             answer: "Gemini Notebook (also called NotebookLM) is an AI-first notebook that grounds responses in your uploaded documents, designed for research, summarization, and finding connections in your materials.",
-            officialSource: "https://notebooklm.google/"
+            officialSource: "https://notebook.google.com/"
           },
           {
             question: "How does Gemini integrate with Google Workspace?",
@@ -362,12 +362,12 @@ export const EXAM_SECTIONS = [
                             {
                               question: "What is Gemini Notebook (also called NotebookLM) and what is it designed for?",
                               answer: "Gemini Notebook (also called NotebookLM) is an AI-first notebook that grounds responses in your uploaded documents, designed for research, summarization, and finding connections in your materials.",
-                              officialSource: "https://notebooklm.google/"
+                              officialSource: "https://notebook.google.com/"
                             },
                             {
                               question: "When is it most effective to use Gemini Notebook (also called NotebookLM)?",
                               answer: "Gemini Notebook (also called NotebookLM) is most effective when you need to analyze, summarize, and connect information across multiple documents, such as for research or report preparation.",
-                              officialSource: "https://notebooklm.google/"
+                              officialSource: "https://notebook.google.com/"
                             }
                           ],
                           concepts: [],
@@ -375,7 +375,7 @@ export const EXAM_SECTIONS = [
                           traps: [],
                           officialDocs: [
                             { title: "Gemini Enterprise", url: "https://cloud.google.com/agentspace" },
-                            { title: "Gemini Notebook (also called NotebookLM)", url: "https://notebooklm.google/" }
+                            { title: "Gemini Notebook (also called NotebookLM)", url: "https://notebook.google.com/" }
                           ]
                         },
                         {
@@ -1545,7 +1545,7 @@ export const PRACTICE_QUESTIONS: Question[] = [
       "It's not a code editor but a document-focused AI assistant.",
       "It's not for training models but for interacting with documents.",
     ],
-    officialDoc: "https://notebooklm.google/",
+    officialDoc: "https://notebook.google.com/",
     difficulty: "easy",
   },
   {
@@ -1822,7 +1822,7 @@ export const PRACTICE_QUESTIONS: Question[] = [
       "Agent Search is for enterprise search, not document analysis.",
       "Gemini for Google Workspace helps with productivity but isn't specialized for multi-document research.",
     ],
-    officialDoc: "https://notebooklm.google/",
+    officialDoc: "https://notebook.google.com/",
     difficulty: "medium",
   },
   {
@@ -3361,7 +3361,7 @@ export const PRACTICE_QUESTIONS: Question[] = [
       "Gemini Enterprise Agent Platform is intended for building conversational agents and not primarily for research synthesis.",
       "Document AI focuses on structured document processing like form parsing and OCR, not contextual synthesis and insight generation.",
     ],
-    officialDoc: "https://notebooklm.google/",
+    officialDoc: "https://notebook.google.com/",
     difficulty: "medium",
   },
   {
