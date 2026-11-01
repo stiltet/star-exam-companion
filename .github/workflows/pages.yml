@@ -40,7 +40,20 @@ jobs:
       - run: pnpm --dir quiz install --frozen-lockfile
 
       - name: Test
-        run: node --test
+        # On failure, repeat the failing tests as one error annotation, so the reason shows on the
+        # run page and through the public API without opening the job log.
+        run: |
+          status=0
+          node --test > test.log 2>&1 || status=$?
+          cat test.log
+          if [ "$status" -ne 0 ]; then
+            msg=$(grep -E -A14 '^[[:space:]]*not ok' test.log | head -c 30000 || true)
+            msg="${msg//'%'/'%25'}"
+            msg="${msg//$'\r'/'%0D'}"
+            msg="${msg//$'\n'/'%0A'}"
+            echo "::error title=node --test failed::${msg}"
+          fi
+          exit "$status"
 
       - name: Build the demo
         run: bash scripts/build-pages.sh pages-out
