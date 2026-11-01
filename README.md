@@ -57,7 +57,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
 | **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#full-local-setup)) |
-| **Install tip** | On a phone or tablet, a small card offers to add the quiz to the home screen: an Install button on Android, the Share steps on iOS Safari. It never shows in the installed app or on desktop, and *Not now* hides it for 30 days. The online demo shows it too. | Nothing extra |
+| **Install tip** | On a phone or tablet, a small card offers to add the quiz to the home screen: an Install button on Android (or the browser-menu steps when the browser offers no prompt), the Share steps on iOS Safari. It never shows in the installed app, on desktop, in Android in-app browsers, or during the exam and the Voice Quiz; in an iOS in-app or non-Safari browser it asks the person to open the page in Safari. *Not now* hides it for 30 days. The online demo shows it too. | Nothing extra |
 
 ## How it works
 

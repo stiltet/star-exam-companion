@@ -25,18 +25,16 @@ export type InstallState = {
   platform: InstallPlatform
   standalone: boolean
   installed: boolean
-  // Android only: the browser has handed over its install prompt.
-  canPrompt: boolean
   dismissedAt: number | null
   now: number
 }
 
-// Android waits for the browser's own prompt: it does not come when the app is already installed,
-// so the tip never tells an installed user to install. iOS has no prompt to wait for. Desktop, in-app
-// browsers and the installed app get nothing.
+// Android offers the browser's own prompt when it has one, and the menu steps when it has not. A
+// browser cannot say that the app is already installed, so the tip may reach someone who has it; Not
+// now hides it for 30 days. Desktop, Android in-app browsers and the installed app get nothing; an iOS
+// in-app browser is told to open the page in Safari.
 export function shouldOffer(state: InstallState): boolean {
   if (state.standalone || state.installed || state.platform === "other") return false
-  if (state.platform === "android" && !state.canPrompt) return false
   if (state.dismissedAt !== null && state.now - state.dismissedAt < DISMISS_DAYS * DAY_MS) return false
   return true
 }
@@ -44,4 +42,12 @@ export function shouldOffer(state: InstallState): boolean {
 // Shown at once on a second visit, after SHOW_AFTER_MS on the first.
 export function showDelay(visits: number): number {
   return visits >= 2 ? 0 : SHOW_AFTER_MS
+}
+
+// What the Android card says: the prompt's benefit when the browser handed one over, the menu steps
+// when it did not (Firefox, or a Chrome that has already shown it).
+export function androidCopy(hasPrompt: boolean): string {
+  return hasPrompt
+    ? "Opens full screen, like an app, and works offline."
+    : "Open your browser menu (⋮ or ≡), then tap Install app or Add to Home screen."
 }

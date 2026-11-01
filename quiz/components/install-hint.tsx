@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/atoms/button"
 import { Callout } from "@/components/atoms/callout"
 import { Text } from "@/components/atoms/text"
 import { useStandalone } from "@/components/standalone"
-import { detectPlatform, shouldOffer, showDelay, type InstallPlatform } from "@/lib/install-hint"
+import { androidCopy, detectPlatform, shouldOffer, showDelay, type InstallPlatform } from "@/lib/install-hint"
 
 // The browser's own install prompt, which Chromium hands over once and lets a page keep.
 type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> }
@@ -33,8 +33,9 @@ function write(key: string, value: string) {
   }
 }
 
-// Offers to add the quiz to the home screen on a phone or tablet. Android gets an Install button;
-// iOS has no such call, so it gets the Share steps. Never shown in the installed app or on desktop.
+// Offers to add the quiz to the home screen on a phone or tablet. Android gets an Install button when
+// the browser has handed over its prompt, and the menu steps when not; iOS has no such call, so it
+// gets the Share steps. Never shown in the installed app or on desktop.
 // It also works in the online demo, which is why it lives in the root layout.
 export function InstallHint() {
   const standalone = useStandalone()
@@ -90,7 +91,6 @@ export function InstallHint() {
     platform,
     standalone,
     installed: read(INSTALLED) === "1",
-    canPrompt: prompt !== null,
     dismissedAt,
     now: Date.now(),
   })
@@ -119,14 +119,16 @@ export function InstallHint() {
   }
 
   return (
-    <Callout title="Keep it on your home screen" pointer={platform === "ios-safari" && !ipad}>
-      {platform === "android" && <Text variant="muted">Opens full screen, like an app, and works offline.</Text>}
+    <Callout title="KEEP IT ON YOUR HOME SCREEN" pointer={platform === "ios-safari" && !ipad}>
+      {platform === "android" && (
+        <Text variant="muted">{androidCopy(prompt !== null)}</Text>
+      )}
       {platform === "ios-safari" && (
         <Text variant="muted">Tap Share {ipad ? "in the toolbar" : "below"} (□↑), then Add to Home Screen.</Text>
       )}
       {platform === "ios-other" && <Text variant="muted">Open this page in Safari, tap Share, then Add to Home Screen.</Text>}
       <div className="flex gap-3">
-        {platform === "android" && <ActionButton variant="filled" onClick={install}>Install</ActionButton>}
+        {platform === "android" && prompt && <ActionButton variant="filled" onClick={install}>Install</ActionButton>}
         <ActionButton variant="outlined" onClick={close}>Not now</ActionButton>
       </div>
     </Callout>
