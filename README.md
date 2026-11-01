@@ -6,6 +6,8 @@
 
 **An open-source, voice-first study app for the Google Cloud Generative AI Leader exam.**
 
+[![Watch the Star Exam Companion product demo on YouTube](https://i.ytimg.com/vi/R-RCiKXjGpc/hqdefault.jpg)](https://youtu.be/R-RCiKXjGpc)
+
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933.svg)](https://nodejs.org)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000000.svg)](https://nextjs.org)
