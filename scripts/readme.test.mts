@@ -15,6 +15,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => readFileSync(path.join(root, file), 'utf8');
 const readme = read('README.md');
 
+/** Every temp directory nginx would otherwise create under /var/lib/nginx, moved under `prefix/logs`. */
+function nginxTempPaths(prefix: string): string {
+  return ['client_body', 'proxy', 'fastcgi', 'uwsgi', 'scgi']
+    .map((name) => `${name}_temp_path ${prefix}/logs/${name}_temp;`)
+    .join('\n');
+}
+
 function scratch(t: TestContext): string {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'readme-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -98,11 +105,20 @@ describe('the README', () => {
       const certs = path.join(prefix, 'certs');
       const made = spawnSync('bash', [path.join(root, 'scripts/make-cert.sh'), certs, '127.0.0.1'], { encoding: 'utf8' });
       assert.equal(made.status, 0, made.stderr);
+      // nginx -t binds the listening ports, and Linux refuses ports 80 and 443 to an unprivileged
+      // user (macOS allows them). The test moves them to high ports; the README's own text is
+      // asserted above, unchanged. make-cert.test.mts uses other ports, because test files run in
+      // parallel and a port is only free by convention.
+      const server = block
+        .replaceAll('/full/path/to/certs', certs)
+        .replace(/(listen\s+)443\b/g, (_match, head: string) => `${head}18443`)
+        .replace(/(listen\s+)80\b/g, (_match, head: string) => `${head}18080`);
       writeFileSync(
         path.join(prefix, 'nginx.conf'),
-        // access_log names a file under the scratch folder: Linux packages build nginx with an absolute
-        // /var/log/nginx/access.log, which an unprivileged test run cannot open.
-        `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${block.replaceAll('/full/path/to/certs', certs)}\n}\n`,
+        // The access log and the temp directories name places under the scratch folder: Linux packages
+        // build nginx with absolute /var/log/nginx and /var/lib/nginx paths, which an unprivileged
+        // test run cannot open or create.
+        `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${nginxTempPaths(prefix)}\n${server}\n}\n`,
       );
       const run = spawnSync(nginx!, ['-t', '-p', prefix, '-c', path.join(prefix, 'nginx.conf')], { encoding: 'utf8' });
       assert.equal(run.status, 0, run.stderr);

@@ -17,6 +17,13 @@ const script = path.join(root, 'scripts/make-cert.sh');
 const guide = readFileSync(path.join(root, 'docs/https.md'), 'utf8');
 const nginxBlock = /```nginx\n([\s\S]*?)```/.exec(guide)?.[1] ?? '';
 
+/** Every temp directory nginx would otherwise create under /var/lib/nginx, moved under `prefix/logs`. */
+function nginxTempPaths(prefix: string): string {
+  return ['client_body', 'proxy', 'fastcgi', 'uwsgi', 'scgi']
+    .map((name) => `${name}_temp_path ${prefix}/logs/${name}_temp;`)
+    .join('\n');
+}
+
 /** A command's exit status and output; never throws, so a missing program reads as a failed run. */
 function runCommand(command: string, args: string[], options: SpawnSyncOptions = {}) {
   const result = spawnSync(command, args, { encoding: 'utf8', timeout: 120_000, ...options });
@@ -142,12 +149,19 @@ describe('the home certificate', () => {
     const certs = path.join(prefix, 'certs');
     const made = await make(certs, '10.0.0.7');
     assert.equal(made.status, 0, made.stderr);
-    const server = nginxBlock.replaceAll('/full/path/to/certs', certs);
+    // nginx -t binds the listening port, and Linux refuses port 443 to an unprivileged user (macOS
+    // allows it). The test moves it to a high port; the guide's own text is asserted above,
+    // unchanged. readme.test.mts uses other ports, because test files run in parallel and a port
+    // is only free by convention.
+    const server = nginxBlock
+      .replaceAll('/full/path/to/certs', certs)
+      .replace(/(listen\s+)443\b/g, (_match, head: string) => `${head}28443`);
     writeFileSync(
       path.join(prefix, 'nginx.conf'),
-      // access_log names a file under the scratch folder: Linux packages build nginx with an absolute
-      // /var/log/nginx/access.log, which an unprivileged test run cannot open.
-      `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${server}\n}\n`
+      // The access log and the temp directories name places under the scratch folder: Linux packages
+      // build nginx with absolute /var/log/nginx and /var/lib/nginx paths, which an unprivileged
+      // test run cannot open or create.
+      `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${nginxTempPaths(prefix)}\n${server}\n}\n`
     );
     const run = runCommand(nginx!, ['-t', '-p', prefix, '-c', path.join(prefix, 'nginx.conf')]);
     assert.equal(run.status, 0, run.stderr);
