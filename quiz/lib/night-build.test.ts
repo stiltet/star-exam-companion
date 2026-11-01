@@ -160,7 +160,7 @@ test("the recording answers a byte range and refuses a range past the end", asyn
   assert.equal(missing.status, 404)
 })
 
-test("a real recording's duration matches its chapter list", { timeout: 180_000 }, async () => {
+test("a real recording's duration matches its chapter list", { timeout: 180_000, skip: process.platform !== "darwin" && "needs the Mac's say, afconvert and afinfo" }, async () => {
   const spoken = nightParts([
     { id: "1", title: "Example", readings: [{ number: 1, title: "One", paragraphs: [{ text: "Hello.", heading: false }] }, { number: 2, title: "Two", paragraphs: [{ text: "Good night.", heading: false }] }] },
   ])
