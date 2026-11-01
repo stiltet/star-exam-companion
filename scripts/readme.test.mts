@@ -100,7 +100,9 @@ describe('the README', () => {
       assert.equal(made.status, 0, made.stderr);
       writeFileSync(
         path.join(prefix, 'nginx.conf'),
-        `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\n${block.replaceAll('/full/path/to/certs', certs)}\n}\n`,
+        // access_log names a file under the scratch folder: Linux packages build nginx with an absolute
+        // /var/log/nginx/access.log, which an unprivileged test run cannot open.
+        `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${block.replaceAll('/full/path/to/certs', certs)}\n}\n`,
       );
       const run = spawnSync(nginx!, ['-t', '-p', prefix, '-c', path.join(prefix, 'nginx.conf')], { encoding: 'utf8' });
       assert.equal(run.status, 0, run.stderr);
