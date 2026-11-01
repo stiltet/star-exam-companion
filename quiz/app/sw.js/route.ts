@@ -33,7 +33,7 @@ export async function GET() {
   const config = {
     build: readFileSync(buildFile, "utf8").trim(),
     pages: [...pageList(EXAM_SECTIONS, ["1", "2", "3", "4"]), ...readingPages(courses)],
-    statics: [...staticList(files(path.join(dist, "static")), "/_next/static"), ...staticList(files(publicDir), "")],
+    statics: [...staticList(files(path.join(dist, "static")), "/_next/static"), ...staticList(files(publicDir), ""), "/manifest.webmanifest"],
   }
   const worker = readFileSync(path.join(process.cwd(), "lib/sw-worker.js"), "utf8")
   return new Response(workerScript(config, worker), {

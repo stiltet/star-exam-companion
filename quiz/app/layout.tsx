@@ -10,6 +10,7 @@ import { SnapshotPrefetch } from "@/components/snapshot"
 import { AudioUnlock } from "@/components/audio"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DemoBanner } from "@/components/demo-banner"
+import { InstallHint } from "@/components/install-hint"
 import { BASE_PATH } from "@/lib/static-demo"
 
 // Next does not add a sub-path to these links itself. Empty everywhere except the online demo,
@@ -59,6 +60,7 @@ export default function RootLayout({
           <SnapshotPrefetch />
           <AudioUnlock />
           <PullToRefresh />
+          <InstallHint />
         </ThemeProvider>
       </body>
     </html>

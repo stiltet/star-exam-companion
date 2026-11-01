@@ -83,6 +83,11 @@ describe('the GitHub Pages build', () => {
       assert.match(home, /href="\/demo-test\/favicon\.png"/, 'the icon must carry the base path');
       assert.match(home, /Online demo\./, 'every page carries the demo banner');
       assert.doesNotMatch(home, /href="\/favicon\.png"/);
+      assert.match(home, /rel="manifest" href="\/demo-test\/manifest\.webmanifest"/, 'Android installs from the manifest');
+      const manifest = JSON.parse(readFileSync(path.join(out, 'manifest.webmanifest'), 'utf8'));
+      assert.equal(manifest.start_url, '/demo-test/');
+      assert.equal(manifest.scope, '/demo-test/');
+      assert.ok(manifest.icons.every((icon: { src: string }) => icon.src.startsWith('/demo-test/')), 'icons carry the base path');
 
       // The three features that need the local install say so, instead of running.
       for (const page of ['voice', 'read', 'progress']) {
