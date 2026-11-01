@@ -27,3 +27,7 @@ quiz/scores-backups/
 
 # The online demo (scripts/build-pages.sh) and the quiz folder's extra build output.
 /pages-out/
+
+# The Node version, read by nvm and by the workflow. A clone's own exclude file may hide root
+# dotfiles; this one is public.
+!/.nvmrc

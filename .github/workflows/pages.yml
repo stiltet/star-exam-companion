@@ -32,22 +32,24 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          # 22.18 or newer runs the TypeScript tests without a flag; CI uses the current LTS line.
-          node-version: 24
+          # The one place the Node version is set: .nvmrc, which `nvm use` reads locally too.
+          node-version-file: .nvmrc
           cache: pnpm
           cache-dependency-path: quiz/pnpm-lock.yaml
 
       - run: pnpm --dir quiz install --frozen-lockfile
 
       - name: Test
-        # On failure, repeat the failing tests as one error annotation, so the reason shows on the
-        # run page and through the public API without opening the job log.
+        # The log shows the readable spec report. A second, TAP report goes to a file, and on failure
+        # its failing tests are repeated as one error annotation, so the reason shows on the run page
+        # and through the public API without opening the job log. Node 24 prints spec even when piped,
+        # so TAP is asked for by name.
         run: |
           status=0
-          node --test > test.log 2>&1 || status=$?
-          cat test.log
+          node --test --test-reporter=spec --test-reporter-destination=stdout \
+            --test-reporter=tap --test-reporter-destination=test.tap || status=$?
           if [ "$status" -ne 0 ]; then
-            msg=$(grep -E -A14 '^[[:space:]]*not ok' test.log | head -c 30000 || true)
+            msg=$(grep -E -A14 '^[[:space:]]*not ok' test.tap | head -c 30000 || true)
             msg="${msg//'%'/'%25'}"
             msg="${msg//$'\r'/'%0D'}"
             msg="${msg//$'\n'/'%0A'}"

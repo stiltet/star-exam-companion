@@ -72,7 +72,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 
 | Requirement | Version | Notes |
 |---|---|---|
-| Node.js | 22.18 or newer | The first release that runs TypeScript without a flag; the tests need it. |
+| Node.js | 22.18 or newer | The first release that runs TypeScript without a flag; the tests need it. `.nvmrc` pins 24.22.2, the version CI runs, so with nvm run `nvm install` then `nvm use` in the repository. |
 | pnpm | 10.6 or newer | Applies the dependency security pins in `quiz/pnpm-workspace.yaml`. |
 | macOS | any current | Only for Voice Quiz and Read Aloud audio; everything else runs on Linux and Windows. |
 
