@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import test from "node:test"
 import { acceptSpeak, clipsToEvict, MAX_CACHED_CLIPS, MAX_SPEAK_CHARS, speechFileName, speechKey, voiceKeys, voiceText } from "./speak.ts"
 import { itemsFromGlossary } from "./round.ts"
-import { answerAloud, explanationParts, questionParts, saidHeading, speakable } from "./score.ts"
+import { answerAloud, explanationParts, questionClips, saidHeading, speakable } from "./score.ts"
 import { parseGlossary } from "./sources.ts"
 
 test("every line the Voice Quiz can say has a key, and only those lines do", () => {
@@ -12,7 +12,7 @@ test("every line the Voice Quiz can say has a key, and only those lines do", () 
   const items = itemsFromGlossary(parsed.glossary)
   const keys = voiceKeys(items)
   for (const item of items) {
-    for (const part of [...questionParts(item.stem, item.options), item.constraint, ...explanationParts(item), "Correct.", answerAloud(true, item.options[item.correctIndex] ?? "")]) {
+    for (const part of [...questionClips(item.stem, item.options).map((clip) => clip.text), item.constraint, ...explanationParts(item), "Correct.", answerAloud(true, item.options[item.correctIndex] ?? "")]) {
       const key = keys[speakable(part)]
       assert.ok(key, `${item.id}: ${part}`)
       assert.equal(voiceText(items, key), speakable(part).trim())

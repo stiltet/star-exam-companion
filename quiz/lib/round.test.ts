@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import { isLearned, parseWeights, sectionCleared, voiceProgress, type ScoreLine } from "./learn.ts"
-import { acceptBatch, answerAloud, discussText, localVoices, pauseAfterQuestionPart, PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS, questionParts } from "./score.ts"
+import { acceptBatch, answerAloud, discussText, localVoices, PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS, questionClips } from "./score.ts"
 import { preferredName, applyNames, displayTerm, label, parseGlossary, plainNames } from "./sources.ts"
 import { SCENES, itemsFromGlossary, takeRound } from "./round.ts"
 import { COURSES } from "./reading.ts"
@@ -71,17 +71,24 @@ test("discuss text carries the question and both answers", () => {
   assert.equal(text.includes("Constraint:"), false)
 })
 
+test("a question's clips are one for the situation and two per option, and the last name pauses for nothing", () => {
+  const three = questionClips("A scene.", ["One", "Two", "Three"])
+  assert.equal(three.length, 7)
+  assert.deepEqual(three.map((clip) => [clip.part, clip.offset]), [[0, 0], [1, 0], [1, 1], [2, 0], [2, 1], [3, 0], [3, 1]])
+  assert.equal(three[6]?.pauseAfter, 0)
+  const one = questionClips("A scene.", ["Only"])
+  assert.deepEqual(one.map((clip) => clip.text), ["A scene.", "A.", "Only"])
+  assert.equal(one[2]?.pauseAfter, 0)
+})
+
 test("reads the letters on screen and does not repeat the constraint after an answer", () => {
-  const parts = questionParts("A scene.\n\nGrounding, or Fine-tuning?", ["Grounding", "Fine-tuning"])
-  assert.deepEqual(parts, [
-    "A scene.",
-    "A. Grounding",
-    "B. Fine-tuning",
-  ])
+  const clips = questionClips("A scene.\n\nGrounding, or Fine-tuning?", ["Grounding", "Fine-tuning"])
+  assert.deepEqual(clips.map((clip) => clip.text), ["A scene.", "A.", "Grounding", "B.", "Fine-tuning"])
+  assert.deepEqual(clips.map((clip) => [clip.part, clip.offset]), [[0, 0], [1, 0], [1, 1], [2, 0], [2, 1]])
   assert.equal(PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS * 2)
-  assert.equal(pauseAfterQuestionPart(0, parts.length), PAUSE_BEFORE_OPTIONS_MS)
-  assert.equal(pauseAfterQuestionPart(1, parts.length), PAUSE_BETWEEN_OPTIONS_MS)
-  assert.equal(pauseAfterQuestionPart(2, parts.length), 0)
+  assert.equal(clips[0]?.pauseAfter, PAUSE_BEFORE_OPTIONS_MS)
+  assert.equal(clips[2]?.pauseAfter, PAUSE_BETWEEN_OPTIONS_MS)
+  assert.equal(clips[4]?.pauseAfter, 0)
   assert.equal(answerAloud(true), "Correct.")
   assert.equal(answerAloud(true, "Grounding"), "Correct. Grounding.")
   assert.equal(answerAloud(false), "Incorrect.")

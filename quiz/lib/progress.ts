@@ -6,12 +6,26 @@ export function modeLines(lines: ScoreLine[], mode: string): ScoreLine[] {
   return lines.filter((line) => line.mode === mode)
 }
 
+// The same question with its options in a new order, so they are not read the same way every time.
+export function shuffleOptions(item: RoundItem, random: () => number = Math.random): RoundItem {
+  const order = item.options.map((_, index) => index)
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1))
+    const current = order[index]
+    const other = order[swapIndex]
+    if (current === undefined || other === undefined) continue
+    order[index] = other
+    order[swapIndex] = current
+  }
+  return { ...item, options: order.map((from) => item.options[from] ?? ""), correctIndex: order.indexOf(item.correctIndex) }
+}
+
 // The questions still to learn, exam section by exam section from 1 to 4.
 // Inside a section the order stays shuffled; the sort is stable, so it keeps the shuffle.
 // A question with no exam section stays at the end.
 export function voiceRound(items: RoundItem[], lines: ScoreLine[], random: () => number = Math.random): RoundItem[] {
   const rank = (item: RoundItem) => (item.section > 0 ? item.section : Number.MAX_SAFE_INTEGER)
-  return [...takeRound(items, modeLines(lines, "round"), random)].sort((a, b) => rank(a) - rank(b))
+  return [...takeRound(items, modeLines(lines, "round"), random)].map((item) => shuffleOptions(item, random)).sort((a, b) => rank(a) - rank(b))
 }
 
 // Where a question sits for the title: its exam section, and its number among that section's

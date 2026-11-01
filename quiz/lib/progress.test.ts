@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import type { ScoreLine } from "./learn.ts"
-import { answeredIds, courseLabel, sectionLabel, examHistory, flashcardProgress, modeLines, practiceProgress, progressFigures, needsSaving, readingProgress, readingState, readingStatus, readToday, sectionJump, sectionPosition, voiceRound } from "./progress.ts"
+import { answeredIds, courseLabel, sectionLabel, examHistory, flashcardProgress, modeLines, practiceProgress, progressFigures, needsSaving, readingProgress, readingState, readingStatus, readToday, sectionJump, sectionPosition, shuffleOptions, voiceRound } from "./progress.ts"
 import { itemsFromGlossary } from "./round.ts"
 import { absorbSent, isSnapshot, readSnapshot, SNAPSHOT_KEY, writeSnapshot, type Snapshot } from "./snapshot.ts"
 import { parseGlossary } from "./sources.ts"
@@ -184,4 +184,32 @@ test("section jumps land on the first question of the neighbouring exam section"
   assert.deepEqual(sectionJump(round, 5), { previous: 3, next: null })
   assert.deepEqual(sectionJump(round, 9), { previous: null, next: null })
   assert.deepEqual(sectionJump([{}], 0), { previous: null, next: null })
+})
+
+test("shuffleOptions reorders the options and keeps the right answer marked", () => {
+  const item = { ...items[0]!, options: ["one", "two", "three", "four"], correctIndex: 2 }
+  const orders = new Set<string>()
+  for (let step = 0; step < 40; step += 1) {
+    let seed = step + 1
+    const shuffled = shuffleOptions(item, () => ((seed = (seed * 16807) % 2147483647) / 2147483647))
+    assert.deepEqual([...shuffled.options].sort(), ["four", "one", "three", "two"])
+    assert.equal(shuffled.options[shuffled.correctIndex], "three")
+    orders.add(shuffled.options.join())
+  }
+  assert.ok(orders.size > 1)
+})
+
+test("voiceRound shuffles each question's options and keeps the right answer marked", () => {
+  let seed = 7
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+  const round = voiceRound(items, [], random)
+  const original = new Map(items.map((item) => [item.id, item]))
+  let moved = 0
+  for (const item of round) {
+    const before = original.get(item.id)!
+    assert.deepEqual([...item.options].sort(), [...before.options].sort())
+    assert.equal(item.options[item.correctIndex], before.options[before.correctIndex])
+    if (item.options.join() !== before.options.join()) moved += 1
+  }
+  assert.ok(moved > round.length / 2)
 })

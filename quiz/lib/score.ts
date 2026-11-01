@@ -169,18 +169,24 @@ export function storeAnswers(existing: ScoreLine[], answers: Answer[]): { lines:
 
 export const PAUSE_BEFORE_OPTIONS_MS = 1000
 export const PAUSE_BETWEEN_OPTIONS_MS = PAUSE_BEFORE_OPTIONS_MS / 2
+export const PAUSE_AFTER_LETTER_MS = 150
 
-export function questionParts(stem: string, options: string[]): string[] {
-  const situation = stem.split("\n\n")[0] ?? stem
-  return [
-    situation,
-    ...options.map((option, index) => `${String.fromCharCode(65 + index)}. ${option}`),
-  ]
+export function optionLetter(index: number): string {
+  return String.fromCharCode(65 + index)
 }
 
-export function pauseAfterQuestionPart(index: number, partCount: number): number {
-  if (index < 0 || index >= partCount - 1) return 0
-  return index === 0 ? PAUSE_BEFORE_OPTIONS_MS : PAUSE_BETWEEN_OPTIONS_MS
+// What the voice says for a question, one clip each: the situation, then each option's letter and
+// its name apart. Options are shuffled, so a name can land on any letter; separate clips keep one
+// clip per name instead of one per name and letter.
+export function questionClips(stem: string, options: string[]): { text: string; part: number; offset: number; pauseAfter: number }[] {
+  const situation = stem.split("\n\n")[0] ?? stem
+  return [
+    { text: situation, part: 0, offset: 0, pauseAfter: PAUSE_BEFORE_OPTIONS_MS },
+    ...options.flatMap((option, index) => [
+      { text: `${optionLetter(index)}.`, part: index + 1, offset: 0, pauseAfter: PAUSE_AFTER_LETTER_MS },
+      { text: option, part: index + 1, offset: 1, pauseAfter: index === options.length - 1 ? 0 : PAUSE_BETWEEN_OPTIONS_MS },
+    ]),
+  ]
 }
 
 export function answerAloud(correct: boolean, right = ""): string {
@@ -281,7 +287,7 @@ export function spokenLines(items: { stem: string; options: string[]; correctInd
   const lines = new Set<string>([speakable(answerAloud(true))])
   for (const item of items) {
     lines.add(speakable(answerAloud(true, item.options[item.correctIndex] ?? "")))
-    for (const part of [...questionParts(item.stem, item.options), item.constraint, ...explanationParts(item)]) lines.add(speakable(part))
+    for (const part of [...questionClips(item.stem, item.options).map((clip) => clip.text), item.constraint, ...explanationParts(item)]) lines.add(speakable(part))
   }
   return [...lines]
 }

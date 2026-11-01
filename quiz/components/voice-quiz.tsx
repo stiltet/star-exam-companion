@@ -14,7 +14,7 @@ import { copyText } from "@/lib/copy"
 import type { RoundItem } from "@/lib/learn"
 import { markedWords, spokenClass, spokenWord, words } from "@/lib/spoken-word"
 import { CONTROLS, startsReading } from "@/lib/start-gesture"
-import { answerAloud, discussText, explanationParts, explanationShown, pauseAfterQuestionPart, PAUSE_IN_EXPLANATION_MS, questionParts, speakable } from "@/lib/score"
+import { answerAloud, discussText, explanationParts, explanationShown, optionLetter, PAUSE_IN_EXPLANATION_MS, questionClips, speakable } from "@/lib/score"
 
 // The exam-guide name for the section now on screen. A section with no published share
 // keeps the number and drops the percentage.
@@ -126,9 +126,11 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
     }
   })
 
-  // The Mac speaks each part with its System voice (/api/speak runs `say`), and the page plays it.
-  // `follow`, when given, is each part's text as shown, so its current word can be marked.
-  function speakParts(parts: string[], pauseAfter: (partIndex: number) => number, after?: () => void, follow?: string[]) {
+  // The Mac speaks each clip with its System voice (/api/speak runs `say`), and the page plays it.
+  // `follow`, when given, is each clip's text as shown, so its current word can be marked. `place`
+  // maps a clip to the part it belongs to and the word offset inside that part, since an option's
+  // letter and name are separate clips.
+  function speakParts(parts: string[], pauseAfter: (partIndex: number) => number, after?: () => void, follow?: string[], place?: (clipIndex: number) => { part: number; offset: number }) {
     if (typeof window === "undefined") {
       after?.()
       return
@@ -185,7 +187,8 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
             const word = spokenWord(shown, audio.currentTime, audio.duration)
             if (word !== last) {
               last = word
-              setSpoken({ part: partIndex, word })
+              const at = place?.(partIndex) ?? { part: partIndex, offset: 0 }
+              setSpoken({ part: at.part, word: word + at.offset })
             }
             followFrame.current = requestAnimationFrame(track)
           }
@@ -208,9 +211,9 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
 
   function speakQuestion(entry: RoundItem) {
     setFollowKind("question")
-    const parts = questionParts(entry.stem, entry.options)
-    const shown = [entry.stem.split("\n\n")[0] ?? entry.stem, ...entry.options.map((option, index) => `${String.fromCharCode(65 + index)}. ${option.replace(/\*\*/g, "")}`)]
-    speakParts(parts, (index) => pauseAfterQuestionPart(index, parts.length), undefined, shown)
+    const clips = questionClips(entry.stem, entry.options)
+    const shown = clips.map((clip) => clip.text.replace(/\*\*/g, ""))
+    speakParts(clips.map((clip) => clip.text), (index) => clips[index]?.pauseAfter ?? 0, undefined, shown, (index) => ({ part: clips[index]?.part ?? 0, offset: clips[index]?.offset ?? 0 }))
   }
 
   useEffect(() => {
@@ -368,7 +371,7 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
       <div className="flex flex-col gap-2 mb-6">
         {item.options.map((option, optionIndex) => (
           <button key={optionIndex} type="button" className={`border-2 p-4 text-left ${picked !== null && optionIndex === item.correctIndex ? "border-green-800 bg-green-700 text-white" : picked === optionIndex ? "border-red-700 bg-red-600 text-white" : "border-foreground"}`} disabled={picked !== null} onClick={() => choose(optionIndex)}>
-            {markedWords(`${String.fromCharCode(65 + optionIndex)}. ${option}`).map((word, wordIndex) => {
+            {markedWords(`${optionLetter(optionIndex)}. ${option}`).map((word, wordIndex) => {
               const now = followKind === "question" && spoken?.part === optionIndex + 1 && spoken.word === wordIndex
               return (
                 <SpokenSpan key={wordIndex} text={word.text} className={spokenClass(word.bold, now)} />
