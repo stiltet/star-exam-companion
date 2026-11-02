@@ -30,9 +30,9 @@ const answer = (n: number, extra: Partial<Answer> = {}): Answer => ({
   id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
   at: new Date().toISOString(), mode: "practice", asked: ["q1"], missed: [], ...extra,
 })
-const request = (answers: Answer[], origin = "http://localhost") => new Request("http://localhost/api/scores", {
+const request = (answers: Answer[], origin = "http://localhost", extra: Record<string, string> = {}) => new Request("http://localhost/api/scores", {
   method: "POST",
-  headers: { host: "localhost", origin, "content-type": "application/json" },
+  headers: { host: "localhost", origin, "content-type": "application/json", ...extra },
   body: JSON.stringify({ answers }),
 })
 
@@ -87,4 +87,16 @@ test("the actual handler keeps mode, time and origin validation and explains ind
   assert.match(body.reasons[invalid[3]!.id], /duration/)
   assert.equal((await postScores(request([answer(4001)], "http://other.example"))).status, 400)
   assert.equal(readScores(file).lines.length, count)
+})
+
+test("a page of another exam than the Mac serves is refused with the exam served, and its answers are neither stored nor lost", async () => {
+  const before = readScores(file).lines.length
+  const stale = await postScores(request([answer(901)], "http://localhost", { "x-quiz-exam": "agentic-architect" }))
+  assert.equal(stale.status, 409)
+  assert.deepEqual(await stale.json(), { ok: false, wrongExam: "generative-ai-leader" })
+  assert.equal(readScores(file).lines.length, before, "nothing was stored")
+  const current = await postScores(request([answer(902)], "http://localhost", { "x-quiz-exam": "generative-ai-leader" }))
+  assert.equal(current.status, 200)
+  const older = await postScores(request([answer(903)]))
+  assert.equal(older.status, 200, "a page older than the exam header is still accepted")
 })

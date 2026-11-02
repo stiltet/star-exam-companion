@@ -8,6 +8,7 @@ import { mergeLines, readOutbox } from "@/lib/outbox"
 import { SNAPSHOT_AT_KEY } from "@/lib/connection"
 import { isSnapshot, readSnapshot, writeSnapshot, type Snapshot } from "@/lib/snapshot"
 import { STATIC_DEMO } from "@/lib/static-demo"
+import { examHeaders, followWrongExam } from "@/lib/exam-header"
 import { scoped } from "@/lib/scope"
 
 // The same wait the service worker gives the Mac before it falls back to the device.
@@ -29,7 +30,8 @@ export async function fetchSnapshot(): Promise<{ snapshot: Snapshot } | { broken
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    const response = await fetch("/api/snapshot", { cache: "no-store", signal: controller.signal })
+    const response = await fetch("/api/snapshot", { cache: "no-store", signal: controller.signal, headers: examHeaders() })
+    if (await followWrongExam(response)) return null
     const body = (await response.json()) as { ok?: boolean; snapshot?: unknown; row?: unknown; error?: unknown }
     if (response.status === 409 && typeof body.row === "string" && typeof body.error === "string") return { broken: { row: body.row, error: body.error } }
     return response.ok && body.ok === true && isSnapshot(body.snapshot) ? { snapshot: body.snapshot } : null

@@ -3,6 +3,7 @@ import { loadPlay, readScores, scoresFile } from "./load.ts"
 import { readJsonBody } from "./body.ts"
 import { browserOrigin, sameOrigin } from "./origin.ts"
 import { acceptBatch, storeAnswers } from "./score.ts"
+import { wrongExam } from "./exam-guard.ts"
 import { practiceItems, writtenPool } from "./questions.ts"
 
 const MAX_BATCH_BYTES = 1024 * 1024
@@ -12,6 +13,8 @@ export async function postScores(request: Request): Promise<Response> {
   const body = await readJsonBody(request, MAX_BATCH_BYTES)
   const play = loadPlay()
   if (!play.ok) return Response.json({ ok: false }, { status: 400 })
+  const wrong = wrongExam(request, play.pack.meta.id)
+  if (wrong) return wrong
   const decision = acceptBatch({
     origin: request.headers.get("origin"),
     contentType: request.headers.get("content-type"),

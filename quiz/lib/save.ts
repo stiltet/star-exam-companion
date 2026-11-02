@@ -1,5 +1,6 @@
 import type { SendResult } from "./outbox.ts"
 import type { Answer } from "./score.ts"
+import { examHeaders, followWrongExam } from "./exam-header.ts"
 import { STATIC_DEMO } from "./static-demo.ts"
 
 // Sends one batch to the Mac. The Mac's verdict per answer, or null when it did not take the
@@ -10,9 +11,11 @@ export async function postAnswers(answers: Answer[], post: typeof fetch = fetch)
   try {
     const response = await post("/api/scores", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...examHeaders() },
       body: JSON.stringify({ answers }),
     })
+    // A page of another exam than the Mac serves: nothing was taken, and the answers stay queued.
+    if (await followWrongExam(response)) return null
     const body = (await response.json()) as Partial<SendResult> & { ok?: boolean }
     if (!response.ok || body.ok !== true) return null
     const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id): id is string => typeof id === "string") : [])

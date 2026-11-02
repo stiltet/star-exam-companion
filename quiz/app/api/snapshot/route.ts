@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { wrongExam } from "@/lib/exam-guard"
 import { loadPlay } from "@/lib/load"
 import { browserOrigin, REFUSED_ORIGIN } from "@/lib/origin"
 import type { Snapshot } from "@/lib/snapshot"
@@ -14,6 +15,8 @@ export async function GET(request: Request) {
   if (browserOrigin(request) === REFUSED_ORIGIN) return NextResponse.json({ ok: false }, { status: 400, headers: NO_STORE })
   const play = loadPlay()
   if (!play.ok) return NextResponse.json({ ok: false, row: play.row, error: play.error }, { status: 409, headers: NO_STORE })
+  const wrong = wrongExam(request, play.pack.meta.id)
+  if (wrong) return wrong
   const snapshot: Snapshot = {
     items: play.items,
     terms: play.glossary.terms.map((term) => term.term),
