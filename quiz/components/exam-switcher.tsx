@@ -2,16 +2,8 @@
 
 import { useState } from "react"
 import { sendNow } from "@/components/outbox"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type Props = {
   exams: { id: string; title: string }[]
@@ -63,21 +55,21 @@ export function ExamSwitcher({ exams, current }: Props) {
           <option key={exam.id} value={exam.id}>{exam.title}</option>
         ))}
       </select>
-      {/* Picking another exam asks at once; Cancel puts the dropdown back. */}
-      <AlertDialog open={pending !== null} onOpenChange={(open) => { if (!open) setPending(null) }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch every device to {title(pending ?? current)}?</AlertDialogTitle>
-            <AlertDialogDescription>
+      {/* Picking another exam asks at once. A tap outside, Escape or Cancel closes it and puts the dropdown back. */}
+      <Dialog open={pending !== null} onOpenChange={(open) => { if (!open) setPending(null) }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Switch every device to {title(pending ?? current)}?</DialogTitle>
+            <DialogDescription>
               Study, Practice, Voice Quiz, the Exam, Flashcards and Progress all show {title(pending ?? current)} from now on, on every device. {title(current)} keeps its scores and comes back as you left it when you switch back. A device that is offline changes the next time it reaches the Mac.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void switchExam()}>Switch exam</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPending(null)}>Cancel</Button>
+            <Button onClick={() => { void switchExam(); setPending(null) }}>Switch exam</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Announced after the dialog closes, so a screen-reader user hears the outcome. */}
       <p role="status" aria-live="polite" className={message ? "mt-4" : "sr-only"}>{message ?? ""}</p>
     </div>
