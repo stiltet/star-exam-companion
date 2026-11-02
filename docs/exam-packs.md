@@ -6,7 +6,8 @@ An exam pack is everything that makes the quiz the quiz for one exam. It is a fo
 switch it any time at the bottom of the Progress page. The choice is kept in `quiz/active-exam.json`
 (git ignores it) and every device follows it.
 
-Adding an exam means adding a folder. No code changes.
+Adding an exam means adding a folder. No code changes. The steps for a pull request are at the
+[end of this page](#add-an-exam-with-a-pull-request).
 
 ## The folder
 
@@ -50,3 +51,57 @@ Each exam keeps its own scores file, `quiz/scores-<id>.jsonl`, its own backups
 exam, so two exams never mix answers and a copied file says which exam it is. An install that
 studied before exams were named finds its old `quiz/scores.jsonl` and browser data moved to the
 Generative AI Leader names the first time it runs, with a backup copy first.
+
+## Add an exam with a pull request
+
+You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, only a new folder.
+
+1. **Fork and branch.** Fork the repository on GitHub, clone your fork, and make a branch named
+   `feat/exam-<id>`, where `<id>` is the exam's short name in lower case with hyphens, such as
+   `data-engineer`.
+2. **Copy a pack.** Copy the folder of a finished pack and name it `<id>`:
+
+   ```bash
+   cp -R exams/generative-ai-leader exams/<id>
+   ```
+
+3. **Fill in the files**, from the table above. Start with `pack.json` (names, links, the exam's real
+   length) and `sections.md` (the exam guide's sections and their weights). Then write the glossary,
+   the scenes and the study topics from Google's own exam guide and documentation. `id` in
+   `pack.json` must be the folder name. If the exam has no official course to read aloud, set
+   `reading` to `false` and delete `courses.json`.
+4. **Check it.** Install, then run the tests. The pack test names the file and row that breaks a rule:
+
+   ```bash
+   pnpm --dir quiz install
+   ```
+
+   ```bash
+   node --test
+   ```
+
+5. **Look at it.** Start the quiz on your pack and click through Study, Practice, Voice Quiz and the
+   Exam:
+
+   ```bash
+   QUIZ_EXAM=<id> pnpm --dir quiz exec next dev -H 127.0.0.1
+   ```
+
+6. **Open the pull request** against `main`. Change only `exams/<id>/` and, if you want it listed, one
+   row in the README's *Choose your exam* table. Say in the description which exam it is, link its
+   exam guide, and tick the checklist below.
+
+### The checklist
+
+- [ ] Every glossary row has a source, an official Google page or document, and its meaning was
+      checked against that page.
+- [ ] Scenes are decisions with one binding constraint. A scene never names its own answer, and the
+      three wrong options are real terms from the glossary.
+- [ ] `sections.md` weights add up to 100, and `terms.txt` lists every term the exam guide names.
+- [ ] No copied course text, PDFs or logos. Short summaries in your own words, with links.
+- [ ] `node --test` passes.
+- [ ] No names, contact details, scores or other personal data in any file.
+
+A pack that is not finished is welcome as long as it passes `node --test`: list only the terms you
+have covered in `terms.txt` and say what is missing in the pull request. A maintainer reviews the
+content against Google's pages, and runs the full gate before merging.

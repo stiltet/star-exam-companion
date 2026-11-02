@@ -443,6 +443,8 @@ Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 
 - **Bugs and ideas:** open a [GitHub issue](https://github.com/stiltet/star-exam-companion/issues).
 - **Changes:** fork the repository, keep each pull request to one change, and include tests.
+- **A new exam:** it is a folder of data, with no code to change. Follow
+  [Add an exam with a pull request](docs/exam-packs.md#add-an-exam-with-a-pull-request).
 - **Content corrections:** every glossary row names its source; point to the official page that
   shows the correct wording.
 - **Security problems:** please do not open a public issue. Report them privately with GitHub's
