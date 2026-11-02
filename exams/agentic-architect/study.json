@@ -1,0 +1,155 @@
+{
+  "sections": [
+    {
+      "id": "low-code",
+      "title": "Building agents using low-code tools",
+      "weight": 13,
+      "description": "Section 1 of Google's exam guide",
+      "topics": [
+        {
+          "id": "1-1",
+          "title": "1.1 Configuring agentic workflows and behavior using low-code tools",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "1-2",
+          "title": "1.2 Connecting enterprise data to Gemini Enterprise",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coding-agents",
+      "title": "Using coding agents for application development",
+      "weight": 17,
+      "description": "Section 2 of Google's exam guide",
+      "topics": [
+        {
+          "id": "2-1",
+          "title": "2.1 Using coding agents effectively",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "2-2",
+          "title": "2.2 Customizing coding agents for enterprise workflows",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "custom-agents",
+      "title": "Developing custom agents",
+      "weight": 33,
+      "description": "Section 3 of Google's exam guide",
+      "topics": [
+        {
+          "id": "3-1",
+          "title": "3.1 Designing and building agentic workflows in code",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "3-2",
+          "title": "3.2 Integrating enterprise domain knowledge",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "3-3",
+          "title": "3.3 Orchestrating and coordinating agentic workflows",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluate-deploy",
+      "title": "Evaluating and deploying agentic workflows",
+      "weight": 22,
+      "description": "Section 4 of Google's exam guide",
+      "topics": [
+        {
+          "id": "4-1",
+          "title": "4.1 Evaluating agents in development and in production",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "4-2",
+          "title": "4.2 Deploying and scaling production workloads",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security-governance",
+      "title": "Securing and governing agentic workflows",
+      "weight": 15,
+      "description": "Section 5 of Google's exam guide",
+      "topics": [
+        {
+          "id": "5-1",
+          "title": "5.1 Configuring agent security and governance",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        },
+        {
+          "id": "5-2",
+          "title": "5.2 Implementing secure agent behavior and execution",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": []
+}

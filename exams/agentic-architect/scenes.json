@@ -1,0 +1,69 @@
+[
+  {
+    "id": "screen-prompts",
+    "correct": "Model Armor",
+    "distractors": [
+      "Agent Registry",
+      "Skill Registry",
+      "Agents CLI"
+    ],
+    "scene": "A support agent passes customer messages to a language model and returns its replies. The security team wants every prompt and every reply screened for prompt injection attempts and leaked card numbers before anything reaches the customer. Which should they use?",
+    "constraint": "The need is to screen the content of prompts and replies, not to catalogue agents, package skills or build the agent."
+  },
+  {
+    "id": "agent-catalog",
+    "correct": "Agent Registry",
+    "distractors": [
+      "Agent Gateway",
+      "Model Armor",
+      "Skill Registry"
+    ],
+    "scene": "A platform team has dozens of agents and MCP servers written by different teams, and nobody can tell what already exists. They want one central catalog where agents are discovered and registered. Which should they use?",
+    "constraint": "The need is a catalog to discover and register, not a control point for network traffic and not a screen for content."
+  },
+  {
+    "id": "agent-traffic",
+    "correct": "Agent Gateway",
+    "distractors": [
+      "Agent Registry",
+      "Model Armor",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "A company wants to secure and govern how its agents connect to tools and to each other across the network, in one place, rather than in each agent's code. Which should it use?",
+    "constraint": "The need is governance of connectivity as the networking component, not a catalog of agents and not a content screen."
+  },
+  {
+    "id": "agent-in-code",
+    "correct": "Agent Development Kit (ADK)",
+    "distractors": [
+      "Agent Gateway",
+      "Agents CLI",
+      "Skill Registry"
+    ],
+    "scene": "A developer team wants an open-source framework to write the agent itself in code, with sequential, parallel and loop workflows, then debug and deploy it. Which should they use?",
+    "constraint": "The need is the framework the agent is written in, not a command-line tool around the project and not a store for skills."
+  },
+  {
+    "id": "agent-lifecycle-cli",
+    "correct": "Agents CLI",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Agent Registry"
+    ],
+    "scene": "A developer wants one command-line tool to scaffold a new agent project, then evaluate and deploy it on Google Cloud, with skills that a coding agent can use for each step. Which should they use?",
+    "constraint": "The need is a CLI for the life of an agent project, not the framework the agent is written in and not a catalog."
+  },
+  {
+    "id": "skill-store",
+    "correct": "Skill Registry",
+    "distractors": [
+      "Agent Registry",
+      "Agents CLI",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "An organisation wants a secure, private repository where reusable skills are stored as self-contained packages for its agents to use. Which should it use?",
+    "constraint": "The need is storage for skills as packages, not a catalog of agents and MCP servers and not a tool for building them.",
+    "guide": "3.1"
+  }
+]
