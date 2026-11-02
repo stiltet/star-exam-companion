@@ -15,7 +15,7 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
-import { activePack } from "./pack.ts"
+import { activePack, DEFAULT_EXAM, examId } from "./pack.ts"
 import { reading } from "./reading.ts"
 import { renderSpeech } from "./say.ts"
 
@@ -27,6 +27,12 @@ export const BUILD_LOG = "build-errors.log"
 export function nightDir(): string {
   const chosen = process.env.NIGHT_DIR
   return chosen && chosen.startsWith("/") ? chosen : path.join(homedir(), "Library", "Caches", "star-exam-night")
+}
+
+// Each exam keeps its recording in its own folder, so one exam's build never clears another's. The
+// default exam keeps the cache folder itself, where its recording already is.
+export function nightDirFor(exam: string = examId()): string {
+  return exam === DEFAULT_EXAM ? nightDir() : path.join(nightDir(), exam)
 }
 
 export function scriptKey(parts: readonly NightPart[]): string {
@@ -226,18 +232,22 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean) => Nig
   return { begin }
 }
 
-let shared: ReturnType<typeof createNightBuild> | null = null
+// One build per exam, since each reads its own courses and keeps its own state.
+const shared = new Map<string, ReturnType<typeof createNightBuild>>()
 
 export function beginNightBuild(retry: boolean): NightBuildState {
-  if (!shared) {
-    shared = createNightBuild({
-      dir: nightDir(),
+  const exam = examId()
+  let build = shared.get(exam)
+  if (!build) {
+    build = createNightBuild({
+      dir: nightDirFor(exam),
       load: loadCourseParts,
       render: (script, file) => renderSpeech(script, file, sayTimeoutMs(script)),
       encode: encodeNightAudio,
     })
+    shared.set(exam, build)
   }
-  return shared.begin(retry)
+  return build.begin(retry)
 }
 
 export function nightStatusResponse(request: Request): Response {
@@ -253,8 +263,8 @@ export async function nightAudioResponse(request: Request, params: Promise<{ key
   const { key } = await params
   const rangeHeader = request.headers.get("range")
   if (!/^[0-9a-f]{64}$/.test(key)) return new Response("Not found", { status: 404 })
-  const file = path.join(nightDir(), key, "night.m4a")
-  const manifest = path.join(nightDir(), key, "manifest.json")
+  const file = path.join(nightDirFor(), key, "night.m4a")
+  const manifest = path.join(nightDirFor(), key, "manifest.json")
   if (!existsSync(file) || !existsSync(manifest)) return new Response("Not found", { status: 404 })
   const info = await stat(file)
   const range = byteRange(rangeHeader, info.size)

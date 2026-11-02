@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, buildProblem, buildRecording, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, buildProblem, buildRecording, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
 
@@ -227,4 +227,15 @@ test("a system error reaches the page as a sentence without the Mac's paths", ()
 test("the phone fetches the recording past the browser's cache, since a rebuild keeps its address", () => {
   const source = readFileSync(new URL("../components/night-reader.tsx", import.meta.url), "utf8")
   assert.match(source, /fetch\(`\/api\/night\/audio\/\$\{ready\.key\}`, \{ cache: "no-store"/)
+})
+
+test("each exam keeps its night recording in its own folder, so one exam's build never clears another's", () => {
+  const before = process.env.NIGHT_DIR
+  delete process.env.NIGHT_DIR
+  try {
+    assert.equal(nightDirFor("generative-ai-leader"), nightDir(), "the default exam keeps the cache folder where its recording already is")
+    assert.equal(nightDirFor("agentic-architect"), path.join(nightDir(), "agentic-architect"))
+  } finally {
+    if (before !== undefined) process.env.NIGHT_DIR = before
+  }
 })
