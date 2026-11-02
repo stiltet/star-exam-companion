@@ -11,7 +11,7 @@ export function detectPlatform(userAgent: string, maxTouchPoints: number): Insta
   if (IN_APP.test(userAgent)) return "other"
   if (ios) {
     if (/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent)) return "ios-other"
-    return "ios-safari"
+    return /Safari/.test(userAgent) ? "ios-safari" : "other"
   }
   if (/Android/.test(userAgent)) return "android"
   return "other"

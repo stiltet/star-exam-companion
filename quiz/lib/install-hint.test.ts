@@ -4,6 +4,7 @@ import { DISMISS_DAYS, SHOW_AFTER_MS, androidCopy, detectPlatform, shouldOffer, 
 
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
 const IPHONE_CHROME = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0 Mobile/15E148 Safari/604.1"
+const IPHONE_WEBVIEW = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
 const IPHONE_INSTAGRAM = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 330.0"
 const IPHONE_TIKTOK = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 musical_ly_36.0.0"
 const IPHONE_GMAIL = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Gmail/6.0.250101"
@@ -19,6 +20,7 @@ test("platforms are told apart", () => {
   assert.equal(detectPlatform(IPAD, 5), "ios-safari")
   assert.equal(detectPlatform(MAC, 0), "other")
   assert.equal(detectPlatform(IPHONE_CHROME, 5), "ios-other")
+  assert.equal(detectPlatform(IPHONE_WEBVIEW, 5), "other")
   assert.equal(detectPlatform(IPHONE_INSTAGRAM, 5), "other")
   assert.equal(detectPlatform(IPHONE_TIKTOK, 5), "other")
   assert.equal(detectPlatform(IPHONE_GMAIL, 5), "other")
@@ -35,6 +37,7 @@ test("the hint is offered on a phone browser", () => {
   assert.equal(shouldOffer(base), true)
   assert.equal(shouldOffer({ ...base, platform: "ios-safari" }), true)
   assert.equal(shouldOffer({ ...base, platform: "ios-other" }), true)
+  assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_WEBVIEW, 5) }), false)
 })
 
 test("the hint is not offered on desktop, in the installed app or once installed", () => {
