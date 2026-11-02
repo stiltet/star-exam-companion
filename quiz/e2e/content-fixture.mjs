@@ -1,4 +1,5 @@
-// Synthetic course text keeps browser tests independent of Google's availability and copyright.
+// Synthetic course text keeps browser tests independent of Google's availability and copyright. It answers for every
+// exam pack's course bundles, since the exam can be switched while the tests run.
 const bundle = {
   contentObjects: [
     { _id: "e2e-first", _type: "page", _sortOrder: 1, title: "Test reading one" },
@@ -20,7 +21,7 @@ const bundle = {
 const originalFetch = globalThis.fetch
 globalThis.fetch = async (input, init) => {
   const url = new URL(input instanceof Request ? input.url : input.toString())
-  if (url.hostname === "storage.googleapis.com" && url.pathname.includes("/GAIL-Chunked/")) {
+  if (url.hostname === "storage.googleapis.com" && url.pathname.includes("/cls-html5-courses/")) {
     const part = url.pathname.split("/").at(-1)?.replace(".json", "")
     if (!Object.hasOwn(bundle, part)) throw new Error(`Unknown test bundle request: ${url}`)
     return Response.json(bundle[part])
