@@ -3,6 +3,9 @@
   "author": "Stellan Lindell",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "dev": "NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
