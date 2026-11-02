@@ -27,6 +27,8 @@ type SectionStat = {
 type Props = {
   stats: {
     // The written questions and the study-section map, from the exam pack.
+    // The exam pack this install studies, so every figure below says whose it is.
+    exam: { id: string; title: string }
     written: { id: string; section: number }[]
     sectionOf: Record<string, string>
     sections: SectionStat[]
@@ -119,6 +121,16 @@ export function ProgressClient({ stats }: Props) {
           {snapshot.skippedLines} saved {snapshot.skippedLines === 1 ? "answer" : "answers"} could not be read and {snapshot.skippedLines === 1 ? "is" : "are"} left out of these figures.
         </p>
       )}
+
+      <div className="border-2 border-foreground mb-6 overflow-x-auto">
+        <SectionBar>EXAM PACKAGE</SectionBar>
+        <table className="w-full text-xs sm:text-sm">
+          <tbody>
+            <Row label="Package" value={stats.exam.title} />
+            <Row label="Id" value={stats.exam.id} last />
+          </tbody>
+        </table>
+      </div>
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>SAVING</SectionBar>

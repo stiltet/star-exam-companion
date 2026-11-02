@@ -39,5 +39,8 @@ with `QUIZ_EXAM=<id>`.
 QUIZ_EXAM=<id> pnpm --dir quiz dev
 ```
 
-Each exam keeps its own scores file (`quiz/scores-<id>.jsonl`; the default exam keeps
-`quiz/scores.jsonl`) and its own browser storage, so two installs never mix answers.
+Each exam keeps its own scores file, `quiz/scores-<id>.jsonl`, its own backups
+(`quiz/scores-backups/scores-<id>-<time>.jsonl`) and its own browser storage, all named after the
+exam, so two exams never mix answers and a copied file says which exam it is. An install that
+studied before exams were named finds its old `quiz/scores.jsonl` and browser data moved to the
+Generative AI Leader names the first time it runs, with a backup copy first.

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     allowedOrigin: browserOrigin(request),
   })
   if (!accepted) return NextResponse.json({ ok: false }, { status: 400 })
-  const backup = resetScores(scoresFile(play.root), new Date())
+  const backup = resetScores(scoresFile(play.root), new Date(), play.pack.meta.id)
   // No commit here. Scores and their backups are personal and gitignored.
   return NextResponse.json({ ok: true, backup: backup ? path.relative(play.root, backup) : null })
 }

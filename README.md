@@ -72,7 +72,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
   one exam: set `QUIZ_EXAM` to its pack name. Adding an exam is adding a folder; see
   [`docs/exam-packs.md`](docs/exam-packs.md).
 - Answers are saved **on the device first** and then sent to the server, which appends them to
-  `quiz/scores.jsonl` on your machine. Your answers are sent nowhere else.
+  `quiz/scores-<exam>.jsonl` on your machine. Your answers are sent nowhere else.
 - Speech comes from the **macOS text-to-speech voice** (`say`), rendered on your machine and cached.
 - A **service worker** stores the pages, so the installed app works offline.
 
@@ -164,7 +164,7 @@ in the shell that starts the quiz.
 |---|---|---|
 | `QUIZ_LAN_HOST` | unset | The one address or name, without a port, that other devices open. Unset, only pages opened on this machine (`localhost`, `127.0.0.1`, `[::1]`) can save answers. |
 | `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Set it before the build, since some pages are built ahead. |
-| `QUIZ_SCORES_FILE` | `quiz/scores.jsonl`, or `quiz/scores-<exam>.jsonl` for any exam but the default | Where answers are saved. |
+| `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
@@ -342,17 +342,17 @@ start.
 | Stop and remove | `launchctl bootout gui/$UID/com.star-exam-companion`, then delete the plist | `systemctl --user disable --now star-exam-companion`, then delete the unit file |
 
 To go back to an earlier version, check it out with git, install, build and restart. Your answers in
-`quiz/scores.jsonl` are not touched by any of this; copy that file before you re-clone. The
+`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. The
 certificate lasts 825 days; see [Renewing or removing it](docs/https.md#renewing-or-removing-it) in
 the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new certificate.
 
 ## Data and privacy
 
-- **Your answers stay on your machine**, in `quiz/scores.jsonl` and in the browser of each device
+- **Your answers stay on your machine**, in `quiz/scores-<exam>.jsonl` and in the browser of each device
   you study on. Git ignores the scores file and its backups.
 - **No accounts, analytics or tracking.** The app's own scripts and the start and dev commands
   here switch Next.js telemetry off.
-- **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores.jsonl`
+- **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores-<exam>.jsonl`
   after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores-*.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
 - **The online demo** is hosted by GitHub Pages, which, like any web host, sees visitors' IP

@@ -27,7 +27,7 @@ test("QUIZ_SCORES_FILE moves the scores to a scratch file, so a test instance ne
   const before = process.env.QUIZ_SCORES_FILE
   try {
     delete process.env.QUIZ_SCORES_FILE
-    assert.equal(scoresFile("/repo"), path.join("/repo", "quiz/scores.jsonl"))
+    assert.equal(scoresFile("/repo"), path.join("/repo", "quiz/scores-generative-ai-leader.jsonl"))
     process.env.QUIZ_SCORES_FILE = "/tmp/scratch/scores.jsonl"
     assert.equal(scoresFile("/repo"), "/tmp/scratch/scores.jsonl")
     assert.deepEqual(readScores("/nonexistent/scores.jsonl"), { lines: [], skipped: 0 })

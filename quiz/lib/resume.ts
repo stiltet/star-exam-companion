@@ -39,7 +39,7 @@ function names(value: unknown, ids: ReadonlySet<string>): string[] | null {
   return value as string[]
 }
 
-export const practiceKey = (filter: string) => `quiz-practice:${filter}`
+export const practiceKey = (filter: string) => `${scoped("quiz-practice")}:${filter}`
 
 export type PracticePlace = { id: string; picked: Record<string, number> }
 
