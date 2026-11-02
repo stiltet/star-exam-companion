@@ -1,8 +1,15 @@
 # Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
-# Work in progress, 2 Nov 2026: batch 1 of the guide's tool list. The rest are added with their scenes.
+# Work in progress, 2 Nov 2026: batches 1 and 2 of the guide's tool list. The rest are added with their scenes.
 Agent Development Kit (ADK)
 Agents CLI
 Agent Gateway
 Agent Registry
 Model Armor
 Skill Registry
+Agent Runtime
+Agent Identity
+Agent Platform Memory Bank
+Vector Search
+RAG Engine
+Model Garden
+Agent evaluation
