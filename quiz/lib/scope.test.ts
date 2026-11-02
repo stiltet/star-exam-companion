@@ -1,10 +1,23 @@
 import assert from "node:assert/strict"
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import test from "node:test"
-import { migrateLegacyScores, scoresFile } from "./load.ts"
+import test, { after } from "node:test"
+import { forgetLegacyMigration, migrateLegacyScores, scoresFile } from "./load.ts"
 import { DEFAULT_EXAM, migrateLegacyStorage, scoped } from "./scope.ts"
+
+// Scratch repo roots, removed when the file's tests end.
+const roots: string[] = []
+after(() => {
+  for (const root of roots) rmSync(root, { recursive: true, force: true })
+})
+
+function scratchRoot(): string {
+  const root = mkdtempSync(path.join(tmpdir(), "scope-"))
+  mkdirSync(path.join(root, "quiz"))
+  roots.push(root)
+  return root
+}
 
 function memory(entries: Record<string, string> = {}) {
   const data = new Map(Object.entries(entries))
@@ -44,18 +57,49 @@ test("a queue written under the plain name after the move is merged by answer id
 })
 
 test("the scores file is named after the exam, and the old plain file moves once with a backup", () => {
-  const before = process.env.QUIZ_SCORES_FILE
+  const env = { file: process.env.QUIZ_SCORES_FILE, exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
   delete process.env.QUIZ_SCORES_FILE
+  delete process.env.QUIZ_EXAM
+  process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+  forgetLegacyMigration()
   try {
-    const root = mkdtempSync(path.join(tmpdir(), "scope-"))
-    mkdirSync(path.join(root, "quiz"))
+    const root = scratchRoot()
     assert.equal(scoresFile(root, "agentic-architect"), path.join(root, "quiz", "scores-agentic-architect.jsonl"))
     writeFileSync(path.join(root, "quiz/scores.jsonl"), "line\n")
     migrateLegacyScores(root)
     assert.equal(existsSync(path.join(root, "quiz/scores.jsonl")), false)
     assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "line\n")
     assert.equal(readFileSync(path.join(root, "quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl"), "utf8"), "line\n")
+    // Once only: a plain file written afterwards is left alone, never merged over the exam's own scores.
+    writeFileSync(path.join(root, "quiz/scores.jsonl"), "newer\n")
+    migrateLegacyScores(root)
+    assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "line\n")
   } finally {
-    if (before !== undefined) process.env.QUIZ_SCORES_FILE = before
+    for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test("another exam running first does not spend the one-time migration", () => {
+  const env = { file: process.env.QUIZ_SCORES_FILE, exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
+  delete process.env.QUIZ_SCORES_FILE
+  process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+  forgetLegacyMigration()
+  try {
+    const root = scratchRoot()
+    writeFileSync(path.join(root, "quiz/scores.jsonl"), "history\n")
+    process.env.QUIZ_EXAM = "agentic-architect"
+    migrateLegacyScores(root)
+    assert.equal(existsSync(path.join(root, "quiz/scores.jsonl")), true, "another exam never touches the old file")
+    delete process.env.QUIZ_EXAM
+    migrateLegacyScores(root)
+    assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "history\n", "the default exam, later in the same process, still migrates")
+  } finally {
+    for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
   }
 })

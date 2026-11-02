@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import test from "node:test"
+import test, { after } from "node:test"
 import { parseSections } from "./learn.ts"
 import { examId, listPacks, loadPack, packDir, setActiveExam } from "./pack.ts"
 import { itemsFromGlossary } from "./round.ts"
@@ -11,6 +11,17 @@ import { testRoot } from "./test-pack.ts"
 
 // The pack validator: every folder under exams/ must meet the same rules, so a pack added by
 // anyone is checked the moment it lands. docs/exam-packs.md lists them.
+// Scratch folders the tests make, removed when the file's tests end.
+const scratch: string[] = []
+after(() => {
+  for (const dir of scratch) rmSync(dir, { recursive: true, force: true })
+})
+const tempDir = (name: string) => {
+  const dir = mkdtempSync(path.join(tmpdir(), name))
+  scratch.push(dir)
+  return dir
+}
+
 const ids = readdirSync(path.join(testRoot, "exams"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
@@ -89,7 +100,7 @@ test("a missing pack says which file it lacks", () => {
 
 test("the chosen exam comes from the setting file, then QUIZ_EXAM, then the default", () => {
   const before = { file: process.env.QUIZ_EXAM_SETTING_FILE, exam: process.env.QUIZ_EXAM }
-  const file = path.join(mkdtempSync(path.join(tmpdir(), "setting-")), "active-exam.json")
+  const file = path.join(tempDir("setting-"), "active-exam.json")
   process.env.QUIZ_EXAM_SETTING_FILE = file
   try {
     delete process.env.QUIZ_EXAM
@@ -113,7 +124,7 @@ test("the chosen exam comes from the setting file, then QUIZ_EXAM, then the defa
 
 test("only a pack in exams/ can be chosen, and every pack is listed with its title", () => {
   const before = process.env.QUIZ_EXAM_SETTING_FILE
-  process.env.QUIZ_EXAM_SETTING_FILE = path.join(mkdtempSync(path.join(tmpdir(), "setting-")), "active-exam.json")
+  process.env.QUIZ_EXAM_SETTING_FILE = path.join(tempDir("setting-"), "active-exam.json")
   try {
     for (const bad of ["../quiz", "no-such-exam", "", "Upper"]) assert.equal(setActiveExam(bad, testRoot), false, bad)
     const packs = listPacks(testRoot)
@@ -122,5 +133,52 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
   } finally {
     if (before === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
     else process.env.QUIZ_EXAM_SETTING_FILE = before
+  }
+})
+
+// A copy of the Agentic Architect pack in a scratch repo root, changed by `change`.
+function packWith(change: (files: { meta: Record<string, unknown>; courses: Record<string, unknown> }) => void): string {
+  const root = tempDir("pack-")
+  mkdirSync(path.join(root, "exams"))
+  cpSync(path.join(testRoot, "exams/agentic-architect"), path.join(root, "exams/agentic-architect"), { recursive: true })
+  const metaFile = path.join(root, "exams/agentic-architect/pack.json")
+  const coursesFile = path.join(root, "exams/agentic-architect/courses.json")
+  const files = { meta: JSON.parse(readFileSync(metaFile, "utf8")), courses: JSON.parse(readFileSync(coursesFile, "utf8")) }
+  change(files)
+  writeFileSync(metaFile, JSON.stringify(files.meta))
+  writeFileSync(coursesFile, JSON.stringify(files.courses))
+  return root
+}
+
+test("a pack's links and course bundles must be https and on Google's own hosts", () => {
+  const bad: [string, (files: { meta: Record<string, unknown>; courses: Record<string, unknown> }) => void, RegExp][] = [
+    ["a javascript: exam page", (f) => { f.meta.examPage = "javascript:alert(1)" }, /pack\.json needs/],
+    ["an http learning path", (f) => { f.meta.learningPath = "http://www.skills.google/paths/1" }, /pack\.json needs/],
+    ["an http footer link", (f) => { f.meta.links = [{ label: "X", href: "http://example.com" }] }, /pack\.json needs/],
+    ["a bundle base on a LAN host", (f) => { f.courses.bundleBase = "https://192.168.1.5/x" }, /bundleBase must be on/],
+    ["a bundle base on another host", (f) => { f.courses.bundleBase = "https://evil.example/cls-html5-courses" }, /bundleBase must be on/],
+    ["a path on another host", (f) => { f.courses.path = "https://evil.example/paths/1" }, /path on/],
+    ["a course folder that climbs out", (f) => { (f.courses.courses as { folder: string }[])[0]!.folder = "../../x" }, /may not contain/],
+  ]
+  for (const [name, change, message] of bad) assert.throws(() => loadPack(packWith(change), "agentic-architect"), message, name)
+  assert.doesNotThrow(() => loadPack(packWith(() => undefined), "agentic-architect"), "the unchanged copy loads")
+})
+
+test("a chosen pack that no longer reads is ignored, so Progress still opens and the exam can be switched back", () => {
+  const before = { file: process.env.QUIZ_EXAM_SETTING_FILE, exam: process.env.QUIZ_EXAM }
+  const root = tempDir("broken-")
+  mkdirSync(path.join(root, "exams/broken"), { recursive: true })
+  writeFileSync(path.join(root, "exams/broken/pack.json"), "not json")
+  const file = path.join(root, "active-exam.json")
+  writeFileSync(file, '{"exam":"broken"}')
+  process.env.QUIZ_EXAM_SETTING_FILE = file
+  delete process.env.QUIZ_EXAM
+  try {
+    assert.equal(examId(root), "generative-ai-leader")
+  } finally {
+    for (const [key, value] of [["QUIZ_EXAM_SETTING_FILE", before.file], ["QUIZ_EXAM", before.exam]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
   }
 })

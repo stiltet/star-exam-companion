@@ -19,10 +19,16 @@ let migrated = false
 // Before the file carried the exam, the one scores file was quiz/scores.jsonl and the quiz was
 // Generative AI Leader's. The default exam takes that file over once, after copying it into
 // scores-backups/. Another exam never touches it.
+// For tests: forget that the migration ran, as a restarted quiz would.
+export function forgetLegacyMigration(): void {
+  migrated = false
+}
+
 export function migrateLegacyScores(root: string): void {
   if (migrated || process.env.QUIZ_SCORES_FILE) return
-  migrated = true
+  // Only the default exam migrates, so another exam running first must not spend the one-time flag.
   if (examId(root) !== DEFAULT_EXAM) return
+  migrated = true
   const legacy = path.join(root, "quiz/scores.jsonl")
   const target = scoresFile(root)
   if (!existsSync(legacy) || existsSync(target)) return

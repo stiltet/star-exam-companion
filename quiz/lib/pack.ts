@@ -73,13 +73,24 @@ function isPackFolder(root: string, id: string): boolean {
   return ID_PATTERN.test(id) && existsSync(path.join(root, "exams", id, "pack.json"))
 }
 
+// Whether a pack's pack.json reads. A chosen pack that no longer does is ignored, so the Progress page, where
+// the exam is switched, still opens and the exam can be changed back.
+function packReads(root: string, id: string): boolean {
+  try {
+    checkMeta(readJson(path.join(root, "exams", id, "pack.json")), id)
+    return true
+  } catch {
+    return false
+  }
+}
+
 // The exam this install serves: the one chosen on the Progress page, else QUIZ_EXAM, else the
 // default. One exam at a time, for every device. A choice naming a pack that is gone is ignored.
 export function examId(root: string = repoRoot()): string {
   try {
     const chosen: unknown = JSON.parse(readFileSync(settingFile(root), "utf8"))
     const id = (chosen as { exam?: unknown } | null)?.exam
-    if (typeof id === "string" && isPackFolder(root, id)) return id
+    if (typeof id === "string" && isPackFolder(root, id) && packReads(root, id)) return id
   } catch {
     // No choice yet, or an unreadable file: fall through to the environment.
   }
@@ -139,6 +150,17 @@ function isText(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== ""
 }
 
+// A pack arrives by pull request, so every link in it must be https: a link is shown as an anchor, and a pack's
+// text bundles are fetched by the Mac, so neither may name another scheme.
+function isHttps(value: unknown): value is string {
+  if (!isText(value)) return false
+  try {
+    return new URL(value).protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
 function checkMeta(value: unknown, id: string): PackMeta {
   const meta = value as Partial<PackMeta> | null
   const sectionOf = meta?.sectionOf
@@ -150,16 +172,16 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.certification) &&
     isText(meta.description) &&
     isText(meta.unnumberedLabel) &&
-    isText(meta.examPage) &&
-    isText(meta.examGuide) &&
-    isText(meta.learningPath) &&
+    isHttps(meta.examPage) &&
+    isHttps(meta.examGuide) &&
+    isHttps(meta.learningPath) &&
     typeof meta.reading === "boolean" &&
     Number.isInteger(meta.exam?.questions) &&
     Number.isInteger(meta.exam?.minutes) &&
     (meta.exam?.questions ?? 0) > 0 &&
     (meta.exam?.minutes ?? 0) > 0 &&
     Array.isArray(meta.links) &&
-    meta.links.every((link) => isText(link?.label) && isText(link?.href)) &&
+    meta.links.every((link) => isText(link?.label) && isHttps(link?.href)) &&
     sectionOf !== null &&
     typeof sectionOf === "object" &&
     Object.values(sectionOf).every(isText)
@@ -175,11 +197,16 @@ function readCourses(file: string, id: string): Course[] {
   if (!data || !isText(data.path) || !isText(data.bundleBase) || !Array.isArray(list) || list.length === 0) {
     throw new Error(`Exam pack ${id}: courses.json needs path, bundleBase and a list of courses`)
   }
+  // The Mac fetches the text from bundleBase: only Google's public course bucket, and a path on Google Skills.
+  if (!data.bundleBase.startsWith("https://storage.googleapis.com/") || !data.path.startsWith("https://www.skills.google/")) {
+    throw new Error(`Exam pack ${id}: courses.json bundleBase must be on https://storage.googleapis.com/ and path on https://www.skills.google/`)
+  }
   const seen = new Set<string>()
   return list.map((entry: Partial<Course>) => {
     if (!isText(entry.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.folder)) {
       throw new Error(`Exam pack ${id}: a course in courses.json needs a numeric id and template, a title and a folder`)
     }
+    if (entry.folder.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam pack ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
     if (seen.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
     seen.add(entry.id)
     return { id: entry.id, template: entry.template, title: entry.title, folder: entry.folder, bundleBase: data.bundleBase as string, path: data.path as string }
