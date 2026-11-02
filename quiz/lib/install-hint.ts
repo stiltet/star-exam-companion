@@ -3,7 +3,7 @@
 export type InstallPlatform = "android" | "ios-safari" | "ios-other" | "other"
 
 // Browsers inside another app (Instagram, Facebook, LinkedIn, Gmail and similar) cannot install.
-const IN_APP = /FBAN|FBAV|Instagram|Line\/|LinkedInApp|Snapchat|Twitter|GSA\//i
+const IN_APP = /FBAN|FBAV|Instagram|Line\/|LinkedInApp|Snapchat|Twitter|GSA\/|musical_ly|BytedanceWebview|TikTok/i
 
 // iPadOS reports a Mac, so a Mac with touch points is an iPad.
 export function detectPlatform(userAgent: string, maxTouchPoints: number): InstallPlatform {
