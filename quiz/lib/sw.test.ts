@@ -161,3 +161,14 @@ test("the page list covers every page, section, topic and Practice filter", () =
   }
   assert.deepEqual(staticList(["chunks/a b.js"], "/_next/static"), ["/_next/static/chunks/a%20b.js"])
 })
+
+test("two exams that number their courses from 1 never share a course's remembered readings", async () => {
+  const last = new Map<string, { id: string }[]>()
+  const never = new Promise<null>(() => undefined)
+  const first = { id: "1", template: "1268" }
+  const other = { id: "1", template: "1584" }
+  await coursePages([first], async () => ({ ok: true as const, pages: [{ id: "gen-ai-page" }] }), never, last)
+  // The other exam's course 1 fails to load: it must not borrow the first exam's pages.
+  const result = await coursePages([other], async () => ({ ok: false as const }), Promise.resolve(null), last)
+  assert.deepEqual(result, [{ id: "1", pages: null }])
+})
