@@ -26,6 +26,9 @@ const env = {
   NEXT_TELEMETRY_DISABLED: "1",
   QUIZ_DIST_DIR: ".next-e2e",
   QUIZ_SCORES_FILE: path.join(scratch, "scores.jsonl"),
+  // The tests run Generative AI Leader, whatever exam this machine has chosen on the Progress page.
+  QUIZ_EXAM: "generative-ai-leader",
+  QUIZ_EXAM_SETTING_FILE: path.join(scratch, "active-exam.json"),
   NIGHT_DIR: path.join(scratch, "night"),
 }
 const next = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url))

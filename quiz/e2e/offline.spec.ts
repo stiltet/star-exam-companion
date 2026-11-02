@@ -13,12 +13,12 @@ test("Cached pages open with the server unreachable; queued answers sync once on
   }
   await page.goto("/practice")
   await page.getByRole("button", { name: /^A\./ }).click()
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]").length)).toBe(1)
-  const queuedId: string = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]")[0].id)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]").length)).toBe(1)
+  const queuedId: string = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]")[0].id)
   await page.reload()
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]").length)).toBe(1)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]").length)).toBe(1)
   await context.setOffline(false)
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]").length)).toBe(0)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]").length)).toBe(0)
   const response = await page.request.get("/api/snapshot")
   expect(await response.json()).toMatchObject({
     ok: true, snapshot: { lines: [expect.objectContaining({ id: queuedId, mode: "practice" })] },
@@ -31,9 +31,9 @@ test("Voice quiz accepts an offline answer without reloading and sends it after 
   await context.setOffline(true)
   await page.getByRole("button", { name: /^A\./ }).click()
   await expect(page.getByRole("button", { name: /^A\./ })).toBeDisabled()
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]").length)).toBe(1)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]").length)).toBe(1)
   await context.setOffline(false)
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox") ?? "[]").length)).toBe(0)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]").length)).toBe(0)
   const response = await page.request.get("/api/snapshot")
   expect(await response.json()).toMatchObject({
     ok: true, snapshot: { lines: [expect.objectContaining({ mode: "round" })] },
