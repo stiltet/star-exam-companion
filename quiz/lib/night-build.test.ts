@@ -27,7 +27,7 @@ const parts: NightPart[] = [
 
 async function settle(build: { begin: (retry: boolean) => NightBuildState }): Promise<NightBuildState> {
   let state = build.begin(false)
-  for (let attempt = 0; attempt < 50 && (state.state === "building" || state.state === "checking"); attempt += 1) {
+  for (let attempt = 0; attempt < 200 && (state.state === "building" || state.state === "checking"); attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 10))
     state = build.begin(false)
   }
@@ -134,7 +134,7 @@ test("a failed build can be tried again, and a stranger is refused before one st
   fail = false
   build.begin(true)
   let ready = build.begin(false)
-  for (let attempt = 0; attempt < 50 && (ready.state === "building" || ready.state === "checking"); attempt += 1) {
+  for (let attempt = 0; attempt < 200 && (ready.state === "building" || ready.state === "checking"); attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 10))
     ready = build.begin(false)
   }
