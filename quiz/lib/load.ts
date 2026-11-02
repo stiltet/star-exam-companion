@@ -75,6 +75,7 @@ export function loadVoiceIndex(): Map<string, string> | null {
     voiceCache = { stamp, index: voiceIndex(itemsFromGlossary(parsed.glossary, loadPack(repoRoot()).scenes)) }
     return voiceCache.index
   } catch {
+    // A pack file that does not read is a 404 for the clip, not a crash; the pack test names what is wrong.
     return null
   }
 }

@@ -40,6 +40,7 @@ function queued(text: string | null): { id?: unknown }[] | null {
     const value: unknown = text === null ? null : JSON.parse(text)
     return Array.isArray(value) ? value : null
   } catch {
+    // Not JSON, so not a queue: the caller treats it as none and keeps the other copy.
     return null
   }
 }
