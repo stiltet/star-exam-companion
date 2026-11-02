@@ -1,12 +1,13 @@
 import { assignSessions, chronological, type ScoreLine } from "./learn.ts"
 import { MAX_BATCH, toLine, type Answer, type Mode } from "./score.ts"
+import { scoped } from "./scope.ts"
 
 // Every answer is kept on the device first and sent from there, so one given away from home, or
 // while the Mac is asleep, reaches quiz/scores.jsonl the next time the app can reach the Mac.
-export const OUTBOX_KEY = "quiz-outbox"
+export const OUTBOX_KEY = scoped("quiz-outbox")
 // Refused answers stay here until an explicit retry is acknowledged by the Mac.
-export const REJECTED_KEY = "quiz-rejected"
-const REASONS_KEY = "quiz-rejected-reasons"
+export const REJECTED_KEY = scoped("quiz-rejected")
+const REASONS_KEY = scoped("quiz-rejected-reasons")
 
 export type Store = Pick<Storage, "getItem" | "setItem">
 

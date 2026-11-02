@@ -13,8 +13,8 @@ import { STATIC_DEMO } from "@/lib/static-demo"
 export default async function ExamPage() {
   if (!STATIC_DEMO) await connection()
   const play = loadPlay()
-  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
-  const sections = [1, 2, 3, 4].map((id) => ({
+  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items, play.bank) : []
+  const sections = (play.ok ? Object.keys(play.weights).map(Number).sort((a, b) => a - b) : []).map((id) => ({
     id: String(id),
     title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),
     weight: play.ok ? (play.weights[id] ?? 0) : 0,

@@ -34,6 +34,7 @@ below gets everything working.
 - [How it works](#how-it-works)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
+- [Choose your exam](#choose-your-exam)
 - [Configuration](#configuration)
 - [Full local setup](#full-local-setup)
 - [Data and privacy](#data-and-privacy)
@@ -66,8 +67,10 @@ machine, keeps your answers there, and works on a phone without a connection onc
 ## How it works
 
 - A **Next.js** app in `quiz/` renders every page and serves a few local API routes.
-- Questions are built from [`glossary.md`](glossary.md) and the section weights in
-  [`exam-sections.md`](exam-sections.md); both are read at run time.
+- Everything about one exam lives in an **exam pack**, the folder `exams/<id>/`. Questions are
+  built from the pack's glossary, scenes and section weights, read at run time. One install serves
+  one exam: set `QUIZ_EXAM` to its pack name. Adding an exam is adding a folder; see
+  [`docs/exam-packs.md`](docs/exam-packs.md).
 - Answers are saved **on the device first** and then sent to the server, which appends them to
   `quiz/scores.jsonl` on your machine. Your answers are sent nowhere else.
 - Speech comes from the **macOS text-to-speech voice** (`say`), rendered on your machine and cached.
@@ -116,6 +119,41 @@ NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1
 `-H 127.0.0.1` keeps the quiz on your machine; the package's own `dev` and `start` scripts listen
 on every network interface.
 
+## Choose your exam
+
+One install studies one exam. The exam is an **exam pack**, a folder under [`exams/`](exams/), and
+you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you get the default,
+`generative-ai-leader`.
+
+| Pack (`QUIZ_EXAM`) | Exam |
+|---|---|
+| `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
+
+To see which packs your copy has:
+
+```bash
+ls exams
+```
+
+To study another exam, set `QUIZ_EXAM` for the build and for the start. Replace `PACK` with a name
+from the list:
+
+```bash
+QUIZ_EXAM=PACK pnpm --dir quiz build
+```
+
+```bash
+QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1
+```
+
+For development, `QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1`
+serves the same pack. If you run the quiz as a login service ([full local setup](#full-local-setup)),
+put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
+each exam, so switching never mixes them.
+
+Missing your exam? A pack is a folder of data, with no code to change: see
+[`docs/exam-packs.md`](docs/exam-packs.md) and [Contributing and support](#contributing-and-support).
+
 ## Configuration
 
 All settings are optional environment variables. Put them in `quiz/.env.local` (git ignores it) or
@@ -124,7 +162,8 @@ in the shell that starts the quiz.
 | Variable | Default | Purpose |
 |---|---|---|
 | `QUIZ_LAN_HOST` | unset | The one address or name, without a port, that other devices open. Unset, only pages opened on this machine (`localhost`, `127.0.0.1`, `[::1]`) can save answers. |
-| `QUIZ_SCORES_FILE` | `quiz/scores.jsonl` | Where answers are saved. |
+| `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Set it before the build, since some pages are built ahead. |
+| `QUIZ_SCORES_FILE` | `quiz/scores.jsonl`, or `quiz/scores-<exam>.jsonl` for any exam but the default | Where answers are saved. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
@@ -313,7 +352,7 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
 - **No accounts, analytics or tracking.** The app's own scripts and the start and dev commands
   here switch Next.js telemetry off.
 - **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores.jsonl`
-  after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores.jsonl` and
+  after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores-*.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
 - **The online demo** is hosted by GitHub Pages, which, like any web host, sees visitors' IP
   addresses. The demo has no accounts, analytics or server of its own, and keeps your answers only
@@ -327,9 +366,7 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
 .
 ├── quiz/                 The Next.js app: pages, components, API routes and tests
 ├── pages-static/         The online demo's own files, laid out like quiz/
-├── glossary.md           Every exam term, one row each, with its source
-├── exam-sections.md      The four exam sections and their weights
-├── checks/               The exam guide's term list, used by the tests
+├── exams/                One exam pack per exam: glossary, scenes, sections, study questions
 ├── docs/https.md         HTTPS, certificates and offline mode on every platform
 ├── scripts/              make-cert.sh (HTTPS certificate), build-pages.sh (online demo)
 ├── .github/workflows/    Builds and deploys the online demo to GitHub Pages

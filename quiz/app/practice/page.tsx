@@ -19,7 +19,7 @@ export default async function PracticePage({ searchParams }: Props) {
   // that combines with ALL, a section or a topic (owner, 28 Oct).
   const onlyUnanswered = unanswered === "1"
   const play = loadPlay()
-  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
+  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items, play.bank) : []
   let filteredQuestions = questions
   if (topic) filteredQuestions = questions.filter((q) => q.topicId === topic)
   else if (section) filteredQuestions = questions.filter((q) => q.sectionId === section)
@@ -30,7 +30,7 @@ export default async function PracticePage({ searchParams }: Props) {
     return query ? `/practice?${query}` : "/practice"
   }
   const place: Record<string, string> = topic ? { topic } : section ? { section } : {}
-  const sections = [1, 2, 3, 4].map((id) => ({
+  const sections = (play.ok ? Object.keys(play.weights).map(Number).sort((a, b) => a - b) : []).map((id) => ({
     id: String(id),
     title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),
     ids: questions.filter((q) => q.sectionId === String(id)).map((q) => q.id),

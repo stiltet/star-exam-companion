@@ -1,6 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { EXAM_SECTIONS } from "@/lib/exam-data"
+import { activePack } from "@/lib/pack"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -11,19 +11,19 @@ type Props = {
 
 // Every section is known at build time, so the online demo can export its pages.
 export function generateStaticParams() {
-  return EXAM_SECTIONS.map((section) => ({ sectionId: section.id }))
+  return activePack().study.sections.map((section) => ({ sectionId: section.id }))
 }
 
 export default async function SectionPage({ params }: Props) {
   const { sectionId } = await params
 
-  const section = EXAM_SECTIONS.find((s) => s.id === sectionId)
+  const section = activePack().study.sections.find((s) => s.id === sectionId)
   if (!section) notFound()
 
-  const sectionIndex = EXAM_SECTIONS.findIndex((s) => s.id === sectionId)
+  const sectionIndex = activePack().study.sections.findIndex((s) => s.id === sectionId)
   const label = sectionLabel(sectionIndex + 1, section.weight)
-  const prevSection = sectionIndex > 0 ? EXAM_SECTIONS[sectionIndex - 1] : null
-  const nextSection = sectionIndex < EXAM_SECTIONS.length - 1 ? EXAM_SECTIONS[sectionIndex + 1] : null
+  const prevSection = sectionIndex > 0 ? activePack().study.sections[sectionIndex - 1] : null
+  const nextSection = sectionIndex < activePack().study.sections.length - 1 ? activePack().study.sections[sectionIndex + 1] : null
 
   return (
     <div className="min-h-screen flex flex-col">

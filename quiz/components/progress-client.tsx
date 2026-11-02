@@ -6,7 +6,7 @@ import { EXAM_TARGET, PRACTICE_TARGET, voiceProgress } from "@/lib/learn"
 import { courseLabel, sectionLabel, examHistory, flashcardProgress, modeLines, practiceProgress, progressFigures, readingProgress, readingStatus } from "@/lib/progress"
 import { COURSES } from "@/lib/reading"
 import { readingTotals } from "@/components/reading-progress"
-import { practiceItems, SECTION_OF } from "@/lib/questions"
+import { practiceItems } from "@/lib/questions"
 import { reviewHash } from "@/lib/exam-review"
 import { ResetProgress } from "@/components/reset-progress"
 import { SectionBar } from "@/components/atoms/section-bar"
@@ -26,6 +26,9 @@ type SectionStat = {
 
 type Props = {
   stats: {
+    // The written questions and the study-section map, from the exam pack.
+    written: { id: string; section: number }[]
+    sectionOf: Record<string, string>
     sections: SectionStat[]
   }
 }
@@ -66,7 +69,7 @@ export function ProgressClient({ stats }: Props) {
     ? COURSES.map((course) => ({ id: Number(course.id), title: courseLabel(course.id), weight: 0 }))
     : sections
   const voice = voiceProgress(items, modeLines(lines, "round"), voiceSections, byCourse ? (item, id) => Number(item.course) === id : undefined)
-  const pool = practiceItems(items)
+  const pool = practiceItems(items, stats.written)
   const practice = practiceProgress(pool, lines, sections)
   const voiceFigures = progressFigures(voice)
   const practiceFigures = progressFigures(practice)
@@ -358,7 +361,7 @@ export function ProgressClient({ stats }: Props) {
                   <Link href={`/study/${section.id}`}>{sectionLabel(index + 1, section.weight)}</Link>
                 </td>
                 <td className="px-2 py-3 sm:p-3 text-right">{section.topicCount}</td>
-                <td className="px-2 py-3 sm:p-3 text-right">{pool.filter((item) => String(item.section) === SECTION_OF[section.id]).length}</td>
+                <td className="px-2 py-3 sm:p-3 text-right">{pool.filter((item) => String(item.section) === stats.sectionOf[section.id]).length}</td>
               </tr>
             ))}
           </tbody>

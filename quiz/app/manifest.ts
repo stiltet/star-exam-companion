@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { activePack } from "@/lib/pack"
 import { BASE_PATH } from "@/lib/static-demo"
 
 // The online demo's export needs this built as a file; the local app serves the same thing.
@@ -9,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Star Exam Companion",
     short_name: "Star Exam",
-    description: "Open-source exam preparation for the Google Cloud Generative AI Leader certification.",
+    description: `Open-source exam preparation for the ${activePack().meta.certification} certification.`,
     start_url: `${BASE_PATH}/`,
     scope: `${BASE_PATH}/`,
     display: "standalone",

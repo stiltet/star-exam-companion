@@ -4,6 +4,7 @@ import { BackButton } from "@/components/back-button"
 import { DevBadgeStyle } from "@/components/dev-badge-style"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import "./globals.css"
+import { activePack } from "@/lib/pack"
 import { OutboxSender } from "@/components/outbox"
 import { OfflineShell } from "@/components/offline"
 import { SnapshotPrefetch } from "@/components/snapshot"
@@ -17,11 +18,12 @@ import { BASE_PATH } from "@/lib/static-demo"
 // which is served from /star-exam-companion on GitHub Pages.
 const base = BASE_PATH
 
+const pack = activePack().meta
+
 export const metadata: Metadata = {
   title: "Star Exam Companion",
-  description:
-    "Open-source exam preparation for Google Cloud Generative AI Leader certification. Brutalist. Minimal. Exam-focused.",
-  keywords: ["Google Cloud", "Generative AI", "Certification", "Exam Prep", "GCGAI Leader"],
+  description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam-focused.`,
+  keywords: ["Google Cloud", "Certification", "Exam Prep", pack.title],
   icons: {
     icon: `${base}/favicon.png`,
     shortcut: `${base}/favicon.png`,

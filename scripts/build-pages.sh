@@ -33,8 +33,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
-cp "$ROOT/glossary.md" "$ROOT/exam-sections.md" "$work/"
-cp -R "$ROOT/checks" "$work/checks"
+cp -R "$ROOT/exams" "$work/exams"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.
 cp -R "$ROOT/pages-static/." "$work/quiz/"

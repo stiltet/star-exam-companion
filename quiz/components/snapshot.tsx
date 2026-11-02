@@ -8,6 +8,7 @@ import { mergeLines, readOutbox } from "@/lib/outbox"
 import { SNAPSHOT_AT_KEY } from "@/lib/connection"
 import { isSnapshot, readSnapshot, writeSnapshot, type Snapshot } from "@/lib/snapshot"
 import { STATIC_DEMO } from "@/lib/static-demo"
+import { scoped } from "@/lib/scope"
 
 // The same wait the service worker gives the Mac before it falls back to the device.
 const FETCH_TIMEOUT_MS = 2500
@@ -43,7 +44,7 @@ export async function fetchSnapshot(): Promise<{ snapshot: Snapshot } | { broken
 type Fetched = Awaited<ReturnType<typeof fetchSnapshot>>
 
 // Sent after every refresh, fresh or failed, so the header and open pages show the current state.
-export const REFRESHED = "quiz-snapshot-refreshed"
+export const REFRESHED = scoped("quiz-snapshot-refreshed")
 
 // When the copy on the device last came from the Mac.
 export function fetchedAt(): string | null {

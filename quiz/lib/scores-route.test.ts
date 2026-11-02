@@ -5,9 +5,10 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import test, { after } from "node:test"
 import { loadPlay, readScores } from "./load.ts"
-import { practiceItems } from "./questions.ts"
+import { practiceItems, writtenPool } from "./questions.ts"
 import { postScores } from "./scores-route.ts"
 import type { Answer } from "./score.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-scores-route-"))
 const before = { cwd: process.cwd(), scores: process.env.QUIZ_SCORES_FILE }
@@ -40,7 +41,7 @@ test("the actual score handler stores every offered question, including written 
   const play = loadPlay()
   assert.ok(play.ok)
   if (!play.ok) return
-  const practice = practiceItems(play.items).map((item, n) => answer(n + 1, { asked: [item.id], missed: n % 2 ? [item.id] : [] }))
+  const practice = practiceItems(play.items, writtenPool(testBank)).map((item, n) => answer(n + 1, { asked: [item.id], missed: n % 2 ? [item.id] : [] }))
   const round = play.items.map((item, n) => answer(n + 1001, { mode: "round", asked: [item.id] }))
   const exam = answer(2001, { mode: "exam", asked: ["q1", play.items[0]!.id], missed: ["q1"], seconds: 420 })
   const cards = answer(2002, { mode: "flashcard", asked: [play.glossary.terms[0]!.term] })

@@ -3,7 +3,7 @@ import { loadPlay, readScores, scoresFile } from "./load.ts"
 import { readJsonBody } from "./body.ts"
 import { browserOrigin, sameOrigin } from "./origin.ts"
 import { acceptBatch, storeAnswers } from "./score.ts"
-import { practiceItems } from "./questions.ts"
+import { practiceItems, writtenPool } from "./questions.ts"
 
 const MAX_BATCH_BYTES = 1024 * 1024
 
@@ -17,7 +17,7 @@ export async function postScores(request: Request): Promise<Response> {
     contentType: request.headers.get("content-type"),
     body,
     allowedOrigin: browserOrigin(request),
-    bankIds: new Set(practiceItems(play.items).map((item) => item.id)),
+    bankIds: new Set(practiceItems(play.items, writtenPool(play.bank)).map((item) => item.id)),
     roundIds: new Set(play.items.map((item) => item.id)),
     termNames: new Set(play.glossary.terms.map((term) => term.term)),
     now: Date.now(),

@@ -19,7 +19,7 @@
 /secrets/
 
 # Personal study data: each person's own answers and their backups.
-quiz/scores.jsonl
+quiz/scores*.jsonl
 quiz/scores-backups/
 
 # Home-made HTTPS certificates from scripts/make-cert.sh. quiz.key is secret.

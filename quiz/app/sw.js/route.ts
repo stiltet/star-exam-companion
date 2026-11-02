@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
-import { EXAM_SECTIONS } from "@/lib/exam-data"
+import { activePack } from "@/lib/pack"
 import { courseBundle } from "@/lib/course-text"
 import { COURSES, type PageSummary } from "@/lib/reading"
 import { coursePages, pageList, readingPages, staticList, workerScript } from "@/lib/sw"
@@ -30,9 +30,11 @@ export async function GET() {
   })
   const courses = await coursePages(COURSES, courseBundle, late, lastPages)
   clearTimeout(timer)
+  const pack = activePack()
+  const sectionNumbers = [...new Set(Object.values(pack.meta.sectionOf))].sort()
   const config = {
     build: readFileSync(buildFile, "utf8").trim(),
-    pages: [...pageList(EXAM_SECTIONS, ["1", "2", "3", "4"]), ...readingPages(courses)],
+    pages: [...pageList(pack.study.sections, sectionNumbers), ...readingPages(courses)],
     statics: [...staticList(files(path.join(dist, "static")), "/_next/static"), ...staticList(files(publicDir), ""), "/manifest.webmanifest"],
   }
   const worker = readFileSync(path.join(process.cwd(), "lib/sw-worker.js"), "utf8")

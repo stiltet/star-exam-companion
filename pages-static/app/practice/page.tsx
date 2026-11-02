@@ -14,7 +14,7 @@ import type { Question } from "@/lib/exam-data"
 // quiz/app/practice in a temporary build copy; the real page is never changed.
 export default function PracticePage() {
   const play = loadPlay()
-  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
+  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items, play.bank) : []
   const sections = [1, 2, 3, 4].map((id) => ({
     id: String(id),
     title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),

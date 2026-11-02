@@ -1,6 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { EXAM_SECTIONS } from "@/lib/exam-data"
+import { activePack } from "@/lib/pack"
 import { writtenQuestions } from "@/lib/questions"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
@@ -12,16 +12,16 @@ type Props = {
 
 // Every topic is known at build time, so the online demo can export its pages.
 export function generateStaticParams() {
-  return EXAM_SECTIONS.flatMap((section) => section.topics.map((topic) => ({ sectionId: section.id, topicId: topic.id })))
+  return activePack().study.sections.flatMap((section) => section.topics.map((topic) => ({ sectionId: section.id, topicId: topic.id })))
 }
 
 export default async function TopicPage({ params }: Props) {
   const { sectionId, topicId } = await params
 
-  const section = EXAM_SECTIONS.find((s) => s.id === sectionId)
+  const section = activePack().study.sections.find((s) => s.id === sectionId)
   if (!section) notFound()
 
-  const sectionIndex = EXAM_SECTIONS.findIndex((s) => s.id === sectionId)
+  const sectionIndex = activePack().study.sections.findIndex((s) => s.id === sectionId)
   const label = sectionLabel(sectionIndex + 1, section.weight)
   const topic = section.topics.find((t) => t.id === topicId)
   if (!topic) notFound()
@@ -30,7 +30,7 @@ export default async function TopicPage({ params }: Props) {
   const prevTopic = topicIndex > 0 ? section.topics[topicIndex - 1] : null
   const nextTopic = topicIndex < section.topics.length - 1 ? section.topics[topicIndex + 1] : null
 
-  const relatedQuestions = writtenQuestions().filter((q) => q.topicId === topicId)
+  const relatedQuestions = writtenQuestions(activePack().study.questions).filter((q) => q.topicId === topicId)
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -5,7 +5,8 @@ import type { ScoreLine } from "./learn.ts"
 import { readFileSync } from "node:fs"
 import { itemsFromGlossary } from "./round.ts"
 import { parseGlossary } from "./sources.ts"
-import { practiceItems } from "./questions.ts"
+import { practiceItems, writtenPool } from "./questions.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
 const origin = "http://localhost"
 const now = Date.parse("2026-10-01T12:00:00.000Z")
@@ -96,11 +97,11 @@ test("a reading read is saved as its course and page, never as missed", () => {
 })
 
 test("the server accepts all 241 voice and 111 written questions in the modes that offer them", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.ok(parsed.ok)
   if (!parsed.ok) return
-  const items = itemsFromGlossary(parsed.glossary)
-  const bank = practiceItems(items)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
+  const bank = practiceItems(items, writtenPool(testBank))
   const pools = {
     bankIds: new Set(bank.map((item) => item.id)),
     roundIds: new Set(items.map((item) => item.id)),

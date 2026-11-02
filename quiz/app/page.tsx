@@ -4,18 +4,14 @@ import { ActionLink } from "@/components/atoms/button"
 import { Heading } from "@/components/atoms/heading"
 import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
 import { Text } from "@/components/atoms/text"
+import { activePack } from "@/lib/pack"
 import { SITE_PAGES } from "@/lib/pages"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
 
-const DOMAINS = [
-  { id: "fundamentals", weight: 30 },
-  { id: "google-cloud-offerings", weight: 35 },
-  { id: "improve-output", weight: 20 },
-  { id: "business-strategies", weight: 15 },
-]
-
 export default function HomePage() {
+  const { meta, study } = activePack()
+  const DOMAINS = study.sections
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -26,7 +22,7 @@ export default function HomePage() {
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
           <Heading variant="hero" placement="mb-4">
             <GoogleCloudLogo placement="mb-3 md:mb-0" />
-            <span className="block">GENERATIVE AI LEADER</span>
+            <span className="block">{meta.title.toUpperCase()}</span>
           </Heading>
           {/* The tagline sits over the buttons, and from lg up right of them in the space they leave (owner, 28 Oct). */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
@@ -44,11 +40,13 @@ export default function HomePage() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="outlined" href="/voice" arrow>VOICE QUIZ</ActionLink>
-                <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>
+                {meta.reading && <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>}
               </div>
-              <div className="flex flex-wrap gap-4">
-                <ActionLink variant="filled" href="https://www.skills.google/paths/1951" newTab>OFFICIAL LEARNING PATH</ActionLink>
-              </div>
+              {meta.reading && (
+                <div className="flex flex-wrap gap-4">
+                  <ActionLink variant="filled" href="https://www.skills.google/paths/1951" newTab>OFFICIAL LEARNING PATH</ActionLink>
+                </div>
+              )}
             </div>
           </div>
         </section>

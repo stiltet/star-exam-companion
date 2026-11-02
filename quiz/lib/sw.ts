@@ -1,4 +1,5 @@
 import { SITE_PAGES } from "./pages.ts"
+import { BUILT_READING } from "./scope.ts"
 
 // What the service worker stores on install: every page, study section and topic, each Practice
 // filter the pages link to, and every static file of this build.
@@ -9,7 +10,7 @@ import { SITE_PAGES } from "./pages.ts"
 export const NIGHT_CACHE = "quiz-night"
 
 export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[]): string[] {
-  const pages = ["/", ...SITE_PAGES.map((page) => page.href), "/about", "/read/night", "/practice?unanswered=1"]
+  const pages = ["/", ...SITE_PAGES.map((page) => page.href), "/about", ...(BUILT_READING ? ["/read/night"] : []), "/practice?unanswered=1"]
   for (const id of practiceSections) {
     pages.push(`/practice?section=${encodeURIComponent(id)}`)
     pages.push(`/practice?section=${encodeURIComponent(id)}&unanswered=1`)

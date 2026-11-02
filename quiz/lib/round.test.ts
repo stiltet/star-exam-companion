@@ -4,8 +4,9 @@ import test from "node:test"
 import { isLearned, parseWeights, sectionCleared, voiceProgress, type ScoreLine } from "./learn.ts"
 import { acceptBatch, answerAloud, discussText, localVoices, PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS, questionClips } from "./score.ts"
 import { preferredName, applyNames, displayTerm, label, parseGlossary, plainNames } from "./sources.ts"
-import { SCENES, itemsFromGlossary, takeRound } from "./round.ts"
+import { itemsFromGlossary, takeRound } from "./round.ts"
 import { COURSES } from "./reading.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
 const glossaryText = `
 | Term | Meaning | Guide | Source |
@@ -99,7 +100,7 @@ test("voice quiz items are exam format and list the choices only once", () => {
   const parsed = parseGlossary(glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
-  for (const item of itemsFromGlossary(parsed.glossary)) {
+  for (const item of itemsFromGlossary(parsed.glossary, testPack.scenes)) {
     assert.equal(item.stem.includes("The binding constraint:"), false)
     assert.equal(item.stem.includes(`, or ${item.options.at(-1)}?`), false, item.id)
     assert.equal(item.options.length >= 2, true)
@@ -124,15 +125,15 @@ test("voice progress keeps the latest answer for each question", () => {
 })
 
 test("voice quiz asks one written decision per scene, each with its own scene, in all four sections", () => {
-  const glossaryFile = readFileSync(new URL("../../glossary.md", import.meta.url), "utf8")
+  const glossaryFile = testPack.glossaryText
   const parsed = parseGlossary(glossaryFile)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
-  const items = itemsFromGlossary(parsed.glossary)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
   // A scene must stand alone: no opening that leans on the question before it (owner, 19 Oct).
   const banned = /same part of the exam|decision this week|The requirement is:|Exam-guide name|^(?:The same|The chosen|Yesterday's)\b/
   const scenes = new Set(items.map((item) => item.stem))
-  assert.equal(items.length, SCENES.length, "a scene names a term the glossary does not have")
+  assert.equal(items.length, testPack.scenes.length, "a scene names a term the glossary does not have")
   assert.deepEqual([...new Set(items.map((item) => item.section))].sort(), [1, 2, 3, 4])
   assert.equal(new Set(items.map((item) => item.id)).size, items.length)
   assert.equal(scenes.size, items.length)
@@ -145,28 +146,28 @@ test("voice quiz asks one written decision per scene, each with its own scene, i
 
 test("every voice question belongs to one of the five learning-path courses", () => {
   const courses = new Set<string>(COURSES.map((course) => course.id))
-  for (const scene of SCENES) assert.equal(courses.has(scene.course), true, scene.id)
-  for (const course of courses) assert.equal(SCENES.some((scene) => scene.course === course), true, course)
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  for (const scene of testPack.scenes) assert.equal(courses.has(scene.course ?? ""), true, scene.id)
+  for (const course of courses) assert.equal(testPack.scenes.some((scene) => scene.course === course), true, course)
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
-  const items = itemsFromGlossary(parsed.glossary)
-  assert.equal(items.length, SCENES.length)
-  for (const item of items) assert.equal(item.course, SCENES.find((scene) => scene.id === item.id)?.course)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
+  assert.equal(items.length, testPack.scenes.length)
+  for (const item of items) assert.equal(item.course, testPack.scenes.find((scene) => scene.id === item.id)?.course)
 })
 
 // Gemini platform is another name for Gemini Enterprise Agent Platform, recorded in the glossary
 // and not a rename, so no scene asks it. Old names of renamed products count through their pair:
 // scenes ask the exam-guide name (else the newest name) and show the other beside it as
 // "also called". The owner's rule, 19 Oct: exam guide first, then newest name.
-const NOT_ASKED = ["Gemini platform"]
+const NOT_ASKED = testPack.meta.notAsked ?? []
 
 test("every glossary row is the answer to at least one voice scene", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
   const glossary = parsed.glossary
-  const answers = new Set(SCENES.map((scene) => scene.correct.toLowerCase()))
+  const answers = new Set(testPack.scenes.map((scene) => scene.correct.toLowerCase()))
   const asked = (name: string) => {
     if (answers.has(name.toLowerCase())) return true
     const pair = glossary.renames.find((item) => [item.oldName, item.newName].some((other) => other.toLowerCase() === name.toLowerCase()))
@@ -174,23 +175,22 @@ test("every glossary row is the answer to at least one voice scene", () => {
   }
   const missing = glossary.terms.map((term) => term.term).filter((name) => !NOT_ASKED.includes(name) && !asked(name))
   assert.deepEqual(missing, [])
-  const examTerms = readFileSync(new URL("../../checks/glossary-terms.txt", import.meta.url), "utf8")
-    .split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"))
+  const examTerms = testPack.terms
   assert.deepEqual(examTerms.filter((name) => !NOT_ASKED.includes(name) && !asked(name)), [])
 })
 
 test("no voice scene names its own answer", () => {
-  for (const scene of SCENES) {
+  for (const scene of testPack.scenes) {
     const name = new RegExp(`\\b${scene.correct.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
     assert.equal(name.test(scene.scene) || name.test(scene.constraint), false, scene.id)
   }
 })
 
 test("a round asks every question and changes order when the shuffle changes", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
-  const items = itemsFromGlossary(parsed.glossary)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
   const lines: ScoreLine[] = []
   const sameOrder = takeRound(items, lines, () => 0.999)
   const otherOrder = takeRound(items, lines, () => 0)
@@ -202,7 +202,7 @@ test("a round asks every question and changes order when the shuffle changes", (
 })
 
 test("a renamed product leads with the exam-guide name, the other name as also called", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
   const glossary = parsed.glossary
@@ -226,7 +226,7 @@ test("a renamed product leads with the exam-guide name, the other name as also c
     "Formerly called Vertex AI Model Registry; the study guide says Agent Platform Model Registry (also called Model Registry).",
   )
   assert.equal(applyNames(glossary, "Track it with Agent Platform Model Registry."), "Track it with Agent Platform Model Registry.")
-  const versions = itemsFromGlossary(glossary).find((item) => item.id === "which-version")
+  const versions = itemsFromGlossary(glossary, testPack.scenes).find((item) => item.id === "which-version")
   assert.equal(versions?.options[versions.correctIndex], "Agent Platform Model Registry (also called Model Registry)")
   assert.match(versions?.why ?? "", /Formerly called Vertex AI Model Registry/)
   assert.match(versions?.why ?? "", /study guide says Agent Platform Model Registry \(also called Model Registry\)/)
@@ -234,18 +234,18 @@ test("a renamed product leads with the exam-guide name, the other name as also c
     const names = [pair.oldName, pair.newName].filter((name) => glossary.examNames.includes(name))
     assert.equal(names.length <= 1, true, `${pair.oldName} => ${pair.newName}`)
   }
-  const platform = itemsFromGlossary(glossary).find((item) => item.id === "managed-platform")
+  const platform = itemsFromGlossary(glossary, testPack.scenes).find((item) => item.id === "managed-platform")
   assert.equal(platform?.options.includes("**Gemini Enterprise Agent Platform** (also called Vertex AI)"), true)
-  const plan = itemsFromGlossary(glossary).find((item) => item.id === "paid-plan")
+  const plan = itemsFromGlossary(glossary, testPack.scenes).find((item) => item.id === "paid-plan")
   assert.equal(plan?.options[plan.correctIndex], "**Gemini Advanced** (also called Google AI Pro)")
   assert.equal(plainNames("**A** (formerly B)"), "A (formerly B)")
 })
 
 test("a round leaves out questions already answered right", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   assert.equal(parsed.ok, true)
   if (!parsed.ok) return
-  const items = itemsFromGlossary(parsed.glossary)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
   const [right, fixedTwice, fixedThrice] = items.map((item) => item.id)
   const answer = (id: string | undefined, missed: boolean): ScoreLine =>
     ({ date: "2026-10-06", session: 1, mode: "round", asked: [id ?? ""], missed: missed ? [id ?? ""] : [] })
@@ -262,7 +262,7 @@ test("a round leaves out questions already answered right", () => {
 })
 
 test("every voice scene asks a question, and its constraint is a full sentence", () => {
-  for (const scene of SCENES) {
+  for (const scene of testPack.scenes) {
     assert.match(scene.scene, /\?$/, `${scene.id}: the scene must end with a question`)
     assert.match(scene.constraint, /^[A-Z].*[.!]$/, `${scene.id}: the constraint must be a sentence`)
     for (const sentence of scene.constraint.split(/(?<=\.) /)) {
