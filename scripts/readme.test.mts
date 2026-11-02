@@ -64,7 +64,7 @@ describe('the README', () => {
     const buildSettings = new Set(['QUIZ_STATIC', 'QUIZ_BASE_PATH', 'QUIZ_COMMIT']);
     const used = new Set<string>();
     for (const file of quizSources()) {
-      for (const [, name] of readFileSync(file, 'utf8').matchAll(/process\.env\.((?:QUIZ|NIGHT)_[A-Z_]+)/g)) used.add(name!);
+      for (const [, name] of readFileSync(file, 'utf8').matchAll(/process\.env\.((?:QUIZ|NIGHT)_[A-Z0-9_]+)/g)) used.add(name!);
     }
     assert.ok(used.has('QUIZ_LAN_HOST') && used.has('QUIZ_SCORES_FILE'), 'the scan found the settings it knows about');
     for (const name of used) {

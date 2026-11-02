@@ -391,9 +391,47 @@ node --test
 pnpm --dir quiz build
 ```
 
-Run both from the repository root, after the install step in [Quick start](#quick-start).
-`node --test` runs every unit test; `pnpm --dir quiz build` also type-checks the app. Both must
-pass before a change is proposed.
+`node --test` runs every unit test; `pnpm --dir quiz build` also type-checks the app.
+
+Install the browser test engines once after installing dependencies:
+
+```bash
+pnpm --dir quiz exec playwright install chromium webkit
+```
+
+Run the complete gate (unit tests, production build and browser tests) from the repository root:
+
+```bash
+pnpm --dir quiz gate
+```
+
+Or run just the browser suite:
+
+```bash
+pnpm --dir quiz e2e
+```
+
+The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
+`http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
+a running server or writes personal scores. If that port is in use, set `QUIZ_E2E_PORT` to another
+unused port:
+
+```bash
+QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
+```
+
+Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, voice answers,
+practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
+reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
+scripts run; speech requests return silent test audio. Reading pages use original synthetic
+course text, not Google's live content. Night recording status and audio are mocked; storing and
+reopening that recording offline are tested without generating speech. Each test has fresh browser
+storage and scratch scores.
+Failed tests leave screenshots and traces under `quiz/test-results/` (gitignored).
+
+All three gate stages must pass before a change is proposed. This automates the smoke journeys
+listed above, not every possible action or device behaviour: actual iPhone installation, sound output,
+macOS voice generation, LAN certificates and Google's live course responses are not exercised.
 
 The online demo is a static export of the same app. `bash scripts/build-pages.sh` builds it into
 `pages-out/`; it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
