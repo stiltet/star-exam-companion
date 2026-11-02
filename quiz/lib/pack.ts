@@ -32,6 +32,8 @@ export type PackMeta = {
   certification: string
   // A short description of the exam, shown on the home page above Exam Structure.
   description: string
+  // Said on the home, Practice and Exam pages while the pack is unfinished, such as "17 terms so far". Absent when it is finished.
+  notice?: string
   // The Glossary and Flashcards group for a term the exam guide does not number, such as "Study guide".
   unnumberedLabel: string
   examPage: string
@@ -172,6 +174,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.certification) &&
     isText(meta.description) &&
     isText(meta.unnumberedLabel) &&
+    (meta.notice === undefined || isText(meta.notice)) &&
     isHttps(meta.examPage) &&
     isHttps(meta.examGuide) &&
     isHttps(meta.learningPath) &&

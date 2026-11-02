@@ -53,6 +53,7 @@ export default function HomePage() {
         <section className="mb-8">
           <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">DESCRIPTION</h2>
           <Text variant="muted">{meta.description}</Text>
+          {meta.notice && <Text variant="notice" role="status" placement="mt-4">{meta.notice}</Text>}
         </section>
 
         {/* Exam Structure */}

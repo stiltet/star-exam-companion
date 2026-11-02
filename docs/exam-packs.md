@@ -13,7 +13,7 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the home, Practice and Exam pages), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
 | `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing pack's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each is the answer to a voice scene. |
@@ -52,6 +52,9 @@ exam, so two exams never mix answers and a copied file says which exam it is. An
 studied before exams were named finds its old `quiz/scores.jsonl` and browser data moved to the
 Generative AI Leader names the first time it runs, with a backup copy first.
 
+The move to exam-named files is one way. To go back to an older build, copy
+`quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl` to `quiz/scores.jsonl`.
+
 ## Add an exam with a pull request
 
 You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, only a new folder.
@@ -86,6 +89,10 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    ```bash
    QUIZ_EXAM=<id> pnpm --dir quiz exec next dev -H 127.0.0.1
    ```
+
+   If you ever switched exams on the Progress page of this checkout, that choice wins over `QUIZ_EXAM`: delete
+   `quiz/active-exam.json` first, or switch on Progress. A chosen pack whose `pack.json` stops loading is
+   ignored, so Progress still opens and you can switch back.
 
 6. **Open the pull request** against `main`. Change only `exams/<id>/` and, if you want it listed, one
    row in the README's *Choose your exam* table. Say in the description which exam it is, link its

@@ -129,7 +129,7 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 | Pack (`QUIZ_EXAM`) | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
-| `agentic-architect` | Google Cloud Professional Agentic Architect. **In progress:** the first batch of terms and scenes, with all five exam sections in Study. Read Aloud is not available for it. |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json` and the terms in its `terms.txt`. Study, the Voice Quiz, the Exam and Read Aloud all work. |
 
 To see which packs your copy has:
 
