@@ -40,16 +40,16 @@ function setHash(id: string | null) {
 }
 
 export function ExamClient({ questions, sections, length }: Props) {
-  const MAX_EXAM_QUESTIONS = length.questions
+  const maxQuestions = length.questions
   // An exam asks the real exam's number of questions, or all there are when the pack has fewer. The
   // time scales with the questions asked, so 17 questions are not given the real exam's whole clock.
-  const EXAM_SECONDS = examDuration(Math.min(MAX_EXAM_QUESTIONS, questions.length), length)
+  const fullSeconds = examDuration(Math.min(maxQuestions, questions.length), length)
   const [examState, setExamState] = useState<ExamState>("intro")
   const [examQuestions, setExamQuestions] = useState<Question[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Map<string, number>>(new Map())
   const [flagged, setFlagged] = useState<Set<string>>(new Set())
-  const [timeRemaining, setTimeRemaining] = useState(EXAM_SECONDS)
+  const [timeRemaining, setTimeRemaining] = useState(fullSeconds)
   const [showEndDialog, setShowEndDialog] = useState(false)
   const [clock, setClock] = useState<Clock | null>(null)
   // A retake of missed and flagged questions: reviewable, but not a practice exam.
@@ -73,19 +73,19 @@ export function ExamClient({ questions, sections, length }: Props) {
   // Past exams lists practice exams only.
   const history = everything.filter((exam) => !exam.retake)
 
-  // The weighted exam: each section's share of MAX_EXAM_QUESTIONS, then any shortfall from the rest, shuffled.
+  // The weighted exam: each section's share of maxQuestions, then any shortfall from the rest, shuffled.
   const generateExam = useCallback(() => {
     const picked: Question[] = []
     for (const section of sections) {
       const own = questions.filter((q) => q.sectionId === section.id)
-      picked.push(...shuffle(own).slice(0, Math.round((section.weight / 100) * MAX_EXAM_QUESTIONS)))
+      picked.push(...shuffle(own).slice(0, Math.round((section.weight / 100) * maxQuestions)))
     }
     let unique = [...new Map(picked.map((q) => [q.id, q])).values()]
-    if (unique.length < MAX_EXAM_QUESTIONS) {
+    if (unique.length < maxQuestions) {
       const used = new Set(unique.map((q) => q.id))
-      unique = unique.concat(shuffle(questions.filter((q) => !used.has(q.id))).slice(0, MAX_EXAM_QUESTIONS - unique.length))
+      unique = unique.concat(shuffle(questions.filter((q) => !used.has(q.id))).slice(0, maxQuestions - unique.length))
     }
-    return shuffle(unique).slice(0, MAX_EXAM_QUESTIONS)
+    return shuffle(unique).slice(0, maxQuestions)
   }, [questions, sections])
 
   // Ends the exam once: saves its line, with every answer and flag, through the outbox, forgets
@@ -282,7 +282,7 @@ export function ExamClient({ questions, sections, length }: Props) {
     const question = examQuestions[currentIndex]
     const isFlagged = flagged.has(question.id)
     const unansweredCount = examQuestions.length - answers.size
-    const duration = clock ? Math.round((clock.endsAt - clock.startedAt) / 1000) : EXAM_SECONDS
+    const duration = clock ? Math.round((clock.endsAt - clock.startedAt) / 1000) : fullSeconds
     const nextFlagged = nextWhere((q) => flagged.has(q.id))
     const nextUnanswered = nextWhere((q) => !answers.has(q.id))
 
@@ -436,11 +436,11 @@ export function ExamClient({ questions, sections, length }: Props) {
             <tbody>
               <tr className="border-b border-foreground">
                 <td className="py-2 text-muted-foreground">Duration</td>
-                <td className="py-2 text-right font-bold">{Math.round(EXAM_SECONDS / 60)} minutes</td>
+                <td className="py-2 text-right font-bold">{Math.round(fullSeconds / 60)} minutes</td>
               </tr>
               <tr className="border-b border-foreground">
                 <td className="py-2 text-muted-foreground">Questions</td>
-                <td className="py-2 text-right font-bold">{Math.min(MAX_EXAM_QUESTIONS, questions.length)}</td>
+                <td className="py-2 text-right font-bold">{Math.min(maxQuestions, questions.length)}</td>
               </tr>
               <tr className="border-b border-foreground">
                 <td className="py-2 text-muted-foreground">Practice target</td>

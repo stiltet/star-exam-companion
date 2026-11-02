@@ -23,6 +23,18 @@ const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 // The courses a reading may name, from the exam pack. Generative AI Leader's five when none are given.
 const DEFAULT_COURSE_IDS: readonly string[] = ["1", "2", "3", "4", "5"]
 
+// One pattern per list of courses, built once rather than for every reading in a batch.
+const patterns = new Map<string, RegExp>()
+function readingPattern(ids: readonly string[]): RegExp {
+  const key = ids.join("|")
+  let pattern = patterns.get(key)
+  if (!pattern) {
+    pattern = new RegExp(`^(${key})/[0-9a-f]{24}$`)
+    patterns.set(key, pattern)
+  }
+  return pattern
+}
+
 // One answer from a batch, or null. Round and practice ask a question, flashcard a glossary term,
 // one per line; an exam lists its questions and the seconds it took.
 type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string>; examLength?: ExamLength; courseIds?: readonly string[] }
@@ -45,7 +57,7 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   // never missed. The page itself is not checked against Google's bundle, which may be offline.
   if (mode === "reading") {
     if (asked.length !== 1 || missed.length !== 0) return "A reading is saved one at a time and is never missed."
-    const reading = new RegExp(`^(${(known.courseIds ?? DEFAULT_COURSE_IDS).join("|")})/[0-9a-f]{24}$`)
+    const reading = readingPattern(known.courseIds ?? DEFAULT_COURSE_IDS)
     if (!asked.every((item) => typeof item === "string" && reading.test(item))) return "The reading is not a known course's page."
     return { id, at, mode, asked: asked as string[], missed: [] }
   }

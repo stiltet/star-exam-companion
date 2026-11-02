@@ -46,6 +46,16 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     // The read layout lets the new exam's Read Aloud pages through. Night reading needs no course text,
     // so the test never reaches Google.
     expect((await page.request.get("/read/night")).status()).toBe(200)
+
+    // The unfinished pack, with no written questions, renders every page without a server error.
+    for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/voice", "/progress"]) {
+      expect((await page.request.get(route)).status(), route).toBe(200)
+    }
+    await page.goto("/progress")
+    await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
+    await page.goto("/")
+    await expect(page.getByRole("heading", { name: "DESCRIPTION" })).toBeVisible()
+    await expect(page.getByText("Unfinished:")).toBeVisible()
   } finally {
     // The server keeps the choice for every test that follows, so put Generative AI Leader back.
     const back = await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
