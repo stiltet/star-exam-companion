@@ -9,7 +9,7 @@ import { EXAM_TARGET } from "@/lib/learn"
 import { Text } from "@/components/atoms/text"
 import { examHistory } from "@/lib/progress"
 import { EXAM_KEY, examOutcome, examResume, examSeconds, loadState, saveState, secondsLeft } from "@/lib/resume"
-import { examSeconds as lengthSeconds, type ExamLength } from "@/lib/score"
+import type { ExamLength } from "@/lib/score"
 import { useSnapshot } from "@/components/snapshot"
 import { ExamReview, type ReviewedExam } from "@/components/exam-review"
 import { ActionButton } from "@/components/atoms/button"
@@ -40,8 +40,10 @@ function setHash(id: string | null) {
 }
 
 export function ExamClient({ questions, sections, length }: Props) {
-  const EXAM_SECONDS = lengthSeconds(length)
   const MAX_EXAM_QUESTIONS = length.questions
+  // An exam asks the real exam's number of questions, or all there are when the pack has fewer. The
+  // time scales with the questions asked, so 17 questions are not given the real exam's whole clock.
+  const EXAM_SECONDS = examDuration(Math.min(MAX_EXAM_QUESTIONS, questions.length), length)
   const [examState, setExamState] = useState<ExamState>("intro")
   const [examQuestions, setExamQuestions] = useState<Question[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -174,7 +176,7 @@ export function ExamClient({ questions, sections, length }: Props) {
   const startExam = (ids?: string[]) => {
     const list = ids ? shuffle(ids.map((id) => bank.get(id)).filter((q): q is Question => q !== undefined)) : generateExam()
     const startedAt = Date.now()
-    const duration = ids ? examDuration(list.length, length) : EXAM_SECONDS
+    const duration = examDuration(list.length, length)
     finished.current = false
     setUnsaved(false)
     setJustFinished(null)
@@ -434,7 +436,7 @@ export function ExamClient({ questions, sections, length }: Props) {
             <tbody>
               <tr className="border-b border-foreground">
                 <td className="py-2 text-muted-foreground">Duration</td>
-                <td className="py-2 text-right font-bold">{EXAM_SECONDS / 60} minutes</td>
+                <td className="py-2 text-right font-bold">{Math.round(EXAM_SECONDS / 60)} minutes</td>
               </tr>
               <tr className="border-b border-foreground">
                 <td className="py-2 text-muted-foreground">Questions</td>

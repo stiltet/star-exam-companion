@@ -64,3 +64,10 @@ test("the shuffle keeps every item once", () => {
   assert.notDeepEqual(mixed, values)
   assert.deepEqual(values, Array.from({ length: 50 }, (_, n) => n), "the input is not changed")
 })
+
+test("an exam with fewer questions than the real one gets time in proportion, not the whole clock", () => {
+  const agentic = { questions: 80, minutes: 180 }
+  assert.equal(examDuration(80, agentic), 10800)
+  assert.equal(examDuration(17, agentic), 2295)
+  assert.equal(examDuration(200, agentic), 10800, "never more than the real exam's")
+})
