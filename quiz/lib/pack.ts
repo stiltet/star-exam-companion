@@ -35,6 +35,8 @@ export type PackMeta = {
   links: { label: string; href: string }[]
   // Glossary terms no scene asks, such as a second name for a product that is not a rename.
   notAsked?: string[]
+  // The Practice exam's length, as the real exam's.
+  exam: { questions: number; minutes: number }
   // Whether the exam has an official course to read aloud (the /read pages).
   reading: boolean
   // Maps a study section id (study.json) to its exam-guide section number.
@@ -98,12 +100,16 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.examPage) &&
     isText(meta.examGuide) &&
     typeof meta.reading === "boolean" &&
+    Number.isInteger(meta.exam?.questions) &&
+    Number.isInteger(meta.exam?.minutes) &&
+    (meta.exam?.questions ?? 0) > 0 &&
+    (meta.exam?.minutes ?? 0) > 0 &&
     Array.isArray(meta.links) &&
     meta.links.every((link) => isText(link?.label) && isText(link?.href)) &&
     sectionOf !== null &&
     typeof sectionOf === "object" &&
     Object.values(sectionOf).every(isText)
-  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, examPage, examGuide, reading, links and sectionOf`)
+  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, examPage, examGuide, exam {questions, minutes}, reading, links and sectionOf`)
   return meta as PackMeta
 }
 

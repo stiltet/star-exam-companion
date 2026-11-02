@@ -11,6 +11,10 @@ export const BUILT_EXAM = process.env.NEXT_PUBLIC_QUIZ_EXAM || DEFAULT_EXAM
 // Whether this exam's pack has the course reading feature (pack.json "reading"), also baked in at build time.
 export const BUILT_READING = process.env.NEXT_PUBLIC_QUIZ_READING !== "0"
 
+// The Practice exam's length, from pack.json "exam", baked in at build time. The defaults are Generative AI Leader's.
+export const BUILT_EXAM_QUESTIONS = Number(process.env.NEXT_PUBLIC_QUIZ_EXAM_QUESTIONS) || 60
+export const BUILT_EXAM_MINUTES = Number(process.env.NEXT_PUBLIC_QUIZ_EXAM_MINUTES) || 90
+
 export function scoped(name: string, exam: string = BUILT_EXAM): string {
   return exam === DEFAULT_EXAM ? name : `${name}-${exam}`
 }

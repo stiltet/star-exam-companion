@@ -4,6 +4,10 @@
   "certification": "Google Cloud Generative AI Leader",
   "examPage": "https://cloud.google.com/learn/certification/generative-ai-leader",
   "examGuide": "https://services.google.com/fh/files/misc/generative_ai_leader_exam_guide_english.pdf",
+  "exam": {
+    "questions": 60,
+    "minutes": 90
+  },
   "reading": true,
   "links": [
     {

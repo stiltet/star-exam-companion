@@ -1,4 +1,5 @@
 import { assignSessions, type ScoreLine } from "./learn.ts"
+import { BUILT_EXAM_MINUTES, BUILT_EXAM_QUESTIONS } from "./scope.ts"
 import { COURSES } from "./reading.ts"
 
 export const MODES = ["round", "practice", "exam", "flashcard", "reading"] as const
@@ -11,8 +12,9 @@ export type Mode = (typeof MODES)[number]
 export type Answer = { id: string; at: string; mode: Mode; asked: string[]; missed: string[]; seconds?: number; answers?: Record<string, number>; flagged?: string[]; retake?: true }
 
 export const MAX_BATCH = 500
-export const EXAM_SECONDS = 90 * 60
-export const MAX_EXAM_QUESTIONS = 60
+// The Practice exam's length comes from the exam pack (scope.ts), as the real exam's does.
+export const EXAM_SECONDS = BUILT_EXAM_MINUTES * 60
+export const MAX_EXAM_QUESTIONS = BUILT_EXAM_QUESTIONS
 // An answer is at most this far ahead of the Mac's clock, or this far behind it.
 const CLOCK_SKEW_MS = 10 * 60 * 1000
 const OLDEST_MS = 400 * 24 * 60 * 60 * 1000
@@ -51,7 +53,7 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   if (new Set(asked).size !== asked.length || new Set(missed).size !== missed.length) return "The saved question lists contain duplicates."
   if (mode === "exam") {
     if (asked.length < 1 || asked.length > MAX_EXAM_QUESTIONS) return `An exam must contain 1 to ${MAX_EXAM_QUESTIONS} questions.`
-    if (typeof seconds !== "number" || !Number.isInteger(seconds) || seconds < 0 || seconds > EXAM_SECONDS) return "The exam duration must be between 0 and 5400 whole seconds."
+    if (typeof seconds !== "number" || !Number.isInteger(seconds) || seconds < 0 || seconds > EXAM_SECONDS) return `The exam duration must be between 0 and ${EXAM_SECONDS} whole seconds.`
     const review = examReview(asked as string[], missed as string[], answers, flagged)
     if (typeof review === "string") return review
     if (retake !== undefined && retake !== true) return "Only true marks an exam as a retake."

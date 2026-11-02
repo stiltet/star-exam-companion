@@ -1,4 +1,4 @@
-import { BUILT_READING } from "./scope.ts"
+import { BUILT_EXAM_MINUTES, BUILT_EXAM_QUESTIONS, BUILT_READING } from "./scope.ts"
 
 // The quiz's pages, in menu order. The header, the home navigation and the missing-page
 // list all read this, so a page cannot be in one of them and absent from the others.
@@ -17,7 +17,7 @@ const ALL_PAGES: readonly SitePage[] = [
   { href: "/practice", menu: "PRACTICE", title: "Practice Questions", blurb: "Individual questions with explanations" },
   { href: "/voice", menu: "VOICE QUIZ", title: "Voice Quiz", blurb: "Voice Quiz. An exam question, read aloud" },
   { href: "/read", menu: "READ ALOUD", title: "Read Aloud", blurb: "The official learning path, read aloud" },
-  { href: "/exam", menu: "EXAM", title: "Practice Exam", blurb: "Timed practice exam (90 min, 60 questions)" },
+  { href: "/exam", menu: "EXAM", title: "Practice Exam", blurb: `Timed practice exam (${BUILT_EXAM_MINUTES} min, ${BUILT_EXAM_QUESTIONS} questions)` },
   { href: "/flashcards", menu: "FLASHCARDS", title: "Flashcards", blurb: "Term recall from official terminology" },
   { href: "/glossary", menu: "GLOSSARY", title: "Glossary", blurb: "All terms linked and categorized" },
   { href: "/progress", menu: "PROGRESS", title: "Progress", blurb: "Track completion and weak areas" },

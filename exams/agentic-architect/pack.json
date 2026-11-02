@@ -4,9 +4,16 @@
   "certification": "Google Cloud Professional Agentic Architect",
   "examPage": "https://cloud.google.com/learn/certification/agentic-architect",
   "examGuide": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+  "exam": {
+    "questions": 80,
+    "minutes": 180
+  },
   "reading": false,
   "links": [
-    { "label": "LEARNING PATH", "href": "https://www.skills.google/paths/4525" }
+    {
+      "label": "LEARNING PATH",
+      "href": "https://www.skills.google/paths/4525"
+    }
   ],
   "sectionOf": {
     "low-code": "1",
