@@ -12,6 +12,7 @@ const IPAD = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36"
 const MAC = IPAD
 const ANDROID_INSTAGRAM = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0 Mobile Safari/537.36 Instagram 330.0 Android"
+const ANDROID_WEBVIEW = "Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/AP1A.240905.004; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36"
 
 test("platforms are told apart", () => {
   assert.equal(detectPlatform(IPHONE, 5), "ios-safari")
@@ -24,6 +25,7 @@ test("platforms are told apart", () => {
   assert.equal(detectPlatform(IPHONE_WECHAT, 5), "other")
   assert.equal(detectPlatform(ANDROID, 5), "android")
   assert.equal(detectPlatform(ANDROID_INSTAGRAM, 5), "other")
+  assert.equal(detectPlatform(ANDROID_WEBVIEW, 5), "other")
   assert.equal(detectPlatform("Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0", 0), "other")
 })
 
@@ -41,6 +43,7 @@ test("the hint is not offered on desktop, in the installed app or once installed
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_TIKTOK, 5) }), false)
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_GMAIL, 5) }), false)
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_WECHAT, 5) }), false)
+  assert.equal(shouldOffer({ ...base, platform: detectPlatform(ANDROID_WEBVIEW, 5) }), false)
   assert.equal(shouldOffer({ ...base, standalone: true }), false)
   assert.equal(shouldOffer({ ...base, installed: true }), false)
 })
