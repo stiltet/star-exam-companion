@@ -20,7 +20,7 @@ export default function HomePage() {
         {/* Hero */}
         <section className="border-2 border-foreground p-6 mb-8">
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
-          <Heading variant="hero" placement="mb-4">
+          <Heading variant="hero" placement="mb-3.5 md:mb-5">
             <GoogleCloudLogo placement="mb-3 md:mb-0" />
             <HeroTitle>{meta.title.toUpperCase()}</HeroTitle>
           </Heading>
