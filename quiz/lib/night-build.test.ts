@@ -138,7 +138,7 @@ test("a failed build can be tried again, and a stranger is refused before one st
     await new Promise((resolve) => setTimeout(resolve, 10))
     ready = build.begin(false)
   }
-  assert.equal(ready.state, "ready")
+  assert.equal(ready.state, "ready", JSON.stringify(ready))
   const refused = nightStatusResponse(new Request("http://evil.example/api/night", { headers: { host: "evil.example" } }))
   assert.equal(refused.status, 400)
 })
