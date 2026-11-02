@@ -13,6 +13,27 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Workflow Builder",
+              "url": "https://docs.cloud.google.com/gemini/enterprise/docs/workflow-builder"
+            }
+          ],
+          "concepts": [
+            "State-based workflows: pages, transition routes and event handlers",
+            "Gemini Enterprise low-code tools: Agent Designer and Customer Experience Agent Studio (CX Agent Studio)",
+            "System instructions and in-console prompt templates, such as few-shot and chain-of-thought, that guide agent behavior"
+          ],
+          "examFocus": "Know which low-code tool fits a workflow with fixed states and which fits a chat agent. Google's docs describe the Gemini Enterprise builder as Workflow Builder, so expect either name.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement",
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Workflow Builder?",
+              "answer": "An interactive no-code, low-code platform for creating, managing and turning on chat agents and workflows in the Gemini Enterprise web app.",
+              "officialSource": "https://docs.cloud.google.com/gemini/enterprise/docs/workflow-builder"
             }
           ]
         },
@@ -24,6 +45,14 @@
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
             }
+          ],
+          "concepts": [
+            "Configuring agents to securely connect to and query enterprise proprietary data sources, such as Gemini Enterprise and Agent Search",
+            "Ingesting and processing unstructured multimodal data (video, audio, images) into the agentic workflow"
+          ],
+          "examFocus": "Connect enterprise data through the managed Gemini Enterprise and Agent Search features before considering a custom pipeline.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement"
           ]
         }
       ]
@@ -42,6 +71,15 @@
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
             }
+          ],
+          "concepts": [
+            "Configuring coding agents with Model Context Protocol (MCP) servers, custom skills and access to tools (for example Antigravity and Claude Code on Google Cloud)",
+            "Running coding agents in secure sandboxes: Google Kubernetes Engine (GKE), Cloud Workstations, Antigravity",
+            "Using coding agents to refactor code, optimize runtimes and patch application-layer vulnerabilities"
+          ],
+          "examFocus": "Match each coding-agent capability to its safe environment: sandboxes limit what an agent can touch while it edits and runs code.",
+          "traps": [
+            "Choosing an option before finding the binding constraint in the scenario"
           ]
         },
         {
@@ -51,6 +89,25 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agents CLI",
+              "url": "https://google.github.io/agents-cli/guide/getting-started/"
+            }
+          ],
+          "concepts": [
+            "Creating skills, plugins, extension hooks, rules and subagents with Antigravity",
+            "Augmenting Antigravity with Agents CLI to build, scale, govern and optimize deployed agents"
+          ],
+          "examFocus": "Tell the extension points apart: skills, plugins, hooks, rules and subagents each customize a coding agent differently. Agents CLI covers the agent's lifecycle.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agents CLI?",
+              "answer": "A command-line tool and skills package for building, evaluating and deploying AI agents on Google Cloud.",
+              "officialSource": "https://google.github.io/agents-cli/guide/getting-started/"
             }
           ]
         }
@@ -69,6 +126,64 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agent Development Kit (ADK)",
+              "url": "https://adk.dev/"
+            },
+            {
+              "title": "Agent Platform Memory Bank",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
+            },
+            {
+              "title": "Agent Platform Sessions",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions"
+            },
+            {
+              "title": "Model Garden",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "title": "Skill Registry",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/skill-registry"
+            }
+          ],
+          "concepts": [
+            "Choosing the language model: LLM versus small language model, self-hosted versus software as a service, open-source versus proprietary, weighing cost, security and agent architecture",
+            "Building custom agents with open-source libraries such as Agent Development Kit (ADK)",
+            "Configuring sessions and memory: Agent Platform Memory Bank and managed sessions",
+            "Configuring skills with Agents CLI: plugins, and agent mode versus human mode"
+          ],
+          "examFocus": "Separate short-term state (a session) from long-term memory (Memory Bank), and pick a model by the scenario's cost, security and architecture constraint.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement",
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent Development Kit (ADK)?",
+              "answer": "An open-source, model-agnostic framework for building, debugging and deploying agents in code. It offers template workflows such as sequential, loop and parallel.",
+              "officialSource": "https://adk.dev/"
+            },
+            {
+              "question": "What is Agent Platform Sessions?",
+              "answer": "Stores the individual interactions between users and agents, so a conversation keeps its history. Memory Bank draws its long-term memories from stored sessions.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions"
+            },
+            {
+              "question": "What is Agent Platform Memory Bank?",
+              "answer": "Generates long-term memories dynamically from conversations between a user and an agent, so the agent can recall them in later sessions. Formerly called Vertex AI Agent Engine Memory Bank.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
+            },
+            {
+              "question": "What is Model Garden?",
+              "answer": "A catalogue of Google's frontier models such as Gemini, plus third-party and open-source models.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What is Skill Registry?",
+              "answer": "A secure, private repository on Agent Platform that stores skills as self-contained packages.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/skill-registry"
             }
           ]
         },
@@ -79,6 +194,54 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Vector Search",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "title": "RAG Engine",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview"
+            },
+            {
+              "title": "Agent Identity",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "title": "Agent Registry",
+              "url": "https://docs.cloud.google.com/agent-registry/overview"
+            }
+          ],
+          "concepts": [
+            "Designing, configuring and managing retrieval-augmented generation (RAG) pipelines and vector retrieval: embedding models, similarity scoring, reranking, vector databases such as Vector Search and Agent Retrieval",
+            "Configuring agent permissions, for example with Agent Identity",
+            "Using Google Cloud tools such as Agent Registry and Google Cloud MCP servers for prebuilt and custom capabilities, including custom integration layers for databases and APIs and MCP servers for third-party SaaS tools"
+          ],
+          "examFocus": "Know when a managed RAG component fits and when you need the vector engine itself. Give each agent its own identity instead of a shared account.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement",
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Vector Search?",
+              "answer": "Google's vector search engine, an AI-native engine for storing, searching and managing data for AI applications.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What is RAG Engine?",
+              "answer": "A component of Agent Platform that facilitates retrieval-augmented generation: it connects private enterprise data to LLMs to improve answer accuracy and reduce hallucinations.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview"
+            },
+            {
+              "question": "What is Agent Identity?",
+              "answer": "Gives each agent a fully managed, unique identity, so access to resources can be controlled and audited per agent.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What is Agent Registry?",
+              "answer": "A centralized catalog for discovering, tracking and managing agents, tools and MCP servers across the organization.",
+              "officialSource": "https://docs.cloud.google.com/agent-registry/overview"
             }
           ]
         },
@@ -89,6 +252,44 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agent Runtime",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
+            },
+            {
+              "title": "Agent Registry",
+              "url": "https://docs.cloud.google.com/agent-registry/overview"
+            },
+            {
+              "title": "Agent Development Kit (ADK)",
+              "url": "https://adk.dev/"
+            }
+          ],
+          "concepts": [
+            "Orchestrating agents with agentic protocols such as MCP and Agent2Agent (A2A)",
+            "Selecting and coordinating multiagent handoffs and workflows: parallel agents, sequential agents and graph workflows",
+            "Using Google Cloud tools for it: Agent Identity, Agent Registry, Agent Runtime and agent policies"
+          ],
+          "examFocus": "Pick the workflow shape (sequential, parallel, loop, graph) from the task's dependencies, and know which platform piece identifies, registers and runs the agents.",
+          "traps": [
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent Runtime?",
+              "answer": "A high-performance, scalable runtime environment for deploying, operating and scaling agents. Formerly called Agent Engine.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
+            },
+            {
+              "question": "What is Agent Identity?",
+              "answer": "Gives each agent a fully managed, unique identity, so access to resources can be controlled and audited per agent.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What is Agent Registry?",
+              "answer": "A centralized catalog for discovering, tracking and managing agents, tools and MCP servers across the organization.",
+              "officialSource": "https://docs.cloud.google.com/agent-registry/overview"
             }
           ]
         }
@@ -107,6 +308,27 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agent evaluation",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/optimize/evaluation/agent-evaluation"
+            }
+          ],
+          "concepts": [
+            "Creating test sets for agent evaluation: golden data, prompts and edge cases",
+            "Building continuous evaluation pipelines that assess an agent's tool execution against success criteria",
+            "Choosing the evaluation framework and tooling: ADK evaluation (evalset), the Agent Platform Gen AI evaluation service, custom autoraters",
+            "Evaluating an agentic system against a golden dataset for response and retrieval quality"
+          ],
+          "examFocus": "Evaluate both the answer and the tool calls, against a golden dataset, and repeat it continuously rather than once before release.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent evaluation?",
+              "answer": "Systematically assessing agent quality, with tools such as multi-turn autoraters and online evaluation of live traffic.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/optimize/evaluation/agent-evaluation"
             }
           ]
         },
@@ -117,6 +339,27 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agent Runtime",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
+            }
+          ],
+          "concepts": [
+            "Selecting the deployment runtime by use case, requirements and cost: Agent Runtime, Cloud Run, GKE",
+            "Troubleshooting agent issues: drift, tool invocation latency, reasoning loops and system failures",
+            "Monitoring and optimizing agents for performance, reliability and cost: logic errors, latency bottlenecks, hallucinations"
+          ],
+          "examFocus": "Choose the runtime from the requirement, and use Cloud Trace and Cloud Logging to find where latency or a reasoning loop comes from.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement",
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent Runtime?",
+              "answer": "A high-performance, scalable runtime environment for deploying, operating and scaling agents. Formerly called Agent Engine.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes"
             }
           ]
         }
@@ -135,6 +378,64 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Agent Gateway",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
+            },
+            {
+              "title": "Agent Registry",
+              "url": "https://docs.cloud.google.com/agent-registry/overview"
+            },
+            {
+              "title": "Model Armor",
+              "url": "https://docs.cloud.google.com/model-armor/overview"
+            },
+            {
+              "title": "Agent Identity",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            }
+          ],
+          "concepts": [
+            "Authentication and secure tool execution, for example agent-to-tool API calls with OAuth 2.0",
+            "Principal access boundary (PAB) policies with Agent Identity",
+            "Agent Gateway to monitor traffic and track agents",
+            "Governance and policy enforcement with Agent Registry and Model Armor"
+          ],
+          "examFocus": "Keep the roles apart: Agent Identity says who the agent is, Agent Gateway governs its traffic (inbound Client-to-Agent, outbound Agent-to-Anywhere), Agent Registry catalogues it, Model Armor screens content.",
+          "traps": [
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent Identity?",
+              "answer": "Gives each agent a fully managed, unique identity, so access to resources can be controlled and audited per agent.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What is Agent Gateway?",
+              "answer": "The governance and security enforcement layer for agents: a central policy enforcement point for agent tool calls, authentication and security policies. It is the networking component of Agent Platform.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
+            },
+            {
+              "question": "What is Client-to-Agent?",
+              "answer": "An Agent Gateway mode for inbound traffic: it secures communications between clients and the agents or MCP tools they reach.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
+            },
+            {
+              "question": "What is Agent-to-Anywhere?",
+              "answer": "An Agent Gateway mode for outbound traffic: it governs requests that agents send to external tools and services.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
+            },
+            {
+              "question": "What is Agent Registry?",
+              "answer": "A centralized catalog for discovering, tracking and managing agents, tools and MCP servers across the organization.",
+              "officialSource": "https://docs.cloud.google.com/agent-registry/overview"
+            },
+            {
+              "question": "What is Model Armor?",
+              "answer": "A Google Cloud service that screens prompts and model responses for harmful content, prompt injection and jailbreaks, sensitive data and malicious links.",
+              "officialSource": "https://docs.cloud.google.com/model-armor/overview"
             }
           ]
         },
@@ -145,6 +446,35 @@
             {
               "title": "Exam guide",
               "url": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Model Armor",
+              "url": "https://docs.cloud.google.com/model-armor/overview"
+            },
+            {
+              "title": "Agent Gateway",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
+            }
+          ],
+          "concepts": [
+            "Safety frameworks and guardrails: Agent Gateway, Model Armor and human-in-the-loop (HITL)",
+            "Secure access to data and identity propagation, with Agent Gateway and Agent Registry"
+          ],
+          "examFocus": "Use guardrails at the right point: screen content with Model Armor, govern traffic with Agent Gateway, and add a human approval step where risk requires it.",
+          "traps": [
+            "Building it yourself when Google offers a managed, native feature that meets the requirement",
+            "Choosing an option before finding the binding constraint in the scenario"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Model Armor?",
+              "answer": "A Google Cloud service that screens prompts and model responses for harmful content, prompt injection and jailbreaks, sensitive data and malicious links.",
+              "officialSource": "https://docs.cloud.google.com/model-armor/overview"
+            },
+            {
+              "question": "What is Agent Gateway?",
+              "answer": "The governance and security enforcement layer for agents: a central policy enforcement point for agent tool calls, authentication and security policies. It is the networking component of Agent Platform.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview"
             }
           ]
         }
