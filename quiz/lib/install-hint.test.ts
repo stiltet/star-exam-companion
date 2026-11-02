@@ -7,6 +7,7 @@ const IPHONE_CHROME = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Ap
 const IPHONE_INSTAGRAM = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 330.0"
 const IPHONE_TIKTOK = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 musical_ly_36.0.0"
 const IPHONE_GMAIL = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Gmail/6.0.250101"
+const IPHONE_WECHAT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.40"
 const IPAD = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36"
 const MAC = IPAD
@@ -20,6 +21,7 @@ test("platforms are told apart", () => {
   assert.equal(detectPlatform(IPHONE_INSTAGRAM, 5), "other")
   assert.equal(detectPlatform(IPHONE_TIKTOK, 5), "other")
   assert.equal(detectPlatform(IPHONE_GMAIL, 5), "other")
+  assert.equal(detectPlatform(IPHONE_WECHAT, 5), "other")
   assert.equal(detectPlatform(ANDROID, 5), "android")
   assert.equal(detectPlatform(ANDROID_INSTAGRAM, 5), "other")
   assert.equal(detectPlatform("Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0", 0), "other")
@@ -38,6 +40,7 @@ test("the hint is not offered on desktop, in the installed app or once installed
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_INSTAGRAM, 5) }), false)
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_TIKTOK, 5) }), false)
   assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_GMAIL, 5) }), false)
+  assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_WECHAT, 5) }), false)
   assert.equal(shouldOffer({ ...base, standalone: true }), false)
   assert.equal(shouldOffer({ ...base, installed: true }), false)
 })
