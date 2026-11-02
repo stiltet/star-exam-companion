@@ -60,6 +60,14 @@ for (const id of ids) {
     assert.deepEqual(glossary.terms.map((term) => term.term).filter((name) => !skipped.includes(name) && !asked(name)), [], "a glossary row no scene asks")
     assert.deepEqual(pack.terms.filter((name) => !skipped.includes(name) && !asked(name)), [], "a term in terms.txt no scene asks")
 
+    // Read Aloud: a pack with a course reading has its courses; scenes may name only those.
+    if (pack.meta.reading) {
+      assert.ok(pack.courses.length > 0, `${id}/courses.json: reading is on but no courses are listed`)
+      for (const scene of pack.scenes) if (scene.course) assert.ok(pack.courses.some((course) => course.id === scene.course), `${scene.id}: course ${scene.course} is not in courses.json`)
+    } else {
+      assert.equal(pack.courses.length, 0)
+    }
+
     // Study data: sections map to exam sections, questions are well formed.
     for (const section of pack.study.sections) assert.ok(pack.meta.sectionOf[section.id], `study.json: section "${section.id}" is not in pack.json sectionOf`)
     for (const target of Object.values(pack.meta.sectionOf)) assert.ok(sections.some((section) => String(section.id) === target), `pack.json sectionOf: "${target}" is not a section in sections.md`)

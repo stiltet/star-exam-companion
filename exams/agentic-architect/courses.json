@@ -1,0 +1,24 @@
+{
+  "path": "https://www.skills.google/paths/4525",
+  "bundleBase": "https://storage.googleapis.com/cloud-training/cls-html5-courses",
+  "courses": [
+    {
+      "id": "1",
+      "template": "1584",
+      "title": "Manage Agent Memory and State",
+      "folder": "T-DEVAGENTMEM-B/2.0"
+    },
+    {
+      "id": "2",
+      "template": "1564",
+      "title": "Optimize Agent Behavior",
+      "folder": "T-DEVAGENTOPT-I/2.0"
+    },
+    {
+      "id": "3",
+      "template": "1593",
+      "title": "Add Agent Capabilities with Tools",
+      "folder": "T-DEVAGENTTOOL-B/2.0"
+    }
+  ]
+}

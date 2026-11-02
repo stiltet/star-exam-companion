@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { EXAM_TARGET, PRACTICE_TARGET, voiceProgress } from "@/lib/learn"
 import { courseLabel, sectionLabel, examHistory, flashcardProgress, modeLines, practiceProgress, progressFigures, readingProgress, readingStatus } from "@/lib/progress"
-import { COURSES } from "@/lib/reading"
 import { readingTotals } from "@/components/reading-progress"
 import { practiceItems } from "@/lib/questions"
 import { reviewHash } from "@/lib/exam-review"
@@ -30,6 +29,8 @@ type Props = {
     // The written questions and the study-section map, from the exam pack.
     // The exam pack this install studies, so every figure below says whose it is.
     exam: { id: string; title: string }
+    // The exam's learning-path courses, for the Voice Quiz and Read Aloud tables. None for a pack without any.
+    courses: { id: string; title: string }[]
     // Every exam pack on this Mac, for the switch under Reset progress.
     exams: { id: string; title: string }[]
     written: { id: string; section: number }[]
@@ -71,7 +72,7 @@ export function ProgressClient({ stats }: Props) {
   // A copy saved before questions carried a course still groups by the exam-guide section.
   const byCourse = items.some((item) => item.course)
   const voiceSections = byCourse
-    ? COURSES.map((course) => ({ id: Number(course.id), title: courseLabel(course.id), weight: 0 }))
+    ? stats.courses.map((course) => ({ id: Number(course.id), title: courseLabel(course.id), weight: 0 }))
     : sections
   const voice = voiceProgress(items, modeLines(lines, "round"), voiceSections, byCourse ? (item, id) => Number(item.course) === id : undefined)
   const pool = practiceItems(items, stats.written)
@@ -326,11 +327,11 @@ export function ProgressClient({ stats }: Props) {
         <SectionBar>OFFICIAL COURSE TRACKING - READ ALOUD</SectionBar>
         <table className="w-full text-xs sm:text-sm">
           <tbody>
-            {COURSES.map((course, index) => {
+            {stats.courses.map((course, index) => {
               const done = readings[course.id]
               // The state only: with the last day read too, the row ran wider than a phone.
               const value = readingStatus(done?.read.length ?? 0, totals[course.id])
-              return <Row key={course.id} label={`Course ${course.id}`} value={value} last={index === COURSES.length - 1} />
+              return <Row key={course.id} label={`Course ${course.id}`} value={value} last={index === stats.courses.length - 1} />
             })}
           </tbody>
         </table>

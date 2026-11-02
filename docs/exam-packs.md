@@ -17,10 +17,14 @@ Adding an exam means adding a folder. No code changes.
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each is the answer to a voice scene. |
 | `scenes.json` | The voice quiz's questions: `id`, `correct`, `distractors` (three), `scene`, `constraint`, and optionally `guide` and `course`. |
+| `courses.json` | Only when `reading` is true: the learning path's courses for Read Aloud, below. |
 | `study.json` | `sections` (the Study pages: topics, study Q and A, official docs) and `questions` (the written practice questions). |
 
-`reading` is `true` only for a pack whose exam has an official course to read aloud. That feature
-still reads one fixed course list, so a new pack sets it `false`.
+`reading` is `true` for a pack whose exam has an official course to read aloud, and then the pack
+needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder }] }`. `path` is
+the learning path on Google Skills, `bundleBase` is the public Google Cloud Storage folder that
+holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
+A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`.
 
 ## The rules a pack follows
 

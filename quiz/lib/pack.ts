@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { Question, StudySection } from "./exam-data.ts"
+import type { Course } from "./reading.ts"
 import { DEFAULT_EXAM } from "./scope.ts"
 
 // An exam pack is the folder exams/<id>/ at the repo root: everything that makes this the quiz
@@ -55,6 +56,8 @@ export type Pack = {
   terms: string[]
   scenes: Scene[]
   study: Study
+  // The learning path's courses for Read Aloud, from courses.json. Empty when the pack has none.
+  courses: Course[]
 }
 
 // Where the Progress page keeps the exam this install serves. A test points it elsewhere.
@@ -158,6 +161,25 @@ function checkMeta(value: unknown, id: string): PackMeta {
   return meta as PackMeta
 }
 
+// courses.json: { path, bundleBase, courses: [{ id, template, title, folder }] }, each course carrying
+// the path and bundle base so it describes itself.
+function readCourses(file: string, id: string): Course[] {
+  const data = readJson(file) as { path?: unknown; bundleBase?: unknown; courses?: unknown } | null
+  const list = data?.courses
+  if (!data || !isText(data.path) || !isText(data.bundleBase) || !Array.isArray(list) || list.length === 0) {
+    throw new Error(`Exam pack ${id}: courses.json needs path, bundleBase and a list of courses`)
+  }
+  const seen = new Set<string>()
+  return list.map((entry: Partial<Course>) => {
+    if (!isText(entry.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.folder)) {
+      throw new Error(`Exam pack ${id}: a course in courses.json needs a numeric id and template, a title and a folder`)
+    }
+    if (seen.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
+    seen.add(entry.id)
+    return { id: entry.id, template: entry.template, title: entry.title, folder: entry.folder, bundleBase: data.bundleBase as string, path: data.path as string }
+  })
+}
+
 export function loadPack(root: string, id: string = examId(root)): Pack {
   const dir = packDir(root, id)
   const meta = checkMeta(readJson(requirePackFile(dir, "pack.json")), id)
@@ -167,6 +189,7 @@ export function loadPack(root: string, id: string = examId(root)): Pack {
   if (!study || !Array.isArray(study.sections) || !Array.isArray(study.questions)) {
     throw new Error(`Exam pack ${id}: study.json needs sections and questions`)
   }
+  const courses = meta.reading ? readCourses(requirePackFile(dir, "courses.json"), id) : []
   const terms = readFileSync(requirePackFile(dir, "terms.txt"), "utf8")
     .split("\n")
     .map((line) => line.trim())
@@ -179,6 +202,7 @@ export function loadPack(root: string, id: string = examId(root)): Pack {
     terms,
     scenes: scenes as Scene[],
     study: { sections: study.sections, questions: study.questions },
+    courses,
   }
 }
 

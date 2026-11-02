@@ -15,7 +15,8 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
-import { COURSES, reading } from "./reading.ts"
+import { activePack } from "./pack.ts"
+import { reading } from "./reading.ts"
 import { renderSpeech } from "./say.ts"
 
 const ENCODE_TIMEOUT_MS = 10 * 60 * 1000
@@ -35,7 +36,7 @@ export function scriptKey(parts: readonly NightPart[]): string {
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
 // reading never receives it, so it reads every paragraph straight through.
 export async function loadCourseParts(): Promise<NightPart[]> {
-  const courses: NightSource[] = await Promise.all(COURSES.map(async (course) => {
+  const courses: NightSource[] = await Promise.all(activePack().courses.map(async (course) => {
     const loaded = await courseBundle(course)
     if (!loaded.ok) throw new Error(loaded.error)
     return {

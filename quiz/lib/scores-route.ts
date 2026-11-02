@@ -21,6 +21,7 @@ export async function postScores(request: Request): Promise<Response> {
     roundIds: new Set(play.items.map((item) => item.id)),
     termNames: new Set(play.glossary.terms.map((term) => term.term)),
     examLength: play.pack.meta.exam,
+    courseIds: play.pack.courses.map((course) => course.id),
     now: Date.now(),
   })
   if (!decision.ok) return Response.json({ ok: false }, { status: 400 })

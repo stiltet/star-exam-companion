@@ -45,8 +45,8 @@ export function ExamSwitcher({ exams, current }: Props) {
       return
     }
     setMessage(`Switched to ${title(chosen)}.`)
-    // A full reload fetches every page, table and menu of the new exam.
-    window.setTimeout(() => window.location.assign("/progress"), 800)
+    // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
+    window.setTimeout(() => window.location.assign("/"), 800)
   }
 
   return (

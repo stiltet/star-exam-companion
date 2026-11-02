@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { courseBundle } from "@/lib/course-text"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadingList } from "@/components/reading-progress"
+import { activePack } from "@/lib/pack"
 import { courseById } from "@/lib/reading"
 
 export const dynamic = "force-dynamic"
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic"
 type Props = { params: Promise<{ course: string }> }
 
 export default async function CourseReadingsPage({ params }: Props) {
-  const course = courseById((await params).course)
+  const course = courseById(activePack().courses, (await params).course)
   if (!course) notFound()
   const loaded = await courseBundle(course)
 

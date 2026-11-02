@@ -1,5 +1,4 @@
 import { assignSessions, type ScoreLine } from "./learn.ts"
-import { COURSES } from "./reading.ts"
 
 export const MODES = ["round", "practice", "exam", "flashcard", "reading"] as const
 export type Mode = (typeof MODES)[number]
@@ -21,11 +20,12 @@ const CLOCK_SKEW_MS = 10 * 60 * 1000
 const OLDEST_MS = 400 * 24 * 60 * 60 * 1000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
-const READING = new RegExp(`^(${COURSES.map((course) => course.id).join("|")})/[0-9a-f]{24}$`)
+// The courses a reading may name, from the exam pack. Generative AI Leader's five when none are given.
+const DEFAULT_COURSE_IDS: readonly string[] = ["1", "2", "3", "4", "5"]
 
 // One answer from a batch, or null. Round and practice ask a question, flashcard a glossary term,
 // one per line; an exam lists its questions and the seconds it took.
-type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string>; examLength?: ExamLength }
+type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string>; examLength?: ExamLength; courseIds?: readonly string[] }
 
 function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer | string {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "The saved answer is not an object."
@@ -45,7 +45,8 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   // never missed. The page itself is not checked against Google's bundle, which may be offline.
   if (mode === "reading") {
     if (asked.length !== 1 || missed.length !== 0) return "A reading is saved one at a time and is never missed."
-    if (!asked.every((item) => typeof item === "string" && READING.test(item))) return "The reading is not a known course's page."
+    const reading = new RegExp(`^(${(known.courseIds ?? DEFAULT_COURSE_IDS).join("|")})/[0-9a-f]{24}$`)
+    if (!asked.every((item) => typeof item === "string" && reading.test(item))) return "The reading is not a known course's page."
     return { id, at, mode, asked: asked as string[], missed: [] }
   }
   const pool = mode === "flashcard" ? known.termNames : mode === "round" ? known.roundIds ?? known.bankIds : known.bankIds
@@ -111,6 +112,7 @@ export function acceptBatch(input: {
   roundIds?: ReadonlySet<string>
   termNames: ReadonlySet<string>
   examLength?: ExamLength
+  courseIds?: readonly string[]
   now: number
 }): { ok: true; answers: Answer[]; rejected: string[]; gone: string[]; reasons: Record<string, string> } | { ok: false } {
   if (input.origin !== input.allowedOrigin) return { ok: false }

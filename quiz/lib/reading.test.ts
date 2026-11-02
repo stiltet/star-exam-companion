@@ -2,7 +2,10 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
-import { bundleUrl, COURSES, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewStop, reviewUrl, splitLong, type Bundle } from "./reading.ts"
+import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewStop, reviewUrl, splitLong, type Bundle } from "./reading.ts"
+import { testPack } from "./test-pack.ts"
+
+const COURSES = testPack.courses
 
 // A made-up bundle in the shape of Google's course/en/*.json: page → article → block → component.
 function bundle(): Bundle {
@@ -167,16 +170,16 @@ test("a flip card's back or a tab's body that repeats its name reads the name on
 const twoPages = [{ id: "x", title: "First" }, { id: "y", title: "Last" }]
 
 test("NEXT leads to the course's next reading", () => {
-  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "x"), { href: "/read/2/y", title: "Last" })
+  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "x", COURSES), { href: "/read/2/y", title: "Last" })
 })
 
 test("after a course's last reading, NEXT leads to the next course", () => {
-  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "y"), { href: "/read/3", title: `Course 3, ${COURSES[2]!.title}` })
+  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "y", COURSES), { href: "/read/3", title: `Course 3, ${COURSES[2]!.title}` })
 })
 
 test("after the last course, and from an unknown page, there is no NEXT", () => {
-  assert.equal(nextReading(COURSES[COURSES.length - 1]!, twoPages, "y"), null)
-  assert.equal(nextReading(COURSES[1]!, twoPages, "nope"), null)
+  assert.equal(nextReading(COURSES[COURSES.length - 1]!, twoPages, "y", COURSES), null)
+  assert.equal(nextReading(COURSES[1]!, twoPages, "nope", COURSES), null)
 })
 
 test("an unknown or switched-off page has no reading", () => {

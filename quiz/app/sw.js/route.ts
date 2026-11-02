@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { activePack } from "@/lib/pack"
 import { courseBundle } from "@/lib/course-text"
-import { COURSES, type PageSummary } from "@/lib/reading"
+import { type PageSummary } from "@/lib/reading"
 import { coursePages, pageList, readingPages, staticList, workerScript } from "@/lib/sw"
 
 export const dynamic = "force-dynamic"
@@ -28,9 +28,9 @@ export async function GET() {
   const late = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), BUNDLE_WAIT_MS)
   })
-  const courses = await coursePages(COURSES, courseBundle, late, lastPages)
-  clearTimeout(timer)
   const pack = activePack()
+  const courses = await coursePages(pack.courses, courseBundle, late, lastPages)
+  clearTimeout(timer)
   const sectionNumbers = [...new Set(Object.values(pack.meta.sectionOf))].sort()
   const config = {
     build: readFileSync(buildFile, "utf8").trim(),

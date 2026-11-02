@@ -5,8 +5,8 @@ import { isLearned, parseWeights, sectionCleared, voiceProgress, type ScoreLine 
 import { acceptBatch, answerAloud, discussText, localVoices, PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS, questionClips } from "./score.ts"
 import { preferredName, applyNames, displayTerm, label, parseGlossary, plainNames } from "./sources.ts"
 import { itemsFromGlossary, takeRound } from "./round.ts"
-import { COURSES } from "./reading.ts"
 import { testBank, testPack } from "./test-pack.ts"
+
 
 const glossaryText = `
 | Term | Meaning | Guide | Source |
@@ -145,7 +145,7 @@ test("voice quiz asks one written decision per scene, each with its own scene, i
 })
 
 test("every voice question belongs to one of the five learning-path courses", () => {
-  const courses = new Set<string>(COURSES.map((course) => course.id))
+  const courses = new Set<string>(testPack.courses.map((course) => course.id))
   for (const scene of testPack.scenes) assert.equal(courses.has(scene.course ?? ""), true, scene.id)
   for (const course of courses) assert.equal(testPack.scenes.some((scene) => scene.course === course), true, course)
   const parsed = parseGlossary(testPack.glossaryText)

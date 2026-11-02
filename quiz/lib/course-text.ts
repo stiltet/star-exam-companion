@@ -60,8 +60,8 @@ async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
     const bundle: Bundle = { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
     const now = Date.now()
     const entry: Entry = { at: now, bundle, pages: pageList(bundle), ids: found, idsAt: now }
-    cache.set(course.id, entry)
-    failed.delete(course.id)
+    cache.set(course.template, entry)
+    failed.delete(course.template)
     return loaded(entry)
   } catch (error) {
     if (kept) {
@@ -71,14 +71,14 @@ async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
       return loaded(kept)
     }
     const reason = error instanceof Error ? error.message : String(error)
-    failed.set(course.id, { at: Date.now(), error: reason })
+    failed.set(course.template, { at: Date.now(), error: reason })
     return { ok: false, error: reason }
   }
 }
 
 // The course's bundle, its readings and their ids on Google Skills, or why it could not be read.
 export async function courseBundle(course: Course): Promise<Loaded> {
-  const kept = cache.get(course.id)
+  const kept = cache.get(course.template)
   const now = Date.now()
   if (kept && now - kept.at < DAY_MS) {
     // A course page that failed once is asked again after RETRY_MS, not kept empty for a day.
@@ -88,12 +88,12 @@ export async function courseBundle(course: Course): Promise<Loaded> {
     }
     return loaded(kept)
   }
-  const recent = kept ? undefined : failed.get(course.id)
+  const recent = kept ? undefined : failed.get(course.template)
   if (recent && now - recent.at < FAILED_MS) return { ok: false, error: recent.error }
-  let run = loading.get(course.id)
+  let run = loading.get(course.template)
   if (!run) {
-    run = load(course, kept).finally(() => loading.delete(course.id))
-    loading.set(course.id, run)
+    run = load(course, kept).finally(() => loading.delete(course.template))
+    loading.set(course.template, run)
   }
   return run
 }

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict"
 import test, { afterEach, beforeEach } from "node:test"
 import { clearCourseCache, courseBundle, FAILED_MS, RETRY_MS } from "./course-text.ts"
-import { COURSES } from "./reading.ts"
+import { testPack } from "./test-pack.ts"
+
+const COURSES = testPack.courses
 
 // fetch and the clock are stubbed: the tests never reach Google, and each starts from a cold cache.
 const realFetch = globalThis.fetch
