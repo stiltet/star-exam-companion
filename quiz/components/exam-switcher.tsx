@@ -51,10 +51,7 @@ export function ExamSwitcher({ exams, current }: Props) {
 
   return (
     <div className="mt-6">
-      <h2 className="font-bold mb-2">SWITCH EXAM</h2>
-      <p className="text-sm text-muted-foreground mb-4">
-        Studying: <strong className="text-foreground">{title(current)}</strong>. Every device on this Mac follows the exam chosen here. Each exam keeps its own scores.
-      </p>
+      <h2 className="font-bold mb-4">SWITCH EXAM</h2>
       <div className="flex flex-wrap gap-4 items-center">
         <label className="sr-only" htmlFor="exam-choice">Exam</label>
         <select
