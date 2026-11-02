@@ -15,7 +15,7 @@ test("platforms are told apart", () => {
   assert.equal(detectPlatform(IPAD, 5), "ios-safari")
   assert.equal(detectPlatform(MAC, 0), "other")
   assert.equal(detectPlatform(IPHONE_CHROME, 5), "ios-other")
-  assert.equal(detectPlatform(IPHONE_INSTAGRAM, 5), "ios-other")
+  assert.equal(detectPlatform(IPHONE_INSTAGRAM, 5), "other")
   assert.equal(detectPlatform(ANDROID, 5), "android")
   assert.equal(detectPlatform(ANDROID_INSTAGRAM, 5), "other")
   assert.equal(detectPlatform("Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0", 0), "other")
@@ -31,6 +31,7 @@ test("the hint is offered on a phone browser", () => {
 
 test("the hint is not offered on desktop, in the installed app or once installed", () => {
   assert.equal(shouldOffer({ ...base, platform: "other" }), false)
+  assert.equal(shouldOffer({ ...base, platform: detectPlatform(IPHONE_INSTAGRAM, 5) }), false)
   assert.equal(shouldOffer({ ...base, standalone: true }), false)
   assert.equal(shouldOffer({ ...base, installed: true }), false)
 })

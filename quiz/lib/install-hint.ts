@@ -8,7 +8,7 @@ const IN_APP = /FBAN|FBAV|Instagram|Line\/|LinkedInApp|Snapchat|Twitter|GSA\//i
 // iPadOS reports a Mac, so a Mac with touch points is an iPad.
 export function detectPlatform(userAgent: string, maxTouchPoints: number): InstallPlatform {
   const ios = /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1)
-  if (IN_APP.test(userAgent)) return ios ? "ios-other" : "other"
+  if (IN_APP.test(userAgent)) return "other"
   if (ios) {
     if (/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent)) return "ios-other"
     return "ios-safari"
@@ -31,8 +31,8 @@ export type InstallState = {
 
 // Android offers the browser's own prompt when it has one, and the menu steps when it has not. A
 // browser cannot say that the app is already installed, so the tip may reach someone who has it; Not
-// now hides it for 30 days. Desktop, Android in-app browsers and the installed app get nothing; an iOS
-// in-app browser is told to open the page in Safari.
+// now hides it for 30 days. Desktop, in-app browsers and the installed app get nothing; iOS browsers
+// other than Safari are told to open the page in Safari.
 export function shouldOffer(state: InstallState): boolean {
   if (state.standalone || state.installed || state.platform === "other") return false
   if (state.dismissedAt !== null && state.now - state.dismissedAt < DISMISS_DAYS * DAY_MS) return false
