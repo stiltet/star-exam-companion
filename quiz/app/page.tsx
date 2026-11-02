@@ -42,11 +42,9 @@ export default function HomePage() {
                 <ActionLink variant="outlined" href="/voice" arrow>VOICE QUIZ</ActionLink>
                 {meta.reading && <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>}
               </div>
-              {meta.reading && (
-                <div className="flex flex-wrap gap-4">
-                  <ActionLink variant="filled" href="https://www.skills.google/paths/1951" newTab>OFFICIAL LEARNING PATH</ActionLink>
-                </div>
-              )}
+              <div className="flex flex-wrap gap-4">
+                <ActionLink variant="filled" href={meta.learningPath} newTab>OFFICIAL LEARNING PATH</ActionLink>
+              </div>
             </div>
           </div>
         </section>

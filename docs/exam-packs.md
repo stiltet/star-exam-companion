@@ -10,7 +10,7 @@ Adding an exam means adding a folder. No code changes.
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `examPage`, `examGuide`, `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
 | `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing pack's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each is the answer to a voice scene. |
