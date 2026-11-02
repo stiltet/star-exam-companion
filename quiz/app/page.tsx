@@ -49,6 +49,9 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* The exam in a sentence or two, from its pack. */}
+        <Text variant="muted" placement="mb-8">{meta.description}</Text>
+
         {/* Exam Structure */}
         <section className="mb-8">
           <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">EXAM STRUCTURE</h2>

@@ -30,6 +30,8 @@ export type PackMeta = {
   title: string
   // The certification's full name, for the page description.
   certification: string
+  // A short description of the exam, shown on the home page above Exam Structure.
+  description: string
   examPage: string
   examGuide: string
   // Extra footer links the exam has: its learning path, sample questions.
@@ -144,6 +146,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     meta.id === id &&
     isText(meta.title) &&
     isText(meta.certification) &&
+    isText(meta.description) &&
     isText(meta.examPage) &&
     isText(meta.examGuide) &&
     isText(meta.learningPath) &&
@@ -157,7 +160,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     sectionOf !== null &&
     typeof sectionOf === "object" &&
     Object.values(sectionOf).every(isText)
-  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
+  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, description, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
   return meta as PackMeta
 }
 
