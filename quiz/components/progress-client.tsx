@@ -127,16 +127,6 @@ export function ProgressClient({ stats }: Props) {
       )}
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
-        <SectionBar>EXAM PACKAGE</SectionBar>
-        <table className="w-full text-xs sm:text-sm">
-          <tbody>
-            <Row label="Package" value={stats.exam.title} />
-            <Row label="Id" value={stats.exam.id} last />
-          </tbody>
-        </table>
-      </div>
-
-      <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>SAVING</SectionBar>
         <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
           <tbody>
@@ -437,6 +427,15 @@ export function ProgressClient({ stats }: Props) {
       </div>
 
       <div className="border-t border-foreground pt-6 mt-6">
+        <div className="border-2 border-foreground mb-6 overflow-x-auto">
+          <SectionBar>EXAM PACKAGE</SectionBar>
+          <table className="w-full text-xs sm:text-sm">
+            <tbody>
+              <Row label="Package" value={stats.exam.title} />
+              <Row label="Id" value={stats.exam.id} last />
+            </tbody>
+          </table>
+        </div>
         <ExamSwitcher exams={stats.exams} current={stats.exam.id} />
       </div>
     </div>
