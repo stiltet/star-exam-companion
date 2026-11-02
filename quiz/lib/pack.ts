@@ -32,6 +32,8 @@ export type PackMeta = {
   certification: string
   // A short description of the exam, shown on the home page above Exam Structure.
   description: string
+  // The Glossary and Flashcards group for a term the exam guide does not number, such as "Study guide".
+  unnumberedLabel: string
   examPage: string
   examGuide: string
   // Extra footer links the exam has: its learning path, sample questions.
@@ -147,6 +149,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.title) &&
     isText(meta.certification) &&
     isText(meta.description) &&
+    isText(meta.unnumberedLabel) &&
     isText(meta.examPage) &&
     isText(meta.examGuide) &&
     isText(meta.learningPath) &&
@@ -160,7 +163,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     sectionOf !== null &&
     typeof sectionOf === "object" &&
     Object.values(sectionOf).every(isText)
-  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, description, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
+  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, description, unnumberedLabel, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
   return meta as PackMeta
 }
 

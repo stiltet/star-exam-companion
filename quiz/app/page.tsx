@@ -1,7 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
-import { Heading } from "@/components/atoms/heading"
+import { Heading, HeroTitle } from "@/components/atoms/heading"
 import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
 import { Text } from "@/components/atoms/text"
 import { activePack } from "@/lib/pack"
@@ -22,7 +22,7 @@ export default function HomePage() {
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
           <Heading variant="hero" placement="mb-4">
             <GoogleCloudLogo placement="mb-3 md:mb-0" />
-            <span className="block">{meta.title.toUpperCase()}</span>
+            <HeroTitle>{meta.title.toUpperCase()}</HeroTitle>
           </Heading>
           {/* The tagline sits over the buttons, and from lg up right of them in the space they leave (owner, 28 Oct). */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">

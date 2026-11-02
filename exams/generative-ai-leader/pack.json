@@ -3,6 +3,7 @@
   "title": "Generative AI Leader",
   "certification": "Google Cloud Generative AI Leader",
   "description": "Google Cloud's certification for leaders who understand, evaluate and guide the adoption of generative AI on Google Cloud. It tests concepts and business decisions, not hands-on implementation.",
+  "unnumberedLabel": "Study guide",
   "examPage": "https://cloud.google.com/learn/certification/generative-ai-leader",
   "examGuide": "https://services.google.com/fh/files/misc/generative_ai_leader_exam_guide_english.pdf",
   "exam": {

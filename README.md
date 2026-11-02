@@ -4,7 +4,7 @@
 
 # Star Exam Companion
 
-**An open-source, voice-first study app for the Google Cloud Generative AI Leader exam.**
+**An open-source, voice-first study app for Google Cloud certification exams, one exam pack per exam.**
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933.svg)](https://nodejs.org)
@@ -46,7 +46,8 @@ below gets everything working.
 
 ## Why Star Exam Companion
 
-It was built to pass the Google Cloud Generative AI Leader exam, and it did. Stellan Lindell passed the exam on first try. It turns the exam
+It was built to pass the Google Cloud Generative AI Leader exam, and it did. Stellan Lindell passed the exam on first try. It now serves
+any exam that has a pack, starting with that one and Professional Agentic Architect. It turns an exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
