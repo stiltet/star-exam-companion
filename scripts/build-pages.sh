@@ -32,7 +32,7 @@ fi
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
+rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude 'active-exam.json' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
 cp -R "$ROOT/exams" "$work/exams"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.

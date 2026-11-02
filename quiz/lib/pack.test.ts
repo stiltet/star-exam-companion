@@ -1,9 +1,10 @@
 import assert from "node:assert/strict"
-import { readdirSync } from "node:fs"
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import test from "node:test"
 import { parseSections } from "./learn.ts"
-import { loadPack, packDir } from "./pack.ts"
+import { examId, listPacks, loadPack, packDir, setActiveExam } from "./pack.ts"
 import { itemsFromGlossary } from "./round.ts"
 import { parseGlossary } from "./sources.ts"
 import { testRoot } from "./test-pack.ts"
@@ -76,4 +77,42 @@ test("a pack name that is not a plain slug is refused, so QUIZ_EXAM cannot reach
 
 test("a missing pack says which file it lacks", () => {
   assert.throws(() => loadPack(testRoot, "no-such-exam"), /no pack\.json/)
+})
+
+test("the chosen exam comes from the setting file, then QUIZ_EXAM, then the default", () => {
+  const before = { file: process.env.QUIZ_EXAM_SETTING_FILE, exam: process.env.QUIZ_EXAM }
+  const file = path.join(mkdtempSync(path.join(tmpdir(), "setting-")), "active-exam.json")
+  process.env.QUIZ_EXAM_SETTING_FILE = file
+  try {
+    delete process.env.QUIZ_EXAM
+    assert.equal(examId(testRoot), "generative-ai-leader", "no choice yet")
+    process.env.QUIZ_EXAM = "agentic-architect"
+    assert.equal(examId(testRoot), "agentic-architect", "the environment is the default choice")
+    assert.equal(setActiveExam("generative-ai-leader", testRoot), true)
+    assert.equal(JSON.parse(readFileSync(file, "utf8")).exam, "generative-ai-leader")
+    assert.equal(examId(testRoot), "generative-ai-leader", "the choice wins over the environment")
+    writeFileSync(file, '{"exam":"no-such-exam"}')
+    assert.equal(examId(testRoot), "agentic-architect", "a choice naming a missing pack is ignored")
+    writeFileSync(file, "not json")
+    assert.equal(examId(testRoot), "agentic-architect", "an unreadable file is ignored")
+  } finally {
+    for (const [key, value] of [["QUIZ_EXAM_SETTING_FILE", before.file], ["QUIZ_EXAM", before.exam]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test("only a pack in exams/ can be chosen, and every pack is listed with its title", () => {
+  const before = process.env.QUIZ_EXAM_SETTING_FILE
+  process.env.QUIZ_EXAM_SETTING_FILE = path.join(mkdtempSync(path.join(tmpdir(), "setting-")), "active-exam.json")
+  try {
+    for (const bad of ["../quiz", "no-such-exam", "", "Upper"]) assert.equal(setActiveExam(bad, testRoot), false, bad)
+    const packs = listPacks(testRoot)
+    assert.deepEqual(packs.map((pack) => pack.id).sort(), ids.slice().sort())
+    assert.equal(packs.find((pack) => pack.id === "agentic-architect")?.title, "Professional Agentic Architect")
+  } finally {
+    if (before === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+    else process.env.QUIZ_EXAM_SETTING_FILE = before
+  }
 })

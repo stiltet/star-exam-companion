@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { acceptAnswer, acceptBatch, EXAM_SECONDS, MAX_BATCH, storeAnswers } from "./score.ts"
+import { acceptAnswer, acceptBatch, DEFAULT_EXAM_LENGTH, examSeconds, MAX_BATCH, storeAnswers } from "./score.ts"
 import type { ScoreLine } from "./learn.ts"
 import { readFileSync } from "node:fs"
 import { itemsFromGlossary } from "./round.ts"
@@ -48,7 +48,7 @@ test("each mode is checked by its own rule", () => {
   assert.equal(check(answer(1, { mode: "flashcard", asked: ["a"] })), false, "a flashcard names a glossary term")
   assert.equal(check(answer(1, { mode: "exam", asked: ["a", "b"], missed: ["b"], seconds: 600 })), true)
   assert.equal(check(answer(1, { mode: "exam", asked: ["a", "a"], missed: [], seconds: 600 })), false)
-  assert.equal(check(answer(1, { mode: "exam", asked: ["a"], missed: [], seconds: EXAM_SECONDS + 1 })), false)
+  assert.equal(check(answer(1, { mode: "exam", asked: ["a"], missed: [], seconds: examSeconds(DEFAULT_EXAM_LENGTH) + 1 })), false)
   assert.equal(check(answer(1, { mode: "exam", asked: ["a"], missed: [] })), false, "an exam says how long it took")
   assert.equal(check(answer(1, { seconds: 5 })), false, "only an exam has seconds")
   assert.equal(check(answer(1, { mode: "quiz" })), false)
@@ -122,7 +122,7 @@ test("refusal responses include specific reasons without changing the rejected I
   const result = acceptBatch(batch([
     answer(1, { asked: ["unknown"] }),
     answer(2, { at: "2026-10-01T13:00:00.000Z" }),
-    answer(3, { mode: "exam", seconds: EXAM_SECONDS + 1 }),
+    answer(3, { mode: "exam", seconds: examSeconds(DEFAULT_EXAM_LENGTH) + 1 }),
   ]))
   assert.ok(result.ok)
   if (!result.ok) return
@@ -162,4 +162,12 @@ test("answers join a session within 30 minutes of each other, and open a new one
   ])
   assert.deepEqual(result.lines.map((line) => line.session), [5, 5, 6])
   assert.equal(result.lines[1]?.seconds, 90)
+})
+
+test("an exam's own length decides what a finished exam may claim", () => {
+  const known = { bankIds: new Set(["a"]), termNames: new Set<string>() }
+  const now = Date.parse("2026-11-02T10:00:00.000Z")
+  const long = answer(1, { mode: "exam", asked: ["a"], missed: [], seconds: 10_000 })
+  assert.equal(acceptAnswer(long, known, now) !== null, false, "90 minutes is the default limit")
+  assert.equal(acceptAnswer(long, { ...known, examLength: { questions: 80, minutes: 180 } }, now) !== null, true, "3 hours fits a 180-minute exam")
 })

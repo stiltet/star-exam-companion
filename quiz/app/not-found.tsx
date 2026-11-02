@@ -2,7 +2,8 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import Link from "next/link"
 import { ActionLink } from "@/components/atoms/button"
-import { SITE_PAGES } from "@/lib/pages"
+import { activePack } from "@/lib/pack"
+import { sitePages } from "@/lib/pages"
 
 export default function NotFound() {
   return (
@@ -20,7 +21,7 @@ export default function NotFound() {
           <div className="border-2 border-foreground p-6 mb-6 text-left">
             <h3 className="font-bold mb-4">Available pages</h3>
             <ul className="space-y-2 text-sm">
-              {SITE_PAGES.map((page) => (
+              {sitePages(activePack().meta).map((page) => (
                 <li key={page.href}>→ <Link href={page.href} className="underline">{page.menu}</Link> — {page.blurb}</li>
               ))}
             </ul>

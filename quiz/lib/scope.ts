@@ -5,17 +5,17 @@
 
 export const DEFAULT_EXAM = "generative-ai-leader"
 
-// Baked in at build time from QUIZ_EXAM (next.config.mjs), since the browser cannot read the server's environment.
-export const BUILT_EXAM = process.env.NEXT_PUBLIC_QUIZ_EXAM || DEFAULT_EXAM
+// The exam this page belongs to, written on <html> by the server for each request (app/layout.tsx).
+// A page keeps its own exam: a copy the worker stored before a switch still reads its own keys.
+function onHtml(name: string): string | undefined {
+  return typeof document === "undefined" ? undefined : document.documentElement.dataset[name]
+}
 
-// Whether this exam's pack has the course reading feature (pack.json "reading"), also baked in at build time.
-export const BUILT_READING = process.env.NEXT_PUBLIC_QUIZ_READING !== "0"
+export function currentExam(): string {
+  return onHtml("exam") || DEFAULT_EXAM
+}
 
-// The Practice exam's length, from pack.json "exam", baked in at build time. The defaults are Generative AI Leader's.
-export const BUILT_EXAM_QUESTIONS = Number(process.env.NEXT_PUBLIC_QUIZ_EXAM_QUESTIONS) || 60
-export const BUILT_EXAM_MINUTES = Number(process.env.NEXT_PUBLIC_QUIZ_EXAM_MINUTES) || 90
-
-export function scoped(name: string, exam: string = BUILT_EXAM): string {
+export function scoped(name: string, exam: string = currentExam()): string {
   return `${name}-${exam}`
 }
 
@@ -47,7 +47,7 @@ function queued(text: string | null): { id?: unknown }[] | null {
 // The default exam takes its old plain-named items over once, so nothing studied before is lost:
 // every queued answer still reaches the Mac. If both names hold a queue (an older open page wrote
 // the plain one after this ran), the queues merge by answer id. Another exam never touches them.
-export function migrateLegacyStorage(store: Store, exam: string = BUILT_EXAM): void {
+export function migrateLegacyStorage(store: Store, exam: string = currentExam()): void {
   if (exam !== DEFAULT_EXAM) return
   const moves: [string, string][] = LEGACY_NAMES.map((name) => [name, scoped(name, exam)])
   for (let index = 0; index < store.length; index += 1) {

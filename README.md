@@ -136,8 +136,12 @@ To see which packs your copy has:
 ls exams
 ```
 
-To study another exam, set `QUIZ_EXAM` for the build and for the start. Replace `PACK` with a name
-from the list:
+To switch exams while the quiz runs, open **Progress**, scroll to the bottom, pick the exam under
+**Switch exam** and confirm. Every device on that computer follows the choice, and each exam keeps
+its own scores. The choice is saved in `quiz/active-exam.json`, which git ignores.
+
+`QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
+build and for the start. Replace `PACK` with a name from the list:
 
 ```bash
 QUIZ_EXAM=PACK pnpm --dir quiz build
@@ -163,7 +167,8 @@ in the shell that starts the quiz.
 | Variable | Default | Purpose |
 |---|---|---|
 | `QUIZ_LAN_HOST` | unset | The one address or name, without a port, that other devices open. Unset, only pages opened on this machine (`localhost`, `127.0.0.1`, `[::1]`) can save answers. |
-| `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Set it before the build, since some pages are built ahead. |
+| `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Only the starting exam: once you switch on the Progress page, that choice wins. |
+| `QUIZ_EXAM_SETTING_FILE` | `quiz/active-exam.json` | Where the exam chosen on the Progress page is saved. |
 | `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |

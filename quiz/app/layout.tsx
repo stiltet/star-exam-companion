@@ -12,28 +12,32 @@ import { AudioUnlock } from "@/components/audio"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DemoBanner } from "@/components/demo-banner"
 import { InstallHint } from "@/components/install-hint"
-import { BASE_PATH } from "@/lib/static-demo"
+import { BASE_PATH, STATIC_DEMO } from "@/lib/static-demo"
+import { connection } from "next/server"
 
 // Next does not add a sub-path to these links itself. Empty everywhere except the online demo,
 // which is served from /star-exam-companion on GitHub Pages.
 const base = BASE_PATH
 
-const pack = activePack().meta
-
-export const metadata: Metadata = {
-  title: "Star Exam Companion",
-  description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam-focused.`,
-  keywords: ["Google Cloud", "Certification", "Exam Prep", pack.title],
-  icons: {
-    icon: `${base}/favicon.png`,
-    shortcut: `${base}/favicon.png`,
-    apple: `${base}/apple-touch-icon.png`,
-  },
-  appleWebApp: {
-    capable: true,
+// Read for each request: the exam can be switched while the quiz runs.
+export async function generateMetadata(): Promise<Metadata> {
+  if (!STATIC_DEMO) await connection()
+  const pack = activePack().meta
+  return {
     title: "Star Exam Companion",
-    statusBarStyle: "default",
-  },
+    description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam-focused.`,
+    keywords: ["Google Cloud", "Certification", "Exam Prep", pack.title],
+    icons: {
+      icon: `${base}/favicon.png`,
+      shortcut: `${base}/favicon.png`,
+      apple: `${base}/apple-touch-icon.png`,
+    },
+    appleWebApp: {
+      capable: true,
+      title: "Star Exam Companion",
+      statusBarStyle: "default",
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -43,14 +47,17 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Per request, so a switch of exam shows at once; the online demo is built once and has one exam.
+  if (!STATIC_DEMO) await connection()
+  const pack = activePack().meta
   return (
     // next-themes sets the theme class on <html> before React loads, so the server's copy differs.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-exam={pack.id}>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange enableColorScheme={false} storageKey="quiz-theme">
           <DemoBanner />

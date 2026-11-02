@@ -5,7 +5,7 @@ import { Heading } from "@/components/atoms/heading"
 import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
 import { Text } from "@/components/atoms/text"
 import { activePack } from "@/lib/pack"
-import { SITE_PAGES } from "@/lib/pages"
+import { sitePages } from "@/lib/pages"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
 
@@ -78,7 +78,7 @@ export default function HomePage() {
         <section className="mb-8">
           <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">NAVIGATION</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SITE_PAGES.map((page) => (
+            {sitePages(meta).map((page) => (
               <Link
                 key={page.href}
                 href={page.href}

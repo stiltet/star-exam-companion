@@ -10,6 +10,9 @@ import { postScores } from "./scores-route.ts"
 import type { Answer } from "./score.ts"
 import { testBank, testPack } from "./test-pack.ts"
 
+// A test reads the default exam, whatever exam this machine has chosen on the Progress page.
+process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-scores-route-"))
 const before = { cwd: process.cwd(), scores: process.env.QUIZ_SCORES_FILE }
 const quiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")

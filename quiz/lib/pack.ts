@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { Question, StudySection } from "./exam-data.ts"
 import { DEFAULT_EXAM } from "./scope.ts"
@@ -57,12 +57,54 @@ export type Pack = {
   study: Study
 }
 
-// The exam this install serves: QUIZ_EXAM, else the default. One exam per install.
-export function examId(): string {
+// Where the Progress page keeps the exam this install serves. A test points it elsewhere.
+export function settingFile(root: string = repoRoot()): string {
+  return process.env.QUIZ_EXAM_SETTING_FILE || path.join(root, "quiz", "active-exam.json")
+}
+
+function isPackFolder(root: string, id: string): boolean {
+  return ID_PATTERN.test(id) && existsSync(path.join(root, "exams", id, "pack.json"))
+}
+
+// The exam this install serves: the one chosen on the Progress page, else QUIZ_EXAM, else the
+// default. One exam at a time, for every device. A choice naming a pack that is gone is ignored.
+export function examId(root: string = repoRoot()): string {
+  try {
+    const chosen: unknown = JSON.parse(readFileSync(settingFile(root), "utf8"))
+    const id = (chosen as { exam?: unknown } | null)?.exam
+    if (typeof id === "string" && isPackFolder(root, id)) return id
+  } catch {
+    // No choice yet, or an unreadable file: fall through to the environment.
+  }
   return process.env.QUIZ_EXAM || DEFAULT_EXAM
 }
 
-export function packDir(root: string, id: string = examId()): string {
+// Every pack in exams/, for the Progress page's switch.
+export function listPacks(root: string = repoRoot()): { id: string; title: string }[] {
+  const found: { id: string; title: string }[] = []
+  for (const entry of readdirSync(path.join(root, "exams"), { withFileTypes: true })) {
+    if (!entry.isDirectory() || !isPackFolder(root, entry.name)) continue
+    try {
+      const meta = checkMeta(readJson(path.join(root, "exams", entry.name, "pack.json")), entry.name)
+      found.push({ id: meta.id, title: meta.title })
+    } catch {
+      // A pack that does not read is left out of the list; the pack test names what is wrong.
+    }
+  }
+  return found.sort((a, b) => a.title.localeCompare(b.title))
+}
+
+// Switches the exam for every device. Only a pack that is in exams/ can be chosen.
+export function setActiveExam(id: string, root: string = repoRoot()): boolean {
+  if (!listPacks(root).some((pack) => pack.id === id)) return false
+  const file = settingFile(root)
+  const temporary = `${file}.${process.pid}.tmp`
+  writeFileSync(temporary, `${JSON.stringify({ exam: id })}\n`)
+  renameSync(temporary, file)
+  return true
+}
+
+export function packDir(root: string, id: string = examId(root)): string {
   // The id becomes a path, so it is a plain slug: no separators, no dots.
   if (!ID_PATTERN.test(id)) throw new Error(`QUIZ_EXAM "${id}" is not a pack name: use lower case words joined by hyphens`)
   return path.join(root, "exams", id)
@@ -116,7 +158,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
   return meta as PackMeta
 }
 
-export function loadPack(root: string, id: string = examId()): Pack {
+export function loadPack(root: string, id: string = examId(root)): Pack {
   const dir = packDir(root, id)
   const meta = checkMeta(readJson(requirePackFile(dir, "pack.json")), id)
   const scenes = readJson(requirePackFile(dir, "scenes.json"))

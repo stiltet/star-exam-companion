@@ -9,7 +9,7 @@ import { EXAM_TARGET } from "@/lib/learn"
 import { Text } from "@/components/atoms/text"
 import { examHistory } from "@/lib/progress"
 import { EXAM_KEY, examOutcome, examResume, examSeconds, loadState, saveState, secondsLeft } from "@/lib/resume"
-import { EXAM_SECONDS, MAX_EXAM_QUESTIONS } from "@/lib/score"
+import { examSeconds as lengthSeconds, type ExamLength } from "@/lib/score"
 import { useSnapshot } from "@/components/snapshot"
 import { ExamReview, type ReviewedExam } from "@/components/exam-review"
 import { ActionButton } from "@/components/atoms/button"
@@ -22,6 +22,8 @@ type ExamState = "intro" | "active"
 
 type Props = {
   questions: Question[]
+  // The real exam's length, from the exam pack.
+  length: ExamLength
   sections: Array<{ id: string; title: string; weight: number }>
 }
 
@@ -37,7 +39,9 @@ function setHash(id: string | null) {
   window.dispatchEvent(new HashChangeEvent("hashchange"))
 }
 
-export function ExamClient({ questions, sections }: Props) {
+export function ExamClient({ questions, sections, length }: Props) {
+  const EXAM_SECONDS = lengthSeconds(length)
+  const MAX_EXAM_QUESTIONS = length.questions
   const [examState, setExamState] = useState<ExamState>("intro")
   const [examQuestions, setExamQuestions] = useState<Question[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -170,7 +174,7 @@ export function ExamClient({ questions, sections }: Props) {
   const startExam = (ids?: string[]) => {
     const list = ids ? shuffle(ids.map((id) => bank.get(id)).filter((q): q is Question => q !== undefined)) : generateExam()
     const startedAt = Date.now()
-    const duration = ids ? examDuration(list.length) : EXAM_SECONDS
+    const duration = ids ? examDuration(list.length, length) : EXAM_SECONDS
     finished.current = false
     setUnsaved(false)
     setJustFinished(null)

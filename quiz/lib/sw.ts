@@ -1,5 +1,4 @@
-import { SITE_PAGES } from "./pages.ts"
-import { BUILT_READING } from "./scope.ts"
+import { sitePages } from "./pages.ts"
 
 // What the service worker stores on install: every page, study section and topic, each Practice
 // filter the pages link to, and every static file of this build.
@@ -9,8 +8,9 @@ import { BUILT_READING } from "./scope.ts"
 
 export const NIGHT_CACHE = "quiz-night"
 
-export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[]): string[] {
-  const pages = ["/", ...SITE_PAGES.map((page) => page.href), "/about", ...(BUILT_READING ? ["/read/night"] : []), "/practice?unanswered=1"]
+// meta: the exam this install serves, as pack.json gives it. Without one, Generative AI Leader's.
+export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[], meta: { reading: boolean; exam: { questions: number; minutes: number } } = { reading: true, exam: { questions: 60, minutes: 90 } }): string[] {
+  const pages = ["/", ...sitePages(meta).map((page) => page.href), "/about", ...(meta.reading ? ["/read/night"] : []), "/practice?unanswered=1"]
   for (const id of practiceSections) {
     pages.push(`/practice?section=${encodeURIComponent(id)}`)
     pages.push(`/practice?section=${encodeURIComponent(id)}&unanswered=1`)

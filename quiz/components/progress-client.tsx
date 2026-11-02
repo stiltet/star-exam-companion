@@ -8,6 +8,7 @@ import { COURSES } from "@/lib/reading"
 import { readingTotals } from "@/components/reading-progress"
 import { practiceItems } from "@/lib/questions"
 import { reviewHash } from "@/lib/exam-review"
+import { ExamSwitcher } from "@/components/exam-switcher"
 import { ResetProgress } from "@/components/reset-progress"
 import { SectionBar } from "@/components/atoms/section-bar"
 import { ActionButton } from "@/components/atoms/button"
@@ -29,6 +30,8 @@ type Props = {
     // The written questions and the study-section map, from the exam pack.
     // The exam pack this install studies, so every figure below says whose it is.
     exam: { id: string; title: string }
+    // Every exam pack on this Mac, for the switch under Reset progress.
+    exams: { id: string; title: string }[]
     written: { id: string; section: number }[]
     sectionOf: Record<string, string>
     sections: SectionStat[]
@@ -430,6 +433,10 @@ export function ProgressClient({ stats }: Props) {
         <p className="text-xs text-muted-foreground">
           Your progress is saved on the Mac as you go and backed up at the end of each study day. Clearing this browser does not lose it, and a reset keeps a copy first.
         </p>
+      </div>
+
+      <div className="border-t border-foreground pt-6 mt-6">
+        <ExamSwitcher exams={stats.exams} current={stats.exam.id} />
       </div>
     </div>
   )

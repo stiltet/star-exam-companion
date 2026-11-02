@@ -20,6 +20,7 @@ export async function postScores(request: Request): Promise<Response> {
     bankIds: new Set(practiceItems(play.items, writtenPool(play.bank)).map((item) => item.id)),
     roundIds: new Set(play.items.map((item) => item.id)),
     termNames: new Set(play.glossary.terms.map((term) => term.term)),
+    examLength: play.pack.meta.exam,
     now: Date.now(),
   })
   if (!decision.ok) return Response.json({ ok: false }, { status: 400 })

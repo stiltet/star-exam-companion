@@ -34,7 +34,7 @@ export async function GET() {
   const sectionNumbers = [...new Set(Object.values(pack.meta.sectionOf))].sort()
   const config = {
     build: readFileSync(buildFile, "utf8").trim(),
-    pages: [...pageList(pack.study.sections, sectionNumbers), ...readingPages(courses)],
+    pages: [...pageList(pack.study.sections, sectionNumbers, pack.meta), ...readingPages(courses)],
     statics: [...staticList(files(path.join(dist, "static")), "/_next/static"), ...staticList(files(publicDir), ""), "/manifest.webmanifest"],
   }
   const worker = readFileSync(path.join(process.cwd(), "lib/sw-worker.js"), "utf8")

@@ -2,7 +2,9 @@
 
 An exam pack is everything that makes the quiz the quiz for one exam. It is a folder,
 `exams/<id>/`, and the app code holds no exam content. One install serves one exam: set
-`QUIZ_EXAM=<id>` (default `generative-ai-leader`) before the build and the start.
+`QUIZ_EXAM=<id>` (default `generative-ai-leader`) for the exam a fresh install starts with, or
+switch it any time at the bottom of the Progress page. The choice is kept in `quiz/active-exam.json`
+(git ignores it) and every device follows it.
 
 Adding an exam means adding a folder. No code changes.
 

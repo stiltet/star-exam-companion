@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url"
 import { loadPlay, loadVoiceIndex, readScores, scoresFile } from "./load.ts"
 import { speechKey, voiceKeys } from "./speak.ts"
 
+// A test reads the default exam, whatever exam this machine has chosen on the Progress page.
+process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+
 // loadPlay reads the repo from the quiz directory, as the running app does.
 test("loads the glossary, the section weights and the scores from the repo", () => {
   const quizDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")

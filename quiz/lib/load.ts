@@ -10,7 +10,7 @@ import { voiceIndex } from "./speak.ts"
 // Each exam keeps its own scores file, named after it, so two exams never mix answers and a copied
 // file says which exam it is. QUIZ_SCORES_FILE points a test instance at a scratch file, so a test
 // never writes real scores.
-export function scoresFile(root: string, id: string = examId()): string {
+export function scoresFile(root: string, id: string = examId(root)): string {
   return process.env.QUIZ_SCORES_FILE || path.join(root, "quiz", `scores-${id}.jsonl`)
 }
 
@@ -22,7 +22,7 @@ let migrated = false
 export function migrateLegacyScores(root: string): void {
   if (migrated || process.env.QUIZ_SCORES_FILE) return
   migrated = true
-  if (examId() !== DEFAULT_EXAM) return
+  if (examId(root) !== DEFAULT_EXAM) return
   const legacy = path.join(root, "quiz/scores.jsonl")
   const target = scoresFile(root)
   if (!existsSync(legacy) || existsSync(target)) return
