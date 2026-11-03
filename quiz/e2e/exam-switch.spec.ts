@@ -50,6 +50,12 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.locator("html")).toHaveAttribute("data-exam", "agentic-architect")
     await settleWorker(page)
     await expect(page.getByText("PROFESSIONAL AGENTIC ARCHITECT")).toBeVisible()
+    // The long exam name stays on one line at this width, shrunk to fit rather than wrapped or cut off.
+    const hero = page.getByText("PROFESSIONAL AGENTIC ARCHITECT")
+    const lines = await hero.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight))
+    expect(lines, "the hero title is one line").toBeLessThan(1.5)
+    const box = (await hero.boundingBox())!
+    expect(box.x + box.width, "and fits inside the page").toBeLessThanOrEqual(page.viewportSize()!.width)
 
     // The read layout lets the new exam's Read Aloud pages through. Night reading needs no course text,
     // so the test never reaches Google.
@@ -93,4 +99,49 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await page.goto("/")
     await settleWorker(page)
   }
+})
+
+// Without the worker, because WebKit sends a page's requests through it and then page.route never sees them.
+test.describe("exam-switcher: a refused switch", () => {
+  test.use({ serviceWorkers: "block" })
+
+  test("says so and leaves the exam as it was", async ({ page }) => {
+    await page.goto("/progress")
+    const pick = page.getByLabel("Exam", { exact: true })
+    await expect(pick).toHaveValue("generative-ai-leader")
+    await page.waitForLoadState("networkidle")
+    // The page reads the answer, not the status; a 4xx would also be logged by the browser as a failed load, which the fixture reports.
+    await page.route("**/api/exam", (route) => route.fulfill({ contentType: "application/json", body: '{"ok":false}' }))
+    await pick.selectOption("agentic-architect")
+    await page.getByRole("button", { name: "Switch exam", exact: true }).click()
+    await expect(page.getByRole("status").filter({ hasText: "The exam was not switched" })).toBeVisible()
+    await expect(page.locator("html")).toHaveAttribute("data-exam", "generative-ai-leader")
+    await expect(pick).toHaveValue("generative-ai-leader")
+    // The Mac still serves the exam it did.
+    const served = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "generative-ai-leader" } })
+    expect(served.status()).toBe(200)
+  })
+})
+
+// This page is only read, so the worker is left out: its install would queue behind the new exam's voice downloads.
+test.describe("a pack with no course to read", () => {
+  test.use({ serviceWorkers: "block" })
+
+  test("still shows Read Aloud, and says there is none", async ({ page, baseURL }) => {
+    const origin = { origin: baseURL! }
+    try {
+      // The scratch pack of server.mjs: the second exam's pack with its Read Aloud courses taken out.
+      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "no-course-test" } })).ok()).toBe(true)
+      await page.goto("/")
+      await expect(page.getByRole("link", { name: /OFFICIAL LEARNING READ ALOUD/ })).toBeVisible()
+      await page.goto("/read")
+      await expect(page.getByText("Read Aloud has no course for Exam With No Course yet")).toBeVisible()
+      await expect(page.getByRole("link", { name: "OFFICIAL LEARNING PATH" })).toBeVisible()
+      // Nothing to pick or to read at night, and no course card.
+      await expect(page.getByRole("link", { name: "Night reading" })).toHaveCount(0)
+      await expect(page.getByText("Pick a course")).toHaveCount(0)
+    } finally {
+      await page.request.post("/api/exam", { headers: origin, data: { exam: "generative-ai-leader" } })
+    }
+  })
 })

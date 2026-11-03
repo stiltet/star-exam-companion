@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process"
-import { mkdtemp, rm } from "node:fs/promises"
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -21,11 +21,24 @@ async function checkPort() {
 await checkPort()
 
 const scratch = await mkdtemp(path.join(tmpdir(), "quiz-e2e-"))
+await mkdir(path.join(scratch, "scores"))
+// A scratch copy of the packs, with one more that has no course to read, so the tests can serve a pack the repo
+// does not ship. It is the second pack with its Read Aloud courses taken out.
+const root = path.join(scratch, "root")
+await mkdir(path.join(root, "quiz"), { recursive: true })
+await cp(fileURLToPath(new URL("../../exams", import.meta.url)), path.join(root, "exams"), { recursive: true })
+const bare = path.join(root, "exams", "no-course-test")
+await cp(path.join(root, "exams", "agentic-architect"), bare, { recursive: true })
+const meta = JSON.parse(await readFile(path.join(bare, "pack.json"), "utf8"))
+await writeFile(path.join(bare, "pack.json"), JSON.stringify({ ...meta, id: "no-course-test", title: "Exam With No Course", reading: false }, null, 2))
+await rm(path.join(bare, "courses.json"))
 const env = {
   ...process.env,
   NEXT_TELEMETRY_DISABLED: "1",
   QUIZ_DIST_DIR: ".next-e2e",
-  QUIZ_SCORES_FILE: path.join(scratch, "scores.jsonl"),
+  // A scratch folder, with one file per exam as the real app keeps them, so a test can answer in two exams.
+  QUIZ_SCORES_DIR: path.join(scratch, "scores"),
+  QUIZ_ROOT: root,
   // The tests run Generative AI Leader, whatever exam this machine has chosen on the Progress page.
   QUIZ_EXAM: "generative-ai-leader",
   QUIZ_EXAM_SETTING_FILE: path.join(scratch, "active-exam.json"),
