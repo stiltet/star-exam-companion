@@ -15,7 +15,7 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
-import { activePack, DEFAULT_EXAM, examId } from "./pack.ts"
+import { DEFAULT_EXAM, examId, loadPack, repoRoot } from "./pack.ts"
 import { reading } from "./reading.ts"
 import { renderSpeech } from "./say.ts"
 
@@ -41,8 +41,10 @@ export function scriptKey(parts: readonly NightPart[]): string {
 
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
 // reading never receives it, so it reads every paragraph straight through.
-export async function loadCourseParts(): Promise<NightPart[]> {
-  const courses: NightSource[] = await Promise.all(activePack().courses.map(async (course) => {
+// The exam is named by the caller, so a switch part way through a build cannot read another exam's courses
+// into this exam's folder.
+export async function loadCourseParts(exam: string): Promise<NightPart[]> {
+  const courses: NightSource[] = await Promise.all(loadPack(repoRoot(), exam).courses.map(async (course) => {
     const loaded = await courseBundle(course)
     if (!loaded.ok) throw new Error(loaded.error)
     return {
@@ -241,7 +243,7 @@ export function beginNightBuild(retry: boolean): NightBuildState {
   if (!build) {
     build = createNightBuild({
       dir: nightDirFor(exam),
-      load: loadCourseParts,
+      load: () => loadCourseParts(exam),
       render: (script, file) => renderSpeech(script, file, sayTimeoutMs(script)),
       encode: encodeNightAudio,
     })

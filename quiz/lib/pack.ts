@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { Question, StudySection } from "./exam-data.ts"
@@ -34,6 +35,8 @@ export type PackMeta = {
   description: string
   // Said on the home, Practice and Exam pages while the pack is unfinished, such as "17 terms so far". Absent when it is finished.
   notice?: string
+  // Extra search keywords for the page's metadata, beside Google Cloud, Certification, Exam Prep and the title.
+  keywords?: string[]
   // The Glossary and Flashcards group for a term the exam guide does not number, such as "Study guide".
   unnumberedLabel: string
   examPage: string
@@ -120,7 +123,8 @@ export function listPacks(root: string = repoRoot()): { id: string; title: strin
 export function setActiveExam(id: string, root: string = repoRoot()): boolean {
   if (!listPacks(root).some((pack) => pack.id === id)) return false
   const file = settingFile(root)
-  const temporary = `${file}.${process.pid}.tmp`
+  // One name per call: two switches at once in one process must not share a temporary file.
+  const temporary = `${file}.${process.pid}.${randomUUID()}.tmp`
   writeFileSync(temporary, `${JSON.stringify({ exam: id })}\n`)
   renameSync(temporary, file)
   return true
@@ -178,6 +182,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.description) &&
     isText(meta.unnumberedLabel) &&
     (meta.notice === undefined || isText(meta.notice)) &&
+    (meta.keywords === undefined || (Array.isArray(meta.keywords) && meta.keywords.every(isText))) &&
     isHttps(meta.examPage) &&
     isHttps(meta.examGuide) &&
     isHttps(meta.learningPath) &&
@@ -219,8 +224,33 @@ function readCourses(file: string, id: string): Course[] {
   })
 }
 
+const PACK_FILES = ["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
+const packCache = new Map<string, { stamp: string; pack: Pack }>()
+
+// A pack is read once and served from memory until one of its files changes: every page, route and exam check
+// asks for it, and without this each ask read and parsed all of it again.
+function packStamp(dir: string): string {
+  return PACK_FILES.map((name) => {
+    try {
+      const stat = statSync(path.join(dir, name))
+      return `${stat.mtimeMs}:${stat.size}`
+    } catch {
+      return "-"
+    }
+  }).join("|")
+}
+
 export function loadPack(root: string, id: string = examId(root)): Pack {
   const dir = packDir(root, id)
+  const stamp = packStamp(dir)
+  const cached = packCache.get(dir)
+  if (cached?.stamp === stamp) return cached.pack
+  const pack = readPack(dir, id)
+  packCache.set(dir, { stamp, pack })
+  return pack
+}
+
+function readPack(dir: string, id: string): Pack {
   const meta = checkMeta(readJson(requirePackFile(dir, "pack.json")), id)
   const scenes = readJson(requirePackFile(dir, "scenes.json"))
   const study = readJson(requirePackFile(dir, "study.json")) as Partial<Study> | null
@@ -246,8 +276,9 @@ export function loadPack(root: string, id: string = examId(root)): Pack {
 }
 
 // The repo root as the running app finds it: the quiz is started from quiz/.
+// QUIZ_ROOT points a test instance at a scratch copy of exams/, so a test can serve a pack the repo does not ship.
 export function repoRoot(): string {
-  return path.resolve(process.cwd(), "..")
+  return process.env.QUIZ_ROOT || path.resolve(process.cwd(), "..")
 }
 
 // The pack the running app serves. Pages read it per request.
