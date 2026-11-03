@@ -58,6 +58,14 @@ test("pages opened together share one load instead of each asking Google", async
   assert.equal(asked.length, 5)
 })
 
+test("two courses with the same Skills number but different folders keep their own bundles", async () => {
+  const asked = stubFetch(healthy)
+  const other = { ...course, folder: `${course.folder}-other` }
+  await courseBundle(course)
+  await courseBundle(other)
+  assert.equal(asked.filter((url) => url.includes(`/${encodeURIComponent(other.folder)}/`)).length, 4)
+})
+
 test("after a day the course is read again, and a failed refresh serves yesterday's copy", async () => {
   stubFetch(healthy)
   await courseBundle(course)

@@ -53,6 +53,11 @@ function loaded(entry: Entry): Loaded {
   return { ok: true, bundle: entry.bundle, pages: entry.pages, ids: entry.ids }
 }
 
+// Two packs may list the same Skills number with different bundles, so the folder is part of the key.
+function key(course: Course): string {
+  return `${course.template}:${course.folder}`
+}
+
 async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
   try {
     const [found, ...lists] = await Promise.all([ids(course), ...PARTS.map((name) => part(course, name))])
@@ -60,8 +65,8 @@ async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
     const bundle: Bundle = { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
     const now = Date.now()
     const entry: Entry = { at: now, bundle, pages: pageList(bundle), ids: found, idsAt: now }
-    cache.set(course.template, entry)
-    failed.delete(course.template)
+    cache.set(key(course), entry)
+    failed.delete(key(course))
     return loaded(entry)
   } catch (error) {
     if (kept) {
@@ -71,14 +76,14 @@ async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
       return loaded(kept)
     }
     const reason = error instanceof Error ? error.message : String(error)
-    failed.set(course.template, { at: Date.now(), error: reason })
+    failed.set(key(course), { at: Date.now(), error: reason })
     return { ok: false, error: reason }
   }
 }
 
 // The course's bundle, its readings and their ids on Google Skills, or why it could not be read.
 export async function courseBundle(course: Course): Promise<Loaded> {
-  const kept = cache.get(course.template)
+  const kept = cache.get(key(course))
   const now = Date.now()
   if (kept && now - kept.at < DAY_MS) {
     // A course page that failed once is asked again after RETRY_MS, not kept empty for a day.
@@ -88,12 +93,12 @@ export async function courseBundle(course: Course): Promise<Loaded> {
     }
     return loaded(kept)
   }
-  const recent = kept ? undefined : failed.get(course.template)
+  const recent = kept ? undefined : failed.get(key(course))
   if (recent && now - recent.at < FAILED_MS) return { ok: false, error: recent.error }
-  let run = loading.get(course.template)
+  let run = loading.get(key(course))
   if (!run) {
-    run = load(course, kept).finally(() => loading.delete(course.template))
-    loading.set(course.template, run)
+    run = load(course, kept).finally(() => loading.delete(key(course)))
+    loading.set(key(course), run)
   }
   return run
 }
