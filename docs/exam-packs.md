@@ -116,8 +116,8 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    ```
 
    If you ever switched exams on the Progress page of this checkout, that choice wins over `QUIZ_EXAM`: delete
-   `quiz/active-exam.json` first, or switch on Progress. A chosen pack whose `pack.json` stops loading is
-   ignored, so Progress still opens and you can switch back.
+   `quiz/active-exam.json` first, or switch on Progress. A chosen pack with any file that stops loading is
+   ignored, so Progress still opens and you can switch back, and the switch refuses a pack that does not load.
 
 6. **Open the pull request** against `main`. Change only `exams/<id>/` and, if you want it listed, one
    row in the README's *Choose your exam* table. Say in the description which exam it is, link its
