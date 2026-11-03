@@ -310,5 +310,71 @@
     ],
     "scene": "After launch, a team wants to keep assessing its agent's quality by evaluating live traffic online, using autoraters for multi-turn conversations. Which should it use?",
     "constraint": "The need is ongoing quality assessment of the agent, not hosting, content screening or stored conversations."
+  },
+  {
+    "id": "model-output-screening",
+    "correct": "Model Armor",
+    "distractors": [
+      "Agent Gateway",
+      "Agent Identity",
+      "Agent evaluation"
+    ],
+    "scene": "A company is worried that a model's replies might contain malicious links or a user's jailbreak attempt might get through. It wants a Google Cloud service to screen prompts and responses for these threats. Which should it use?",
+    "constraint": "The need is to screen prompt and response content for harmful material, not to govern tool calls, identify agents or measure quality."
+  },
+  {
+    "id": "central-policy-point",
+    "correct": "Agent Gateway",
+    "distractors": [
+      "Model Armor",
+      "Agent Registry",
+      "Agent Identity"
+    ],
+    "scene": "A platform team wants one central place that enforces authentication and security policies on every tool call its agents make. Which should it use?",
+    "constraint": "The need is a policy enforcement point for agent traffic, not content screening, a catalogue or a per-agent identity."
+  },
+  {
+    "id": "agent-skills-package",
+    "correct": "Agents CLI",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Workflow Builder"
+    ],
+    "scene": "A developer wants a command-line tool, with a skills package, to build, evaluate and deploy AI agents on Google Cloud from the terminal. Which should they use?",
+    "constraint": "The need is a command-line tool for the whole agent lifecycle, not a code framework, a skill store or a no-code builder."
+  },
+  {
+    "id": "chat-agent-no-code",
+    "correct": "Workflow Builder",
+    "distractors": [
+      "Agents CLI",
+      "Agent Development Kit (ADK)",
+      "Agent Runtime"
+    ],
+    "scene": "A business team with no developers wants to create and turn on chat agents and workflows in the Gemini Enterprise web app using a no-code, low-code platform. Which should they use?",
+    "constraint": "The need is a no-code, low-code builder inside the Gemini Enterprise web app, not a command-line tool, a code framework or hosting."
+  },
+  {
+    "id": "secure-inbound-clients",
+    "correct": "Client-to-Agent",
+    "distractors": [
+      "Agent-to-Anywhere",
+      "Agent Identity",
+      "Model Armor"
+    ],
+    "scene": "A security architect needs the Agent Gateway mode that secures inbound traffic between clients and the agents or MCP tools they reach. Which mode is it?",
+    "constraint": "The need is the inbound mode of Agent Gateway, not the outbound mode, an agent identity or content screening."
+  },
+  {
+    "id": "govern-outbound-requests",
+    "correct": "Agent-to-Anywhere",
+    "distractors": [
+      "Client-to-Agent",
+      "Agent Registry",
+      "Agent Runtime"
+    ],
+    "scene": "An agent sends requests to external tools and services, and the security team wants the Agent Gateway mode that governs those outbound requests. Which mode is it?",
+    "constraint": "The need is the outbound mode of Agent Gateway, not the inbound mode, a catalogue or hosting."
   }
 ]
