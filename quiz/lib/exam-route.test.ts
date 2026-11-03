@@ -13,6 +13,8 @@ const quiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const setting = path.join(scratch, "active-exam.json")
 process.chdir(quiz)
 process.env.QUIZ_EXAM_SETTING_FILE = setting
+// A successful switch starts the new exam's Night recording; a test must not build one.
+process.env.QUIZ_NIGHT_PRELOAD = "0"
 after(() => {
   process.chdir(before.cwd)
   if (before.setting === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE

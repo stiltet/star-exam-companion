@@ -1,5 +1,6 @@
 import { readJsonBody } from "./body.ts"
 import { sameOrigin } from "./origin.ts"
+import { startNightPreload } from "./night-preload.ts"
 import { setActiveExam } from "./pack.ts"
 
 // Switches the exam this install serves, for every device. Like Reset, only a page on one of this Mac's own
@@ -9,5 +10,7 @@ export async function postExam(request: Request): Promise<Response> {
   const body = await readJsonBody(request)
   const exam = body && typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 1 ? (body as { exam?: unknown }).exam : undefined
   if (typeof exam !== "string" || !setActiveExam(exam)) return Response.json({ ok: false }, { status: 400 })
+  // The new exam's Night reading recording starts building now, not when its page is first opened.
+  startNightPreload()
   return Response.json({ ok: true, exam })
 }
