@@ -57,26 +57,31 @@
   ],
   "noReading": [
     {
+      "id": "9",
       "template": "1596",
       "title": "Engineer AI Agents with Agent Development Kit (ADK)",
       "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on the official site."
     },
     {
+      "id": "10",
       "template": "1672",
       "title": "Agentic Strategy: Discover, Design, and Prototype",
       "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on the official site."
     },
     {
+      "id": "11",
       "template": "1275",
       "title": "Deploy Multi-Agent Systems with Gemini Enterprise Agent Platform",
       "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on the official site."
     },
     {
+      "id": "12",
       "template": "1786",
       "title": "Orchestrate Workflows with the Data Agent Kit",
       "why": "This course has readings on Google Skills that the quiz cannot read aloud. Open the course on the official site to study it there."
     },
     {
+      "id": "13",
       "template": "1832",
       "title": "Build Agent Skills with Google",
       "why": "This course has readings on Google Skills that the quiz cannot read aloud. Open the course on the official site to study it there."

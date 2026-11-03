@@ -73,12 +73,17 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
     await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
-    // The two newer courses that were found are read aloud; the path's other five are listed under NOT READ ALOUD, each with why.
+    // The two newer courses that were found are read aloud. The path's other five are in the same list, marked as
+    // having no text; opening one says why and links to the official course.
     await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
     await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
-    await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toBeVisible()
-    await expect(page.getByText("Build Agent Skills with Google")).toBeVisible()
-    await expect(page.getByText(/hands-on labs, videos and quizzes on Google Skills/).first()).toBeVisible()
+    await expect(page.getByText("No text to read aloud")).toHaveCount(5)
+    await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
+    await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
+    await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
+    await expect(page.getByText(/Open the course on the official site/)).toBeVisible()
+    await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
+    await page.goBack()
     // The list says the pack is unfinished, so eight courses are not read as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
 

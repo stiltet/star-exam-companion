@@ -61,7 +61,8 @@ export function ReadingList({ course, pages }: { course: string; pages: PageSumm
 
 // One course on the overview, coloured by its state. The total comes from the Mac when it could
 // read Google's bundle, else from this device; either way it is kept here for Progress.
-export function CourseCard({ course, title, total }: { course: string; title: string; total?: number }) {
+// noText: a course of the path with nothing to read aloud; its page says why and links to Google Skills.
+export function CourseCard({ course, title, total, noText }: { course: string; title: string; total?: number; noText?: boolean }) {
   const { lines } = useSnapshot()
   const [kept, setKept] = useState<number | undefined>(undefined)
   useEffect(() => {
@@ -70,9 +71,9 @@ export function CourseCard({ course, title, total }: { course: string; title: st
   }, [course, total])
   const read = readingProgress(lines)[course]?.read.length ?? 0
   return (
-    <StatusLink href={`/read/${course}`} layout="stack" state={readingState(read, kept)}>
+    <StatusLink href={`/read/${course}`} layout="stack" state={noText ? "none" : readingState(read, kept)}>
       <span className="font-bold">Course {course}</span>: {title}
-      <span className="block text-sm font-bold mt-1">{readingStatus(read, kept)}</span>
+      <span className="block text-sm font-bold mt-1">{noText ? "No text to read aloud" : readingStatus(read, kept)}</span>
     </StatusLink>
   )
 }

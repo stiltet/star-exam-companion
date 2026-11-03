@@ -73,7 +73,7 @@ export type Pack = {
 }
 
 // A course of the learning path with nothing the quiz can read aloud: the Read Aloud page lists it and says why.
-export type NoReading = { template: string; title: string; why: string }
+export type NoReading = { id: string; template: string; title: string; why: string }
 
 // Where the Progress page keeps the exam this install serves. A test points it elsewhere.
 export function settingFile(root: string = repoRoot()): string {
@@ -233,16 +233,19 @@ function readCourses(file: string, id: string): Course[] {
   })
 }
 
-// courses.json may also hold `noReading`: [{ template, title, why }], the path's courses that have no text to read.
+// courses.json may also hold `noReading`: [{ id, template, title, why }], the path's courses that have no text to read.
 function readNoReading(file: string, id: string): NoReading[] {
   const list = (readJson(file) as { noReading?: unknown } | null)?.noReading
   if (list === undefined) return []
   if (!Array.isArray(list)) throw new Error(`Exam pack ${id}: noReading in courses.json must be a list`)
+  const taken = new Set((readJson(file) as { courses?: { id?: unknown }[] }).courses?.map((course) => String(course.id)))
   return list.map((entry: Partial<NoReading>) => {
-    if (!isText(entry?.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.why)) {
-      throw new Error(`Exam pack ${id}: a noReading course in courses.json needs a numeric template, a title and a why`)
+    if (!isText(entry?.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.why)) {
+      throw new Error(`Exam pack ${id}: a noReading course in courses.json needs a numeric id and template, a title and a why`)
     }
-    return { template: entry.template, title: entry.title, why: entry.why }
+    if (taken.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
+    taken.add(entry.id)
+    return { id: entry.id, template: entry.template, title: entry.title, why: entry.why }
   })
 }
 

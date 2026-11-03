@@ -1,7 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
-import { Heading } from "@/components/atoms/heading"
 import { Text } from "@/components/atoms/text"
 import { CourseCard } from "@/components/reading-progress"
 import { courseBundle } from "@/lib/course-text"
@@ -33,21 +32,8 @@ export default async function ReadPage() {
             const result = loaded[index]
             return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} />
           })}
+          {pack.noReading.map((course) => <CourseCard key={course.id} course={course.id} title={course.title} noText />)}
         </div>}
-        {pack.meta.reading && pack.noReading.length > 0 && (
-          <section className="mt-8" aria-labelledby="no-reading">
-            <Heading id="no-reading" variant="label" placement="mb-4">NOT READ ALOUD</Heading>
-            <ul className="divide-y-2 divide-foreground border-2 border-foreground">
-              {pack.noReading.map((course) => (
-                <li key={course.template} className="p-4 flex flex-col gap-3">
-                  <Text variant="label">{course.title}</Text>
-                  <Text variant="note">{course.why}</Text>
-                  <ActionLink variant="outlined" href={`https://www.skills.google/course_templates/${course.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
         {pack.meta.reading && (
           <div className="mt-8">
             <ActionLink variant="outlined" placement="self-stretch" href="/read/night">Night reading</ActionLink>

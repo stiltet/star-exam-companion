@@ -140,12 +140,13 @@ test("courses without reading text are listed with a reason, and a malformed ent
   const aa = loadPack(testRoot, "agentic-architect")
   assert.equal(aa.noReading.length, 5)
   assert.equal(aa.courses.length, 8)
-  assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.template) && course.title && course.why))
+  assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.id) && /^\d+$/.test(course.template) && course.title && course.why))
+  assert.equal(new Set([...aa.courses, ...aa.noReading].map((course) => course.id)).size, 13, "every course of the path has its own id")
   assert.equal(loadPack(testRoot, "generative-ai-leader").noReading.length, 0)
   const root = packWith(() => {})
   const file = path.join(root, "exams/agentic-architect/courses.json")
   const data = JSON.parse(readFileSync(file, "utf8"))
-  data.noReading = [{ template: "x", title: "Broken", why: "no number" }]
+  data.noReading = [{ id: "9", template: "x", title: "Broken", why: "no number" }]
   writeFileSync(file, JSON.stringify(data))
   assert.throws(() => loadPack(root, "agentic-architect"), /noReading course/)
 })
