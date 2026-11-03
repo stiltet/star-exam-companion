@@ -122,6 +122,8 @@ export function listPacks(root: string = repoRoot()): { id: string; title: strin
 // Switches the exam for every device. Only a pack that is in exams/ can be chosen.
 export function setActiveExam(id: string, root: string = repoRoot()): boolean {
   if (!listPacks(root).some((pack) => pack.id === id)) return false
+  // A pack whose other files do not load would be saved and then ignored by examId, so the switch would say it worked.
+  if (!packReads(root, id)) return false
   const file = settingFile(root)
   // One name per call: two switches at once in one process must not share a temporary file.
   const temporary = `${file}.${process.pid}.${randomUUID()}.tmp`

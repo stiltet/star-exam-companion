@@ -56,6 +56,12 @@ test("a queue written under the plain name after the move is merged by answer id
   assert.equal(store.data.has("quiz-outbox"), false)
 })
 
+test("a queue under the plain name is kept, not deleted, when the other copy cannot be merged", () => {
+  const store = memory({ "quiz-outbox-generative-ai-leader": "not a list", "quiz-outbox": '[{"id":"c"}]' })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.equal(store.data.get("quiz-outbox"), '[{"id":"c"}]')
+})
+
 test("refused answers and their reasons written under the plain name after the move are merged too", () => {
   const store = memory({
     "quiz-rejected-generative-ai-leader": '[{"id":"a"}]',

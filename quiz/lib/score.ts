@@ -54,6 +54,8 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   // never missed. The page itself is not checked against Google's bundle, which may be offline.
   if (mode === "reading") {
     if (asked.length !== 1 || missed.length !== 0) return "A reading is saved one at a time and is never missed."
+    // A pack with no course has nothing to read: an empty list would otherwise make a pattern that matches any course.
+    if (known.courseIds.length === 0) return "The reading is not a known course's page."
     const reading = readingPattern(known.courseIds)
     if (!asked.every((item) => typeof item === "string" && reading.test(item))) return "The reading is not a known course's page."
     return { id, at, mode, asked: asked as string[], missed: [] }

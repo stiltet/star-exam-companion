@@ -136,6 +136,20 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
   }
 })
 
+test("a pack whose files do not load is refused, so a switch never reports success and then keeps the old exam", () => {
+  const before = process.env.QUIZ_EXAM_SETTING_FILE
+  process.env.QUIZ_EXAM_SETTING_FILE = path.join(tempDir("setting-"), "active-exam.json")
+  try {
+    const root = packWith(() => {})
+    writeFileSync(path.join(root, "exams/agentic-architect/scenes.json"), "not json")
+    assert.equal(listPacks(root).some((pack) => pack.id === "agentic-architect"), true, "pack.json alone still reads")
+    assert.equal(setActiveExam("agentic-architect", root), false)
+  } finally {
+    if (before === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+    else process.env.QUIZ_EXAM_SETTING_FILE = before
+  }
+})
+
 // A copy of the Agentic Architect pack in a scratch repo root, changed by `change`.
 function packWith(change: (files: { meta: Record<string, unknown>; courses: Record<string, unknown> }) => void): string {
   const root = tempDir("pack-")

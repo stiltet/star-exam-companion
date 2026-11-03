@@ -98,6 +98,12 @@ test("a reading read is saved as its course and page, never as missed", () => {
   assert.equal(check(answer(1, { mode: "reading", asked: ["a"] })), false)
 })
 
+test("a pack with no course accepts no reading, instead of matching any course", () => {
+  const noCourses = { ...known, courseIds: [] }
+  assert.equal(acceptAnswer(answer(1, { mode: "reading", asked: ["2/6899cc1b05fa90817c63cc5e"] }), noCourses, now) !== null, false)
+  assert.equal(acceptAnswer(answer(1, { mode: "reading", asked: ["/6899cc1b05fa90817c63cc5e"] }), noCourses, now) !== null, false)
+})
+
 test("the server accepts all 241 voice and 111 written questions in the modes that offer them", () => {
   const parsed = parseGlossary(testPack.glossaryText)
   assert.ok(parsed.ok)
