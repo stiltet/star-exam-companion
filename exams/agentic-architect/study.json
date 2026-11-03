@@ -1027,6 +1027,321 @@
       ],
       "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
       "difficulty": "medium"
+    },
+    {
+      "id": "aq27",
+      "sectionId": "low-code",
+      "topicId": "1-2",
+      "question": "A company's support knowledge sits in recorded calls, screen videos and product photos. The agent must use it. What does the exam guide expect the architect to configure?",
+      "options": [
+        "Only a text index of the written FAQ",
+        "Ingestion that processes unstructured multimodal data such as video, audio and images",
+        "A sandbox for generated code",
+        "A principal access boundary policy"
+      ],
+      "correctIndex": 1,
+      "explanation": "Connecting enterprise data includes ingesting and processing unstructured multimodal data, such as videos, audio and images, into the agentic workflow.",
+      "whyOthersWrong": [
+        "A text-only index leaves out the videos, audio and images the agent must use.",
+        "A sandbox limits what a coding agent can touch; it does not bring data in.",
+        "A principal access boundary policy limits access; it does not ingest data."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq28",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "An architect wants an agent to follow a set of worked examples and to reason step by step. Which in-console prompt techniques does the exam guide name?",
+      "options": [
+        "Sessions and Memory Bank",
+        "Parallel and sequential agents",
+        "OAuth 2.0 and Agent Gateway",
+        "Few-shot and chain-of-thought prompt templates"
+      ],
+      "correctIndex": 3,
+      "explanation": "System instructions and in-console prompt templates, such as few-shot and chain-of-thought, guide agent behaviour in tools such as Agent Designer and CX Agent Studio.",
+      "whyOthersWrong": [
+        "Sessions and Memory Bank store conversation history and memories; they do not shape prompts.",
+        "Parallel and sequential are workflow shapes, not prompt templates.",
+        "OAuth 2.0 and Agent Gateway are about access and traffic, not prompting."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq29",
+      "sectionId": "coding-agents",
+      "topicId": "2-1",
+      "question": "A team wants a coding agent to refactor source code, speed up execution runtimes and patch application-layer vulnerabilities. Which use does this describe?",
+      "options": [
+        "Using coding agents effectively on source code",
+        "Configuring Agent Gateway modes",
+        "Evaluating retrieval quality with a golden dataset",
+        "Ingesting multimodal data"
+      ],
+      "correctIndex": 0,
+      "explanation": "Section 2.1 names using coding agents to refactor source code, optimise execution runtimes and patch application-layer vulnerabilities.",
+      "whyOthersWrong": [
+        "Agent Gateway modes govern agent traffic, not source code changes.",
+        "A golden dataset evaluates agent answers and retrieval, not code refactoring.",
+        "Multimodal ingestion brings data into an agent workflow; it does not change code."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq30",
+      "sectionId": "coding-agents",
+      "topicId": "2-2",
+      "question": "Which tool does the exam guide say augments Antigravity to build, scale, govern and optimise deployed agents?",
+      "options": [
+        "Model Garden",
+        "Vector Search",
+        "Agents CLI",
+        "Cloud Trace"
+      ],
+      "correctIndex": 2,
+      "explanation": "Section 2.2 names augmenting Antigravity with Agents CLI to build, scale, govern and optimise deployed agents.",
+      "whyOthersWrong": [
+        "Model Garden is a catalogue of models, not a tool that extends Antigravity.",
+        "Vector Search stores and searches embeddings.",
+        "Cloud Trace shows latency; it does not build or govern agents."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq31",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "Choosing a language model for an agent, which factors does the exam guide say to weigh?",
+      "options": [
+        "Brand colour, region name and team size",
+        "Only the largest context window",
+        "Cost, security and agent architecture",
+        "Only the newest release date"
+      ],
+      "correctIndex": 2,
+      "explanation": "Model selection compares LLM with SLM, self-hosted with SaaS, and open-source with proprietary, considering cost, security and agent architecture.",
+      "whyOthersWrong": [
+        "Brand colour, region name and team size do not bear on model fit.",
+        "The largest context window alone ignores cost, security and architecture.",
+        "Release date alone ignores the factors the guide names."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq32",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "A retrieval system returns many candidates. Which step reorders them so the most relevant come first?",
+      "options": [
+        "Tokenisation",
+        "Reranking",
+        "Sandboxing",
+        "Identity propagation"
+      ],
+      "correctIndex": 1,
+      "explanation": "Retrieval pipelines combine embedding models, similarity scoring and reranking, using services such as Vector Search and Agent Retrieval.",
+      "whyOthersWrong": [
+        "Tokenisation splits text into tokens; it does not reorder retrieved candidates.",
+        "Sandboxing limits what generated code can touch.",
+        "Identity propagation passes who is calling; it does not rank results."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq33",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "An agent must reach a third-party software-as-a-service tool and a remote server through a standard interface. What does the exam guide point to?",
+      "options": [
+        "A Model Armor template",
+        "A vector index of past chats",
+        "A Cloud Trace span",
+        "A Model Context Protocol (MCP) server"
+      ],
+      "correctIndex": 3,
+      "explanation": "Google Cloud MCP servers and custom integration layers connect agents to managed databases, APIs, third-party SaaS tools and remote servers.",
+      "whyOthersWrong": [
+        "Model Armor screens prompts and replies; it is not an integration interface.",
+        "A vector index of chats holds embeddings, not tool connections.",
+        "A Cloud Trace span records timing, not tool access."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq34",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Three independent checks on the same order, such as stock, fraud and shipping, have no dependence on each other. Which workflow shape suits them?",
+      "options": [
+        "Parallel agents",
+        "Sequential agents",
+        "A single prompt with no agents",
+        "A loop that waits for human input"
+      ],
+      "correctIndex": 0,
+      "explanation": "The guide names parallel agents, sequential agents and graph workflow. Steps that do not depend on one another can run in parallel.",
+      "whyOthersWrong": [
+        "Sequential agents wait for each result, which wastes time when steps are independent.",
+        "A single prompt with no agents gives up the coordination the design needs.",
+        "A loop that waits for human input adds delay for no dependency reason."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq35",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "Before building an evaluation, a team collects reference answers, typical prompts and unusual cases. What are these called in the exam guide?",
+      "options": [
+        "Skill packages",
+        "Gateway policies",
+        "Memory entries",
+        "Test sets with golden data, prompts and edge cases"
+      ],
+      "correctIndex": 3,
+      "explanation": "Section 4.1 names creating test sets for agent evaluation, for example golden data, prompts and edge cases.",
+      "whyOthersWrong": [
+        "Skill packages are reusable instructions for agents, not evaluation material.",
+        "Gateway policies enforce traffic rules.",
+        "Memory entries are long-term recollections, not test material."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq36",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "Which evaluation options does the exam guide name for choosing a framework and tooling?",
+      "options": [
+        "Cloud Run, GKE and Agent Runtime",
+        "ADK evaluation tooling (evalset), the Agent Platform Gen AI evaluation service and custom autoraters",
+        "Model Armor, Agent Registry and Agent Identity",
+        "Cloud Logging, Cloud Trace and BigQuery"
+      ],
+      "correctIndex": 1,
+      "explanation": "Determining the framework and tooling includes ADK evaluation tooling (evalset), the Agent Platform Gen AI evaluation service and custom autoraters.",
+      "whyOthersWrong": [
+        "Cloud Run, GKE and Agent Runtime are deployment runtimes.",
+        "Model Armor, Agent Registry and Agent Identity are security and governance tools.",
+        "Cloud Logging, Cloud Trace and BigQuery are observability and data tools."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq37",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "An agent's behaviour slowly changes over weeks without any code change, and its answers get worse. Which problem does the exam guide name for this?",
+      "options": [
+        "A principal access boundary",
+        "Reranking",
+        "Drift",
+        "Sandboxing"
+      ],
+      "correctIndex": 2,
+      "explanation": "Troubleshooting agent issues includes drift, tool invocation latency, agent reasoning loops and system failures.",
+      "whyOthersWrong": [
+        "A principal access boundary is an access policy, not a quality problem.",
+        "Reranking is a retrieval step, not a fault.",
+        "Sandboxing is a safety measure, not a fault."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq38",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "An agent calls a protected API on a user's behalf. Which standard does the exam guide name for authenticated agent-to-tool API calls?",
+      "options": [
+        "OAuth 2.0",
+        "Sequential agents",
+        "Few-shot prompting",
+        "Reranking"
+      ],
+      "correctIndex": 0,
+      "explanation": "Section 5.1 names implementing authentication and secure tool execution, for example agent-to-tool API calls using OAuth 2.0.",
+      "whyOthersWrong": [
+        "Sequential agents is a workflow shape.",
+        "Few-shot prompting is a prompt technique.",
+        "Reranking reorders retrieved results."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq39",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "Security wants to limit which resources an agent identity can ever reach. Which policy type does the exam guide name for this with Agent Identity?",
+      "options": [
+        "Few-shot templates",
+        "Principal access boundary (PAB) policies",
+        "Parallel agents",
+        "Skill packages"
+      ],
+      "correctIndex": 1,
+      "explanation": "Section 5.1 names configuring principal access boundary (PAB) policies using Agent Identity.",
+      "whyOthersWrong": [
+        "Few-shot templates guide prompts, not access.",
+        "Parallel agents is a workflow shape.",
+        "Skill packages are reusable instructions, not access limits."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq40",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "The team needs to watch the traffic its agents generate and keep track of which agents exist. Which tool does the exam guide name to monitor traffic and track agents?",
+      "options": [
+        "Model Garden",
+        "Vector Search",
+        "Agents CLI",
+        "Agent Gateway"
+      ],
+      "correctIndex": 3,
+      "explanation": "Section 5.1 names configuring Agent Gateway to monitor traffic and track agents.",
+      "whyOthersWrong": [
+        "Model Garden is a catalogue of models.",
+        "Vector Search stores and searches embeddings.",
+        "Agents CLI builds, evaluates and deploys agents from the command line."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq41",
+      "sectionId": "security-governance",
+      "topicId": "5-2",
+      "question": "An agent must pass the caller's identity along to the data it reads. Which tools does the exam guide name for secure data access and identity propagation?",
+      "options": [
+        "Few-shot prompts and chain-of-thought",
+        "Sessions and Memory Bank",
+        "Agent Gateway and Agent Registry",
+        "Cloud Run and GKE"
+      ],
+      "correctIndex": 2,
+      "explanation": "Section 5.2 names configuring secure access to data and identity propagation, for example with Agent Gateway and Agent Registry.",
+      "whyOthersWrong": [
+        "Few-shot prompts and chain-of-thought shape prompts.",
+        "Sessions and Memory Bank store history and memories.",
+        "Cloud Run and GKE are deployment runtimes."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
     }
   ]
 }
