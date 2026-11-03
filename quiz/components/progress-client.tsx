@@ -315,6 +315,7 @@ export function ProgressClient({ stats }: Props) {
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>OFFICIAL COURSE TRACKING - READ ALOUD</SectionBar>
+        {stats.courses.length === 0 && <p className="p-4 text-xs sm:text-sm">This exam has no Read Aloud course yet, so there is nothing to track.</p>}
         <table className="w-full text-xs sm:text-sm">
           <tbody>
             {stats.courses.map((course, index) => {

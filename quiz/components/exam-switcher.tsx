@@ -35,7 +35,7 @@ export function ExamSwitcher({ exams, current }: Props) {
       const response = await fetch("/api/exam", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exam: exam }),
+        body: JSON.stringify({ exam }),
       })
       ok = ((await response.json()) as { ok?: boolean }).ok === true
     } catch {

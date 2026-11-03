@@ -9,7 +9,7 @@
   "scripts": {
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "e2e": "playwright test",
-    "gate": "cd .. && node --test && pnpm --dir quiz build && pnpm --dir quiz e2e",
+    "gate": "cd .. && node --test && pnpm --dir quiz e2e",
     "dev": "NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
     "lint": "eslint .",
     "start": "NEXT_TELEMETRY_DISABLED=1 next start -H 0.0.0.0"

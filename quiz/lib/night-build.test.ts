@@ -239,3 +239,35 @@ test("each exam keeps its night recording in its own folder, so one exam's build
     if (before !== undefined) process.env.NIGHT_DIR = before
   }
 })
+
+test("a build in the default exam's folder clears its own old recordings and leaves another exam's folder alone", async () => {
+  const before = process.env.NIGHT_DIR
+  process.env.NIGHT_DIR = path.join(scratch, "per-exam")
+  try {
+    const mine = nightDirFor("generative-ai-leader")
+    const theirs = nightDirFor("agentic-architect")
+    assert.equal(path.dirname(theirs), mine, "the other exam's folder sits inside the default one, the case a prune could harm")
+    const staleKey = "c".repeat(64)
+    const theirKey = "d".repeat(64)
+    mkdirSync(path.join(mine, staleKey), { recursive: true })
+    writeFileSync(path.join(mine, staleKey, "night.m4a"), "old")
+    mkdirSync(path.join(theirs, theirKey), { recursive: true })
+    writeFileSync(path.join(theirs, theirKey, "night.m4a"), "theirs")
+    writeFileSync(path.join(theirs, "partial.partial"), "theirs too")
+    const encode = async (_wav: string, m4a: string) => {
+      writeFileSync(m4a, "audio")
+    }
+    const render = async (script: string, file: string) => {
+      writeFileSync(file, tone(script === "One." ? 1 : 2))
+      return true
+    }
+    const ready = await buildRecording({ dir: mine, parts, render, encode })
+    assert.equal(exists(path.join(mine, staleKey)), false, "this exam's old recording is cleared")
+    assert.equal(exists(path.join(mine, ready.key, "night.m4a")), true, "and its new one is kept")
+    assert.equal(readFileSync(path.join(theirs, theirKey, "night.m4a"), "utf8"), "theirs", "the other exam's recording is untouched")
+    assert.equal(exists(path.join(theirs, "partial.partial")), true, "so is its unfinished work")
+  } finally {
+    if (before === undefined) delete process.env.NIGHT_DIR
+    else process.env.NIGHT_DIR = before
+  }
+})

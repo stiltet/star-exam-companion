@@ -29,7 +29,7 @@
 
 **[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
 Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
-are core features that need the quiz on your own computer; the [full local setup](#full-local-setup)
+are core features that need the quiz on your own computer; every exam pack has its own copy of the demo, linked from the bar under the header; the [full local setup](#full-local-setup)
 below gets everything working.
 
 ## Contents
@@ -176,6 +176,8 @@ in the shell that starts the quiz.
 | `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Only the starting exam: once you switch on the Progress page, that choice wins. |
 | `QUIZ_EXAM_SETTING_FILE` | `quiz/active-exam.json` | Where the exam chosen on the Progress page is saved. |
 | `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
+| `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
+| `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
@@ -404,7 +406,7 @@ Install the browser test engines once after installing dependencies:
 pnpm --dir quiz exec playwright install chromium webkit
 ```
 
-Run the complete gate (unit tests, production build and browser tests) from the repository root:
+Run the complete gate (unit tests, then the browser tests, which build and type-check the production app in their own folder, `quiz/.next-e2e`, so a running quiz is never built over) from the repository root:
 
 ```bash
 pnpm --dir quiz gate
@@ -434,12 +436,12 @@ reopening that recording offline are tested without generating speech. Each test
 storage and scratch scores.
 Failed tests leave screenshots and traces under `quiz/test-results/` (gitignored).
 
-All three gate stages must pass before a change is proposed. This automates the smoke journeys
+Both gate stages must pass before a change is proposed. This automates the smoke journeys
 listed above, not every possible action or device behaviour: actual iPhone installation, sound output,
 macOS voice generation, LAN certificates and Google's live course responses are not exercised.
 
-The online demo is a static export of the same app. `bash scripts/build-pages.sh` builds it into
-`pages-out/`; it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
+The online demo is a static export of the same app, built once for every exam pack. `bash scripts/build-pages.sh` builds it into
+`pages-out/` (the default exam at the root, every other exam under `pages-out/<pack id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
 Read Aloud and Progress with a panel that says they need the local install, and filters Practice
 in the browser. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
 Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
