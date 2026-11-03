@@ -27,6 +27,9 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     // Let the device finish storing the voice clips first: a clip still downloading when the exam switches
     // asks for a line the new exam does not have, and the fixture counts that 404 as a browser error.
     await expect(page.getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 40_000 })
+    // And for the page to go quiet: WebKit reports a prefetch or a storage call cut off by the switch's page load as an
+    // uncaught error, so the switch must not land while the page is still fetching.
+    await page.waitForLoadState("networkidle")
 
     // Picking another exam opens the confirmation; a tap outside it closes it and puts the dropdown back.
     await pick.selectOption("agentic-architect")
