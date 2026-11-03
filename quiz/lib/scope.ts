@@ -19,9 +19,9 @@ export function scoped(name: string, exam: string = currentExam()): string {
   return `${name}-${exam}`
 }
 
-// Before the names carried the exam, the Generative AI Leader quiz kept these under plain names.
 // The plain names that hold a list of queued answers; the other legacy names hold a map or one value.
 const QUEUE_NAMES = ["quiz-outbox", "quiz-rejected"]
+// Before the names carried the exam, the Generative AI Leader quiz kept these under plain names.
 const LEGACY_NAMES = [
   ...QUEUE_NAMES,
   "quiz-rejected-reasons",

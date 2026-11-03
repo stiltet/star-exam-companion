@@ -69,9 +69,12 @@ test("the route handler takes the request alone, so Next's second argument canno
   assert.equal(response.status, 400)
 })
 
+test("the route's default after-switch hook is the Night recording preload", () => {
+  assert.equal(examRoute.onSwitched, startNightPreload)
+})
+
 test("the route handler itself starts the Night recording after a successful switch, and not after a refused one", async () => {
   const original = examRoute.onSwitched
-  assert.equal(original, startNightPreload, "the route runs the Night recording preload by default")
   let started = 0
   examRoute.onSwitched = () => { started += 1 }
   try {
