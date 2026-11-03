@@ -23,13 +23,15 @@ test.use({ navigationCutOff: true })
 // (the menu of the exam served, rendered on every page) and app/read/layout.tsx (the Read Aloud guard) through the
 // Progress page.
 test("exam-switcher: a tap outside the confirmation cancels, and confirming switches the exam for the whole install", async ({ page, baseURL }) => {
+  // WebKit stores the 1,500 or so voice clips at between 2 and 15 a second on a busy machine, slowing as the store grows, so the wait below can take ten minutes.
+  test.setTimeout(900_000)
   const pick = page.getByLabel("Exam", { exact: true })
   try {
     await page.goto("/progress")
     await expect(pick).toHaveValue("generative-ai-leader")
     // Let the device finish storing the voice clips first: a clip still downloading when the exam switches
     // asks for a line the new exam does not have, and the fixture counts that 404 as a browser error.
-    await expect(page.getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 40_000 })
+    await expect(page.getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 840_000 })
     // And for the page to go quiet: WebKit reports a prefetch or a storage call cut off by the switch's page load as an
     // uncaught error, so the switch must not land while the page is still fetching.
     await page.waitForLoadState("networkidle")
