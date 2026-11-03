@@ -87,6 +87,8 @@ test("an unreadable plain-named queue is kept when the scoped name holds nothing
   migrateLegacyStorage(store, DEFAULT_EXAM)
   assert.equal(store.data.get(`${scoped("quiz-outbox", DEFAULT_EXAM)}-unreadable`), "{truncated")
   assert.equal(store.data.get(`${scoped("quiz-rejected-reasons", DEFAULT_EXAM)}-unreadable`), "[not a map")
+  assert.equal(store.data.get(scoped("quiz-outbox", DEFAULT_EXAM)), "{truncated", "the plain copy is adopted under the scoped name")
+  assert.equal(store.data.has("quiz-outbox"), false)
 })
 
 test("refused reasons under the plain name reach the name the app reads when the other copy is not a map", () => {

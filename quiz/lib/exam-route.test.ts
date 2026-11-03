@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
-import { postExam, switchExam } from "./exam-route.ts"
+import { examRoute, postExam, switchExam } from "./exam-route.ts"
 
 // The route reads the repo from the quiz directory, as the running app does, and saves to a scratch file.
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-exam-route-"))
@@ -66,4 +66,19 @@ test("the route handler takes the request alone, so Next's second argument canno
   assert.equal(postExam.length, 1)
   const response = await postExam(new Request("http://localhost/api/exam", { method: "POST", headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json" }, body: '{"exam":"no-such-exam"}' }))
   assert.equal(response.status, 400)
+})
+
+test("the route handler itself starts the Night recording after a successful switch, and not after a refused one", async () => {
+  const original = examRoute.onSwitched
+  let started = 0
+  examRoute.onSwitched = () => { started += 1 }
+  try {
+    const request = (body: string) => new Request("http://localhost/api/exam", { method: "POST", headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json" }, body })
+    assert.equal((await postExam(request('{"exam":"no-such-exam"}'))).status, 400)
+    assert.equal(started, 0)
+    assert.equal((await postExam(request('{"exam":"agentic-architect"}'))).status, 200)
+    assert.equal(started, 1)
+  } finally {
+    examRoute.onSwitched = original
+  }
 })

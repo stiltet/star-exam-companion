@@ -82,7 +82,7 @@ Answers still waiting on a device sit under exam-named browser keys (for example
 you roll back. If you roll back and later upgrade again, the plain `quiz/scores.jsonl` an older build wrote
 is merged into `quiz/scores-generative-ai-leader.jsonl` by answer id at the first start, and moved to
 `quiz/scores-backups/`. A device queue (answers waiting to send, refused answers and their reasons) that
-holds text the app cannot read is kept under the same browser key with `-unreadable` added, not deleted.
+holds text the app cannot read is kept, not deleted, under the same browser key with `-unreadable` added; a second, different unreadable text goes to `-unreadable-2`, then `-3`. Nothing removes these backups but clearing the site's data.
 
 ## Add an exam with a pull request
 

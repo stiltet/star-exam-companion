@@ -197,7 +197,7 @@ export function buildProblem(error: unknown): string {
 
 // preload: the start made when the server boots or the exam is switched, not by someone opening the page. If it fails
 // (the network not up yet), the next ordinary start, the page being opened, tries again without pressing Retry.
-export function createNightBuild(deps: Runner): { begin: (retry: boolean, preload?: boolean) => NightBuildState } {
+export function createNightBuild(deps: Runner): { begin: (retry: boolean, preload?: boolean) => NightBuildState; idle: () => Promise<void> } {
   let job: Promise<void> | null = null
   let status: NightBuildState = { state: "checking" }
   let known = false
@@ -236,7 +236,8 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
     })()
     return status
   }
-  return { begin }
+  // Resolves when the build now running has settled; a test waits on this instead of a timer.
+  return { begin, idle: () => job ?? Promise.resolve() }
 }
 
 // One build per exam, since each reads its own courses and keeps its own state.

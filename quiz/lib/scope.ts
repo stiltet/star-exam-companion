@@ -55,6 +55,9 @@ function keyed(text: string | null): Record<string, unknown> | null {
   }
 }
 
+// The plain names that hold a list of queued answers; the others held a map or one value.
+const QUEUES = new Set(["quiz-outbox", "quiz-rejected"])
+
 // A copy the app cannot read is not deleted: it is kept under `<name>-unreadable`, as the scores move keeps a backup.
 // A different unreadable text already kept there is not overwritten: the next free `-2`, `-3`... holds it, and the
 // same text is kept once.
@@ -87,10 +90,10 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
     const current = store.getItem(to)
     if (current === null) {
       // Nothing under the scoped name yet: the plain copy is adopted as it is. One the app cannot read is kept too.
-      if ((from === "quiz-outbox" || from === "quiz-rejected") && !queued(old)) keepUnreadable(store, to, old)
+      if (QUEUES.has(from) && !queued(old)) keepUnreadable(store, to, old)
       if (from === "quiz-rejected-reasons" && !keyed(old)) keepUnreadable(store, to, old)
       store.setItem(to, old)
-    } else if (from === "quiz-outbox" || from === "quiz-rejected") {
+    } else if (QUEUES.has(from)) {
       // A copy that is not a list holds nothing to send: the other copy is adopted, so no queued answer is
       // stranded under a name the app no longer reads. The unreadable text is kept under a backup name.
       const first = queued(current)

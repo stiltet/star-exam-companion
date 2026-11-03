@@ -1,5 +1,8 @@
 import assert from "node:assert/strict"
-import test from "node:test"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import test, { after } from "node:test"
 import { createNightBuild } from "./night-build.ts"
 import { startNightPreload } from "./night-preload.ts"
 
@@ -32,21 +35,24 @@ test("a preload that throws is swallowed", () => {
   withPreload(undefined, () => assert.doesNotThrow(() => startNightPreload(() => { throw new Error("no network") }, () => true)))
 })
 
+const scratch = mkdtempSync(path.join(tmpdir(), "quiz-night-preload-"))
+after(() => rmSync(scratch, { recursive: true, force: true }))
+
 test("a build whose preload failed is tried again by the next ordinary start, without Retry", async () => {
   let loads = 0
   const build = createNightBuild({
-    dir: "/nonexistent-night-dir",
+    dir: scratch,
     load: async () => { loads += 1; throw new Error("no network") },
     render: async () => true,
     encode: async () => undefined,
   })
   build.begin(false, true)
-  await new Promise((resolve) => setTimeout(resolve, 50))
+  await build.idle()
   assert.equal(loads, 1)
   build.begin(false)
-  await new Promise((resolve) => setTimeout(resolve, 50))
+  await build.idle()
   assert.equal(loads, 2, "the page opening starts a fresh attempt after a failed preload")
   build.begin(false)
-  await new Promise((resolve) => setTimeout(resolve, 50))
+  await build.idle()
   assert.equal(loads, 2, "an ordinary failed start waits for Retry as before")
 })

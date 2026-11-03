@@ -17,6 +17,9 @@ export async function switchExam(request: Request, onSwitched: () => void): Prom
   return Response.json({ ok: true, exam })
 }
 
+// What the route runs after a switch. An object, so a test can replace it and watch the route call it.
+export const examRoute = { onSwitched: startNightPreload }
+
 export function postExam(request: Request): Promise<Response> {
-  return switchExam(request, startNightPreload)
+  return switchExam(request, () => examRoute.onSwitched())
 }
