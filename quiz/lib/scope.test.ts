@@ -56,10 +56,18 @@ test("a queue written under the plain name after the move is merged by answer id
   assert.equal(store.data.has("quiz-outbox"), false)
 })
 
-test("a queue under the plain name is kept, not deleted, when the other copy cannot be merged", () => {
+test("a queue under the plain name reaches the name the app reads when the other copy is not a list", () => {
   const store = memory({ "quiz-outbox-generative-ai-leader": "not a list", "quiz-outbox": '[{"id":"c"}]' })
   migrateLegacyStorage(store, DEFAULT_EXAM)
-  assert.equal(store.data.get("quiz-outbox"), '[{"id":"c"}]')
+  assert.deepEqual(JSON.parse(store.data.get(scoped("quiz-outbox", DEFAULT_EXAM)) ?? "[]").map((item: { id: string }) => item.id), ["c"])
+  assert.equal(store.data.has("quiz-outbox"), false)
+})
+
+test("refused reasons under the plain name reach the name the app reads when the other copy is not a map", () => {
+  const store = memory({ "quiz-rejected-reasons-generative-ai-leader": "not a map", "quiz-rejected-reasons": '{"z":"gone"}' })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.deepEqual(JSON.parse(store.data.get(scoped("quiz-rejected-reasons", DEFAULT_EXAM)) ?? "{}"), { z: "gone" })
+  assert.equal(store.data.has("quiz-rejected-reasons"), false)
 })
 
 test("refused answers and their reasons written under the plain name after the move are merged too", () => {

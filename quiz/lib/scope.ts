@@ -73,16 +73,14 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
     if (current === null) {
       store.setItem(to, old)
     } else if (from === "quiz-outbox" || from === "quiz-rejected") {
-      const first = queued(current)
-      const second = queued(old)
-      // A copy that is not a list cannot be merged: the plain name stays, so queued answers are never dropped.
-      if (!first || !second) continue
+      // A copy that is not a list holds nothing to send: the other copy is adopted, so no queued answer is
+      // stranded under a name the app no longer reads.
+      const first = queued(current) ?? []
+      const second = queued(old) ?? []
       const seen = new Set(first.map((item) => item.id))
       store.setItem(to, JSON.stringify([...first, ...second.filter((item) => !seen.has(item.id))]))
     } else if (from === "quiz-rejected-reasons") {
-      const first = keyed(current)
-      const second = keyed(old)
-      if (first && second) store.setItem(to, JSON.stringify({ ...second, ...first }))
+      store.setItem(to, JSON.stringify({ ...(keyed(old) ?? {}), ...(keyed(current) ?? {}) }))
     }
     store.removeItem(from)
   }
