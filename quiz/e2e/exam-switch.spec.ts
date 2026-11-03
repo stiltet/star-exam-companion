@@ -59,6 +59,8 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     }
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
+    await page.goto("/exam")
+    await expect(page.getByText("Unfinished:")).toBeVisible()
     await page.goto("/")
     await expect(page.getByRole("heading", { name: "DESCRIPTION" })).toBeVisible()
     await expect(page.getByText("Unfinished:")).toBeVisible()
