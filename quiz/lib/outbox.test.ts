@@ -24,7 +24,7 @@ test("ids are version 4 UUIDs the Mac accepts, and a new answer passes its check
   assert.equal(newId((bytes) => bytes.fill(255)), "ffffffff-ffff-4fff-bfff-ffffffffffff")
   assert.notEqual(newId(), newId())
   const fresh = newAnswer("practice", ["a"], ["a"], {}, new Date(at("10:00")))
-  assert.deepEqual(acceptAnswer(fresh, { bankIds: new Set(["a"]), termNames: new Set() }, Date.parse(at("10:01"))), fresh)
+  assert.deepEqual(acceptAnswer(fresh, { bankIds: new Set(["a"]), termNames: new Set(), examLength: { questions: 60, minutes: 90 }, courseIds: ["1", "2", "3", "4", "5"] }, Date.parse(at("10:01"))), fresh)
 })
 
 test("an answer stays on the device until the Mac has stored it", async () => {

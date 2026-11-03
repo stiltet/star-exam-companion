@@ -1,4 +1,4 @@
-import { DEFAULT_EXAM_LENGTH, examSeconds, type ExamLength } from "./score.ts"
+import { examSeconds, type ExamLength } from "./score.ts"
 
 // What a finished exam saved: the questions asked and missed, and since 27 Oct the option chosen
 // per answered question and the flagged ones.
@@ -37,7 +37,7 @@ export function retakeIds(exam: SavedExam, bank: ReadonlySet<string>): string[] 
 }
 
 // The full exam's time per question, for any number of questions (at least one).
-export function examDuration(count: number, length: ExamLength = DEFAULT_EXAM_LENGTH): number {
+export function examDuration(count: number, length: ExamLength): number {
   const questions = Math.min(length.questions, Math.max(1, count))
   return Math.round((examSeconds(length) / length.questions) * questions)
 }

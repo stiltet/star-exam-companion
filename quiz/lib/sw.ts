@@ -8,8 +8,8 @@ import { sitePages } from "./pages.ts"
 
 export const NIGHT_CACHE = "quiz-night"
 
-// meta: the exam this install serves, as pack.json gives it. Without one, Generative AI Leader's.
-export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[], meta: { reading: boolean; exam: { questions: number; minutes: number } } = { reading: true, exam: { questions: 60, minutes: 90 } }): string[] {
+// meta: the exam this install serves, as pack.json gives it.
+export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[], meta: { reading: boolean; exam: { questions: number; minutes: number } }): string[] {
   const pages = ["/", ...sitePages(meta).map((page) => page.href), "/about", ...(meta.reading ? ["/read/night"] : []), "/practice?unanswered=1"]
   for (const id of practiceSections) {
     pages.push(`/practice?section=${encodeURIComponent(id)}`)

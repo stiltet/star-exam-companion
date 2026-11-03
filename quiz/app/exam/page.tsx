@@ -6,7 +6,6 @@ import { loadPlay } from "@/lib/load"
 import { sectionLabel } from "@/lib/progress"
 import { quizQuestions } from "@/lib/questions"
 import type { Question } from "@/lib/exam-data"
-import { DEFAULT_EXAM_LENGTH } from "@/lib/score"
 import { connection } from "next/server"
 import { STATIC_DEMO } from "@/lib/static-demo"
 
@@ -21,12 +20,14 @@ export default async function ExamPage() {
     title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),
     weight: play.ok ? (play.weights[id] ?? 0) : 0,
   }))
+  // A pack that does not load has no exam to time, so the page shows none of it.
+  if (!play.ok) return <div className="min-h-screen flex flex-col"><SiteHeader /><main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full"><Text variant="notice" role="status">{play.error}</Text></main><SiteFooter /></div>
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        {play.ok && play.pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{play.pack.meta.notice}</Text>}
-        <ExamClient questions={questions} sections={sections} length={play.ok ? play.pack.meta.exam : DEFAULT_EXAM_LENGTH} />
+        {play.pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{play.pack.meta.notice}</Text>}
+        <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
       </main>
       <SiteFooter />
     </div>

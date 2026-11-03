@@ -47,7 +47,7 @@ test("retires a missed question after three right answers in a row", () => {
 
 test("refuses a cross-site or malformed score", () => {
   const answer = { id: "00000000-0000-4000-8000-000000000001", at: "2026-09-30T10:00:00.000Z", mode: "round", asked: ["a"], missed: [] }
-  const base = { allowedOrigin: "http://127.0.0.1:3000", bankIds: new Set(["a"]), termNames: new Set<string>(), now: Date.parse("2026-09-30T12:00:00.000Z") }
+  const base = { allowedOrigin: "http://127.0.0.1:3000", bankIds: new Set(["a"]), termNames: new Set<string>(), examLength: { questions: 60, minutes: 90 }, courseIds: ["1", "2", "3", "4", "5"], now: Date.parse("2026-09-30T12:00:00.000Z") }
   assert.equal(acceptBatch({ ...base, origin: "https://evil.example", contentType: "application/json", body: { answers: [answer] } }).ok, false)
   assert.equal(acceptBatch({ ...base, origin: base.allowedOrigin, contentType: "text/plain", body: { answers: [answer] } }).ok, false)
   const malformed = acceptBatch({ ...base, origin: base.allowedOrigin, contentType: "application/json", body: { answers: [{ ...answer, asked: ["nope"], note: "x" }] } })

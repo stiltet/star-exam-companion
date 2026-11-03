@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { acceptAnswer, acceptBatch, DEFAULT_EXAM_LENGTH, examSeconds, MAX_BATCH, storeAnswers } from "./score.ts"
+import { acceptAnswer, acceptBatch, examSeconds, MAX_BATCH, storeAnswers } from "./score.ts"
 import type { ScoreLine } from "./learn.ts"
 import { readFileSync } from "node:fs"
 import { itemsFromGlossary } from "./round.ts"
@@ -12,7 +12,9 @@ const origin = "http://localhost"
 const now = Date.parse("2026-10-01T12:00:00.000Z")
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`
 const answer = (n: number, extra: Record<string, unknown> = {}) => ({ id: id(n), at: "2026-10-01T11:00:00.000Z", mode: "round", asked: ["a"], missed: [], ...extra })
-const known = { bankIds: new Set(["a", "b"]), termNames: new Set(["Grounding"]) }
+// The first exam pack's length and courses, as its pack.json and courses.json give them.
+const DEFAULT_EXAM_LENGTH = { questions: 60, minutes: 90 }
+const known = { bankIds: new Set(["a", "b"]), termNames: new Set(["Grounding"]), examLength: DEFAULT_EXAM_LENGTH, courseIds: ["1", "2", "3", "4", "5"] }
 const batch = (answers: unknown[]) => ({ origin, contentType: "application/json", body: { answers }, allowedOrigin: origin, ...known, now })
 
 test("a batch is accepted only as same-origin JSON { answers } of 1 to 500", () => {
@@ -106,6 +108,8 @@ test("the server accepts all 241 voice and 111 written questions in the modes th
     bankIds: new Set(bank.map((item) => item.id)),
     roundIds: new Set(items.map((item) => item.id)),
     termNames: new Set(parsed.glossary.terms.map((term) => term.term)),
+    examLength: testPack.meta.exam,
+    courseIds: testPack.courses.map((course) => course.id),
   }
   assert.equal(bank.length - items.length, 111)
   for (const item of bank) {
@@ -165,9 +169,9 @@ test("answers join a session within 30 minutes of each other, and open a new one
 })
 
 test("an exam's own length decides what a finished exam may claim", () => {
-  const known = { bankIds: new Set(["a"]), termNames: new Set<string>() }
+  const pools = { bankIds: new Set(["a"]), termNames: new Set<string>(), courseIds: ["1"] }
   const now = Date.parse("2026-11-02T10:00:00.000Z")
   const long = answer(1, { mode: "exam", asked: ["a"], missed: [], seconds: 10_000 })
-  assert.equal(acceptAnswer(long, known, now) !== null, false, "90 minutes is the default limit")
-  assert.equal(acceptAnswer(long, { ...known, examLength: { questions: 80, minutes: 180 } }, now) !== null, true, "3 hours fits a 180-minute exam")
+  assert.equal(acceptAnswer(long, { ...pools, examLength: { questions: 60, minutes: 90 } }, now) !== null, false, "90 minutes is that exam's limit")
+  assert.equal(acceptAnswer(long, { ...pools, examLength: { questions: 80, minutes: 180 } }, now) !== null, true, "3 hours fits a 180-minute exam")
 })
