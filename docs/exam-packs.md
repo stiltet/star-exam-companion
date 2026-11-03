@@ -73,6 +73,11 @@ Generative AI Leader names the first time it runs, with a backup copy first.
 
 The move to exam-named files is one way. To go back to an older build, copy
 `quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl` to `quiz/scores.jsonl`.
+Answers still waiting on a device sit under exam-named browser keys (for example
+`quiz-outbox-generative-ai-leader`), which an older build cannot read: let each device sync before
+you roll back. If you roll back and later upgrade again, the new `quiz/scores.jsonl` an older build
+wrote is not read, because `quiz/scores-generative-ai-leader.jsonl` already exists; merge it into
+that file by hand first.
 
 ## Add an exam with a pull request
 

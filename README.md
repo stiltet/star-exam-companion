@@ -353,7 +353,7 @@ start.
 | Stop and remove | `launchctl bootout gui/$UID/com.star-exam-companion`, then delete the plist | `systemctl --user disable --now star-exam-companion`, then delete the unit file |
 
 To go back to an earlier version, check it out with git, install, build and restart. Your answers in
-`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. The
+`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. An install that studied before exams were named had its scores file renamed on the first run of this version, so read [Running a pack](docs/exam-packs.md#running-a-pack) before going back. The
 certificate lasts 825 days; see [Renewing or removing it](docs/https.md#renewing-or-removing-it) in
 the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new certificate.
 
