@@ -1,5 +1,5 @@
 # Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
-# Work in progress, 2 Nov 2026: batches 1 and 2 of the guide's tool list. The rest are added with their scenes.
+# Every term here is the answer to at least one scene.
 Agent Development Kit (ADK)
 Agents CLI
 Agent Gateway

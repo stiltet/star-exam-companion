@@ -187,5 +187,128 @@
     ],
     "scene": "A business analyst with no programming background wants to create and publish a chat agent inside the Gemini Enterprise web app, using prompts and a visual editor. Which should they use?",
     "constraint": "The need is a no-code or low-code builder, not a code framework and not a command-line tool."
+  },
+  {
+    "id": "sessions-keep-history",
+    "correct": "Agent Platform Sessions",
+    "distractors": [
+      "Agent Platform Memory Bank",
+      "Vector Search",
+      "Model Garden"
+    ],
+    "scene": "A chat agent must keep the history of each ongoing conversation, so a user's follow-up question still makes sense within the same exchange. Which should store those individual interactions?",
+    "constraint": "The need is the stored interactions of one conversation, not long-term memories recalled in later sessions, retrieval or a model catalogue."
+  },
+  {
+    "id": "recall-preferences-later",
+    "correct": "Agent Platform Memory Bank",
+    "distractors": [
+      "Agent Platform Sessions",
+      "RAG Engine",
+      "Agent Identity"
+    ],
+    "scene": "A travel agent should remember a customer's seat preference from a conversation last month and use it when the customer returns. The memories are to be generated dynamically from past conversations. Which should provide this?",
+    "constraint": "The need is long-term memories generated from conversations and recalled in later sessions, not the history of one conversation."
+  },
+  {
+    "id": "ground-on-private-docs",
+    "correct": "RAG Engine",
+    "distractors": [
+      "Vector Search",
+      "Model Garden",
+      "Agent Runtime"
+    ],
+    "scene": "An agent hallucinates about company policy. The team wants a managed component that connects private enterprise data to the model so answers are more accurate. Which should they use?",
+    "constraint": "The need is a managed retrieval-augmented generation component, not the raw vector engine, a model catalogue or a hosting environment."
+  },
+  {
+    "id": "vector-engine-itself",
+    "correct": "Vector Search",
+    "distractors": [
+      "RAG Engine",
+      "Agent Registry",
+      "Agent evaluation"
+    ],
+    "scene": "A team is building its own retrieval pipeline and needs an AI-native engine to store, search and manage the embeddings behind it. Which should they pick?",
+    "constraint": "The need is the engine that stores and searches the vectors, not a managed component that wires private data to a model."
+  },
+  {
+    "id": "pick-open-model",
+    "correct": "Model Garden",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Agent Runtime"
+    ],
+    "scene": "An architect wants to compare Google's frontier models with third-party and open-source models before choosing one for a cost-sensitive agent. Where should they browse them?",
+    "constraint": "The need is a catalogue of models, not a framework, a skill repository or a hosting environment.",
+    "guide": "3.1"
+  },
+  {
+    "id": "scale-in-production",
+    "correct": "Agent Runtime",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Agents CLI",
+      "Model Garden"
+    ],
+    "scene": "A prototype agent works on a laptop. The team now needs a high-performance, scalable environment to deploy, operate and scale it in production. Which should host it?",
+    "constraint": "The need is a managed place to run and scale the agent, not a framework to write it, a command-line tool or a model catalogue."
+  },
+  {
+    "id": "workflow-shapes-in-code",
+    "correct": "Agent Development Kit (ADK)",
+    "distractors": [
+      "Agents CLI",
+      "Agent Runtime",
+      "Workflow Builder"
+    ],
+    "scene": "Developers want an open-source, model-agnostic framework to write an agent in code, using template workflows that run steps one after another, in a loop or in parallel. Which should they use?",
+    "constraint": "The need is a code framework with template workflows, not a no-code builder, a hosting environment or a command-line tool."
+  },
+  {
+    "id": "per-agent-audit",
+    "correct": "Agent Identity",
+    "distractors": [
+      "Agent Gateway",
+      "Agent Registry",
+      "Model Armor"
+    ],
+    "scene": "Security wants to control and audit access to cloud resources separately for each agent, rather than letting all agents share one account. Which should they set up?",
+    "constraint": "The need is a unique managed identity per agent, not traffic policy, a catalogue or content screening."
+  },
+  {
+    "id": "catalogue-mcp-servers",
+    "correct": "Agent Registry",
+    "distractors": [
+      "Skill Registry",
+      "Agent Identity",
+      "Agent Gateway"
+    ],
+    "scene": "An organisation has many agents, tools and MCP servers built by different teams. It wants one central catalogue to discover, track and manage them all. Which should it use?",
+    "constraint": "The need is a central catalogue of agents, tools and MCP servers, not skills packages, identities or traffic enforcement."
+  },
+  {
+    "id": "package-skills-privately",
+    "correct": "Skill Registry",
+    "distractors": [
+      "Agent Registry",
+      "Agents CLI",
+      "Model Garden"
+    ],
+    "scene": "A team wants a secure, private repository on Agent Platform that stores its agent skills as self-contained packages. Which should it use?",
+    "constraint": "The need is a private store for skills packages, not a catalogue of agents, a command-line tool or a model catalogue.",
+    "guide": "3.1"
+  },
+  {
+    "id": "continuous-agent-checks",
+    "correct": "Agent evaluation",
+    "distractors": [
+      "Agent Runtime",
+      "Model Armor",
+      "Agent Platform Sessions"
+    ],
+    "scene": "After launch, a team wants to keep assessing its agent's quality by evaluating live traffic online, using autoraters for multi-turn conversations. Which should it use?",
+    "constraint": "The need is ongoing quality assessment of the agent, not hosting, content screening or stored conversations."
   }
 ]
