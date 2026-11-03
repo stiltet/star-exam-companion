@@ -5,13 +5,14 @@ import type { ReactNode, Ref } from "react"
 // name, centred between the previous and next arrows. chapter: the "Question N of M" line.
 // title: a reading's own title. page: a page's heading. title and page are h1s.
 // label: a small bold heading over a box or list, such as RULES or QUESTIONS on the exam.
+// rule: a home page section title with a rule under it, such as DESCRIPTION or EXAM STRUCTURE.
 // hero: the home page's course title, the Google Cloud logo over the course name on a phone
 // and beside it from md up (owner, 28 Oct). It grows from a phone so GENERATIVE AI LEADER
 // stays on one line at 375 px. HeroTitle sizes any course name to stay on one line: the size is
 // capped at the hero's own, and shrinks when the name is too long for the room it has.
 // Its look lives here; the parent places it. id lets a region be named by it. A ref makes it
 // a place focus can be moved to.
-export type HeadingVariant = "section" | "group" | "chapter" | "title" | "page" | "label" | "hero"
+export type HeadingVariant = "section" | "group" | "chapter" | "title" | "page" | "label" | "rule" | "hero"
 
 const LOOK: Record<HeadingVariant, string> = {
   section: "text-center text-3xl font-bold m-0 leading-none",
@@ -20,6 +21,7 @@ const LOOK: Record<HeadingVariant, string> = {
   title: "text-[28px] font-bold m-0",
   page: "text-2xl font-bold m-0",
   label: "text-base font-bold m-0",
+  rule: "text-xl font-bold border-b-2 border-foreground pb-2 m-0",
   // The heading is the container HeroTitle measures. --hero-max is the largest size; --hero-reserve is
   // the room the logo takes beside the title from md up.
   hero: "flex flex-col items-start md:flex-row md:items-center md:gap-6 text-xl sm:text-3xl font-bold leading-tight m-0 [container-type:inline-size] [--hero-max:1.25rem] sm:[--hero-max:1.875rem] md:[--hero-reserve:290px]",

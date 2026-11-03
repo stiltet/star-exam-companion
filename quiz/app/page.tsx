@@ -51,14 +51,14 @@ export default function HomePage() {
 
         {/* The exam in a sentence or two, from its pack. */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">DESCRIPTION</h2>
+          <Heading variant="rule" placement="mb-4">DESCRIPTION</Heading>
           <Text variant="muted">{meta.description}</Text>
           {meta.notice && <Text variant="notice" role="status" placement="mt-4">{meta.notice}</Text>}
         </section>
 
         {/* Exam Structure */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">EXAM STRUCTURE</h2>
+          <Heading variant="rule" placement="mb-4">EXAM STRUCTURE</Heading>
           <div className="border-2 border-foreground">
             <table className="w-full text-sm">
               <thead>
@@ -83,7 +83,7 @@ export default function HomePage() {
 
         {/* Quick Access */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">NAVIGATION</h2>
+          <Heading variant="rule" placement="mb-4">NAVIGATION</Heading>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sitePages(meta).map((page) => (
               <Link
