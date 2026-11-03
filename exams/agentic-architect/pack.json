@@ -4,7 +4,7 @@
   "certification": "Google Cloud Professional Agentic Architect",
   "description": "Google Cloud's certification for technical practitioners who design and manage autonomous, AI-driven agentic workflows, weighing reliability, performance, cost, security and scalability. About 80 multiple-choice questions in 3 hours, then hands-on labs in Google Skills for those who pass.",
   "unnumberedLabel": "Tools in scope",
-  "notice": "Unfinished: Read Aloud covers four courses, three of the learning path's ten plus the related Build Your First Agent with ADK course, because no readable course text could be matched to the other seven. The exam has 34 voice scenes and 26 written practice questions, fewer than the real exam asks.",
+  "notice": "Unfinished: Read Aloud covers four courses, three of the learning path's ten plus the related Build Your First Agent with ADK course. Google publishes the other seven in a player format Read Aloud cannot read, or not at all. The exam has 34 voice scenes and 41 written practice questions, fewer than the real exam asks.",
   "examPage": "https://cloud.google.com/learn/certification/agentic-architect",
   "examGuide": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
   "exam": {
