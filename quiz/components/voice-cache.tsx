@@ -23,6 +23,12 @@ function readLists(): Record<string, string[]> {
 const RETRY_MS = 30_000
 
 let storing: Promise<void> | null = null
+// Set when the exam is being switched: the clips still to store belong to the exam being left, so storing stops.
+let stopped = false
+
+export function stopStoringVoice(): void {
+  stopped = true
+}
 let retry: ReturnType<typeof setTimeout> | null = null
 
 // A clip from the voice cache on this device if it is there, else from the Mac. Read by the page
@@ -46,7 +52,7 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
   if (retry) clearTimeout(retry)
   retry = null
   let failed = false
-  storing = (async () => {
+  const storeAll = async () => {
     const cache = await caches.open(VOICE_CACHE)
     const wanted = new Set(Object.values(voice).map((key) => `/api/speak/${key}`))
     const lists = readLists()
@@ -63,6 +69,7 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
       // Storage full or blocked: the next run deletes nothing it cannot account for.
     }
     for (const url of wanted) {
+      if (stopped) break
       if (await cache.match(url)) continue
       try {
         const response = await fetch(url)
@@ -78,7 +85,12 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
         break
       }
     }
-  })().finally(() => {
+  }
+  storing = storeAll().catch(() => {
+    // A browser refuses storage calls while the page is unloading, as WebKit does with "Context is stopped", which
+    // happens when the exam is switched mid-download. It is not an error to report: storing resumes on the next page.
+    failed = true
+  }).finally(() => {
     storing = null
     if (failed) {
       retry = setTimeout(() => {

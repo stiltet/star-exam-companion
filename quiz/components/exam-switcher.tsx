@@ -5,6 +5,7 @@ import { ActionButton } from "@/components/atoms/button"
 import { Heading } from "@/components/atoms/heading"
 import { Select } from "@/components/atoms/select"
 import { sendNow } from "@/components/outbox"
+import { stopStoringVoice } from "@/components/voice-cache"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type Props = {
@@ -23,6 +24,8 @@ export function ExamSwitcher({ exams, current }: Props) {
 
   async function switchExam(target: string) {
     setSwitching(true)
+    // Clips still downloading belong to the exam being left; the next page stores the new exam's.
+    stopStoringVoice()
     setMessage(`Switching to ${title(target)}…`)
     // Answers still on this device reach the Mac first, while it still serves the exam they belong to.
     await sendNow()

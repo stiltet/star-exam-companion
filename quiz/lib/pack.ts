@@ -159,6 +159,7 @@ function isHttps(value: unknown): value is string {
   try {
     return new URL(value).protocol === "https:"
   } catch {
+    // Not a URL at all, so it is not an https link: the caller rejects the pack.
     return false
   }
 }

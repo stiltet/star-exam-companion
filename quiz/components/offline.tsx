@@ -37,7 +37,11 @@ export function useOfflineStatus(): OfflineStatus | null {
       const secure = window.isSecureContext
       let ready = false
       if (secure && "serviceWorker" in navigator && navigator.serviceWorker.controller && "caches" in window) {
-        ready = (await caches.keys()).some((name) => name.startsWith("quiz-pages-"))
+        try {
+          ready = (await caches.keys()).some((name) => name.startsWith("quiz-pages-"))
+        } catch {
+          // A browser refuses storage calls while the page is unloading ("Context is stopped" in WebKit): not ready, not an error.
+        }
       }
       let error: string | null = null
       try {
