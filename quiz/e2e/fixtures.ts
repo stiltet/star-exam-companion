@@ -1,12 +1,18 @@
 import { test as base, expect, type Page } from "@playwright/test"
 
-export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean }>({
+// A page load that interrupts the page it replaces, as switching the exam does, makes WebKit report the requests and
+// storage calls it cut off as uncaught errors.
+const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
+
+export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean }>({
   offlineNetwork: [false, { option: true }],
-  browserChecks: [async ({ context, page, baseURL, offlineNetwork }, use) => {
+  navigationCutOff: [false, { option: true }],
+  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff }, use) => {
     const errors: string[] = []
     page.on("pageerror", (error) => {
       // WebKit reports refused offline prefetches and background voice downloads as pageerrors.
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/speak\/).+ due to access control checks\.$/.test(error.message)) return
+      if (navigationCutOff && CUT_OFF.test(error.message)) return
       errors.push(error.message)
     })
     page.on("console", (message) => {
@@ -17,6 +23,7 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean }
         if (url.pathname.startsWith("/api/") || url.searchParams.has("_rsc") || /^\/(?:favicon|apple-touch-icon)\.png$/.test(url.pathname)) return
       }
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
+      if (navigationCutOff && CUT_OFF.test(message.text())) return
       errors.push(message.text())
     })
     await context.addInitScript(() => {

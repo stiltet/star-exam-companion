@@ -16,6 +16,9 @@ async function settleWorker(page: Page) {
   })).toBe(true)
 }
 
+// The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
+test.use({ navigationCutOff: true })
+
 // Covers components/exam-switcher.tsx (the dropdown and its confirmation), components/site-header-view.tsx
 // (the menu of the exam served, rendered on every page) and app/read/layout.tsx (the Read Aloud guard) through the
 // Progress page.
