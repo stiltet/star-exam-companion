@@ -17,6 +17,9 @@ async function settleWorker(page: Page) {
 }
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
+// The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
+const UNFINISHED = /Unfinished: Read Aloud covers four courses/
+
 test.use({ navigationCutOff: true })
 
 // Covers components/exam-switcher.tsx (the dropdown and its confirmation), components/site-header-view.tsx
@@ -65,6 +68,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await page.goto("/read")
     await expect(page.getByText("Manage Agent Memory and State")).toBeVisible()
     await expect(page.getByText("Add Agent Capabilities with Tools")).toBeVisible()
+    await expect(page.getByText("Build Your First Agent with Agent Development Kit (ADK)")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored
@@ -83,14 +87,16 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/voice", "/progress"]) {
       await page.goto(route)
       await expect(page.locator("h1, h2").first(), route).toBeVisible()
+      // The pack says it is unfinished on the Practice page too, in the pack's own words.
+      if (route === "/practice") await expect(page.getByText(UNFINISHED)).toBeVisible()
     }
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
     await page.goto("/exam")
-    await expect(page.getByText("Unfinished:")).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toBeVisible()
     await page.goto("/")
     await expect(page.getByRole("heading", { name: "DESCRIPTION" })).toBeVisible()
-    await expect(page.getByText("Unfinished:")).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toBeVisible()
   } finally {
     // The server keeps the choice for every test that follows, so put Generative AI Leader back.
     const back = await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
