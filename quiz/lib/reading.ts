@@ -79,8 +79,9 @@ function decode(text: string): string {
 }
 
 // The paragraphs of an HTML fragment as plain text: block ends and <br> break paragraphs.
-export function htmlParagraphs(html: unknown): string[] {
-  if (typeof html !== "string") return []
+export function htmlParagraphs(input: unknown): string[] {
+  if (typeof input !== "string") return []
+  const html = input
   const marked = html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
