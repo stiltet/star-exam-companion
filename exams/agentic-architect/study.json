@@ -481,5 +481,552 @@
       ]
     }
   ],
-  "questions": []
+  "questions": [
+    {
+      "id": "aq1",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "A team wants business analysts to build and turn on a chat agent in the Gemini Enterprise web app without writing code. Which tool fits?",
+      "options": [
+        "Agent Development Kit (ADK)",
+        "Workflow Builder",
+        "Agents CLI",
+        "Agent Runtime"
+      ],
+      "correctIndex": 1,
+      "explanation": "Workflow Builder is an interactive no-code, low-code platform for creating, managing and turning on chat agents and workflows in the Gemini Enterprise web app.",
+      "whyOthersWrong": [
+        "ADK is an open-source framework for building agents in code, so it does not suit analysts who will not write code.",
+        "Agents CLI is a command-line tool for building, evaluating and deploying agents, not a no-code builder.",
+        "Agent Runtime runs and scales deployed agents; it is not where a no-code agent is built."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini/enterprise/docs/workflow-builder",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq2",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "A support flow has fixed stages. The agent must move between pages, follow transition routes and react to events. Which design matches?",
+      "options": [
+        "A state-based workflow with pages, transition routes and event handlers",
+        "A single long system prompt with no states",
+        "A vector index of past conversations",
+        "A sandboxed coding agent"
+      ],
+      "correctIndex": 0,
+      "explanation": "State-based workflows model a flow as pages joined by transition routes, with event handlers for what happens along the way, which suits fixed stages.",
+      "whyOthersWrong": [
+        "A prompt alone does not give the explicit stages and transitions the flow needs.",
+        "A vector index retrieves knowledge; it does not define the stages of a flow.",
+        "A coding agent writes and runs code; it is not a way to model a staged support flow."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq3",
+      "sectionId": "low-code",
+      "topicId": "1-2",
+      "question": "An agent must answer from the company's proprietary documents. A managed Google feature already connects and searches such data. What should the architect do first?",
+      "options": [
+        "Build a custom ingestion and search pipeline",
+        "Fine-tune a model on the documents before anything else",
+        "Copy the documents into the system prompt",
+        "Connect the data through Gemini Enterprise and Agent Search"
+      ],
+      "correctIndex": 3,
+      "explanation": "The exam favours the managed, native feature when it meets the requirement. Gemini Enterprise and Agent Search connect to and query enterprise data.",
+      "whyOthersWrong": [
+        "A custom pipeline is more to build and run when a managed feature already meets the need.",
+        "Fine-tuning is not the first step when a managed connection to the data exists.",
+        "A prompt holds limited text and cannot stand in for connecting and querying the document set."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq4",
+      "sectionId": "coding-agents",
+      "topicId": "2-1",
+      "question": "A coding agent will run generated code. Security requires that it can touch only a limited environment while it edits and runs code. What should be used?",
+      "options": [
+        "Run it directly on a developer laptop with admin rights",
+        "Give it the production project's owner role",
+        "A secure sandbox such as Cloud Workstations or Google Kubernetes Engine (GKE)",
+        "Disable code execution and have it only suggest text"
+      ],
+      "correctIndex": 2,
+      "explanation": "Coding agents should run in secure sandboxes, for example GKE, Cloud Workstations or Antigravity, which limit what the agent can touch.",
+      "whyOthersWrong": [
+        "A laptop with admin rights does not limit what the agent can touch.",
+        "The owner role gives broad access, the opposite of a limit.",
+        "Disabling execution removes the capability the team wants instead of making it safe."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq5",
+      "sectionId": "coding-agents",
+      "topicId": "2-1",
+      "question": "A coding agent needs access to the team's internal tools and a reusable set of instructions. Which two things configure that?",
+      "options": [
+        "Principal access boundary policies and Model Armor",
+        "Model Context Protocol (MCP) servers and custom skills",
+        "Agent Gateway modes and Agent Registry",
+        "Sessions and Memory Bank"
+      ],
+      "correctIndex": 1,
+      "explanation": "Coding agents are configured with MCP servers, custom skills and access to tools.",
+      "whyOthersWrong": [
+        "Those are governance and screening controls, not how a coding agent gets tools and instructions.",
+        "Those govern and catalogue agent traffic; they do not give a coding agent its tools.",
+        "Those store conversation state and memories, not tools or skills."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq6",
+      "sectionId": "coding-agents",
+      "topicId": "2-2",
+      "question": "A team wants one command-line tool to build, evaluate and deploy agents on Google Cloud, with a skills package for coding agents. What is it?",
+      "options": [
+        "Agents CLI",
+        "Workflow Builder",
+        "Model Garden",
+        "Skill Registry"
+      ],
+      "correctIndex": 0,
+      "explanation": "Agents CLI is a command-line tool and skills package for building, evaluating and deploying AI agents on Google Cloud.",
+      "whyOthersWrong": [
+        "Workflow Builder is a no-code builder in the Gemini Enterprise web app.",
+        "Model Garden is a catalogue of models, not a build and deploy tool.",
+        "Skill Registry stores skills as packages; it does not build or deploy agents."
+      ],
+      "officialDoc": "https://google.github.io/agents-cli/guide/getting-started/",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq7",
+      "sectionId": "coding-agents",
+      "topicId": "2-2",
+      "question": "In Antigravity, which list names the ways to customise a coding agent for enterprise workflows?",
+      "options": [
+        "Pages, routes, events and webhooks",
+        "Sessions, memories, embeddings and rerankers",
+        "Inbound, outbound, identity and registry",
+        "Skills, plugins, extension hooks, rules and subagents"
+      ],
+      "correctIndex": 3,
+      "explanation": "Antigravity is customised with skills, plugins, extension hooks, rules and subagents.",
+      "whyOthersWrong": [
+        "Pages and routes belong to state-based low-code workflows.",
+        "Those are memory and retrieval parts, not coding-agent customisation.",
+        "Those are governance and traffic terms, not extension points."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq8",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "A developer wants an open-source, model-agnostic framework to build and debug agents in code, with sequential, loop and parallel template workflows. Which fits?",
+      "options": [
+        "Workflow Builder",
+        "Model Armor",
+        "Agent Development Kit (ADK)",
+        "Agent Gateway"
+      ],
+      "correctIndex": 2,
+      "explanation": "ADK is an open-source, model-agnostic framework for building, debugging and deploying agents in code, with sequential, loop and parallel workflow templates.",
+      "whyOthersWrong": [
+        "Workflow Builder is no-code or low-code, not a code framework.",
+        "Model Armor screens prompts and responses; it does not build agents.",
+        "Agent Gateway enforces policy on traffic; it does not build agents."
+      ],
+      "officialDoc": "https://adk.dev/",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq9",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "An agent must remember a conversation's history within that conversation. Which component stores the individual interactions between a user and the agent?",
+      "options": [
+        "Agent Platform Memory Bank",
+        "Agent Platform Sessions",
+        "Model Garden",
+        "Agent Registry"
+      ],
+      "correctIndex": 1,
+      "explanation": "Sessions store the individual interactions between users and agents, so a conversation keeps its history.",
+      "whyOthersWrong": [
+        "Memory Bank generates long-term memories for later sessions; it is not the conversation history.",
+        "Model Garden is a catalogue of models.",
+        "Agent Registry is a catalogue of agents, tools and MCP servers."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq10",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "A returning customer should find that the agent recalls their preferences from earlier conversations. Which component generates and keeps such long-term memories?",
+      "options": [
+        "Agent Platform Memory Bank",
+        "Agent Platform Sessions alone",
+        "Agent Gateway",
+        "Cloud Trace"
+      ],
+      "correctIndex": 0,
+      "explanation": "Memory Bank generates long-term memories dynamically from conversations, so the agent can recall them in later sessions.",
+      "whyOthersWrong": [
+        "Sessions keep the history of a conversation; the long-term memories come from Memory Bank, which draws on stored sessions.",
+        "Agent Gateway enforces policy on agent traffic.",
+        "Cloud Trace shows where latency comes from; it stores no memories."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq11",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "An architect needs one place to choose among Google's frontier models such as Gemini, plus third-party and open-source models. Where?",
+      "options": [
+        "Skill Registry",
+        "Agent Registry",
+        "RAG Engine",
+        "Model Garden"
+      ],
+      "correctIndex": 3,
+      "explanation": "Model Garden is a catalogue of Google's frontier models such as Gemini, plus third-party and open-source models.",
+      "whyOthersWrong": [
+        "Skill Registry stores skills, not models.",
+        "Agent Registry catalogues agents, tools and MCP servers.",
+        "RAG Engine connects private data to language models; it is not a model catalogue."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq12",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "An organisation wants a secure, private repository on Agent Platform where agent skills are stored as self-contained packages. Which?",
+      "options": [
+        "Agent Registry",
+        "Model Garden",
+        "Skill Registry",
+        "Agent Identity"
+      ],
+      "correctIndex": 2,
+      "explanation": "Skill Registry is a secure, private repository on Agent Platform that stores skills as self-contained packages.",
+      "whyOthersWrong": [
+        "Agent Registry catalogues agents, tools and MCP servers, not skill packages.",
+        "Model Garden catalogues models.",
+        "Agent Identity gives each agent a unique identity for access control."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/skill-registry",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq13",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "An agent must reduce hallucinations by grounding answers in private enterprise data. Which Agent Platform component connects that data to language models for retrieval-augmented generation?",
+      "options": [
+        "Model Armor",
+        "RAG Engine",
+        "Agent Gateway",
+        "Agents CLI"
+      ],
+      "correctIndex": 1,
+      "explanation": "RAG Engine facilitates retrieval-augmented generation by connecting private enterprise data to language models, improving accuracy and reducing hallucinations.",
+      "whyOthersWrong": [
+        "Model Armor screens content for harm, injection and sensitive data; it does not ground answers.",
+        "Agent Gateway enforces policy on agent traffic.",
+        "Agents CLI builds, evaluates and deploys agents."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq14",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "Each agent must have its own managed identity so access to resources can be controlled and audited per agent, not through a shared account. What gives that?",
+      "options": [
+        "Agent Identity",
+        "A shared service account for every agent",
+        "Agent Registry",
+        "Model Garden"
+      ],
+      "correctIndex": 0,
+      "explanation": "Agent Identity gives each agent a fully managed, unique identity, so access can be controlled and audited per agent.",
+      "whyOthersWrong": [
+        "A shared account cannot tell the agents apart, so access cannot be controlled or audited per agent.",
+        "Agent Registry catalogues agents; it does not give them identities.",
+        "Model Garden catalogues models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq15",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "The organisation wants a central catalogue for discovering, tracking and managing agents, tools and MCP servers. Which?",
+      "options": [
+        "Skill Registry",
+        "Vector Search",
+        "Cloud Logging",
+        "Agent Registry"
+      ],
+      "correctIndex": 3,
+      "explanation": "Agent Registry is a centralised catalogue for discovering, tracking and managing agents, tools and MCP servers across the organisation.",
+      "whyOthersWrong": [
+        "Skill Registry stores skills, not agents and MCP servers.",
+        "Vector Search stores and searches data for AI applications.",
+        "Cloud Logging records logs; it is not a catalogue of agents."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/agent-registry/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq16",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Two agents built by different teams must work together. Which open protocol lets an agent reach tools, and which lets agents coordinate with each other?",
+      "options": [
+        "A2A for tools and MCP between agents",
+        "OAuth 2.0 for both",
+        "MCP for tools and Agent2Agent (A2A) between agents",
+        "Model Armor for both"
+      ],
+      "correctIndex": 2,
+      "explanation": "Agents are orchestrated with agentic protocols such as MCP and Agent2Agent (A2A). MCP connects an agent to tools; A2A connects agents to one another.",
+      "whyOthersWrong": [
+        "That swaps the two protocols' roles.",
+        "OAuth 2.0 authenticates calls; it is not a protocol for tools or agent-to-agent coordination.",
+        "Model Armor screens content; it is not an orchestration protocol."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq17",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "A task's steps depend on one another and must run in order, each using the previous result. Which workflow shape fits?",
+      "options": [
+        "Parallel agents",
+        "Sequential agents",
+        "A loop with no exit condition",
+        "Independent agents with no handoff"
+      ],
+      "correctIndex": 1,
+      "explanation": "Pick the workflow shape from the task's dependencies. Steps that depend on earlier results run in sequence.",
+      "whyOthersWrong": [
+        "Parallel agents suit independent work, not steps that need earlier results.",
+        "A loop with no exit condition would never finish.",
+        "Without a handoff the later steps cannot use the earlier results."
+      ],
+      "officialDoc": "https://adk.dev/",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq18",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Which service is the high-performance, scalable environment for deploying, operating and scaling agents, formerly called Agent Engine?",
+      "options": [
+        "Agent Runtime",
+        "Agent Registry",
+        "Agent Gateway",
+        "Model Garden"
+      ],
+      "correctIndex": 0,
+      "explanation": "Agent Runtime is the scalable runtime environment for deploying, operating and scaling agents. It was formerly called Agent Engine.",
+      "whyOthersWrong": [
+        "Agent Registry catalogues agents.",
+        "Agent Gateway enforces policy on agent traffic.",
+        "Model Garden catalogues models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq19",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "Before release, the team wants to judge an agent's answers and its tool calls against known-good examples. What should they build?",
+      "options": [
+        "A single manual test of one happy path",
+        "A vector index of the production logs",
+        "A longer system prompt",
+        "A golden dataset of prompts and edge cases to evaluate against"
+      ],
+      "correctIndex": 3,
+      "explanation": "Evaluation uses test sets such as golden data, prompts and edge cases, and assesses the agent's tool execution against success criteria.",
+      "whyOthersWrong": [
+        "One happy path misses edge cases and the tool calls.",
+        "A vector index retrieves data; it does not evaluate the agent.",
+        "A longer prompt changes behaviour but does not measure it."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/optimize/evaluation/agent-evaluation",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq20",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "An agent passed evaluation once. How should the team keep its quality known as it changes in production?",
+      "options": [
+        "Evaluate once and never again",
+        "Rely on users to report problems",
+        "Run continuous evaluation, including online evaluation of live traffic",
+        "Evaluate only the final text, never the tool calls"
+      ],
+      "correctIndex": 2,
+      "explanation": "Agent evaluation is continuous: multi-turn autoraters and online evaluation of live traffic assess quality over time, and tool execution is assessed too.",
+      "whyOthersWrong": [
+        "A single evaluation goes stale as the agent and its data change.",
+        "Waiting for reports means problems are found late.",
+        "Tool calls are part of what the evaluation assesses, so skipping them leaves a gap."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/optimize/evaluation/agent-evaluation",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq21",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "A team must choose where to deploy an agent. Which are the runtimes the exam guide names for this choice?",
+      "options": [
+        "Model Armor, Agent Gateway and Agent Registry",
+        "Agent Runtime, Cloud Run and GKE",
+        "Workflow Builder, ADK and Agents CLI",
+        "Cloud Trace, Cloud Logging and Vector Search"
+      ],
+      "correctIndex": 1,
+      "explanation": "The deployment runtime is chosen by use case, requirements and cost from Agent Runtime, Cloud Run and GKE.",
+      "whyOthersWrong": [
+        "Those are security and governance parts, not runtimes.",
+        "Those are build tools, not where an agent runs.",
+        "Those are observability and data parts, not runtimes."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq22",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "A deployed agent is slow and sometimes loops on its reasoning. Which Google Cloud tools show where the latency and the loop come from?",
+      "options": [
+        "Cloud Trace and Cloud Logging",
+        "Model Armor and Agent Registry",
+        "Skill Registry and Model Garden",
+        "Agents CLI and Workflow Builder"
+      ],
+      "correctIndex": 0,
+      "explanation": "Troubleshooting agents uses Cloud Trace and Cloud Logging to find where latency or a reasoning loop comes from.",
+      "whyOthersWrong": [
+        "Model Armor screens content and Agent Registry catalogues agents; neither traces latency.",
+        "Those are catalogues and do not show runtime behaviour.",
+        "Those build agents; they do not diagnose a running one."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq23",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "Security wants one governance and enforcement layer for agent tool calls, authentication and security policies. Which Agent Platform component is it?",
+      "options": [
+        "Agent Registry",
+        "Model Garden",
+        "Sessions",
+        "Agent Gateway"
+      ],
+      "correctIndex": 3,
+      "explanation": "Agent Gateway is the governance and security enforcement layer for agents, a central policy enforcement point for tool calls, authentication and security policies.",
+      "whyOthersWrong": [
+        "Agent Registry catalogues agents; it does not enforce policy on traffic.",
+        "Model Garden catalogues models.",
+        "Sessions store conversation history."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq24",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "An agent sends requests to external tools and services. Which Agent Gateway mode governs that outbound traffic?",
+      "options": [
+        "Client-to-Agent",
+        "Agent Identity",
+        "Agent-to-Anywhere",
+        "Model Armor"
+      ],
+      "correctIndex": 2,
+      "explanation": "Agent-to-Anywhere governs requests that agents send to external tools and services. Client-to-Agent secures inbound traffic.",
+      "whyOthersWrong": [
+        "Client-to-Agent secures inbound communications between clients and agents, not outbound requests.",
+        "Agent Identity gives each agent a unique identity; it is not a traffic mode.",
+        "Model Armor screens content; it is not a traffic mode."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq25",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "Prompts and replies must be screened for prompt injection, jailbreaks, sensitive data and malicious links. Which service does this?",
+      "options": [
+        "Agent Identity",
+        "Model Armor",
+        "Agent Registry",
+        "Cloud Trace"
+      ],
+      "correctIndex": 1,
+      "explanation": "Model Armor screens prompts and model responses for harmful content, prompt injection and jailbreaks, sensitive data and malicious links.",
+      "whyOthersWrong": [
+        "Agent Identity identifies the agent; it does not screen content.",
+        "Agent Registry catalogues agents.",
+        "Cloud Trace shows latency, not content problems."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/model-armor/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq26",
+      "sectionId": "security-governance",
+      "topicId": "5-2",
+      "question": "An agent can take an action with serious consequences, such as paying a large invoice. Which safeguard fits?",
+      "options": [
+        "A human-in-the-loop approval step before the action",
+        "Let the agent act, then review the logs next month",
+        "Give the agent broader permissions so it is never blocked",
+        "Remove the guardrails to reduce latency"
+      ],
+      "correctIndex": 0,
+      "explanation": "Safety frameworks combine guardrails with human-in-the-loop (HITL) approval where risk requires it.",
+      "whyOthersWrong": [
+        "Reviewing later cannot undo a harmful action that has already happened.",
+        "Broader permissions increase risk, the opposite of a safeguard.",
+        "Removing guardrails makes risky actions easier."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    }
+  ]
 }
