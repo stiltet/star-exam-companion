@@ -39,6 +39,20 @@
       "title": "Understand Google Cloud Agents",
       "folder": "T-GCAGNT-B/v1.2.0/EN",
       "format": "rise"
+    },
+    {
+      "id": "7",
+      "template": "1436",
+      "title": "Build AI Agents with Enterprise Databases",
+      "folder": "T-AIATDB-A/1.0.0/T-AIATDB-A",
+      "format": "rise"
+    },
+    {
+      "id": "8",
+      "template": "1685",
+      "title": "Liftoff with Google Antigravity: Build a Video Game with AI",
+      "folder": "T-LWGA-B/v2.0/T-LWGA-B",
+      "format": "rise"
     }
   ],
   "noReading": [
@@ -50,11 +64,6 @@
     {
       "template": "1672",
       "title": "Agentic Strategy: Discover, Design, and Prototype",
-      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud."
-    },
-    {
-      "template": "1685",
-      "title": "Liftoff with Google Antigravity: Build a Video Game with AI",
       "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud."
     },
     {
@@ -70,11 +79,6 @@
     {
       "template": "1832",
       "title": "Build Agent Skills with Google",
-      "why": "This course has readings on Google Skills, but they could not be matched to a public text bundle, so they cannot be read aloud here yet."
-    },
-    {
-      "template": "1436",
-      "title": "Build AI Agents with Enterprise Databases",
       "why": "This course has readings on Google Skills, but they could not be matched to a public text bundle, so they cannot be read aloud here yet."
     }
   ]

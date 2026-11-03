@@ -18,7 +18,7 @@ async function settleWorker(page: Page) {
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
 // The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
-const UNFINISHED = /Unfinished: Read Aloud covers six courses, five of the learning path's twelve/
+const UNFINISHED = /Unfinished: Read Aloud covers eight courses, seven of the learning path's twelve/
 
 test.use({ navigationCutOff: true })
 
@@ -73,11 +73,13 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
     await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
-    // The path's other seven courses are listed under NOT READ ALOUD, each with why, so none is missing silently.
+    // The two newer courses that were found are read aloud; the path's other five are listed under NOT READ ALOUD, each with why.
+    await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
+    await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
     await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toBeVisible()
     await expect(page.getByText("Build Agent Skills with Google")).toBeVisible()
     await expect(page.getByText(/hands-on labs, videos and quizzes on Google Skills/).first()).toBeVisible()
-    // The list says the pack is unfinished, so six courses are not read as the whole learning path.
+    // The list says the pack is unfinished, so eight courses are not read as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored
