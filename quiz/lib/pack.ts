@@ -82,6 +82,8 @@ function packReads(root: string, id: string): boolean {
     loadPack(root, id)
     return true
   } catch {
+    // Any file of the pack that does not load means the pack cannot be served: the choice is ignored, not reported,
+    // so the page that switches the exam still opens. The pack test names what is wrong with a pack.
     return false
   }
 }
