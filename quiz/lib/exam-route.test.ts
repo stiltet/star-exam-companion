@@ -5,6 +5,7 @@ import path from "node:path"
 import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
 import { examRoute, postExam, switchExam } from "./exam-route.ts"
+import { startNightPreload } from "./night-preload.ts"
 
 // The route reads the repo from the quiz directory, as the running app does, and saves to a scratch file.
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-exam-route-"))
@@ -70,6 +71,7 @@ test("the route handler takes the request alone, so Next's second argument canno
 
 test("the route handler itself starts the Night recording after a successful switch, and not after a refused one", async () => {
   const original = examRoute.onSwitched
+  assert.equal(original, startNightPreload, "the route runs the Night recording preload by default")
   let started = 0
   examRoute.onSwitched = () => { started += 1 }
   try {

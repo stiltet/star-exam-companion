@@ -179,7 +179,7 @@ in the shell that starts the quiz.
 | `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
 | `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
-| `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser tests set it. A second test instance (the one on port 47822) must set it too, or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache: start it with `QUIZ_NIGHT_PRELOAD=0 NIGHT_DIR=<scratch folder>` before the usual command. |
+| `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite (`pnpm --dir quiz e2e`, the instance on port 47822) sets it. Any other test instance must set it too, or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
 ## Full local setup

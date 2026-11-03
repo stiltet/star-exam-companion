@@ -20,9 +20,10 @@ export function scoped(name: string, exam: string = currentExam()): string {
 }
 
 // Before the names carried the exam, the Generative AI Leader quiz kept these under plain names.
+// The plain names that hold a list of queued answers; the other legacy names hold a map or one value.
+const QUEUE_NAMES = ["quiz-outbox", "quiz-rejected"]
 const LEGACY_NAMES = [
-  "quiz-outbox",
-  "quiz-rejected",
+  ...QUEUE_NAMES,
   "quiz-rejected-reasons",
   "quiz-snapshot",
   "quiz-snapshot-at",
@@ -55,8 +56,7 @@ function keyed(text: string | null): Record<string, unknown> | null {
   }
 }
 
-// The plain names that hold a list of queued answers; the others held a map or one value.
-const QUEUES = new Set(["quiz-outbox", "quiz-rejected"])
+const QUEUES = new Set(QUEUE_NAMES)
 
 // A copy the app cannot read is not deleted: it is kept under `<name>-unreadable`, as the scores move keeps a backup.
 // A different unreadable text already kept there is not overwritten: the next free `-2`, `-3`... holds it, and the

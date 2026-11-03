@@ -82,6 +82,16 @@ test("when both copies of a queue are unreadable, both are kept, and a later unr
   assert.equal(store.data.has("quiz-outbox"), false)
 })
 
+test("a third different unreadable text is kept under -unreadable-3, and the same text twice is kept once", () => {
+  const name = scoped("quiz-outbox", DEFAULT_EXAM)
+  const store = memory({ [name]: "one {", [`${name}-unreadable`]: "one {", [`${name}-unreadable-2`]: "two {", "quiz-outbox": "three {" })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.equal(store.data.get(`${name}-unreadable`), "one {")
+  assert.equal(store.data.get(`${name}-unreadable-2`), "two {")
+  assert.equal(store.data.get(`${name}-unreadable-3`), "three {")
+  assert.equal(store.data.has(`${name}-unreadable-4`), false, "the unreadable scoped text already kept is not kept twice")
+})
+
 test("an unreadable plain-named queue is kept when the scoped name holds nothing yet", () => {
   const store = memory({ "quiz-outbox": "{truncated", "quiz-rejected-reasons": "[not a map" })
   migrateLegacyStorage(store, DEFAULT_EXAM)
