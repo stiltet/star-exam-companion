@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { phoneTitle, sitePages } from "./pages.ts"
 
-const SITE_PAGES = sitePages({ reading: true, exam: { questions: 60, minutes: 90 } })
+const SITE_PAGES = sitePages({ exam: { questions: 60, minutes: 90 } })
 
 test("the page list is the menu order, and Read Aloud is in it", () => {
   assert.deepEqual(SITE_PAGES.map((page) => page.href), [
@@ -13,7 +13,7 @@ test("the page list is the menu order, and Read Aloud is in it", () => {
 
 test("the exam's blurb names the question count the exam asks", () => {
   assert.match(SITE_PAGES.find((page) => page.href === "/exam")?.blurb ?? "", /\b60 questions/)
-  const agentic = sitePages({ reading: false, exam: { questions: 80, minutes: 180 } })
+  const agentic = sitePages({ exam: { questions: 80, minutes: 180 } })
   assert.match(agentic.find((page) => page.href === "/exam")?.blurb ?? "", /180 min, 80 questions/)
 })
 
@@ -29,8 +29,7 @@ test("the phone title comes from the page list, Study's own phone title included
   for (const page of SITE_PAGES) assert.equal(phoneTitle(page.href), page.phone ?? page.title)
 })
 
-test("a pack with no course to read has no Read Aloud page, and every other page stays", () => {
-  const pages = sitePages({ reading: false, exam: { questions: 80, minutes: 180 } }).map((page) => page.href)
-  assert.equal(pages.includes("/read"), false)
-  assert.deepEqual(pages, ["/study", "/practice", "/voice", "/exam", "/flashcards", "/glossary", "/progress"])
+test("a pack with no course to read still lists Read Aloud, so the page can say there is none", () => {
+  const pages = sitePages({ exam: { questions: 80, minutes: 180 } }).map((page) => page.href)
+  assert.deepEqual(pages, ["/study", "/practice", "/voice", "/read", "/exam", "/flashcards", "/glossary", "/progress"])
 })

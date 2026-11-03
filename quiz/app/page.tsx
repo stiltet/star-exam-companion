@@ -40,7 +40,7 @@ export default function HomePage() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="outlined" href="/voice" arrow>VOICE QUIZ</ActionLink>
-                {meta.reading && <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>}
+                <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>
               </div>
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="filled" href={meta.learningPath} newTab>OFFICIAL LEARNING PATH</ActionLink>

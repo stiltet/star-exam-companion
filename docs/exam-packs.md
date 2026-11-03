@@ -25,7 +25,7 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder }] }`. `path` is
 the learning path on Google Skills, `bundleBase` is the public Google Cloud Storage folder that
 holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
-A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`.
+A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
 
 ### Shapes of the data files
 

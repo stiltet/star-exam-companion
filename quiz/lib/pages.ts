@@ -21,10 +21,10 @@ const ALL_PAGES: readonly SitePage[] = [
   { href: "/progress", menu: "PROGRESS", title: "Progress", blurb: "Track completion and weak areas" },
 ]
 
-// The pages of the exam this install serves: an exam pack with no course to read has no Read Aloud
-// page, and the Practice exam's blurb gives that exam's length.
-export function sitePages(pack: { reading: boolean; exam: { questions: number; minutes: number } }): readonly SitePage[] {
-  return ALL_PAGES.filter((page) => pack.reading || page.href !== "/read").map((page) =>
+// The pages of the exam this install serves: every exam shows every page, a pack with no course to read
+// included (its Read Aloud page says so), and the Practice exam's blurb gives that exam's length.
+export function sitePages(pack: { exam: { questions: number; minutes: number } }): readonly SitePage[] {
+  return ALL_PAGES.map((page) =>
     page.href === "/exam" ? { ...page, blurb: `Timed practice exam (${pack.exam.minutes} min, ${pack.exam.questions} questions)` } : page,
   )
 }
