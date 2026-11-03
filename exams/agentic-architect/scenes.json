@@ -376,5 +376,211 @@
     ],
     "scene": "An agent sends requests to external tools and services, and the security team wants the Agent Gateway mode that governs those outbound requests. Which mode is it?",
     "constraint": "The need is the outbound mode of Agent Gateway, not the inbound mode, a catalogue or hosting."
+  },
+  {
+    "id": "search-with-foundation-models",
+    "correct": "Agent Search",
+    "distractors": [
+      "RAG Engine",
+      "Vector Search",
+      "Model Garden"
+    ],
+    "scene": "A team with limited machine learning skills wants to build a search and question-answering application using Google's foundation models and search and recommendation expertise, formerly called Vertex AI Search. Which should it use?",
+    "constraint": "The need is a ready-made search and recommendation service, formerly Vertex AI Search, not a retrieval component or a model catalogue."
+  },
+  {
+    "id": "enterprise-knowledge-agent",
+    "correct": "Gemini Enterprise",
+    "distractors": [
+      "Antigravity",
+      "Agent Runtime",
+      "Agents CLI"
+    ],
+    "scene": "A company wants one agent where Gemini answers staff questions, handles knowledge work, and writes and runs code. Which should it use?",
+    "constraint": "The need is Google's enterprise offering for everyday knowledge work, not a coding-agent platform, a hosting service or a command-line tool."
+  },
+  {
+    "id": "agent-first-coding",
+    "correct": "Antigravity",
+    "distractors": [
+      "Agents CLI",
+      "Gemini Enterprise",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "Developers want an agent-first platform that orchestrates subagents across environments and comes as an App, a CLI and an SDK. Which should they use?",
+    "constraint": "The need is the agent-first coding platform with an App, CLI and SDK, not the agent lifecycle command-line tool, the enterprise offering or an agent framework."
+  },
+  {
+    "id": "gemini-family-models",
+    "correct": "Gemini LLMs",
+    "distractors": [
+      "Model Garden",
+      "Agent Search",
+      "Vector Search"
+    ],
+    "scene": "A team needs Google's own family of models for complex coding and multimodal reasoning. Which does it name?",
+    "constraint": "The need is the Gemini models themselves, not the catalogue that lists them or a search service.",
+    "guide": "3.1"
+  },
+  {
+    "id": "open-tool-standard",
+    "correct": "Model Context Protocol (MCP)",
+    "distractors": [
+      "Agent2Agent (A2A)",
+      "Auth Manager",
+      "Agent Gateway"
+    ],
+    "scene": "An architect wants an open-source standard for connecting an AI application to external systems such as data sources, tools and workflows. Which should it use?",
+    "constraint": "The need is the open standard that connects applications to tools and data, not the standard between agents, a credential vault or a traffic layer."
+  },
+  {
+    "id": "agents-talk-to-agents",
+    "correct": "Agent2Agent (A2A)",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agent Gateway"
+    ],
+    "scene": "Agents built by different teams must securely communicate, collaborate and solve problems together through an open standard. Which should they use?",
+    "constraint": "The need is the open standard for agents working with one another, not the standard for tools, a catalogue or a gateway."
+  },
+  {
+    "id": "collections-of-data-objects",
+    "correct": "Agent Retrieval",
+    "distractors": [
+      "Vector Search",
+      "RAG Engine",
+      "Agent Search"
+    ],
+    "scene": "A team wants Google's fully managed, AI-native search engine in which you work with Collections of Data Objects instead of managing indexes, formerly called Vector Search 2.0. Which should it use?",
+    "constraint": "The need is the engine that evolves Vector Search into storage and retrieval, formerly Vector Search 2.0, not the original index service, the grounding component or a search application service.",
+    "guide": "3.2"
+  },
+  {
+    "id": "analyse-warehouse-data",
+    "correct": "BigQuery",
+    "distractors": [
+      "Cloud SQL",
+      "Firestore",
+      "Cloud Storage"
+    ],
+    "scene": "An analyst wants a fully managed, serverless, AI-ready data platform to analyse data with SQL and Python. Which should they use?",
+    "constraint": "The need is an analytics data platform, not a transactional relational database, a document database or object storage.",
+    "guide": "3.2"
+  },
+  {
+    "id": "managed-relational-database",
+    "correct": "Cloud SQL",
+    "distractors": [
+      "BigQuery",
+      "Firestore",
+      "Memorystore for Redis"
+    ],
+    "scene": "An agent needs a fully managed relational database for MySQL, PostgreSQL or SQL Server. Which should be used?",
+    "constraint": "The need is a managed relational database, not an analytics platform, a document database or a cache.",
+    "guide": "3.2"
+  },
+  {
+    "id": "store-any-amount-of-objects",
+    "correct": "Cloud Storage",
+    "distractors": [
+      "Firestore",
+      "Cloud SQL",
+      "BigQuery"
+    ],
+    "scene": "A team wants scalable, managed object storage to store and retrieve any amount of data at any time. Which should it use?",
+    "constraint": "The need is object storage, not a document database, a relational database or an analytics platform.",
+    "guide": "3.2"
+  },
+  {
+    "id": "serverless-document-store",
+    "correct": "Firestore",
+    "distractors": [
+      "Cloud SQL",
+      "Cloud Storage",
+      "Memorystore for Redis"
+    ],
+    "scene": "An agent needs a fully managed, scalable, serverless document database. Which should it use?",
+    "constraint": "The need is a document database, not a relational database, object storage or a cache.",
+    "guide": "3.2"
+  },
+  {
+    "id": "fast-agent-cache",
+    "correct": "Memorystore for Redis",
+    "distractors": [
+      "Firestore",
+      "Cloud SQL",
+      "Cloud Storage"
+    ],
+    "scene": "An agent needs an application cache with sub-millisecond data access, powered by the Redis in-memory data store, fully managed. Which should it use?",
+    "constraint": "The need is an in-memory cache, not a document database, a relational database or object storage.",
+    "guide": "3.2"
+  },
+  {
+    "id": "run-a-container-managed",
+    "correct": "Cloud Run",
+    "distractors": [
+      "Google Kubernetes Engine (GKE)",
+      "Agent Runtime",
+      "Cloud Logging"
+    ],
+    "scene": "A team wants a fully managed application platform to run its code, function or container on Google's scalable infrastructure, with no cluster to run. Which should it choose?",
+    "constraint": "The need is a fully managed platform for containers and code, not a Kubernetes service, an agent-specific runtime or a logging system."
+  },
+  {
+    "id": "managed-kubernetes",
+    "correct": "Google Kubernetes Engine (GKE)",
+    "distractors": [
+      "Cloud Run",
+      "Agent Runtime",
+      "Cloud Trace"
+    ],
+    "scene": "A platform team wants a managed Kubernetes service for deploying containerised applications on Google Cloud, which also serves as a secure sandbox for coding agents. Which should it use?",
+    "constraint": "The need is a managed Kubernetes service, not a serverless container platform, an agent runtime or a tracing system."
+  },
+  {
+    "id": "collect-and-search-logs",
+    "correct": "Cloud Logging",
+    "distractors": [
+      "Cloud Trace",
+      "Agent evaluation",
+      "Model Armor"
+    ],
+    "scene": "Operations needs a real-time log-management system with storage, search, analysis and monitoring support for its agents. Which should it use?",
+    "constraint": "The need is log management, not request tracing, quality evaluation or content screening."
+  },
+  {
+    "id": "find-latency-bottleneck",
+    "correct": "Cloud Trace",
+    "distractors": [
+      "Cloud Logging",
+      "Agent evaluation",
+      "Agent Gateway"
+    ],
+    "scene": "An agent is slow, and the team needs a distributed tracing system that tracks request latency to find the bottleneck across services. Which should it use?",
+    "constraint": "The need is tracing of request latency, not log storage, quality evaluation or traffic governance."
+  },
+  {
+    "id": "vault-for-tool-credentials",
+    "correct": "Auth Manager",
+    "distractors": [
+      "Agent Identity",
+      "Model Armor",
+      "Agent Gateway"
+    ],
+    "scene": "An agent must call external tools using 3-legged OAuth, 2-legged OAuth and API keys, and the team wants a centralised credentials vault and authentication broker. Which should it use?",
+    "constraint": "The need is a vault and broker for outbound tool credentials, not the agent's own identity, content screening or a traffic layer."
+  },
+  {
+    "id": "discover-and-deidentify",
+    "correct": "Sensitive Data Protection",
+    "distractors": [
+      "Model Armor",
+      "Agent Identity",
+      "Cloud Storage"
+    ],
+    "scene": "A security team wants to discover, classify and de-identify sensitive data inside and outside Google Cloud. Which service should it use?",
+    "constraint": "The need is discovering and de-identifying sensitive data, not screening prompts and replies, identifying an agent or storing objects.",
+    "guide": "5.1"
   }
 ]

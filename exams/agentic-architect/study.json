@@ -1468,6 +1468,699 @@
       ],
       "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
       "difficulty": "medium"
+    },
+    {
+      "id": "aq48",
+      "sectionId": "low-code",
+      "topicId": "1-2",
+      "question": "A team with limited machine learning skills wants a service, formerly called Vertex AI Search, that uses Google's foundation models and search expertise for search and question answering. Which is it?",
+      "options": [
+        "RAG Engine",
+        "Agent Search",
+        "Model Garden",
+        "Agents CLI"
+      ],
+      "correctIndex": 1,
+      "explanation": "Agent Search lets developers use Google's foundation models and its search and recommendation expertise to build search and question-answering applications. It was formerly called Vertex AI Search.",
+      "whyOthersWrong": [
+        "RAG Engine is a component that grounds model answers in private data, not a ready-made search service.",
+        "Model Garden is a catalogue of models.",
+        "Agents CLI is a command-line tool for building, evaluating and deploying agents."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/generative-ai-app-builder/docs",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq49",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "In which Google product does Gemini answer questions, handle knowledge work, and write and run code in a single agent?",
+      "options": [
+        "Agent Runtime",
+        "Skill Registry",
+        "Gemini Enterprise",
+        "Cloud Trace"
+      ],
+      "correctIndex": 2,
+      "explanation": "Gemini Enterprise is Google's enterprise offering in which Gemini answers questions, handles knowledge work, and writes and runs code in a single agent.",
+      "whyOthersWrong": [
+        "Agent Runtime hosts and scales agents; it is not where staff use Gemini.",
+        "Skill Registry stores skills as packages.",
+        "Cloud Trace tracks request latency."
+      ],
+      "officialDoc": "https://cloud.google.com/gemini-enterprise",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq50",
+      "sectionId": "coding-agents",
+      "topicId": "2-2",
+      "question": "Which Google platform for coding agents orchestrates subagents across environments and comes as an App, a CLI and an SDK?",
+      "options": [
+        "Antigravity",
+        "Workflow Builder",
+        "Model Armor",
+        "Vector Search"
+      ],
+      "correctIndex": 0,
+      "explanation": "Antigravity is Google's agent-first platform for coding agents, available as an App, a CLI and an SDK.",
+      "whyOthersWrong": [
+        "Workflow Builder is a no-code builder inside Gemini Enterprise.",
+        "Model Armor screens prompts and replies.",
+        "Vector Search stores and searches embeddings."
+      ],
+      "officialDoc": "https://antigravity.google/product",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq51",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "Which family of Google models handles complex coding and multimodal reasoning?",
+      "options": [
+        "Cloud SQL",
+        "Agent Gateway",
+        "Firestore",
+        "Gemini LLMs"
+      ],
+      "correctIndex": 3,
+      "explanation": "The Gemini models handle complex coding and multimodal reasoning, and Model Garden lists them with third-party and open-source models.",
+      "whyOthersWrong": [
+        "Cloud SQL is a relational database service.",
+        "Agent Gateway governs agent traffic.",
+        "Firestore is a document database."
+      ],
+      "officialDoc": "https://ai.google.dev/gemini-api/docs",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq52",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Which open-source standard connects AI applications to external systems such as data sources, tools and workflows?",
+      "options": [
+        "Principal access boundary policies",
+        "Model Context Protocol (MCP)",
+        "Cloud Logging",
+        "Reranking"
+      ],
+      "correctIndex": 1,
+      "explanation": "MCP is an open-source standard for connecting AI applications to external systems.",
+      "whyOthersWrong": [
+        "Principal access boundary policies limit what an identity can reach.",
+        "Cloud Logging is a log-management system.",
+        "Reranking reorders retrieved results."
+      ],
+      "officialDoc": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq53",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Which open standard lets agents from different teams securely communicate, collaborate and solve problems together?",
+      "options": [
+        "Agent2Agent (A2A)",
+        "BigQuery",
+        "Cloud Storage",
+        "Agent Identity"
+      ],
+      "correctIndex": 0,
+      "explanation": "The Agent2Agent (A2A) protocol is an open standard that lets different AI agents securely communicate and collaborate.",
+      "whyOthersWrong": [
+        "BigQuery is a data platform.",
+        "Cloud Storage is object storage.",
+        "Agent Identity gives each agent its own managed identity."
+      ],
+      "officialDoc": "https://a2a-protocol.org/latest/",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq54",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "Which fully managed, AI-native search engine, formerly Vector Search 2.0, has you work with Collections of Data Objects instead of managing indexes?",
+      "options": [
+        "Cloud Run",
+        "Cloud Trace",
+        "Agent Retrieval",
+        "Auth Manager"
+      ],
+      "correctIndex": 2,
+      "explanation": "Agent Retrieval evolves Vector Search into a storage and retrieval system built on Collections of Data Objects. It was formerly called Vector Search 2.0.",
+      "whyOthersWrong": [
+        "Cloud Run runs containers and code.",
+        "Cloud Trace tracks latency.",
+        "Auth Manager is a vault and broker for tool credentials."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search-2/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq55",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "An analyst needs a fully managed, serverless, AI-ready data platform to analyse data with SQL and Python. Which service fits?",
+      "options": [
+        "Firestore",
+        "BigQuery",
+        "Memorystore for Redis",
+        "Cloud Storage"
+      ],
+      "correctIndex": 1,
+      "explanation": "BigQuery is a fully managed, AI-ready data platform with a serverless architecture that uses SQL and Python.",
+      "whyOthersWrong": [
+        "Firestore is a document database, not an analytics platform.",
+        "Memorystore for Redis is an in-memory cache.",
+        "Cloud Storage stores objects; it does not analyse them with SQL."
+      ],
+      "officialDoc": "https://cloud.google.com/bigquery/docs/introduction",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq56",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "An application needs a fully managed relational database for MySQL, PostgreSQL or SQL Server. Which service fits?",
+      "options": [
+        "BigQuery",
+        "Firestore",
+        "Cloud Storage",
+        "Cloud SQL"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cloud SQL is a fully managed relational database service for MySQL, PostgreSQL and SQL Server.",
+      "whyOthersWrong": [
+        "BigQuery is an analytics platform rather than a transactional database service.",
+        "Firestore is a document database.",
+        "Cloud Storage is object storage."
+      ],
+      "officialDoc": "https://cloud.google.com/sql/docs/introduction",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq57",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "Which service gives scalable, managed object storage for any amount of data?",
+      "options": [
+        "Cloud Storage",
+        "Cloud SQL",
+        "Memorystore for Redis",
+        "Firestore"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Storage is a scalable, managed object storage service for storing and retrieving any amount of data at any time.",
+      "whyOthersWrong": [
+        "Cloud SQL stores relational rows, not objects.",
+        "Memorystore for Redis is an in-memory cache.",
+        "Firestore stores documents."
+      ],
+      "officialDoc": "https://cloud.google.com/storage/docs/introduction",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq58",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "Which service is a fully managed, scalable, serverless document database?",
+      "options": [
+        "Cloud SQL",
+        "BigQuery",
+        "Firestore",
+        "Cloud Storage"
+      ],
+      "correctIndex": 2,
+      "explanation": "Firestore is a fully managed, scalable, serverless document database.",
+      "whyOthersWrong": [
+        "Cloud SQL is a relational database service.",
+        "BigQuery is an analytics data platform.",
+        "Cloud Storage is object storage."
+      ],
+      "officialDoc": "https://cloud.google.com/firestore/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq59",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "An agent needs an application cache with sub-millisecond data access, powered by the Redis in-memory data store. Which service fits?",
+      "options": [
+        "Cloud SQL",
+        "Memorystore for Redis",
+        "Firestore",
+        "BigQuery"
+      ],
+      "correctIndex": 1,
+      "explanation": "Memorystore for Redis is a fully managed service powered by Redis, built for application caches with sub-millisecond data access.",
+      "whyOthersWrong": [
+        "Cloud SQL is a relational database, not a cache.",
+        "Firestore is a document database.",
+        "BigQuery is an analytics platform."
+      ],
+      "officialDoc": "https://cloud.google.com/memorystore/docs/redis/memorystore-for-redis-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq60",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Which fully managed platform runs your code, function or container on Google's scalable infrastructure, with no cluster to manage?",
+      "options": [
+        "Cloud Run",
+        "Cloud Logging",
+        "Sensitive Data Protection",
+        "Agent Registry"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Run is a fully managed application platform for running your code, function or container.",
+      "whyOthersWrong": [
+        "Cloud Logging manages logs; it does not run code.",
+        "Sensitive Data Protection finds and de-identifies sensitive data.",
+        "Agent Registry is a catalogue of agents, tools and MCP servers."
+      ],
+      "officialDoc": "https://cloud.google.com/run/docs/overview/what-is-cloud-run",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq61",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Which managed Kubernetes service deploys containerised applications on Google Cloud and can host a secure sandbox for a coding agent?",
+      "options": [
+        "Cloud Trace",
+        "Firestore",
+        "Auth Manager",
+        "Google Kubernetes Engine (GKE)"
+      ],
+      "correctIndex": 3,
+      "explanation": "GKE is a managed Kubernetes service for containerised applications, and the exam guide names it among the secure sandboxes for coding agents.",
+      "whyOthersWrong": [
+        "Cloud Trace shows request latency.",
+        "Firestore is a document database.",
+        "Auth Manager handles outbound tool credentials."
+      ],
+      "officialDoc": "https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq62",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Which service is a real-time log-management system with storage, search, analysis and monitoring support?",
+      "options": [
+        "Cloud Trace",
+        "Cloud Logging",
+        "Agent evaluation",
+        "Memorystore for Redis"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cloud Logging is a real-time log-management system that collects log data from Google Cloud resources automatically.",
+      "whyOthersWrong": [
+        "Cloud Trace tracks request latency rather than managing logs.",
+        "Agent evaluation assesses agent quality.",
+        "Memorystore for Redis is a cache."
+      ],
+      "officialDoc": "https://cloud.google.com/logging/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq63",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "An agent is slow, and the team needs a distributed tracing system for request latency across services. Which service fits?",
+      "options": [
+        "Cloud Logging",
+        "Cloud Storage",
+        "Cloud Trace",
+        "Agent Search"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Trace is a distributed tracing system that tracks request latency and helps troubleshoot performance bottlenecks across services and generative AI applications.",
+      "whyOthersWrong": [
+        "Cloud Logging stores and searches logs; it does not trace requests.",
+        "Cloud Storage is object storage.",
+        "Agent Search is a search and recommendation service."
+      ],
+      "officialDoc": "https://cloud.google.com/trace/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq64",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "An agent calls external tools with 3-legged OAuth, 2-legged OAuth and API keys. Which service is the centralised credentials vault and authentication broker for this?",
+      "options": [
+        "Auth Manager",
+        "Model Armor",
+        "Firestore",
+        "Cloud Run"
+      ],
+      "correctIndex": 0,
+      "explanation": "The auth manager is a centralised credentials vault and authentication broker that simplifies an agent's outbound tool authentication.",
+      "whyOthersWrong": [
+        "Model Armor screens prompts and replies; it does not hold credentials.",
+        "Firestore is a document database.",
+        "Cloud Run runs code."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/iam/docs/auth-manager-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq65",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "A security team wants to discover, classify and de-identify sensitive data inside and outside Google Cloud. Which service does that?",
+      "options": [
+        "Agent Gateway",
+        "Sensitive Data Protection",
+        "Agent Registry",
+        "Cloud Trace"
+      ],
+      "correctIndex": 1,
+      "explanation": "Sensitive Data Protection helps you discover, classify and de-identify sensitive data inside and outside Google Cloud.",
+      "whyOthersWrong": [
+        "Agent Gateway governs agent traffic.",
+        "Agent Registry catalogues agents, tools and MCP servers.",
+        "Cloud Trace tracks request latency."
+      ],
+      "officialDoc": "https://cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq66",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "Which section of the exam guide carries the largest share of the exam?",
+      "options": [
+        "Section 1, Building agents using low-code tools (about 13%)",
+        "Section 2, Using coding agents for application development (about 17%)",
+        "Section 3, Developing custom agents (about 33%)",
+        "Section 5, Securing and governing agentic workflows (about 15%)"
+      ],
+      "correctIndex": 2,
+      "explanation": "Section 3, Developing custom agents, is about 33% of the exam, the largest share.",
+      "whyOthersWrong": [
+        "Section 1 is about 13%, the smallest share.",
+        "Section 2 is about 17%.",
+        "Section 5 is about 15%."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq67",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "Which section of the exam guide carries the smallest share of the exam?",
+      "options": [
+        "Section 1, Building agents using low-code tools (about 13%)",
+        "Section 3, Developing custom agents (about 33%)",
+        "Section 4, Evaluating and deploying agentic workflows (about 22%)",
+        "Section 2, Using coding agents for application development (about 17%)"
+      ],
+      "correctIndex": 0,
+      "explanation": "Section 1, Building agents using low-code tools, is about 13% of the exam, the smallest share.",
+      "whyOthersWrong": [
+        "Section 3 is about 33%, the largest share.",
+        "Section 4 is about 22%.",
+        "Section 2 is about 17%."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq68",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "Which topics make up Section 4 of the exam guide, about 22% of the exam?",
+      "options": [
+        "Securing and governing agentic workflows",
+        "Developing custom agents",
+        "Using coding agents for application development",
+        "Evaluating and deploying agentic workflows"
+      ],
+      "correctIndex": 3,
+      "explanation": "Section 4 is Evaluating and deploying agentic workflows, about 22% of the exam.",
+      "whyOthersWrong": [
+        "Securing and governing agentic workflows is Section 5, about 15%.",
+        "Developing custom agents is Section 3, about 33%.",
+        "Using coding agents for application development is Section 2, about 17%."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq69",
+      "sectionId": "security-governance",
+      "topicId": "5-1",
+      "question": "Which topics make up Section 5 of the exam guide, about 15% of the exam?",
+      "options": [
+        "Evaluating and deploying agentic workflows",
+        "Securing and governing agentic workflows",
+        "Building agents using low-code tools",
+        "Developing custom agents"
+      ],
+      "correctIndex": 1,
+      "explanation": "Section 5 is Securing and governing agentic workflows, about 15% of the exam.",
+      "whyOthersWrong": [
+        "Evaluating and deploying agentic workflows is Section 4.",
+        "Building agents using low-code tools is Section 1.",
+        "Developing custom agents is Section 3."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq70",
+      "sectionId": "coding-agents",
+      "topicId": "2-1",
+      "question": "Which five qualities does the exam guide say a Professional Agentic Architect weighs when building agentic solutions?",
+      "options": [
+        "Colour, font, layout, tone and length",
+        "Latency only",
+        "Reliability, performance, cost, security and scalability",
+        "Region, language, currency, theme and time zone"
+      ],
+      "correctIndex": 2,
+      "explanation": "The guide describes an architect who builds agentic solutions considering reliability, performance, cost, security and scalability.",
+      "whyOthersWrong": [
+        "Colour, font, layout, tone and length are not qualities the guide names.",
+        "Latency alone is one factor of performance, not the five the guide names.",
+        "Region, language, currency, theme and time zone are not the guide's qualities."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq71",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "Vertex AI Search was renamed in Google's documentation. What is it called now?",
+      "options": [
+        "Agent Search",
+        "Agent Retrieval",
+        "Agent Runtime",
+        "Agent Registry"
+      ],
+      "correctIndex": 0,
+      "explanation": "Vertex AI Search is now called Agent Search, the name the exam guide uses.",
+      "whyOthersWrong": [
+        "Agent Retrieval was formerly Vector Search 2.0.",
+        "Agent Runtime was formerly Agent Engine.",
+        "Agent Registry is a catalogue of agents, tools and MCP servers."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/generative-ai-app-builder/docs",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq72",
+      "sectionId": "custom-agents",
+      "topicId": "3-2",
+      "question": "Vector Search 2.0 was renamed. What is it called now?",
+      "options": [
+        "Agent Search",
+        "Agent Runtime",
+        "Model Garden",
+        "Agent Retrieval"
+      ],
+      "correctIndex": 3,
+      "explanation": "Vector Search 2.0 is now called Agent Retrieval, the name the exam guide uses.",
+      "whyOthersWrong": [
+        "Agent Search was formerly Vertex AI Search.",
+        "Agent Runtime was formerly Agent Engine.",
+        "Model Garden is a catalogue of models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search-2/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq73",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "Agent Engine was renamed. What does the exam guide call the service for deploying, operating and scaling agents?",
+      "options": [
+        "Agent Registry",
+        "Agent Runtime",
+        "Agent Gateway",
+        "Agent Search"
+      ],
+      "correctIndex": 1,
+      "explanation": "Agent Engine is now called Agent Runtime, a high-performance, scalable environment for deploying, operating and scaling agents.",
+      "whyOthersWrong": [
+        "Agent Registry is a catalogue.",
+        "Agent Gateway is the governance and enforcement layer.",
+        "Agent Search is a search and recommendation service."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq74",
+      "sectionId": "custom-agents",
+      "topicId": "3-1",
+      "question": "Vertex AI Agent Engine Memory Bank was renamed. What is it called now?",
+      "options": [
+        "Agent Platform Sessions",
+        "Agent Runtime",
+        "Agent Platform Memory Bank",
+        "Agent Registry"
+      ],
+      "correctIndex": 2,
+      "explanation": "Vertex AI Agent Engine Memory Bank is now called Agent Platform Memory Bank, which generates long-term memories from conversations.",
+      "whyOthersWrong": [
+        "Agent Platform Sessions stores the interactions of a conversation.",
+        "Agent Runtime hosts and scales agents.",
+        "Agent Registry is a catalogue."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq75",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Which two services does the exam guide group as Google Cloud Observability?",
+      "options": [
+        "Cloud Logging and Cloud Trace",
+        "Cloud Run and GKE",
+        "BigQuery and Cloud SQL",
+        "Model Armor and Agent Gateway"
+      ],
+      "correctIndex": 0,
+      "explanation": "The guide's tool list names Google Cloud Observability as Cloud Logging and Cloud Trace.",
+      "whyOthersWrong": [
+        "Cloud Run and GKE are deployment runtimes.",
+        "BigQuery and Cloud SQL are data services.",
+        "Model Armor and Agent Gateway are security and governance tools."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq76",
+      "sectionId": "security-governance",
+      "topicId": "5-2",
+      "question": "Sensitive Data Protection can continuously scan and profile data assets across which three services?",
+      "options": [
+        "Cloud Run, GKE and Agent Runtime",
+        "BigQuery, Cloud SQL and Cloud Storage",
+        "Cloud Logging, Cloud Trace and Cloud Run",
+        "Firestore, Memorystore for Redis and Agent Registry"
+      ],
+      "correctIndex": 1,
+      "explanation": "Sensitive Data Protection can continuously scan and profile data assets across BigQuery, Cloud SQL and Cloud Storage to discover shadow data.",
+      "whyOthersWrong": [
+        "Cloud Run, GKE and Agent Runtime run workloads; they are not data stores to scan.",
+        "Cloud Logging, Cloud Trace and Cloud Run are observability and compute services.",
+        "Firestore and Memorystore for Redis are not named, and Agent Registry is a catalogue."
+      ],
+      "officialDoc": "https://cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq77",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "A developer asks whether Cloud Run needs a container image they built themselves. What does Google's overview say?",
+      "options": [
+        "Every deployment needs a hand-written Kubernetes cluster",
+        "Only functions are supported, never containers",
+        "It runs only agents, never other code",
+        "Building container images is optional; Cloud Run can deploy code from any language that can be built into a container"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cloud Run runs code, a function or a container, and building container images is optional.",
+      "whyOthersWrong": [
+        "Cloud Run needs no cluster; that is GKE.",
+        "Cloud Run supports containers, as well as code and functions.",
+        "Cloud Run is a general application platform, not agent-only."
+      ],
+      "officialDoc": "https://cloud.google.com/run/docs/overview/what-is-cloud-run",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq78",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "MCP connects AI applications to which kinds of external things, according to its own introduction?",
+      "options": [
+        "Only other AI agents",
+        "Only billing accounts",
+        "Data sources, tools and workflows",
+        "Only container images"
+      ],
+      "correctIndex": 2,
+      "explanation": "MCP is an open-source standard for connecting AI applications to external systems such as data sources, tools and workflows.",
+      "whyOthersWrong": [
+        "Connecting agents to one another is the job of A2A.",
+        "Billing accounts are not what MCP connects.",
+        "Container images are not what MCP connects."
+      ],
+      "officialDoc": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq79",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Cloud Trace helps troubleshoot performance bottlenecks in which kinds of workloads?",
+      "options": [
+        "Only billing exports",
+        "Services and generative AI applications",
+        "Only static websites",
+        "Only on-premises printers"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cloud Trace tracks request latency and helps troubleshoot performance bottlenecks across services and generative AI applications.",
+      "whyOthersWrong": [
+        "Billing exports are not traced by Cloud Trace.",
+        "Static websites are not what the page names.",
+        "On-premises printers are not what the page names."
+      ],
+      "officialDoc": "https://cloud.google.com/trace/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq80",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "What does Google's certification page say follows the multiple-choice exam for those who pass?",
+      "options": [
+        "Hands-on labs in Google Skills",
+        "A written essay marked by a panel",
+        "Nothing; the exam is the only step",
+        "A paid conference talk"
+      ],
+      "correctIndex": 0,
+      "explanation": "The exam is about 80 multiple-choice questions in 3 hours, then hands-on labs in Google Skills for those who pass.",
+      "whyOthersWrong": [
+        "The page names no essay.",
+        "The page names hands-on labs after the exam.",
+        "The page names no conference talk."
+      ],
+      "officialDoc": "https://cloud.google.com/learn/certification/agentic-architect",
+      "difficulty": "medium"
     }
   ]
 }
