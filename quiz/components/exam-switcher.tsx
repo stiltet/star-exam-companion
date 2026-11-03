@@ -20,12 +20,13 @@ export function ExamSwitcher({ exams, current }: Props) {
   const [pending, setPending] = useState<string | null>(null)
   const [switching, setSwitching] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // The name the dialog shows is kept while it fades out, so it never flips to the old exam's.
+  const [shown, setShown] = useState(current)
+  const target = pending ?? shown
   const title = (id: string) => exams.find((exam) => exam.id === id)?.title ?? id
 
   async function switchExam(target: string) {
     setSwitching(true)
-    // Clips still downloading belong to the exam being left; the next page stores the new exam's.
-    stopStoringVoice()
     setMessage(`Switching to ${title(target)}…`)
     // Answers still on this device reach the Mac first, while it still serves the exam they belong to.
     await sendNow()
@@ -45,14 +46,13 @@ export function ExamSwitcher({ exams, current }: Props) {
       setMessage("The exam was not switched. Check that the Mac is reachable, then try again.")
       return
     }
+    // Clips still downloading belong to the exam being left; the next page stores the new exam's. Only now, so a
+    // failed switch leaves the voice downloads of the exam still studied running.
+    stopStoringVoice()
     setMessage(`Switched to ${title(target)}.`)
     // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
     window.setTimeout(() => window.location.assign("/"), 800)
   }
-
-  // The name the dialog shows is kept while it fades out, so it never flips to the old exam's.
-  const [shown, setShown] = useState(current)
-  const target = pending ?? shown
 
   return (
     <div className="mt-6">

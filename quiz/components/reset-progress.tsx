@@ -34,7 +34,7 @@ export function ResetProgress() {
         body: JSON.stringify({ confirm: true }),
       })
       if (await followWrongExam(response)) {
-        setMessage("The Mac now serves another exam. This page is reloading. Nothing was deleted.")
+        setMessage("The Mac now serves another exam. Reload this page. Nothing was deleted.")
         return
       }
       body = (await response.json()) as typeof body

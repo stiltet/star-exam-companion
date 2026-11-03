@@ -75,11 +75,11 @@ function isPackFolder(root: string, id: string): boolean {
   return ID_PATTERN.test(id) && existsSync(path.join(root, "exams", id, "pack.json"))
 }
 
-// Whether a pack's pack.json reads. A chosen pack that no longer does is ignored, so the Progress page, where
+// Whether a pack loads, every file of it. A chosen pack that no longer does is ignored, so the Progress page, where
 // the exam is switched, still opens and the exam can be changed back.
 function packReads(root: string, id: string): boolean {
   try {
-    checkMeta(readJson(path.join(root, "exams", id, "pack.json")), id)
+    loadPack(root, id)
     return true
   } catch {
     return false

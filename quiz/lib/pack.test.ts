@@ -182,3 +182,20 @@ test("a chosen pack that no longer reads is ignored, so Progress still opens and
     }
   }
 })
+
+test("a chosen pack whose courses.json no longer loads is ignored too, not only one whose pack.json is broken", () => {
+  const before = { file: process.env.QUIZ_EXAM_SETTING_FILE, exam: process.env.QUIZ_EXAM }
+  const root = packWith((files) => { files.courses.bundleBase = "http://127.0.0.1:1/x" })
+  const file = path.join(root, "active-exam.json")
+  writeFileSync(file, '{"exam":"agentic-architect"}')
+  process.env.QUIZ_EXAM_SETTING_FILE = file
+  delete process.env.QUIZ_EXAM
+  try {
+    assert.equal(examId(root), "generative-ai-leader")
+  } finally {
+    for (const [key, value] of [["QUIZ_EXAM_SETTING_FILE", before.file], ["QUIZ_EXAM", before.exam]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})

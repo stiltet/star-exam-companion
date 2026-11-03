@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { currentExam } from "@/lib/scope"
+import { voiceCleanup, type VoiceLists } from "@/lib/voice-lists"
 
 // Kept by the service worker across builds; it plays these clips with no connection.
 const VOICE_CACHE = "quiz-voice"
@@ -10,10 +11,10 @@ const STORED = "quiz-voice-stored"
 // stored before this list existed is never deleted by it.
 const LISTS_KEY = "quiz-voice-lists"
 
-function readLists(): Record<string, string[]> {
+function readLists(): VoiceLists {
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(LISTS_KEY) ?? "{}")
-    return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string[]>) : {}
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as VoiceLists) : {}
   } catch {
     // Storage blocked or unreadable: no lists, so nothing is deleted.
     return {}
@@ -23,13 +24,14 @@ function readLists(): Record<string, string[]> {
 const RETRY_MS = 30_000
 
 let storing: Promise<void> | null = null
+let retry: ReturnType<typeof setTimeout> | null = null
+
 // Set when the exam is being switched: the clips still to store belong to the exam being left, so storing stops.
 let stopped = false
 
 export function stopStoringVoice(): void {
   stopped = true
 }
-let retry: ReturnType<typeof setTimeout> | null = null
 
 // A clip from the voice cache on this device if it is there, else from the Mac. Read by the page
 // itself, not through the service worker, which left the voice silent in the home-screen app.
@@ -55,13 +57,10 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
   const storeAll = async () => {
     const cache = await caches.open(VOICE_CACHE)
     const wanted = new Set(Object.values(voice).map((key) => `/api/speak/${key}`))
-    const lists = readLists()
-    const previous = new Set(lists[currentExam()] ?? [])
-    lists[currentExam()] = [...wanted]
-    const stillUsed = new Set(Object.values(lists).flat())
+    const cached = (await cache.keys()).map((request) => new URL(request.url).pathname)
+    const { lists, remove } = voiceCleanup(cached, readLists(), currentExam(), [...wanted])
     for (const request of await cache.keys()) {
-      const clip = new URL(request.url).pathname
-      if (previous.has(clip) && !stillUsed.has(clip)) await cache.delete(request)
+      if (remove.includes(new URL(request.url).pathname)) await cache.delete(request)
     }
     try {
       window.localStorage.setItem(LISTS_KEY, JSON.stringify(lists))
