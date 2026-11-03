@@ -200,7 +200,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
   return meta as PackMeta
 }
 
-// courses.json: { path, bundleBase, courses: [{ id, template, title, folder }] }, each course carrying
+// courses.json: { path, bundleBase, courses: [{ id, template, title, folder, format? }] }, each course carrying
 // the path and bundle base so it describes itself.
 function readCourses(file: string, id: string): Course[] {
   const data = readJson(file) as { path?: unknown; bundleBase?: unknown; courses?: unknown } | null
@@ -219,8 +219,10 @@ function readCourses(file: string, id: string): Course[] {
     }
     if (entry.folder.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam pack ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
     if (seen.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
+    if (entry.format !== undefined && entry.format !== "rise") throw new Error(`Exam pack ${id}: a course format in courses.json can only be "rise"`)
     seen.add(entry.id)
-    return { id: entry.id, template: entry.template, title: entry.title, folder: entry.folder, bundleBase: data.bundleBase as string, path: data.path as string }
+    const course: Course = { id: entry.id, template: entry.template, title: entry.title, folder: entry.folder, bundleBase: data.bundleBase as string, path: data.path as string }
+    return entry.format ? { ...course, format: entry.format } : course
   })
 }
 

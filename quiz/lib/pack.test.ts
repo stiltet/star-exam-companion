@@ -159,6 +159,7 @@ test("a pack's links and course bundles must be https and on Google's own hosts"
     ["a bundle base on another host", (f) => { f.courses.bundleBase = "https://evil.example/cls-html5-courses" }, /bundleBase must be on/],
     ["a path on another host", (f) => { f.courses.path = "https://evil.example/paths/1" }, /path on/],
     ["a course folder that climbs out", (f) => { (f.courses.courses as { folder: string }[])[0]!.folder = "../../x" }, /may not contain/],
+    ["a course format that is not rise", (f) => { (f.courses.courses as { format?: string }[])[0]!.format = "scorm" }, /can only be "rise"/],
   ]
   for (const [name, change, message] of bad) assert.throws(() => loadPack(packWith(change), "agentic-architect"), message, name)
   assert.doesNotThrow(() => loadPack(packWith(() => undefined), "agentic-architect"), "the unchanged copy loads")

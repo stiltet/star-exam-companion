@@ -13,6 +13,8 @@ export type Course = {
   template: string
   title: string
   folder: string
+  // "rise" for a course Google publishes as one runtime-data.js (see rise.ts); absent for the usual four JSON files.
+  format?: "rise"
   bundleBase: string
   path: string
 }
@@ -38,6 +40,11 @@ export function reviewUrl(course: Course, ids: string[], pageCount: number, page
   return id
     ? { url: `${course.path}/course_templates/${course.template}/html_bundles/${id}`, direct: true }
     : { url: `${course.path}/course_templates/${course.template}`, direct: false }
+}
+
+// A Rise course's one file; its folder already names the language, so the path ends there.
+export function riseUrl(course: Course): string {
+  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/runtime-data.js`
 }
 
 export function bundleUrl(course: Course, part: (typeof PARTS)[number]): string {

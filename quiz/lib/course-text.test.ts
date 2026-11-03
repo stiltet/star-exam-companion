@@ -66,6 +66,18 @@ test("two courses with the same Skills number but different folders keep their o
   assert.equal(asked.filter((url) => url.includes(`/${encodeURIComponent(other.folder)}/`)).length, 4)
 })
 
+test("a Rise course is read from its one runtime-data.js file and its Skills page, not four JSON files", async () => {
+  const rise = { ...course, template: "9001", folder: "T-X/v1/EN", format: "rise" as const }
+  const lesson = { course: { lessons: [{ id: "l1", type: "blocks", title: "One", items: [{ id: "b1", type: "text", variant: "paragraph", items: [{ paragraph: "<p>Read me.</p>" }] }] }] } }
+  const file = `__jsonp("runtime-data.js","${Buffer.from(JSON.stringify(lesson)).toString("base64")}")`
+  const asked = stubFetch((url) => (url.endsWith("runtime-data.js") ? new Response(file) : new Response("")))
+  const loaded = await courseBundle(rise)
+  assert.equal(loaded.ok, true)
+  assert.equal(asked.length, 2)
+  assert.ok(asked.some((url) => url.endsWith("/T-X/v1/EN/runtime-data.js")))
+  if (loaded.ok) assert.deepEqual(loaded.pages, [{ id: "l1", title: "One" }])
+})
+
 test("after a day the course is read again, and a failed refresh serves yesterday's copy", async () => {
   stubFetch(healthy)
   await courseBundle(course)

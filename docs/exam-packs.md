@@ -22,10 +22,11 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 | `study.json` | `sections` (the Study pages: topics, study Q and A, official docs) and `questions` (the written practice questions). |
 
 `reading` is `true` for a pack whose exam has an official course to read aloud, and then the pack
-needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder }] }`. `path` is
+needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder, format? }] }`. `path` is
 the learning path on Google Skills, `bundleBase` is the public Google Cloud Storage folder that
 holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
-A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
+`format` is absent for a course stored as four JSON files, and `"rise"` for one Google stores as a single
+`runtime-data.js` (its `folder` then ends where that file is, such as `T-XXXX/v1.0.0/EN`). A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
 
 ### Shapes of the data files
 

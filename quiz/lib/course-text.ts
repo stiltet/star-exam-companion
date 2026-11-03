@@ -1,4 +1,5 @@
-import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, type Bundle, type Course, type PageSummary } from "./reading.ts"
+import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, riseUrl, type Bundle, type Course, type PageSummary } from "./reading.ts"
+import { decodeRise, riseBundle } from "./rise.ts"
 
 // Each course's bundle, read from Google at most once a day per running quiz. The text is
 // Google's, so the Mac keeps it in memory only, never on its disk; only its spoken clips are
@@ -37,6 +38,17 @@ async function part(course: Course, name: (typeof PARTS)[number]): Promise<Bundl
   return data
 }
 
+// A course's text as the reader's four lists: its four JSON files, or one Rise file turned into them.
+async function bundleOf(course: Course): Promise<Bundle> {
+  if (course.format === "rise") {
+    const response = await fetch(riseUrl(course), { cache: "no-store", signal: AbortSignal.timeout(30_000) })
+    if (!response.ok) throw new Error(`Google answered ${response.status} for runtime-data.js`)
+    return riseBundle(decodeRise(await response.text()))
+  }
+  const [contentObjects, articles, blocks, components] = await Promise.all(PARTS.map((name) => part(course, name)))
+  return { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
+}
+
 // The readings' ids on Google Skills, for the review links; none when the page cannot be read,
 // and then each review button goes to the course instead and says so.
 async function ids(course: Course): Promise<string[]> {
@@ -60,9 +72,7 @@ function key(course: Course): string {
 
 async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
   try {
-    const [found, ...lists] = await Promise.all([ids(course), ...PARTS.map((name) => part(course, name))])
-    const [contentObjects, articles, blocks, components] = lists
-    const bundle: Bundle = { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
+    const [found, bundle] = await Promise.all([ids(course), bundleOf(course)])
     const now = Date.now()
     const entry: Entry = { at: now, bundle, pages: pageList(bundle), ids: found, idsAt: now }
     cache.set(key(course), entry)
