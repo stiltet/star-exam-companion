@@ -136,6 +136,19 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
   }
 })
 
+test("courses without reading text are listed with a reason, and a malformed entry is refused", () => {
+  const aa = loadPack(testRoot, "agentic-architect")
+  assert.equal(aa.noReading.length, 7)
+  assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.template) && course.title && course.why))
+  assert.equal(loadPack(testRoot, "generative-ai-leader").noReading.length, 0)
+  const root = packWith(() => {})
+  const file = path.join(root, "exams/agentic-architect/courses.json")
+  const data = JSON.parse(readFileSync(file, "utf8"))
+  data.noReading = [{ template: "x", title: "Broken", why: "no number" }]
+  writeFileSync(file, JSON.stringify(data))
+  assert.throws(() => loadPack(root, "agentic-architect"), /noReading course/)
+})
+
 test("a pack whose files do not load is refused, so a switch never reports success and then keeps the old exam", () => {
   const before = process.env.QUIZ_EXAM_SETTING_FILE
   process.env.QUIZ_EXAM_SETTING_FILE = path.join(tempDir("setting-"), "active-exam.json")

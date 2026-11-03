@@ -68,7 +68,12 @@ export type Pack = {
   study: Study
   // The learning path's courses for Read Aloud, from courses.json. Empty when the pack has none.
   courses: Course[]
+  // Courses of the same path that Read Aloud cannot read, each with the plain reason, from courses.json.
+  noReading: NoReading[]
 }
+
+// A course of the learning path with nothing the quiz can read aloud: the Read Aloud page lists it and says why.
+export type NoReading = { template: string; title: string; why: string }
 
 // Where the Progress page keeps the exam this install serves. A test points it elsewhere.
 export function settingFile(root: string = repoRoot()): string {
@@ -228,7 +233,20 @@ function readCourses(file: string, id: string): Course[] {
   })
 }
 
-const PACK_FILES = ["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
+// courses.json may also hold `noReading`: [{ template, title, why }], the path's courses that have no text to read.
+function readNoReading(file: string, id: string): NoReading[] {
+  const list = (readJson(file) as { noReading?: unknown } | null)?.noReading
+  if (list === undefined) return []
+  if (!Array.isArray(list)) throw new Error(`Exam pack ${id}: noReading in courses.json must be a list`)
+  return list.map((entry: Partial<NoReading>) => {
+    if (!isText(entry?.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.why)) {
+      throw new Error(`Exam pack ${id}: a noReading course in courses.json needs a numeric template, a title and a why`)
+    }
+    return { template: entry.template, title: entry.title, why: entry.why }
+  })
+}
+
+const PACK_FILES =["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
 const packCache = new Map<string, { stamp: string; pack: Pack }>()
 
 // A pack is read once and served from memory until one of its files changes: every page, route and exam check
@@ -264,6 +282,7 @@ function readPack(dir: string, id: string): Pack {
     throw new Error(`Exam pack ${id}: study.json needs sections and questions`)
   }
   const courses = meta.reading ? readCourses(requirePackFile(dir, "courses.json"), id) : []
+  const noReading = meta.reading ? readNoReading(requirePackFile(dir, "courses.json"), id) : []
   const terms = readFileSync(requirePackFile(dir, "terms.txt"), "utf8")
     .split("\n")
     .map((line) => line.trim())
@@ -277,6 +296,7 @@ function readPack(dir: string, id: string): Pack {
     scenes: scenes as Scene[],
     study: { sections: study.sections, questions: study.questions },
     courses,
+    noReading,
   }
 }
 

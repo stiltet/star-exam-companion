@@ -73,6 +73,10 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
     await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
+    // The path's other seven courses are listed under NOT READ ALOUD, each with why, so none is missing silently.
+    await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toBeVisible()
+    await expect(page.getByText("Build Agent Skills with Google")).toBeVisible()
+    await expect(page.getByText(/hands-on labs, videos and quizzes on Google Skills/).first()).toBeVisible()
     // The list says the pack is unfinished, so six courses are not read as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
 
