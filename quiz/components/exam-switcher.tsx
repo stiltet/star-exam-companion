@@ -43,7 +43,7 @@ export function ExamSwitcher({ exams, current }: Props) {
     }
     if (!ok) {
       setSwitching(false)
-      setMessage("The exam was not switched. Check that the Mac is reachable and that the exam's files load, then try again.")
+      setMessage("The exam was not switched. Check that the Mac is reachable and that this exam's content is complete, then try again.")
       return
     }
     // Clips still downloading belong to the exam being left; the next page stores the new exam's. Only now, so a

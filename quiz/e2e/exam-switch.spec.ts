@@ -18,7 +18,7 @@ async function settleWorker(page: Page) {
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
 // The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
-const UNFINISHED = /Unfinished: Read Aloud covers six courses/
+const UNFINISHED = /Unfinished: Read Aloud covers six courses, five of the learning path's twelve/
 
 test.use({ navigationCutOff: true })
 

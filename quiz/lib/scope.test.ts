@@ -61,6 +61,15 @@ test("a queue under the plain name reaches the name the app reads when the other
   migrateLegacyStorage(store, DEFAULT_EXAM)
   assert.deepEqual(JSON.parse(store.data.get(scoped("quiz-outbox", DEFAULT_EXAM)) ?? "[]").map((item: { id: string }) => item.id), ["c"])
   assert.equal(store.data.has("quiz-outbox"), false)
+  assert.equal(store.data.get(`${scoped("quiz-outbox", DEFAULT_EXAM)}-unreadable`), "not a list", "the unreadable text is kept, not deleted")
+})
+
+test("an unreadable plain-named queue is kept under a backup name, not deleted", () => {
+  const store = memory({ "quiz-outbox-generative-ai-leader": '[{"id":"a"}]', "quiz-outbox": "{truncated" })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.deepEqual(JSON.parse(store.data.get(scoped("quiz-outbox", DEFAULT_EXAM)) ?? "[]").map((item: { id: string }) => item.id), ["a"])
+  assert.equal(store.data.has("quiz-outbox"), false)
+  assert.equal(store.data.get(`${scoped("quiz-outbox", DEFAULT_EXAM)}-unreadable`), "{truncated")
 })
 
 test("refused reasons under the plain name reach the name the app reads when the other copy is not a map", () => {
@@ -68,6 +77,7 @@ test("refused reasons under the plain name reach the name the app reads when the
   migrateLegacyStorage(store, DEFAULT_EXAM)
   assert.deepEqual(JSON.parse(store.data.get(scoped("quiz-rejected-reasons", DEFAULT_EXAM)) ?? "{}"), { z: "gone" })
   assert.equal(store.data.has("quiz-rejected-reasons"), false)
+  assert.equal(store.data.get(`${scoped("quiz-rejected-reasons", DEFAULT_EXAM)}-unreadable`), "not a map")
 })
 
 test("refused answers and their reasons written under the plain name after the move are merged too", () => {

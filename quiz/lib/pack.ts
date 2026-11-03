@@ -4,6 +4,7 @@ import path from "node:path"
 import type { Question, StudySection } from "./exam-data.ts"
 import type { Course } from "./reading.ts"
 import { DEFAULT_EXAM } from "./scope.ts"
+import { parseGlossary } from "./sources.ts"
 
 // An exam pack is the folder exams/<id>/ at the repo root: everything that makes this the quiz
 // for one exam. The app code holds no exam content. docs/exam-packs.md describes the format.
@@ -78,12 +79,11 @@ function isPackFolder(root: string, id: string): boolean {
   return ID_PATTERN.test(id) && existsSync(path.join(root, "exams", id, "pack.json"))
 }
 
-// Whether a pack loads, every file of it. A chosen pack that no longer does is ignored, so the Progress page, where
-// the exam is switched, still opens and the exam can be changed back.
+// Whether a pack loads, every file of it, and its glossary parses, as the pages need. A chosen pack that no longer
+// does is ignored, so the Progress page, where the exam is switched, still opens and the exam can be changed back.
 function packReads(root: string, id: string): boolean {
   try {
-    loadPack(root, id)
-    return true
+    return parseGlossary(loadPack(root, id).glossaryText).ok
   } catch {
     // Any file of the pack that does not load means the pack cannot be served: the choice is ignored, not reported,
     // so the page that switches the exam still opens. The pack test names what is wrong with a pack.

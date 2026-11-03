@@ -55,6 +55,12 @@ function keyed(text: string | null): Record<string, unknown> | null {
   }
 }
 
+// A copy the app cannot read is not deleted: it is kept, once, under `<name>-unreadable`, as the scores move keeps a backup.
+function keepUnreadable(store: Store, name: string, text: string): void {
+  const backup = `${name}-unreadable`
+  if (store.getItem(backup) === null) store.setItem(backup, text)
+}
+
 // The default exam takes its old plain-named items over once, so nothing studied before is lost:
 // every queued answer still reaches the Mac. If both names hold a queue or the refused answers and their
 // reasons (an older open page wrote the plain one after this ran), they merge by answer id, the newer
@@ -74,13 +80,19 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
       store.setItem(to, old)
     } else if (from === "quiz-outbox" || from === "quiz-rejected") {
       // A copy that is not a list holds nothing to send: the other copy is adopted, so no queued answer is
-      // stranded under a name the app no longer reads.
-      const first = queued(current) ?? []
-      const second = queued(old) ?? []
-      const seen = new Set(first.map((item) => item.id))
-      store.setItem(to, JSON.stringify([...first, ...second.filter((item) => !seen.has(item.id))]))
+      // stranded under a name the app no longer reads. The unreadable text is kept under a backup name.
+      const first = queued(current)
+      const second = queued(old)
+      if (!first) keepUnreadable(store, to, current)
+      if (!second) keepUnreadable(store, to, old)
+      const seen = new Set((first ?? []).map((item) => item.id))
+      store.setItem(to, JSON.stringify([...(first ?? []), ...(second ?? []).filter((item) => !seen.has(item.id))]))
     } else if (from === "quiz-rejected-reasons") {
-      store.setItem(to, JSON.stringify({ ...(keyed(old) ?? {}), ...(keyed(current) ?? {}) }))
+      const first = keyed(current)
+      const second = keyed(old)
+      if (!first) keepUnreadable(store, to, current)
+      if (!second) keepUnreadable(store, to, old)
+      store.setItem(to, JSON.stringify({ ...(second ?? {}), ...(first ?? {}) }))
     }
     store.removeItem(from)
   }

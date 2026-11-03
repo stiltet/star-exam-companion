@@ -144,6 +144,12 @@ test("a pack whose files do not load is refused, so a switch never reports succe
     writeFileSync(path.join(root, "exams/agentic-architect/scenes.json"), "not json")
     assert.equal(listPacks(root).some((pack) => pack.id === "agentic-architect"), true, "pack.json alone still reads")
     assert.equal(setActiveExam("agentic-architect", root), false)
+    // A glossary that reads but does not parse fails every page, so it is refused too.
+    const parseRoot = packWith(() => {})
+    const glossaryFile = path.join(parseRoot, "exams/agentic-architect/glossary.md")
+    writeFileSync(glossaryFile, `${readFileSync(glossaryFile, "utf8")}\n| Broken | **Renamed:** no arrow here | — | https://cloud.google.com/ |\n`)
+    assert.equal(parseGlossary(readFileSync(glossaryFile, "utf8")).ok, false, "the appended row cannot be parsed")
+    assert.equal(setActiveExam("agentic-architect", parseRoot), false)
   } finally {
     if (before === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
     else process.env.QUIZ_EXAM_SETTING_FILE = before

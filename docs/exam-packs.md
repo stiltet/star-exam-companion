@@ -13,7 +13,7 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the home, Practice and Exam pages), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the home, Practice, Exam, Read Aloud and Progress pages), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
 | `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing pack's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each is the answer to a voice scene. |
@@ -78,7 +78,8 @@ Answers still waiting on a device sit under exam-named browser keys (for example
 `quiz-outbox-generative-ai-leader`), which an older build cannot read: let each device sync before
 you roll back. If you roll back and later upgrade again, the plain `quiz/scores.jsonl` an older build wrote
 is merged into `quiz/scores-generative-ai-leader.jsonl` by answer id at the first start, and moved to
-`quiz/scores-backups/`.
+`quiz/scores-backups/`. A device queue (answers waiting to send, refused answers and their reasons) that
+holds text the app cannot read is kept under the same browser key with `-unreadable` added, not deleted.
 
 ## Add an exam with a pull request
 
@@ -116,8 +117,9 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    ```
 
    If you ever switched exams on the Progress page of this checkout, that choice wins over `QUIZ_EXAM`: delete
-   `quiz/active-exam.json` first, or switch on Progress. A chosen pack with any file that stops loading is
-   ignored, so Progress still opens and you can switch back, and the switch refuses a pack that does not load.
+   `quiz/active-exam.json` first, or switch on Progress. A chosen pack with any file that stops loading, or a
+   glossary that does not parse, is ignored, so Progress still opens and you can switch back, and the switch
+   refuses such a pack.
 
 6. **Open the pull request** against `main`. Change only `exams/<id>/` and, if you want it listed, one
    row in the README's *Choose your exam* table. Say in the description which exam it is, link its
@@ -136,7 +138,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 
 A pack that is not finished is welcome as long as it passes `node --test`: list only the terms you
 have covered in `terms.txt`, set `notice` in `pack.json` to a plain statement of what is missing (the
-quiz shows it on the home, Practice and Exam pages), and say the same in the pull request. Remove the
+quiz shows it on the home, Practice, Exam, Read Aloud and Progress pages), and say the same in the pull request. Remove the
 `notice` when nothing is missing. Keep a pull request to one exam; split a large pack into one pull
 request per file group (for example glossary and scenes first, study data after). A maintainer reviews the
 content against Google's pages, and runs the full gate before merging.
