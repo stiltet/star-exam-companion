@@ -10,6 +10,8 @@ import { ConnectionIcon, useConnection } from "@/components/connection-status"
 // Imported, not "/logo.png": the URL then carries the file's hash, so the phone's worker, which
 // keeps statics until asked for a new URL, shows a new logo as soon as it changes.
 import logo from "@/public/logo.png"
+import { DemoExams } from "@/components/demo-exams"
+import { STATIC_DEMO } from "@/lib/static-demo"
 
 // The header carries the page title at every width, and the page's own h1 is visually hidden (sr-only).
 
@@ -83,6 +85,7 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
           </div>
         </nav>
       </div>
+      {STATIC_DEMO && <DemoExams />}
       {/* Positioned from the header's padding edge, so it draws its own top line over the header's. */}
       {open && (
         <div id="site-menu" className="sm:hidden absolute inset-x-0 top-full border-y-2 border-foreground bg-background shadow-lg">

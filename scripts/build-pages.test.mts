@@ -31,7 +31,7 @@ function htmlFiles(dir: string): string[] {
 }
 
 function build(out: string, env: Record<string, string> = {}) {
-  const result = spawnSync('bash', [script, out], { encoding: 'utf8', timeout: 280_000, env: { ...process.env, ...env } });
+  const result = spawnSync('bash', [script, out], { encoding: 'utf8', timeout: 800_000, env: { ...process.env, ...env } });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -72,7 +72,7 @@ describe('the GitHub Pages build', () => {
 
   test(
     'it exports the whole demo under the base path, with no server routes, and can run again over its own output',
-    { skip: !hasPnpm && 'pnpm is not installed', timeout: 290_000 },
+    { skip: !hasPnpm && 'pnpm is not installed', timeout: 1_700_000 },
     (t) => {
       const out = path.join(scratch(t), 'site');
       const first = build(out, { QUIZ_BASE_PATH: '/demo-test' });
@@ -111,6 +111,17 @@ describe('the GitHub Pages build', () => {
         for (const [, url] of readFileSync(file, 'utf8').matchAll(/(?:href|src)="(\/[^"]*)"/g)) {
           assert.ok(url!.startsWith('/demo-test/') || url!.startsWith('//'), `${path.relative(out, file)} points at ${url}, outside the base path`);
         }
+      }
+
+      // Every other exam is its own copy of the demo under <base>/<pack id>/, and each copy links them all.
+      const other = path.join(out, 'agentic-architect');
+      assert.ok(existsSync(path.join(other, 'index.html')), 'the second exam has its own demo');
+      const otherHome = readFileSync(path.join(other, 'index.html'), 'utf8');
+      assert.match(otherHome, /PROFESSIONAL AGENTIC ARCHITECT/);
+      assert.match(otherHome, /href="\/demo-test\/agentic-architect\/favicon\.png"/, 'the second exam carries its own base path');
+      for (const page of [home, otherHome]) {
+        assert.match(page, /href="\/demo-test\/"[^>]*>Generative AI Leader</, 'the default exam is linked at the root');
+        assert.match(page, /href="\/demo-test\/agentic-architect\/"[^>]*>Professional Agentic Architect</, 'the other exam is linked under its name');
       }
 
       // A second run replaces its own output instead of refusing it.

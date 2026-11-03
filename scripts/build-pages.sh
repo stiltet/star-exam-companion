@@ -7,6 +7,9 @@
 # Environment:
 #   QUIZ_BASE_PATH  where the site is served from, default /star-exam-companion
 #
+# One demo is built for every exam pack under exams/. The default exam (generative-ai-leader) is at the
+# root of the site, and every other pack at <root>/<pack id>/. The demo's Progress page links them all.
+#
 # It never changes quiz/. It copies the repo's content to a temporary folder, puts the demo's own
 # files (pages-static/, laid out like quiz/) over it, removes what needs a server (the API routes,
 # the service worker and the course readings), and builds the export there. Voice Quiz, Read Aloud
@@ -40,17 +43,35 @@ cp -R "$ROOT/pages-static/." "$work/quiz/"
 rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
 
 pnpm --dir "$work/quiz" install --frozen-lockfile --silent
-(
-  cd "$work/quiz"
-  QUIZ_STATIC=1 NEXT_PUBLIC_QUIZ_STATIC=1 QUIZ_BASE_PATH="$BASE" QUIZ_DIST_DIR=out NEXT_TELEMETRY_DISABLED=1 \
-    QUIZ_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" \
-    pnpm build
-)
 
-[ -f "$work/quiz/out/index.html" ] || { echo "build-pages: the export has no index.html" >&2; exit 1; }
+# The default exam: quiz/lib/pack.ts DEFAULT_EXAM. The packs, as "id=Title" pairs for the demo's links.
+DEFAULT_EXAM="generative-ai-leader"
+packs=""
+for dir in "$ROOT"/exams/*/; do
+  id="$(basename "$dir")"
+  [ -f "$dir/pack.json" ] || continue
+  title="$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).title)' "$dir/pack.json")"
+  packs="${packs:+$packs;}$id=$title"
+done
+[ -n "$packs" ] || { echo "build-pages: no exam pack under $ROOT/exams" >&2; exit 1; }
+
 rm -rf "$OUT"
 mkdir -p "$OUT"
-cp -R "$work/quiz/out/." "$OUT/"
+for dir in "$ROOT"/exams/*/; do
+  id="$(basename "$dir")"
+  [ -f "$dir/pack.json" ] || continue
+  if [ "$id" = "$DEFAULT_EXAM" ]; then base="$BASE"; dest="$OUT"; else base="$BASE/$id"; dest="$OUT/$id"; fi
+  (
+    cd "$work/quiz"
+    QUIZ_EXAM="$id" QUIZ_STATIC=1 NEXT_PUBLIC_QUIZ_STATIC=1 QUIZ_BASE_PATH="$base" QUIZ_DIST_DIR="out-$id" \
+      NEXT_PUBLIC_DEMO_ROOT="$BASE" NEXT_PUBLIC_DEMO_CURRENT="$id" NEXT_PUBLIC_DEMO_DEFAULT="$DEFAULT_EXAM" NEXT_PUBLIC_DEMO_PACKS="$packs" NEXT_TELEMETRY_DISABLED=1 \
+      QUIZ_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" \
+      pnpm build
+  )
+  [ -f "$work/quiz/out-$id/index.html" ] || { echo "build-pages: the export for $id has no index.html" >&2; exit 1; }
+  mkdir -p "$dest"
+  cp -R "$work/quiz/out-$id/." "$dest/"
+done
 # Tells GitHub Pages to serve the files as they are, and marks this folder as ours to replace.
 touch "$OUT/.nojekyll"
 
