@@ -11,6 +11,7 @@ import { ExamSwitcher } from "@/components/exam-switcher"
 import { ResetProgress } from "@/components/reset-progress"
 import { SectionBar } from "@/components/atoms/section-bar"
 import { ActionButton } from "@/components/atoms/button"
+import { Text } from "@/components/atoms/text"
 import { sendNow, useWaiting } from "@/components/outbox"
 import { useSnapshot } from "@/components/snapshot"
 import { useConnection } from "@/components/connection-status"
@@ -315,7 +316,11 @@ export function ProgressClient({ stats }: Props) {
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>OFFICIAL COURSE TRACKING - READ ALOUD</SectionBar>
-        {stats.courses.length === 0 && <p className="p-4 text-xs sm:text-sm">This exam has no Read Aloud course yet, so there is nothing to track.</p>}
+        {stats.courses.length === 0 && (
+          <Text variant="note" placement="p-4">
+            This exam has no Read Aloud course yet, so there is nothing to track.
+          </Text>
+        )}
         <table className="w-full text-xs sm:text-sm">
           <tbody>
             {stats.courses.map((course, index) => {
