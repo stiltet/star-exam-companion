@@ -56,6 +56,20 @@ test("a queue written under the plain name after the move is merged by answer id
   assert.equal(store.data.has("quiz-outbox"), false)
 })
 
+test("refused answers and their reasons written under the plain name after the move are merged too", () => {
+  const store = memory({
+    "quiz-rejected-generative-ai-leader": '[{"id":"a"}]',
+    "quiz-rejected": '[{"id":"a"},{"id":"z"}]',
+    "quiz-rejected-reasons-generative-ai-leader": '{"a":"new"}',
+    "quiz-rejected-reasons": '{"a":"old","z":"gone"}',
+  })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.deepEqual(JSON.parse(store.data.get("quiz-rejected-generative-ai-leader") ?? "[]").map((item: { id: string }) => item.id), ["a", "z"])
+  assert.deepEqual(JSON.parse(store.data.get("quiz-rejected-reasons-generative-ai-leader") ?? "{}"), { a: "new", z: "gone" })
+  assert.equal(store.data.has("quiz-rejected"), false)
+  assert.equal(store.data.has("quiz-rejected-reasons"), false)
+})
+
 test("the scores file is named after the exam, and the old plain file moves once with a backup", () => {
   const env = { file: process.env.QUIZ_SCORES_FILE, exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
   delete process.env.QUIZ_SCORES_FILE
@@ -70,10 +84,32 @@ test("the scores file is named after the exam, and the old plain file moves once
     assert.equal(existsSync(path.join(root, "quiz/scores.jsonl")), false)
     assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "line\n")
     assert.equal(readFileSync(path.join(root, "quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl"), "utf8"), "line\n")
-    // Once only: a plain file written afterwards is left alone, never merged over the exam's own scores.
+    // Once per start: a plain file an older build writes afterwards is merged at the next start (below).
     writeFileSync(path.join(root, "quiz/scores.jsonl"), "newer\n")
     migrateLegacyScores(root)
     assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "line\n")
+  } finally {
+    for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test("a plain scores file an older build wrote after the move is merged by answer id at the next start", () => {
+  const env = { file: process.env.QUIZ_SCORES_FILE, exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
+  delete process.env.QUIZ_SCORES_FILE
+  delete process.env.QUIZ_EXAM
+  process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+  const line = (id: string) => `{"date":"2026-10-02","session":1,"mode":"round","asked":["a"],"missed":[],"id":"${id}"}`
+  try {
+    const root = scratchRoot()
+    writeFileSync(scoresFile(root, DEFAULT_EXAM), `${line("one")}\n`)
+    writeFileSync(path.join(root, "quiz/scores.jsonl"), `${line("one")}\n${line("two")}\n`)
+    forgetLegacyMigration()
+    migrateLegacyScores(root)
+    assert.equal(existsSync(path.join(root, "quiz/scores.jsonl")), false, "the plain file is moved away")
+    assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), `${line("one")}\n${line("two")}\n`, "its new answer joined the exam's file once")
   } finally {
     for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
       if (value === undefined) delete process.env[key]

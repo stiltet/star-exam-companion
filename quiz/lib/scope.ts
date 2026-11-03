@@ -45,9 +45,20 @@ function queued(text: string | null): { id?: unknown }[] | null {
   }
 }
 
+function keyed(text: string | null): Record<string, unknown> | null {
+  try {
+    const value: unknown = text === null ? null : JSON.parse(text)
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null
+  } catch {
+    // Not JSON, so not a map: the caller keeps the other copy.
+    return null
+  }
+}
+
 // The default exam takes its old plain-named items over once, so nothing studied before is lost:
-// every queued answer still reaches the Mac. If both names hold a queue (an older open page wrote
-// the plain one after this ran), the queues merge by answer id. Another exam never touches them.
+// every queued answer still reaches the Mac. If both names hold a queue or the refused answers and their
+// reasons (an older open page wrote the plain one after this ran), they merge by answer id, the newer
+// scoped copy winning. For anything else the scoped copy, the newer, is kept. Another exam never touches them.
 export function migrateLegacyStorage(store: Store, exam: string = currentExam()): void {
   if (exam !== DEFAULT_EXAM) return
   const moves: [string, string][] = LEGACY_NAMES.map((name) => [name, scoped(name, exam)])
@@ -61,13 +72,17 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
     const current = store.getItem(to)
     if (current === null) {
       store.setItem(to, old)
-    } else if (from === "quiz-outbox") {
+    } else if (from === "quiz-outbox" || from === "quiz-rejected") {
       const first = queued(current)
       const second = queued(old)
       if (first && second) {
         const seen = new Set(first.map((item) => item.id))
         store.setItem(to, JSON.stringify([...first, ...second.filter((item) => !seen.has(item.id))]))
       }
+    } else if (from === "quiz-rejected-reasons") {
+      const first = keyed(current)
+      const second = keyed(old)
+      if (first && second) store.setItem(to, JSON.stringify({ ...second, ...first }))
     }
     store.removeItem(from)
   }
