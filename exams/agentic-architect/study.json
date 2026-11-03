@@ -1342,6 +1342,132 @@
       ],
       "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
       "difficulty": "medium"
+    },
+    {
+      "id": "aq42",
+      "sectionId": "low-code",
+      "topicId": "1-1",
+      "question": "Which Gemini Enterprise tools does the exam guide name for configuring state-based workflows with pages, transition routes and event handlers?",
+      "options": [
+        "Model Armor and Agent Gateway",
+        "Gemini Enterprise Agent Designer and Customer Experience Agent Studio (CX Agent Studio)",
+        "Agents CLI and Agent Runtime",
+        "Vector Search and RAG Engine"
+      ],
+      "correctIndex": 1,
+      "explanation": "Section 1.1 names configuring state-based workflows using Gemini Enterprise tools such as Gemini Enterprise Agent Designer and CX Agent Studio.",
+      "whyOthersWrong": [
+        "Model Armor screens content and Agent Gateway governs traffic; neither builds workflows.",
+        "Agents CLI and Agent Runtime build and run agents in code, not low-code state workflows.",
+        "Vector Search and RAG Engine retrieve data; they do not configure workflow states."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq43",
+      "sectionId": "coding-agents",
+      "topicId": "2-1",
+      "question": "Which coding agents does the exam guide give as examples to configure with MCP servers, custom skills and tool access?",
+      "options": [
+        "Antigravity and Claude Code on Google Cloud",
+        "Model Garden and Skill Registry",
+        "Cloud Trace and Cloud Logging",
+        "Agent Identity and Agent Registry"
+      ],
+      "correctIndex": 0,
+      "explanation": "Section 2.1 names configuring coding agents such as Antigravity and Claude Code on Google Cloud with MCP servers, custom skills and access to tools.",
+      "whyOthersWrong": [
+        "Model Garden and Skill Registry are a model catalogue and a skill store, not coding agents.",
+        "Cloud Trace and Cloud Logging are observability tools.",
+        "Agent Identity and Agent Registry are security and governance tools."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq44",
+      "sectionId": "custom-agents",
+      "topicId": "3-3",
+      "question": "A multiagent system needs each agent to have its own identity, be found in a catalogue, run in a managed environment and obey policies. Which tools does the exam guide pair for this?",
+      "options": [
+        "Few-shot templates and chain-of-thought",
+        "Cloud Storage and Firestore",
+        "Agent Identity, Agent Registry, Agent Runtime and agent policies",
+        "Reranking and similarity scoring"
+      ],
+      "correctIndex": 2,
+      "explanation": "Section 3.3 names selecting and coordinating multiagent handoffs and workflows using Google Cloud tools such as Agent Identity, Agent Registry, Agent Runtime and agent policies.",
+      "whyOthersWrong": [
+        "Few-shot templates and chain-of-thought shape prompts, not multiagent coordination.",
+        "Cloud Storage and Firestore store data; they do not coordinate agents.",
+        "Reranking and similarity scoring belong to retrieval pipelines."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq45",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "A team wants to measure both how good an agent's answers are and how good its retrieval is against known-good data. What does the exam guide name for this?",
+      "options": [
+        "Raising the model's temperature",
+        "Adding another Agent Gateway mode",
+        "Moving the agent to Cloud Run",
+        "Evaluating the system against a golden dataset for response and retrieval quality"
+      ],
+      "correctIndex": 3,
+      "explanation": "Section 4.1 names evaluating an agentic system against a golden dataset to assess agent response and retrieval quality, for example using ADK.",
+      "whyOthersWrong": [
+        "Temperature changes randomness; it does not measure quality.",
+        "Agent Gateway modes govern traffic, not evaluation.",
+        "Moving to Cloud Run changes where the agent runs, not how it is measured."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq46",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-1",
+      "question": "What should a continuous evaluation pipeline assess, against established success criteria?",
+      "options": [
+        "The colour of the console theme",
+        "An agent's tool execution",
+        "The number of Skill Registry entries",
+        "The size of the Model Garden catalogue"
+      ],
+      "correctIndex": 1,
+      "explanation": "Section 4.1 names creating continuous evaluation pipelines that assess an agent's tool execution based on established success criteria.",
+      "whyOthersWrong": [
+        "The console theme says nothing about agent quality.",
+        "The number of registry entries is not a success criterion for the agent.",
+        "The catalogue size is not a measure of the agent's behaviour."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
+    },
+    {
+      "id": "aq47",
+      "sectionId": "evaluate-deploy",
+      "topicId": "4-2",
+      "question": "Operations wants to monitor and optimise agents for performance, reliability and cost. Which three problems does the exam guide say to identify?",
+      "options": [
+        "Brand colours, region names and team sizes",
+        "Prompt templates, skills and plugins",
+        "Logic errors, latency bottlenecks and hallucinations",
+        "Inbound mode, outbound mode and identity"
+      ],
+      "correctIndex": 2,
+      "explanation": "Section 4.2 names monitoring and optimising agents for performance, reliability and cost, for example identifying logic errors, latency bottlenecks and hallucinations.",
+      "whyOthersWrong": [
+        "Brand colours, region names and team sizes are not agent performance problems.",
+        "Prompt templates, skills and plugins are ways to build and customise agents.",
+        "Inbound mode, outbound mode and identity are Agent Gateway and identity concepts."
+      ],
+      "officialDoc": "https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf",
+      "difficulty": "medium"
     }
   ]
 }
