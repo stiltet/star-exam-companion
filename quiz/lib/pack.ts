@@ -235,6 +235,7 @@ function packStamp(dir: string): string {
       const stat = statSync(path.join(dir, name))
       return `${stat.mtimeMs}:${stat.size}`
     } catch {
+      // A file that is not there (courses.json of a pack with no course) has no stamp; one that appears changes the key.
       return "-"
     }
   }).join("|")
