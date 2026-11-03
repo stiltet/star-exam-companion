@@ -22,6 +22,11 @@
 > sponsored or endorsed by Google. The Google Cloud name and logo and the other Google product names
 > are trademarks of Google LLC. Always check the content against Google's official documentation.
 
+> [!NOTE]
+> **Vibe-coded.** Most of this app was written by AI coding agents (Claude Code), steered by its owner in
+> plain language rather than typed by hand. It has tests and an automated review gate, but read the code
+> before you trust it with anything that matters.
+
 **[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
 Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
 are core features that need the quiz on your own computer; the [full local setup](#full-local-setup)
