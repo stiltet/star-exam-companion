@@ -25,9 +25,9 @@ export function ExamSwitcher({ exams, current }: Props) {
   const target = pending ?? shown
   const title = (id: string) => exams.find((exam) => exam.id === id)?.title ?? id
 
-  async function switchExam(target: string) {
+  async function switchExam(exam: string) {
     setSwitching(true)
-    setMessage(`Switching to ${title(target)}…`)
+    setMessage(`Switching to ${title(exam)}…`)
     // Answers still on this device reach the Mac first, while it still serves the exam they belong to.
     await sendNow()
     let ok = false
@@ -35,7 +35,7 @@ export function ExamSwitcher({ exams, current }: Props) {
       const response = await fetch("/api/exam", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exam: target }),
+        body: JSON.stringify({ exam: exam }),
       })
       ok = ((await response.json()) as { ok?: boolean }).ok === true
     } catch {
@@ -49,7 +49,7 @@ export function ExamSwitcher({ exams, current }: Props) {
     // Clips still downloading belong to the exam being left; the next page stores the new exam's. Only now, so a
     // failed switch leaves the voice downloads of the exam still studied running.
     stopStoringVoice()
-    setMessage(`Switched to ${title(target)}.`)
+    setMessage(`Switched to ${title(exam)}.`)
     // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
     window.setTimeout(() => window.location.assign("/"), 800)
   }

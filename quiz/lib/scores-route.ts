@@ -29,9 +29,9 @@ export async function postScores(request: Request): Promise<Response> {
   })
   if (!decision.ok) return Response.json({ ok: false }, { status: 400 })
   // No await between read and append: concurrent requests cannot both store one ID.
-  const file = scoresFile(play.root)
+  const file = scoresFile(play.root, play.pack.meta.id)
   const result = storeAnswers(readScores(file).lines, decision.answers)
   if (result.lines.length > 0) appendFileSync(file, result.lines.map((line) => `${JSON.stringify(line)}\n`).join(""))
-  // Scores stay local: quiz/scores.jsonl is gitignored.
+  // Scores stay local: quiz/scores-<exam>.jsonl is gitignored.
   return Response.json({ ok: true, stored: result.stored, duplicate: result.duplicate, rejected: decision.rejected, gone: decision.gone, reasons: decision.reasons })
 }

@@ -28,14 +28,18 @@ export function migrateLegacyScores(root: string): void {
   if (migrated || process.env.QUIZ_SCORES_FILE) return
   // Only the default exam migrates, so another exam running first must not spend the one-time flag.
   if (examId(root) !== DEFAULT_EXAM) return
-  migrated = true
   const legacy = path.join(root, "quiz/scores.jsonl")
   const target = scoresFile(root)
-  if (!existsSync(legacy) || existsSync(target)) return
+  if (!existsSync(legacy) || existsSync(target)) {
+    migrated = true
+    return
+  }
   const backups = path.join(root, "quiz", BACKUP_DIR)
   mkdirSync(backups, { recursive: true })
   copyFileSync(legacy, path.join(backups, `scores-${DEFAULT_EXAM}-before-exam-names.jsonl`))
   renameSync(legacy, target)
+  // Set only after the move, so a failed copy is tried again on the next request instead of being forgotten.
+  migrated = true
 }
 
 export function readScores(file: string) {
@@ -69,7 +73,8 @@ let voiceCache: { stamp: string; index: Map<string, string> } | null = null
 
 export function loadVoiceIndex(): Map<string, string> | null {
   try {
-    const dir = packDir(repoRoot())
+    const id = examId(repoRoot())
+    const dir = packDir(repoRoot(), id)
     const glossary = path.join(dir, "glossary.md")
     const scenes = path.join(dir, "scenes.json")
     // A pack file missing mid-checkout is a 404 for the clip, not a crash.
@@ -78,7 +83,7 @@ export function loadVoiceIndex(): Map<string, string> | null {
     if (voiceCache?.stamp === stamp) return voiceCache.index
     const parsed = parseGlossary(readFileSync(glossary, "utf8"))
     if (!parsed.ok) return null
-    voiceCache = { stamp, index: voiceIndex(itemsFromGlossary(parsed.glossary, loadPack(repoRoot()).scenes)) }
+    voiceCache = { stamp, index: voiceIndex(itemsFromGlossary(parsed.glossary, loadPack(repoRoot(), id).scenes)) }
     return voiceCache.index
   } catch {
     // A pack file that does not read is a 404 for the clip, not a crash; the pack test names what is wrong.

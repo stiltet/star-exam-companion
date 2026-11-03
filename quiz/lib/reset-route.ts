@@ -20,7 +20,7 @@ export async function postReset(request: Request): Promise<Response> {
     allowedOrigin: browserOrigin(request),
   })
   if (!accepted) return Response.json({ ok: false }, { status: 400 })
-  const backup = resetScores(scoresFile(play.root), new Date(), play.pack.meta.id)
+  const backup = resetScores(scoresFile(play.root, play.pack.meta.id), new Date(), play.pack.meta.id)
   // No commit here. Scores and their backups are personal and gitignored.
   return Response.json({ ok: true, backup: backup ? path.relative(play.root, backup) : null })
 }
