@@ -72,6 +72,23 @@ test("an unreadable plain-named queue is kept under a backup name, not deleted",
   assert.equal(store.data.get(`${scoped("quiz-outbox", DEFAULT_EXAM)}-unreadable`), "{truncated")
 })
 
+test("when both copies of a queue are unreadable, both are kept, and a later unreadable copy never overwrites a kept one", () => {
+  const store = memory({ "quiz-outbox-generative-ai-leader": "first {broken", "quiz-outbox": "second {broken" })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  const name = scoped("quiz-outbox", DEFAULT_EXAM)
+  assert.equal(store.data.get(`${name}-unreadable`), "first {broken")
+  assert.equal(store.data.get(`${name}-unreadable-2`), "second {broken")
+  assert.equal(store.data.get(name), "[]")
+  assert.equal(store.data.has("quiz-outbox"), false)
+})
+
+test("an unreadable plain-named queue is kept when the scoped name holds nothing yet", () => {
+  const store = memory({ "quiz-outbox": "{truncated", "quiz-rejected-reasons": "[not a map" })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.equal(store.data.get(`${scoped("quiz-outbox", DEFAULT_EXAM)}-unreadable`), "{truncated")
+  assert.equal(store.data.get(`${scoped("quiz-rejected-reasons", DEFAULT_EXAM)}-unreadable`), "[not a map")
+})
+
 test("refused reasons under the plain name reach the name the app reads when the other copy is not a map", () => {
   const store = memory({ "quiz-rejected-reasons-generative-ai-leader": "not a map", "quiz-rejected-reasons": '{"z":"gone"}' })
   migrateLegacyStorage(store, DEFAULT_EXAM)

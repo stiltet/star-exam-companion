@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
-import { postExam } from "./exam-route.ts"
+import { postExam, switchExam } from "./exam-route.ts"
 
 // The route reads the repo from the quiz directory, as the running app does, and saves to a scratch file.
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-exam-route-"))
@@ -22,12 +22,12 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true })
 })
 
-const post = (body: string, headers: Record<string, string> = {}) =>
-  postExam(new Request("http://localhost/api/exam", {
+const post = (body: string, headers: Record<string, string> = {}, onSwitched: () => void = () => undefined) =>
+  switchExam(new Request("http://localhost/api/exam", {
     method: "POST",
     headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json", ...headers },
     body,
-  }))
+  }), onSwitched)
 
 test("a same-origin JSON request naming a pack in exams/ switches the exam and saves the choice", async () => {
   const response = await post('{"exam":"agentic-architect"}')
@@ -51,4 +51,19 @@ test("every other request is refused and changes nothing", async () => {
   ]
   for (const [name, response] of refused) assert.equal((await response).status, 400, name)
   assert.equal(existsSync(setting), false, "no refused request saved a choice")
+})
+
+test("a successful switch starts the new exam's Night recording, and a refused request does not", async () => {
+  let started = 0
+  await post('{"exam":"agentic-architect"}', {}, () => { started += 1 })
+  assert.equal(started, 1)
+  await post('{"exam":"no-such-exam"}', {}, () => { started += 1 })
+  await post('{"exam":"agentic-architect"}', { origin: "http://evil.example" }, () => { started += 1 })
+  assert.equal(started, 1, "a refused switch starts nothing")
+})
+
+test("the route handler takes the request alone, so Next's second argument cannot replace the switch hook", async () => {
+  assert.equal(postExam.length, 1)
+  const response = await postExam(new Request("http://localhost/api/exam", { method: "POST", headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json" }, body: '{"exam":"no-such-exam"}' }))
+  assert.equal(response.status, 400)
 })

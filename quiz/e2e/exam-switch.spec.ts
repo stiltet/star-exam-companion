@@ -81,7 +81,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
-    await expect(page.getByText(/Open the course on the official site/)).toBeVisible()
+    await expect(page.getByText(/Open the course on Google Skills/)).toBeVisible()
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
     await page.goBack()
     // The list says the pack is unfinished, so eight courses are not read as the whole learning path.

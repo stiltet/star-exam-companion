@@ -195,14 +195,18 @@ export function buildProblem(error: unknown): string {
   return error instanceof Error ? error.message : "The Mac could not finish the recording. Try again."
 }
 
-export function createNightBuild(deps: Runner): { begin: (retry: boolean) => NightBuildState } {
+// preload: the start made when the server boots or the exam is switched, not by someone opening the page. If it fails
+// (the network not up yet), the next ordinary start, the page being opened, tries again without pressing Retry.
+export function createNightBuild(deps: Runner): { begin: (retry: boolean, preload?: boolean) => NightBuildState } {
   let job: Promise<void> | null = null
   let status: NightBuildState = { state: "checking" }
   let known = false
-  const begin = (retry: boolean): NightBuildState => {
+  let preloadFailed = false
+  const begin = (retry: boolean, preload = false): NightBuildState => {
     if (job) return status
-    if (known && !retry) return status
+    if (known && !retry && !preloadFailed) return status
     known = true
+    preloadFailed = false
     status = { state: "checking" }
     let reached = { done: 0, total: 0 }
     job = (async () => {
@@ -224,6 +228,7 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean) => Nig
         const { done, total } = reached
         const message = error instanceof Error ? error.message : String(error)
         status = { state: "failed", error: buildProblem(error), done, total }
+        preloadFailed = preload
         await noteFailure(deps.dir, message, done, total)
       } finally {
         job = null
@@ -237,7 +242,7 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean) => Nig
 // One build per exam, since each reads its own courses and keeps its own state.
 const shared = new Map<string, ReturnType<typeof createNightBuild>>()
 
-export function beginNightBuild(retry: boolean): NightBuildState {
+export function beginNightBuild(retry: boolean, preload = false): NightBuildState {
   const exam = examId()
   let build = shared.get(exam)
   if (!build) {
@@ -249,7 +254,7 @@ export function beginNightBuild(retry: boolean): NightBuildState {
     })
     shared.set(exam, build)
   }
-  return build.begin(retry)
+  return build.begin(retry, preload)
 }
 
 export function nightStatusResponse(request: Request): Response {

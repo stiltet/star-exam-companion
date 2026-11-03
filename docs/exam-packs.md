@@ -27,7 +27,7 @@ the learning path on Google Skills, `bundleBase` is the public Google Cloud Stor
 holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read
 (a lab or video course, say). Read Aloud lists them in the same list as the others, marked "No text to read aloud";
-opening one shows `why` and a link to the course on Google Skills. Their ids continue after the readable courses' ids.
+opening one shows `why` and a link to the course on Google Skills. Say in `why` only what its Skills page shows: a lab or video course lists no readings, and a course whose readings sit behind a login says so. Their ids continue after the readable courses' ids.
 `format` is absent for a course stored as four JSON files, and `"rise"` for one Google stores as a single
 `runtime-data.js` (its `folder` then ends where that file is, such as `T-XXXX/v1.0.0/EN`). A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
 

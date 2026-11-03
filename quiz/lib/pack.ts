@@ -235,10 +235,11 @@ function readCourses(file: string, id: string): Course[] {
 
 // courses.json may also hold `noReading`: [{ id, template, title, why }], the path's courses that have no text to read.
 function readNoReading(file: string, id: string): NoReading[] {
-  const list = (readJson(file) as { noReading?: unknown } | null)?.noReading
+  const data = readJson(file) as { noReading?: unknown; courses?: { id?: unknown }[] } | null
+  const list = data?.noReading
   if (list === undefined) return []
   if (!Array.isArray(list)) throw new Error(`Exam pack ${id}: noReading in courses.json must be a list`)
-  const taken = new Set((readJson(file) as { courses?: { id?: unknown }[] }).courses?.map((course) => String(course.id)))
+  const taken = new Set(data?.courses?.map((course) => String(course.id)))
   return list.map((entry: Partial<NoReading>) => {
     if (!isText(entry?.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.why)) {
       throw new Error(`Exam pack ${id}: a noReading course in courses.json needs a numeric id and template, a title and a why`)
@@ -249,7 +250,7 @@ function readNoReading(file: string, id: string): NoReading[] {
   })
 }
 
-const PACK_FILES =["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
+const PACK_FILES = ["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
 const packCache = new Map<string, { stamp: string; pack: Pack }>()
 
 // A pack is read once and served from memory until one of its files changes: every page, route and exam check

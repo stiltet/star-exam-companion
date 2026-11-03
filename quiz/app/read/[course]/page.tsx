@@ -1,8 +1,9 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
+import { Breadcrumb } from "@/components/atoms/breadcrumb"
+import { Heading } from "@/components/atoms/heading"
 import { Text } from "@/components/atoms/text"
 import { courseBundle } from "@/lib/course-text"
 import { CourseTextError } from "@/components/course-text-error"
@@ -25,12 +26,8 @@ export default async function CourseReadingsPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-          <nav className="text-sm mb-6 text-muted-foreground">
-            <Link href="/read">READ ALOUD</Link>
-            <span className="mx-2">/</span>
-            <span className="text-foreground">COURSE {noText.id}</span>
-          </nav>
-          <h1 className="text-2xl font-bold mb-6">{noText.title}</h1>
+          <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="mb-6" />
+          <Heading variant="page" placement="mb-6">{noText.title}</Heading>
           <Text variant="muted" placement="mb-6">{noText.why}</Text>
           <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
         </main>
@@ -45,12 +42,8 @@ export default async function CourseReadingsPage({ params }: Props) {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        <nav className="text-sm mb-6 text-muted-foreground">
-          <Link href="/read">READ ALOUD</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">COURSE {course.id}</span>
-        </nav>
-        <h1 className="text-2xl font-bold mb-6">{course.title}</h1>
+        <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="mb-6" />
+        <Heading variant="page" placement="mb-6">{course.title}</Heading>
         {loaded.ok ? (
           <ReadingList course={course.id} pages={loaded.pages} />
         ) : (

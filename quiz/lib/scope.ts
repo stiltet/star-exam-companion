@@ -55,10 +55,19 @@ function keyed(text: string | null): Record<string, unknown> | null {
   }
 }
 
-// A copy the app cannot read is not deleted: it is kept, once, under `<name>-unreadable`, as the scores move keeps a backup.
+// A copy the app cannot read is not deleted: it is kept under `<name>-unreadable`, as the scores move keeps a backup.
+// A different unreadable text already kept there is not overwritten: the next free `-2`, `-3`... holds it, and the
+// same text is kept once.
 function keepUnreadable(store: Store, name: string, text: string): void {
-  const backup = `${name}-unreadable`
-  if (store.getItem(backup) === null) store.setItem(backup, text)
+  for (let n = 1; ; n += 1) {
+    const backup = n === 1 ? `${name}-unreadable` : `${name}-unreadable-${n}`
+    const kept = store.getItem(backup)
+    if (kept === text) return
+    if (kept === null) {
+      store.setItem(backup, text)
+      return
+    }
+  }
 }
 
 // The default exam takes its old plain-named items over once, so nothing studied before is lost:
@@ -77,6 +86,9 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
     if (old === null) continue
     const current = store.getItem(to)
     if (current === null) {
+      // Nothing under the scoped name yet: the plain copy is adopted as it is. One the app cannot read is kept too.
+      if ((from === "quiz-outbox" || from === "quiz-rejected") && !queued(old)) keepUnreadable(store, to, old)
+      if (from === "quiz-rejected-reasons" && !keyed(old)) keepUnreadable(store, to, old)
       store.setItem(to, old)
     } else if (from === "quiz-outbox" || from === "quiz-rejected") {
       // A copy that is not a list holds nothing to send: the other copy is adopted, so no queued answer is
