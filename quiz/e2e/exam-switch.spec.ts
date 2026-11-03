@@ -55,9 +55,28 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     // so the test never reaches Google.
     expect((await page.request.get("/read/night")).status()).toBe(200)
 
-    // The unfinished pack, with no written questions, renders every page without a server error.
+    // Read Aloud lists this exam's own courses and none of the other exam's. The list needs no course text.
+    await page.goto("/read")
+    await expect(page.getByText("Manage Agent Memory and State")).toBeVisible()
+    await expect(page.getByText("Add Agent Capabilities with Tools")).toBeVisible()
+    await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
+
+    // A page of the other exam is refused with 409 and the exam served, so its answers are never stored
+    // against this exam's scores.
+    const other = { origin: baseURL!, "x-quiz-exam": "generative-ai-leader" }
+    for (const path of ["/api/scores", "/api/scores/reset"]) {
+      const refused = await page.request.post(path, { headers: other, data: path === "/api/scores" ? { answers: [] } : {} })
+      expect(refused.status(), path).toBe(409)
+      expect(await refused.json(), path).toMatchObject({ ok: false, wrongExam: "agentic-architect" })
+    }
+    const snapshot = await page.request.get("/api/snapshot", { headers: other })
+    expect(snapshot.status(), "/api/snapshot").toBe(409)
+
+    // The unfinished pack, with no written questions, renders every page in the browser: the fixture fails the
+    // test on a script error, and each page must show a heading.
     for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/voice", "/progress"]) {
-      expect((await page.request.get(route)).status(), route).toBe(200)
+      await page.goto(route)
+      await expect(page.locator("h1, h2").first(), route).toBeVisible()
     }
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
