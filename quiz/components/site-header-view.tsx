@@ -70,18 +70,18 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
             ))}
           </div>
           <div className="flex shrink-0 items-center">
-          <ConnectionIcon state={connection} />
-          <button
-            ref={buttonRef}
-            type="button"
-            className="sm:hidden -mr-2 flex size-11 shrink-0 items-center justify-center"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            aria-controls="site-menu"
-            onClick={() => setOpen((was) => !was)}
-          >
-            {open ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
-          </button>
+            <ConnectionIcon state={connection} />
+            <button
+              ref={buttonRef}
+              type="button"
+              className="sm:hidden -mr-2 flex size-11 shrink-0 items-center justify-center"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              aria-controls="site-menu"
+              onClick={() => setOpen((was) => !was)}
+            >
+              {open ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
+            </button>
           </div>
         </nav>
       </div>

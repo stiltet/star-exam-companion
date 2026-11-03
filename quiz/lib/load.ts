@@ -8,9 +8,8 @@ import { parseGlossary } from "./sources.ts"
 import { voiceIndex } from "./speak.ts"
 
 // Each exam keeps its own scores file, named after it, so two exams never mix answers and a copied
-// file says which exam it is. QUIZ_SCORES_FILE points a test instance at one scratch file, and QUIZ_SCORES_DIR at a
-// scratch folder that keeps a file per exam, so a test
-// never writes real scores.
+// file says which exam it is. QUIZ_SCORES_FILE points a test instance at one scratch file, and
+// QUIZ_SCORES_DIR at a scratch folder that keeps a file per exam, so a test never writes real scores.
 export function scoresFile(root: string, id: string = examId(root)): string {
   if (process.env.QUIZ_SCORES_FILE) return process.env.QUIZ_SCORES_FILE
   return path.join(process.env.QUIZ_SCORES_DIR || path.join(root, "quiz"), `scores-${id}.jsonl`)
@@ -39,7 +38,9 @@ export function migrateLegacyScores(root: string): void {
   }
   const backups = path.join(root, "quiz", BACKUP_DIR)
   mkdirSync(backups, { recursive: true })
-  const backup = path.join(backups, `scores-${DEFAULT_EXAM}-before-exam-names.jsonl`)
+  // A first backup keeps its plain name; a later one, after a rollback and a second move, gets the time, so it never overwrites.
+  const first = path.join(backups, `scores-${DEFAULT_EXAM}-before-exam-names.jsonl`)
+  const backup = existsSync(first) ? path.join(backups, `scores-${DEFAULT_EXAM}-before-exam-names-${Date.now()}.jsonl`) : first
   if (!existsSync(target)) {
     copyFileSync(legacy, backup)
     renameSync(legacy, target)

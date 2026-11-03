@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
@@ -88,6 +88,34 @@ test("the scores file is named after the exam, and the old plain file moves once
     writeFileSync(path.join(root, "quiz/scores.jsonl"), "newer\n")
     migrateLegacyScores(root)
     assert.equal(readFileSync(scoresFile(root, DEFAULT_EXAM), "utf8"), "line\n")
+  } finally {
+    for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test("a second move after a rollback keeps the first backup instead of overwriting it", () => {
+  const env = { file: process.env.QUIZ_SCORES_FILE, exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
+  delete process.env.QUIZ_SCORES_FILE
+  delete process.env.QUIZ_EXAM
+  process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+  forgetLegacyMigration()
+  try {
+    const root = scratchRoot()
+    const backups = path.join(root, "quiz/scores-backups")
+    writeFileSync(path.join(root, "quiz/scores.jsonl"), "first\n")
+    migrateLegacyScores(root)
+    // A rollback: the exam's own file is deleted by hand and an older build writes a plain file again.
+    unlinkSync(scoresFile(root, DEFAULT_EXAM))
+    writeFileSync(path.join(root, "quiz/scores.jsonl"), "second\n")
+    forgetLegacyMigration()
+    migrateLegacyScores(root)
+    assert.equal(readFileSync(path.join(backups, "scores-generative-ai-leader-before-exam-names.jsonl"), "utf8"), "first\n")
+    const later = readdirSync(backups).filter((name) => /^scores-generative-ai-leader-before-exam-names-\d+\.jsonl$/.test(name))
+    assert.equal(later.length, 1)
+    assert.equal(readFileSync(path.join(backups, later[0]), "utf8"), "second\n")
   } finally {
     for (const [key, value] of [["QUIZ_SCORES_FILE", env.file], ["QUIZ_EXAM", env.exam], ["QUIZ_EXAM_SETTING_FILE", env.setting]] as const) {
       if (value === undefined) delete process.env[key]
