@@ -19,6 +19,12 @@
       "template": "1593",
       "title": "Add Agent Capabilities with Tools",
       "folder": "T-DEVAGENTTOOL-B/2.0"
+    },
+    {
+      "id": "4",
+      "template": "1563",
+      "title": "Build Your First Agent with Agent Development Kit (ADK)",
+      "folder": "T-DEVAGENT-I/2.0"
     }
   ]
 }
