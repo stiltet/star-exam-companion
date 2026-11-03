@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
+import { Text } from "@/components/atoms/text"
 import { CourseCard } from "@/components/reading-progress"
 import { courseBundle } from "@/lib/course-text"
 import { activePack } from "@/lib/pack"
@@ -20,11 +21,12 @@ export default async function ReadPage() {
         <h1 className="sr-only text-2xl font-bold mb-4">Read Aloud</h1>
         {!pack.meta.reading && (
           <>
-            <p className="mb-6">Read Aloud has no course for {pack.meta.title} yet: this exam has no readable course text in the quiz. The official learning path is on Google Skills.</p>
+            <Text variant="muted" placement="mb-6">Read Aloud has no course for {pack.meta.title} yet: this exam has no readable course text in the quiz. The official learning path is on Google Skills.</Text>
             <ActionLink variant="filled" href={pack.meta.learningPath} newTab>OFFICIAL LEARNING PATH</ActionLink>
           </>
         )}
-        {pack.meta.reading && <p className="mb-6">The official learning path&apos;s readings, read aloud in the Mac&apos;s voice. Pick a course.</p>}
+        {pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{pack.meta.notice}</Text>}
+        {pack.meta.reading && <Text variant="muted" placement="mb-6">The official learning path&apos;s readings, read aloud in the Mac&apos;s voice. Pick a course.</Text>}
         {pack.meta.reading && <div className="divide-y-2 divide-foreground border-2 border-foreground">
           {courses.map((course, index) => {
             const result = loaded[index]

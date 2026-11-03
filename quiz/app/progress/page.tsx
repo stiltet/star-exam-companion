@@ -8,7 +8,7 @@ import { ProgressClient } from "@/components/progress-client"
 export default function ProgressPage() {
   const pack = activePack()
   const stats = {
-    exam: { id: pack.meta.id, title: pack.meta.title },
+    exam: { id: pack.meta.id, title: pack.meta.title, notice: pack.meta.notice },
     courses: pack.courses.map((course) => ({ id: course.id, title: course.title })),
     exams: listPacks(),
     written: writtenPool({ questions: pack.study.questions, sectionOf: pack.meta.sectionOf }),

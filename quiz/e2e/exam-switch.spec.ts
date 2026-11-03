@@ -73,6 +73,8 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
     await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
+    // The list says the pack is unfinished, so six courses are not read as the whole learning path.
+    await expect(page.getByText(UNFINISHED)).toBeVisible()
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored
     // against this exam's scores.
@@ -95,6 +97,8 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     }
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
+    // The course tracking table carries the same notice.
+    await expect(page.getByText(UNFINISHED)).toBeVisible()
     await page.goto("/exam")
     await expect(page.getByText(UNFINISHED)).toBeVisible()
     await page.goto("/")
