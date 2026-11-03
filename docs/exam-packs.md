@@ -27,6 +27,25 @@ the learning path on Google Skills, `bundleBase` is the public Google Cloud Stor
 holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
 A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`.
 
+### Shapes of the data files
+
+`scenes.json` is a list. Each scene: `id` (unique), `correct` (a glossary term), `distractors`
+(three other glossary terms), `scene` (a short situation), `constraint` (the one fact that decides
+it) and optionally `guide` and `course`. The scene's section comes from the `Guide` column of the
+correct term's glossary row. A term whose row has "—" there needs `"guide": "3.1"` (its exam-guide
+section) on every scene that asks it, or the pack test fails with "its guide section is not in
+sections.md".
+
+`study.json` is `{ sections, questions }`:
+
+- `sections`: one per exam section, `{ id, title, weight, description, topics }`. Each topic is
+  `{ id, title, officialDocs: [{ title, url }], concepts, examFocus, traps, studyQA }`, where
+  `studyQA` is `[{ question, answer, officialSource }]`. Every `id` is a key of `sectionOf` in
+  `pack.json`.
+- `questions`: the written practice questions, `{ id, sectionId, topicId, question, options` (four),
+  `correctIndex, explanation, whyOthersWrong` (three, one per wrong option)`, officialDoc,
+  difficulty }`. Build each from facts a topic already cites.
+
 ## The rules a pack follows
 
 - Every glossary row names an official source, and a changed row is checked against that page.
@@ -110,5 +129,8 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 - [ ] No names, contact details, scores or other personal data in any file.
 
 A pack that is not finished is welcome as long as it passes `node --test`: list only the terms you
-have covered in `terms.txt` and say what is missing in the pull request. A maintainer reviews the
+have covered in `terms.txt`, set `notice` in `pack.json` to a plain statement of what is missing (the
+quiz shows it on the home, Practice and Exam pages), and say the same in the pull request. Remove the
+`notice` when nothing is missing. Keep a pull request to one exam; split a large pack into one pull
+request per file group (for example glossary and scenes first, study data after). A maintainer reviews the
 content against Google's pages, and runs the full gate before merging.

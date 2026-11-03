@@ -51,8 +51,8 @@ below gets everything working.
 
 ## Why Star Exam Companion
 
-It was built to pass the Google Cloud Generative AI Leader exam, and it did. Stellan Lindell passed the exam on first try. It now serves
-any exam that has a pack, starting with that one and Professional Agentic Architect. It turns an exam
+It started as a way to pass the Google Cloud Generative AI Leader exam, and its author passed it on the first try. It now serves
+any Google Cloud exam that has a pack, starting with that one and Professional Agentic Architect. It turns an exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
@@ -134,7 +134,7 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 | Pack (`QUIZ_EXAM`) | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
-| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json` and the terms in its `terms.txt`. Study, the Voice Quiz, the Exam and Read Aloud all work. |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud (three of the learning path's courses) all work. |
 
 To see which packs your copy has:
 
@@ -449,7 +449,8 @@ Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 - **Bugs and ideas:** open a [GitHub issue](https://github.com/stiltet/star-exam-companion/issues).
 - **Changes:** fork the repository, keep each pull request to one change, and include tests.
 - **A new exam:** it is a folder of data, with no code to change. Follow
-  [Add an exam with a pull request](docs/exam-packs.md#add-an-exam-with-a-pull-request).
+  [Add an exam with a pull request](docs/exam-packs.md#add-an-exam-with-a-pull-request), and
+  read [`CONTRIBUTING.md`](CONTRIBUTING.md) first.
 - **Content corrections:** every glossary row names its source; point to the official page that
   shows the correct wording.
 - **Security problems:** please do not open a public issue. Report them privately with GitHub's
