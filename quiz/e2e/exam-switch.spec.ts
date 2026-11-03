@@ -18,7 +18,7 @@ async function settleWorker(page: Page) {
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
 // The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
-const UNFINISHED = /Unfinished: Read Aloud covers four courses/
+const UNFINISHED = /Unfinished: Read Aloud covers six courses/
 
 test.use({ navigationCutOff: true })
 
@@ -69,6 +69,9 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("Manage Agent Memory and State")).toBeVisible()
     await expect(page.getByText("Add Agent Capabilities with Tools")).toBeVisible()
     await expect(page.getByText("Build Your First Agent with Agent Development Kit (ADK)")).toBeVisible()
+    // The two courses Google publishes in its newer format are listed too.
+    await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
+    await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored

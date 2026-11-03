@@ -25,6 +25,20 @@
       "template": "1563",
       "title": "Build Your First Agent with Agent Development Kit (ADK)",
       "folder": "T-DEVAGENT-I/2.0"
+    },
+    {
+      "id": "5",
+      "template": "1782",
+      "title": "AgentOps: Operationalize AI Agents on Google Cloud",
+      "folder": "T-AGTOPS-I/v1.0.0/EN",
+      "format": "rise"
+    },
+    {
+      "id": "6",
+      "template": "1504",
+      "title": "Understand Google Cloud Agents",
+      "folder": "T-GCAGNT-B/v1.2.0/EN",
+      "format": "rise"
     }
   ]
 }
