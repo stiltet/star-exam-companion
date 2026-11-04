@@ -24,10 +24,17 @@ function nginxTempPaths(prefix: string): string {
     .join('\n');
 }
 
-/** A command's exit status and output; never throws, so a missing program reads as a failed run. */
-function runCommand(command: string, args: string[], options: SpawnSyncOptions = {}) {
-  const result = spawnSync(command, args, { encoding: 'utf8', timeout: 120_000, ...options });
+/** A process result; never throws, so a missing program reads as a failed run. */
+function capture(result: ReturnType<typeof spawnSync>) {
   return { status: result.status, stdout: String(result.stdout ?? ''), stderr: String(result.stderr ?? result.error ?? '') };
+}
+
+function runOpenSSL(args: string[], options: SpawnSyncOptions = {}) {
+  return capture(spawnSync('openssl', args, { encoding: 'utf8', timeout: 120_000, ...options }));
+}
+
+function runScript(args: string[], options: SpawnSyncOptions = {}) {
+  return capture(spawnSync('bash', [script, ...args], { encoding: 'utf8', timeout: 120_000, ...options }));
 }
 
 function scratch(t: TestContext): string {
@@ -37,13 +44,13 @@ function scratch(t: TestContext): string {
 }
 
 async function text(file: string): Promise<string> {
-  const run = runCommand('openssl', ['x509', '-in', file, '-noout', '-text']);
+  const run = runOpenSSL(['x509', '-in', file, '-noout', '-text']);
   assert.equal(run.status, 0, run.stderr);
   return run.stdout;
 }
 
 async function make(out: string, ...args: string[]) {
-  return runCommand('bash', [script, out, ...args]);
+  return runScript([out, ...args]);
 }
 
 describe('the home certificate', () => {
@@ -54,7 +61,7 @@ describe('the home certificate', () => {
     assert.deepEqual(readdirSync(out).sort(), ['quiz-ca.crt', 'quiz.crt', 'quiz.key']);
     assert.equal(statSync(path.join(out, 'quiz.key')).mode & 0o777, 0o600);
 
-    const verify = runCommand('openssl', ['verify', '-CAfile', path.join(out, 'quiz-ca.crt'), path.join(out, 'quiz.crt')]);
+    const verify = runOpenSSL(['verify', '-CAfile', path.join(out, 'quiz-ca.crt'), path.join(out, 'quiz.crt')]);
     assert.equal(verify.status, 0, verify.stderr);
 
     const server = await text(path.join(out, 'quiz.crt'));
@@ -129,7 +136,7 @@ describe('the home certificate', () => {
     writeFileSync(path.join(bin, 'openssl'), '#!/bin/sh\necho "simulated openssl fault" >&2\nexit 3\n');
     chmodSync(path.join(bin, 'openssl'), 0o755);
     const out = path.join(dir, 'certs');
-    const run = runCommand('bash', [script, out, '10.0.0.7'], { env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
+    const run = runScript([out, '10.0.0.7'], { env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
     assert.notEqual(run.status, 0);
     assert.match(run.stderr, /simulated openssl fault/);
     assert.deepEqual(readdirSync(out), []);
@@ -163,7 +170,7 @@ describe('the home certificate', () => {
       // test run cannot open or create.
       `pid ${prefix}/nginx.pid;\nerror_log ${prefix}/logs/error.log;\nevents {}\nhttp {\naccess_log ${prefix}/logs/access.log;\n${nginxTempPaths(prefix)}\n${server}\n}\n`
     );
-    const run = runCommand(nginx!, ['-t', '-p', prefix, '-c', path.join(prefix, 'nginx.conf')]);
+    const run = capture(spawnSync(nginx!, ['-t', '-p', prefix, '-c', path.join(prefix, 'nginx.conf')], { encoding: 'utf8', timeout: 120_000 }));
     assert.equal(run.status, 0, run.stderr);
   });
 });
