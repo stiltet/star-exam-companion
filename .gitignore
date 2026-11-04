@@ -22,6 +22,7 @@
 quiz/scores*.jsonl
 quiz/scores-backups/
 quiz/active-exam.json
+quiz/exam-switches.log
 
 # Home-made HTTPS certificates from scripts/make-cert.sh. quiz.key is secret.
 /certs/

@@ -144,7 +144,9 @@ ls exams
 
 To switch exams while the quiz runs, open **Progress**, scroll to the bottom, pick the exam under
 **Switch exam** and confirm. Every device on that computer follows the choice, and each exam keeps
-its own scores. The choice is saved in `quiz/active-exam.json`, which git ignores.
+its own scores. The choice is saved in `quiz/active-exam.json`, which git ignores. Each switch also adds a line
+(time, the exam left, the exam chosen) to `quiz/exam-switches.log`, next to it and also ignored by git, so there
+is a record of when the quiz changed exam.
 
 `QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
 build and for the start. Replace `PACK` with a name from the list:

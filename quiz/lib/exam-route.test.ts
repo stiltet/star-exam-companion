@@ -87,3 +87,17 @@ test("the route handler itself starts the Night recording after a successful swi
     examRoute.onSwitched = original
   }
 })
+
+test("a successful switch to another exam writes one audit line, and a refused or repeated one writes none", async () => {
+  const log = path.join(path.dirname(setting), "exam-switches.log")
+  rmSync(log, { force: true })
+  rmSync(setting, { force: true })
+  await post('{"exam":"agentic-architect"}')
+  const first = readFileSync(log, "utf8").trim().split("\n")
+  assert.equal(first.length, 1)
+  assert.match(first[0] ?? "", /^\d{4}-\d{2}-\d{2}T[\d:.]+Z switched from .+ to agentic-architect$/)
+  await post('{"exam":"agentic-architect"}')
+  await post('{"exam":"no-such-exam"}')
+  await post('{"exam":"agentic-architect"}', { origin: "http://evil.example" })
+  assert.equal(readFileSync(log, "utf8").trim().split("\n").length, 1, "the same exam, an unknown pack and a foreign site add nothing")
+})
