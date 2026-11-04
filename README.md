@@ -66,6 +66,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 ## How it works
 
 - A **Next.js** app in `quiz/` renders every page and serves a few local API routes.
+- Read Aloud parses official course HTML on the server and sends plain text to the device; its HTML parser is not shipped to browsers.
 - Questions are built from [`glossary.md`](glossary.md) and the section weights in
   [`exam-sections.md`](exam-sections.md); both are read at run time.
 - Answers are saved **on the device first** and then sent to the server, which appends them to

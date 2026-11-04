@@ -1,8 +1,11 @@
 import assert from "node:assert/strict"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
-import { bundleUrl, COURSES, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewStop, reviewUrl, splitLong, type Bundle } from "./reading.ts"
+import { COURSES, reviewStop } from "./reading-view.ts"
+import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewUrl, splitLong, type Bundle } from "./reading.ts"
 
 // A made-up bundle in the shape of Google's course/en/*.json: page → article → block → component.
 function bundle(): Bundle {
@@ -49,6 +52,37 @@ test("HTML becomes plain paragraphs with entities decoded", () => {
   assert.deepEqual(htmlParagraphs(undefined), [])
   assert.deepEqual(htmlParagraphs("<p><span>Gen</span>AI, <b>x</b>.</p>"), ["GenAI, x."])
   assert.deepEqual(htmlParagraphs("<p>Bad &#99999999; code</p>"), ["Bad &#99999999; code"])
+  assert.deepEqual(htmlParagraphs("<p>Before<script>hidden</script>after<style>hidden</style>end</p>"), ["Before after end"])
+})
+
+test("noscript markup is extracted as text", () => {
+  assert.deepEqual(htmlParagraphs("<p><noscript><strong>Fallback</strong></noscript></p>"), ["Fallback"])
+})
+
+test("HTML attributes containing greater-than signs do not leak into the reading", () => {
+  assert.deepEqual(htmlParagraphs('<p title="a > b">Text <span title="c > d">inside</span></p>'), ["Text inside"])
+})
+
+test("HTML block tags with quoted greater-than signs retain headings, leads, and list items", () => {
+  assert.deepEqual(htmlBlocks('<h3 title="a > b">Heading</h3><p title="a > b"><strong>Lead</strong> body</p><ul><li title="a > b">Item</li></ul>'), [
+    { text: "Heading", heading: true },
+    { text: "Lead body", lead: "Lead" },
+    { items: ["Item"] },
+  ])
+})
+
+test("bold leads inside multi-letter inline wrappers are retained", () => {
+  assert.deepEqual(htmlBlocks("<p><span><strong>Half</strong> bold</p>"), [{ text: "Half bold", lead: "Half" }])
+})
+
+test("malformed nested script-like tags remain escaped text", () => {
+  const paragraphs = [
+    ...htmlParagraphs("<p><scr<script>x</script>ipt>alert(1)</p>"),
+    ...htmlParagraphs("<p><<b>script></p>"),
+  ]
+  assert.deepEqual(paragraphs, ["x</script>ipt>alert(1)", "<script>"])
+  const markup = paragraphs.map((paragraph) => renderToStaticMarkup(createElement("p", null, paragraph))).join("")
+  assert.doesNotMatch(markup, /<\/?script\b/i)
 })
 
 test("a long paragraph is cut at a sentence end, never above the clip limit", () => {
@@ -400,6 +434,27 @@ test("a Start button pauses the voice before the conversation it starts", () => 
   ])
   assert.equal(page.review, true)
   assert.deepEqual(page.reviewAt, [2, 7], "Start pauses before the cards, and the Review below keeps its own stop")
+})
+
+test("dialog card names are inserted literally into paragraph and list bodies", () => {
+  const data: Bundle = {
+    contentObjects: [{ _id: "p", _type: "page", title: "C1 - Dialog" }],
+    articles: [{ _id: "a", _parentId: "p" }],
+    blocks: [{ _id: "b", _parentId: "a" }],
+    components: [{
+      _id: "dialog", _parentId: "b", _component: "dialog",
+      _people: [{ _id: "dollar", name: "$&" }, { _id: "list", name: "List" }],
+      _items: [{ _personId: "dollar", body: "<p>Text.</p>" }, { _personId: "list", body: "<ul><li>Item.</li></ul>" }],
+    }],
+  }
+  assert.deepEqual(reading(data, "p")?.paragraphs.map((paragraph) => paragraph.text), ["$&. Text.", "List. Item."])
+})
+
+test("client-facing reading modules do not import the server parser module", () => {
+  for (const file of ["../components/read-aloud.tsx", "../components/progress-client.tsx", "../components/reading-progress.tsx", "./score.ts"]) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8")
+    assert.doesNotMatch(source, /from ["'](?:@\/lib\/reading|\.\/reading\.ts)["']/)
+  }
 })
 
 test("the voice stops before a review in the middle of a page, never at its start or end", () => {

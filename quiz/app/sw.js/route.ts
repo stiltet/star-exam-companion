@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { EXAM_SECTIONS } from "@/lib/exam-data"
 import { courseBundle } from "@/lib/course-text"
-import { COURSES, type PageSummary } from "@/lib/reading"
+import { COURSES, type PageSummary } from "@/lib/reading-view"
 import { coursePages, pageList, readingPages, staticList, workerScript } from "@/lib/sw"
 
 export const dynamic = "force-dynamic"

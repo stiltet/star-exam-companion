@@ -5,7 +5,7 @@ import { isLearned, parseWeights, sectionCleared, voiceProgress, type ScoreLine 
 import { acceptBatch, answerAloud, discussText, localVoices, PAUSE_BEFORE_OPTIONS_MS, PAUSE_BETWEEN_OPTIONS_MS, questionClips } from "./score.ts"
 import { preferredName, applyNames, displayTerm, label, parseGlossary, plainNames } from "./sources.ts"
 import { SCENES, itemsFromGlossary, takeRound } from "./round.ts"
-import { COURSES } from "./reading.ts"
+import { COURSES } from "./reading-view.ts"
 
 const glossaryText = `
 | Term | Meaning | Guide | Source |

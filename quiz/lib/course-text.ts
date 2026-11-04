@@ -1,4 +1,5 @@
-import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, type Bundle, type Course, type PageSummary } from "./reading.ts"
+import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, type Bundle } from "./reading.ts"
+import { COURSES, type Course, type PageSummary } from "./reading-view.ts"
 
 // Each course's bundle, read from Google at most once a day per running quiz. The text is
 // Google's, so the Mac keeps it in memory only, never on its disk; only its spoken clips are

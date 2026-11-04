@@ -1,5 +1,5 @@
 import { assignSessions, type ScoreLine } from "./learn.ts"
-import { COURSES } from "./reading.ts"
+import { COURSES } from "./reading-view.ts"
 
 export const MODES = ["round", "practice", "exam", "flashcard", "reading"] as const
 export type Mode = (typeof MODES)[number]

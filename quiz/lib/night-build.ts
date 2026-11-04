@@ -15,7 +15,8 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
-import { COURSES, reading } from "./reading.ts"
+import { reading } from "./reading.ts"
+import { COURSES } from "./reading-view.ts"
 import { renderSpeech } from "./say.ts"
 
 const ENCODE_TIMEOUT_MS = 10 * 60 * 1000
