@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { test, expect } from "./fixtures"
+import { test, expect, openVoice } from "./fixtures"
 
 // A switch makes the browser fetch the other exam's worker, which installs while the old one still runs.
 // Wait for that to finish, so the fixture does not unregister a worker mid-install.
@@ -53,6 +53,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.locator("html")).toHaveAttribute("data-exam", "agentic-architect")
     await settleWorker(page)
     await expect(page.getByText("PROFESSIONAL AGENTIC ARCHITECT")).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     // The long exam name stays on one line at this width, shrunk to fit rather than wrapped or cut off.
     const hero = page.getByText("PROFESSIONAL AGENTIC ARCHITECT")
     const lines = await hero.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight))
@@ -98,14 +99,16 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     const snapshot = await page.request.get("/api/snapshot", { headers: other })
     expect(snapshot.status(), "/api/snapshot").toBe(409)
 
-    // The unfinished pack, with no written questions, renders every page in the browser: the fixture fails the
-    // test on a script error, and each page must show a heading.
-    for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/voice", "/progress"]) {
+    // The unfinished pack renders every page in the browser: the fixture fails the test on a script error,
+    // and each page must show a heading.
+    for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/progress"]) {
       await page.goto(route)
       await expect(page.locator("h1, h2").first(), route).toBeVisible()
       // The pack says it is unfinished on the Practice page too, in the pack's own words.
       if (route === "/practice") await expect(page.getByText(UNFINISHED)).toBeVisible()
     }
+    await openVoice(page)
+    await expect(page.locator("h1, h2").first(), "/voice").toBeVisible()
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
     // The course tracking table carries the same notice.
@@ -114,7 +117,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText(UNFINISHED)).toBeVisible()
     await page.goto("/")
     await expect(page.getByRole("heading", { name: "DESCRIPTION" })).toBeVisible()
-    await expect(page.getByText(UNFINISHED)).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toHaveCount(0)
   } finally {
     // The server keeps the choice for every test that follows, so put Generative AI Leader back.
     const back = await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
