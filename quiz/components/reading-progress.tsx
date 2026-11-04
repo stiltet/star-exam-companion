@@ -5,7 +5,7 @@ import { StatusLink } from "@/components/atoms/status-link"
 import { useSnapshot } from "@/components/snapshot"
 import { readingProgress, readingState, readingStatus } from "@/lib/progress"
 import { scoped } from "@/lib/scope"
-import type { PageSummary } from "@/lib/reading"
+import type { PageSummary } from "@/lib/reading-view"
 
 // Each course's number of readings, kept on this device when its list is opened. The list comes
 // from Google's bundle, which Progress cannot reach offline, so Progress shows "n of N" only

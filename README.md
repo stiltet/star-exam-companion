@@ -77,6 +77,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
   built from the pack's glossary, scenes and section weights, read at run time. One install serves
   one exam: set `QUIZ_EXAM` to its pack name. Adding an exam is adding a folder; see
   [`docs/exam-packs.md`](docs/exam-packs.md).
+- Read Aloud parses official course HTML on the server and sends plain text to the device; its HTML parser is not shipped to browsers.
 - Answers are saved **on the device first** and then sent to the server, which appends them to
   `quiz/scores-<exam>.jsonl` on your machine. Your answers are sent nowhere else.
 - Speech comes from the **macOS text-to-speech voice** (`say`), rendered on your machine and cached.

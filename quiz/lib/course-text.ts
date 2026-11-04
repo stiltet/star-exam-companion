@@ -1,4 +1,5 @@
-import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, riseUrl, type Bundle, type Course, type PageSummary } from "./reading.ts"
+import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, riseUrl, type Bundle } from "./reading.ts"
+import type { Course, PageSummary } from "./reading-view.ts"
 import { decodeRise, riseBundle } from "./rise.ts"
 
 // Each course's bundle, read from Google at most once a day per running quiz. The text is

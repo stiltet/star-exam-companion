@@ -7,7 +7,6 @@ import { preferredName, applyNames, displayTerm, label, parseGlossary, plainName
 import { itemsFromGlossary, takeRound } from "./round.ts"
 import { testBank, testPack } from "./test-pack.ts"
 
-
 const glossaryText = `
 | Term | Meaning | Guide | Source |
 | Customer Engagement Suite | Tools to engage customers. **Renamed:** Customer Engagement Suite => Gemini Enterprise for Customer Experience. | 2.3 | EG |

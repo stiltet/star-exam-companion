@@ -3,21 +3,9 @@
 // text, as pages → articles → blocks → components. Nothing is copied into this repo: the
 // server reads the bundle when a page is asked for.
 
+import { parseFragment, type DefaultTreeAdapterMap } from "parse5"
+import type { Course, PageSummary, Paragraph, Reading } from "./reading-view.ts"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
-
-// A course of the exam's learning path, as the exam pack's courses.json lists it. The pack gives the
-// path, where its text bundles live, and each course's folder there.
-export type Course = {
-  id: string
-  // The course's number on Google Skills, for its page and its readings.
-  template: string
-  title: string
-  folder: string
-  // "rise" for a course Google publishes as one runtime-data.js (see rise.ts); absent for the usual four JSON files.
-  format?: "rise"
-  bundleBase: string
-  path: string
-}
 
 export const PARTS = ["contentObjects", "articles", "blocks", "components"] as const
 
@@ -59,18 +47,10 @@ type Node = Record<string, unknown> & { _id?: string; _parentId?: string; _sortO
 export type Bundle = Record<(typeof PARTS)[number], Node[]>
 
 // One paragraph to read: a heading or body text, each short enough for one clip.
-// lead: the bold words the text starts with. bullet: one item of a list, shown with a bullet;
-// each item is a paragraph of its own, so the page can follow it.
-export type Paragraph = { text: string; heading: boolean; lead?: string; bullet?: true }
-
-export type PageSummary = { id: string; title: string }
-
 // review: the page had a "Quiz yourself" review, a Start button, or another hands-on stop, left
 // for Google. reviewAt: each paragraph such a stop stood before. A page can have many. The voice
 // pauses at each, and each has its own button. videoAt: for each video, the paragraph after its
 // title and intro, where it stood. Its link goes there and the voice stops, as for a review.
-export type Reading = { title: string; paragraphs: Paragraph[]; review: boolean; reviewAt: number[]; videoAt: number[] }
-
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", ndash: "–", mdash: "—", hellip: "…" }
 
 function decode(text: string): string {
@@ -89,32 +69,74 @@ function decode(text: string): string {
 export function htmlParagraphs(input: unknown): string[] {
   if (typeof input !== "string") return []
   const html = input
-  const marked = html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/?(p|div|li|h[1-6]|tr|ul|ol|blockquote)\b[^>]*>/gi, "\n")
-    // Inline tags join their text: "<b>Gen</b>AI," stays "GenAI,", not "Gen AI ,".
-    .replace(/<[^>]*>/g, "")
-  return decode(marked)
-    .split("\n")
+  const fragment = parseFragment(html, { sourceCodeLocationInfo: true, scriptingEnabled: false })
+  const paragraphs: string[] = []
+  const blockTags = new Set(["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "ul", "ol", "blockquote"])
+  let paragraph = ""
+  const breakParagraph = () => {
+    paragraphs.push(paragraph)
+    paragraph = ""
+  }
+  function visit(node: DefaultTreeAdapterMap["childNode"]): void {
+    if (node.nodeName === "#text" && "value" in node) {
+      const location = node.sourceCodeLocation
+      paragraph += location
+        ? decode(html.slice(location.startOffset, location.endOffset))
+        : node.value
+      return
+    }
+    const tag = "tagName" in node ? node.tagName : undefined
+    if (tag === "script" || tag === "style") {
+      paragraph += " "
+      return
+    }
+    if (tag === "br") {
+      breakParagraph()
+      return
+    }
+    const block = tag !== undefined && blockTags.has(tag)
+    if (block) breakParagraph()
+    if ("childNodes" in node) {
+      for (const child of node.childNodes) visit(child)
+    }
+    if (block) breakParagraph()
+  }
+  for (const child of fragment.childNodes) visit(child)
+  paragraphs.push(paragraph)
+  return paragraphs
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter((line) => line.length > 0)
 }
 
-// The blocks of an HTML fragment: each <ul>/<ol> becomes one list of its items, the rest
-// plain paragraphs as htmlParagraphs gives them. A nested list ends the outer match at its inner
-// </ul>: its items join their parent item and the outer list's rest becomes plain paragraphs, so
-// the box is split but no text is lost. Google's course bundles had no nested lists on 19 Oct.
-// A heading in the text: an HTML heading, or Google's own way of writing one, a short paragraph
-// that is bold all through and ends without a full stop, such as "Workflow agents" (20 Oct).
-function headingsIn(html: string): Set<string> {
+function paragraphsFor(html: string, cache: Map<string, string[]>): string[] {
+  const found = cache.get(html)
+  if (found) return found
+  const paragraphs = htmlParagraphs(html)
+  cache.set(html, paragraphs)
+  return paragraphs
+}
+
+const TAG_ATTRIBUTES = String.raw`(?:[^>"']|"[^"]*"|'[^']*')*`
+const HEADING_TAG = new RegExp(String.raw`<(h[1-6])\b${TAG_ATTRIBUTES}>([\s\S]*?)<\/\1>`, "gi")
+const PARAGRAPH_TAG = new RegExp(String.raw`<p\b${TAG_ATTRIBUTES}>([\s\S]*?)<\/p>`, "gi")
+const BOLD_TAG = new RegExp(String.raw`<(strong|b)\b${TAG_ATTRIBUTES}>[\s\S]*?<\/\1>`, "gi")
+const LEAD_START = new RegExp(String.raw`^\s*(?:<(?!(?:strong|b)\b)[a-z][a-z0-9]*\b${TAG_ATTRIBUTES}>\s*)*<(strong|b)\b${TAG_ATTRIBUTES}>([\s\S]*?)<\/\1>`, "i")
+const LINK_OUT = new RegExp(String.raw`<a\b${TAG_ATTRIBUTES}>(?:(?!<\/a>)[\s\S])*↗(?:(?!<\/a>)[\s\S])*<\/a>`, "gi")
+const LIST_CHUNK = new RegExp(String.raw`(<(?:ul|ol)\b${TAG_ATTRIBUTES}>[\s\S]*?<\/(?:ul|ol)>)`, "i")
+const LIST_START = new RegExp(String.raw`^<(?:ul|ol)\b`, "i")
+const LIST_ITEM = new RegExp(String.raw`<li\b${TAG_ATTRIBUTES}>([\s\S]*?)<\/li>`, "gi")
+const PARAGRAPH_START = new RegExp(String.raw`^<p\b`, "i")
+const PARAGRAPH_OPEN = new RegExp(String.raw`^(<p\b${TAG_ATTRIBUTES}>)`, "i")
+const LIST_ITEM_OPEN = new RegExp(String.raw`^(<(?:ul|ol)\b${TAG_ATTRIBUTES}>\s*<li\b${TAG_ATTRIBUTES}>)`, "i")
+
+function headingsIn(html: string, cache: Map<string, string[]>): Set<string> {
   const found = new Set<string>()
-  for (const match of html.matchAll(/<(h[1-6])\b[^>]*>([\s\S]*?)<\/\1>/gi)) found.add(htmlParagraphs(match[2]).join(" "))
-  for (const match of html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+  for (const match of html.matchAll(HEADING_TAG)) found.add(paragraphsFor(match[2] ?? "", cache).join(" "))
+  for (const match of html.matchAll(PARAGRAPH_TAG)) {
     const inner = match[1] ?? ""
     // All its text is bold, whatever spans wrap it: nothing is left once the bold parts go.
-    const outsideBold = htmlParagraphs(inner.replace(/<(strong|b)\b[^>]*>[\s\S]*?<\/\1>/gi, "")).join("")
-    const text = htmlParagraphs(inner).join(" ")
+    const outsideBold = paragraphsFor(inner.replace(BOLD_TAG, ""), cache).join("")
+    const text = paragraphsFor(inner, cache).join(" ")
     if (/<(strong|b)\b/i.test(inner) && outsideBold === "" && text.length <= 80 && !/[.?!]$/.test(text)) found.add(text)
   }
   return found
@@ -123,43 +145,50 @@ function headingsIn(html: string): Set<string> {
 // The bold words a bullet or paragraph starts with, such as "Evaluate model capabilities" in
 // "Evaluate model capabilities: Look for…", shown bold as on Google (owner, 20 Oct). Null when it
 // starts plain, or when all of it is bold (that is a heading).
-function leadOf(html: string): string | null {
-  const match = html.match(/^\s*(?:<(?!(?:strong|b)\b)[a-z][^>]*>\s*)*<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>/i)
+function leadOf(html: string, cache: Map<string, string[]>): string | null {
+  const match = html.match(LEAD_START)
   if (!match) return null
-  const lead = htmlParagraphs(match[2]).join(" ").trim()
-  const all = htmlParagraphs(html).join(" ")
+  const lead = paragraphsFor(match[2] ?? "", cache).join(" ").trim()
+  const all = paragraphsFor(html, cache).join(" ")
   return lead && all.startsWith(lead) && all.length > lead.length ? lead : null
 }
 
-function leadsIn(html: string): Map<string, string> {
+function leadsIn(html: string, cache: Map<string, string[]>): Map<string, string> {
   const found = new Map<string, string>()
-  for (const match of html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
-    const lead = leadOf(match[1] ?? "")
-    if (lead) found.set(htmlParagraphs(match[1]).join(" "), lead)
+  for (const match of html.matchAll(PARAGRAPH_TAG)) {
+    const inner = match[1] ?? ""
+    const lead = leadOf(inner, cache)
+    if (lead) found.set(paragraphsFor(inner, cache).join(" "), lead)
   }
   return found
 }
 
 export type Block = { text: string; heading?: true; lead?: string } | { items: string[]; leads?: (string | null)[] }
 
+// The blocks of an HTML fragment: each <ul>/<ol> becomes one list of its items, the rest
+// plain paragraphs as htmlParagraphs gives them. A nested list may split the box, but no text is lost.
 export function htmlBlocks(html: unknown): Block[] {
   if (typeof html !== "string") return []
   const out: Block[] = []
+  const paragraphCache = new Map<string, string[]>()
   // Google marks a link out with ↗, such as "View Vision specs ↗": the owner found these
   // annoying read aloud (20 Oct). The link goes; a line or bullet that was only the link goes with
   // it, and in "Gemini Pro, Flash, and more. View Gemini specs ↗" the sentence stays.
-  const text = html.replace(/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*↗(?:(?!<\/a>)[\s\S])*<\/a>/gi, "")
-  for (const chunk of text.split(/(<(?:ul|ol)\b[^>]*>[\s\S]*?<\/(?:ul|ol)>)/i)) {
-    if (/^<(?:ul|ol)\b/i.test(chunk)) {
-      const found = [...chunk.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)]
-        .map((match) => ({ text: htmlParagraphs(match[1]).join(" "), lead: leadOf(match[1] ?? "") }))
+  const text = html.replace(LINK_OUT, "")
+  for (const chunk of text.split(LIST_CHUNK)) {
+    if (LIST_START.test(chunk)) {
+      const found = [...chunk.matchAll(LIST_ITEM)]
+        .map((match) => {
+          const item = match[1] ?? ""
+          return { text: paragraphsFor(item, paragraphCache).join(" "), lead: leadOf(item, paragraphCache) }
+        })
         .filter((item) => item.text)
       const items = found.map((item) => item.text)
       if (items.length > 0) out.push(found.some((item) => item.lead) ? { items, leads: found.map((item) => item.lead) } : { items })
     } else {
-      const headings = headingsIn(chunk)
-      const leads = leadsIn(chunk)
-      for (const text of htmlParagraphs(chunk)) {
+      const headings = headingsIn(chunk, paragraphCache)
+      const leads = leadsIn(chunk, paragraphCache)
+      for (const text of paragraphsFor(chunk, paragraphCache)) {
         const lead = leads.get(text)
         out.push(headings.has(text) ? { text, heading: true } : lead ? { text, lead } : { text })
       }
@@ -237,8 +266,8 @@ function isInstruction(text: string): boolean {
 function namedCard(name: string, html: string): string {
   const safe = name.replace(/&/g, "&amp;").replace(/</g, "&lt;")
   const trimmed = html.trim()
-  if (/^<p\b/i.test(trimmed)) return trimmed.replace(/^(<p\b[^>]*>)/i, `$1${safe}. `)
-  if (/^<(?:ul|ol)\b/i.test(trimmed)) return trimmed.replace(/^(<(?:ul|ol)\b[^>]*>\s*<li\b[^>]*>)/i, `$1${safe}. `)
+  if (PARAGRAPH_START.test(trimmed)) return trimmed.replace(PARAGRAPH_OPEN, (_match, open: string) => `${open}${safe}. `)
+  if (LIST_START.test(trimmed)) return trimmed.replace(LIST_ITEM_OPEN, (open) => `${open}${safe}. `)
   return `<p>${safe}. ${trimmed}</p>`
 }
 
@@ -407,13 +436,6 @@ export function reading(bundle: Bundle, pageId: string): Reading | null {
   if (!page) return null
   const { paragraphs, review, reviewAt, videoAt, tryTitle } = pageParagraphs(bundle, page)
   return paragraphs.length > 0 || review ? { title: pageTitle(page, paragraphs, tryTitle), paragraphs, review, reviewAt, videoAt } : null
-}
-
-// Where the review button sits and the voice stops: before the paragraph the review stood before
-// on Google (owner, 20 Oct). A review at the very start or end keeps the button at the end, with
-// no stop.
-export function reviewStop(review: boolean, reviewAt: number | null, count: number): number | null {
-  return review && reviewAt !== null && reviewAt > 0 && reviewAt < count ? reviewAt : null
 }
 
 // Where NEXT leads: the course's next reading, or after its last one the next course's list of

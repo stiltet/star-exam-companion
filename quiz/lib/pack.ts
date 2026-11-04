@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { Question, StudySection } from "./exam-data.ts"
-import type { Course } from "./reading.ts"
+import type { Course } from "./reading-view.ts"
 import { DEFAULT_EXAM } from "./scope.ts"
 import { parseGlossary } from "./sources.ts"
 
