@@ -1,5 +1,6 @@
 import { appendFileSync } from "node:fs"
 import path from "node:path"
+import { format } from "node:util"
 import { settingFile } from "./pack.ts"
 
 // A record of every exam switch, so "when did the quiz change exam?" has an answer. One line each, appended to
@@ -17,6 +18,7 @@ export function recordExamSwitch(from: string, to: string, root?: string, now: (
   try {
     appendFileSync(file, line)
   } catch (error) {
-    console.error("Could not write the exam switch audit log:", error)
+    // The chosen exam has already changed, so report the failed write without failing the switch.
+    process.stderr.write(`${format("Could not write the exam switch audit log:", error)}\n`)
   }
 }
