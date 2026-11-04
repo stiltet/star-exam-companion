@@ -68,8 +68,10 @@ for (const id of ids) {
       const pair = glossary.renames.find((item) => [item.oldName, item.newName].some((other) => other.toLowerCase() === name.toLowerCase()))
       return pair !== undefined && (answers.has(pair.oldName.toLowerCase()) || answers.has(pair.newName.toLowerCase()))
     }
+    const glossaryNames = new Set(glossary.terms.map((term) => term.term.toLowerCase()))
     assert.deepEqual(glossary.terms.map((term) => term.term).filter((name) => !skipped.includes(name) && !asked(name)), [], "a glossary row no scene asks")
-    assert.deepEqual(pack.terms.filter((name) => !skipped.includes(name) && !asked(name)), [], "a term in terms.txt no scene asks")
+    assert.deepEqual(pack.terms.filter((name) => !glossaryNames.has(name.toLowerCase())), [], "a term in terms.txt has no glossary row")
+    assert.deepEqual(pack.terms.filter((name) => !asked(name)), [], "a term in terms.txt no scene asks")
 
     // Read Aloud: a pack with a course reading has its courses; scenes may name only those.
     if (pack.meta.reading) {

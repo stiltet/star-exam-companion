@@ -1,23 +1,35 @@
 # Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
 # Every term here is the answer to at least one scene.
+Gemini Enterprise Agent Designer
+Customer Experience Agent Studio (CX Agent Studio)
 Agent Development Kit (ADK)
 Agents CLI
+Claude Code
+Cloud Workstations
 Agent Gateway
 Agent Registry
 Model Armor
 Skill Registry
 Agent Runtime
+Agent Engine
 Agent Identity
 Agent Platform Memory Bank
+Agent Platform Sessions
 Vector Search
+Vector Search 1.0
 RAG Engine
 Model Garden
 Agent evaluation
+ADK evaluation tooling (evalset)
+Agent Platform Gen AI evaluation service
 Agent Search
+Vertex AI Search
 Gemini Enterprise
 Antigravity
 Gemini LLMs
 Model Context Protocol (MCP)
+MCP servers
+Google Cloud MCP Servers
 Agent2Agent (A2A)
 Agent Retrieval
 BigQuery
@@ -27,7 +39,9 @@ Firestore
 Memorystore for Redis
 Cloud Run
 Google Kubernetes Engine (GKE)
+Google Cloud Observability
 Cloud Logging
 Cloud Trace
 Auth Manager
+OAuth 2.0
 Sensitive Data Protection

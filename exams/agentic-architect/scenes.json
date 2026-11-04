@@ -582,5 +582,126 @@
     "scene": "A security team wants to discover, classify and de-identify sensitive data inside and outside Google Cloud. Which service should it use?",
     "constraint": "The need is discovering and de-identifying sensitive data, not screening prompts and replies, identifying an agent or storing objects.",
     "guide": "5.1"
+  },
+  {
+    "id": "enterprise-no-code-agent",
+    "correct": "Gemini Enterprise Agent Designer",
+    "distractors": [
+      "Customer Experience Agent Studio (CX Agent Studio)",
+      "Agent Development Kit (ADK)",
+      "Cloud Workstations"
+    ],
+    "scene": "A business team wants to create and share an agent with little or no code inside its Gemini Enterprise application. Which tool should it use?",
+    "constraint": "The need is the no-code agent creator inside the enterprise application, not a customer-contact platform, a code framework or a development environment."
+  },
+  {
+    "id": "customer-conversation-builder",
+    "correct": "Customer Experience Agent Studio (CX Agent Studio)",
+    "distractors": [
+      "Gemini Enterprise Agent Designer",
+      "Agent Registry",
+      "Cloud Workstations"
+    ],
+    "scene": "A contact centre wants a low-code platform to build, evaluate and deploy multimodal conversational agents for customer support across voice and chat. Which should it use?",
+    "constraint": "The need is a platform focused on customer conversations, not an enterprise agent creator, an agent catalogue or a developer workstation."
+  },
+  {
+    "id": "anthropic-coding-agent",
+    "correct": "Claude Code",
+    "distractors": [
+      "Antigravity",
+      "Agents CLI",
+      "Cloud Workstations"
+    ],
+    "scene": "A developer wants Anthropic's coding-agent harness to plan, change and test code using Claude models hosted on Google Cloud. Which should they choose?",
+    "constraint": "The need is Anthropic's coding agent, not Google's agent-first coding platform, an agent lifecycle CLI or a managed development environment."
+  },
+  {
+    "id": "managed-coding-workstation",
+    "correct": "Cloud Workstations",
+    "distractors": [
+      "Google Kubernetes Engine (GKE)",
+      "Cloud Run",
+      "Claude Code"
+    ],
+    "scene": "A team wants centrally configured, managed development environments on Google Cloud that developers can access through a browser or local editor while using coding agents. Which should it use?",
+    "constraint": "The need is a managed development environment, not a Kubernetes service, a container runtime or a coding agent."
+  },
+  {
+    "id": "original-vector-index",
+    "correct": "Vector Search 1.0",
+    "distractors": [
+      "Agent Retrieval",
+      "RAG Engine",
+      "Agent Search"
+    ],
+    "scene": "A team is migrating data from Google's original index-based vector service into the newer collections-based retrieval service. Which version is it migrating from?",
+    "constraint": "The need is the original index-based version, not its collections-based successor, a grounding component or a search application service."
+  },
+  {
+    "id": "expose-tools-to-agent",
+    "correct": "MCP servers",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agents CLI"
+    ],
+    "scene": "An AI application needs programs that expose APIs or databases as tools through a standard interface. The programs can run on the developer's machine or remotely. What should the team configure?",
+    "constraint": "The need is programs exposing capabilities, not the protocol itself, a catalogue or an agent lifecycle CLI."
+  },
+  {
+    "id": "managed-google-mcp",
+    "correct": "Google Cloud MCP Servers",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agents CLI"
+    ],
+    "scene": "An agent needs managed remote endpoints that expose Google Cloud service capabilities through a standard interface, without the team hosting the endpoints itself. What should it connect to?",
+    "constraint": "The need is managed service endpoints, not the protocol itself, a catalogue or an agent lifecycle CLI."
+  },
+  {
+    "id": "evaluate-with-adk-cases",
+    "correct": "ADK evaluation tooling (evalset)",
+    "distractors": [
+      "Agent Platform Gen AI evaluation service",
+      "Model Armor",
+      "Agent Gateway"
+    ],
+    "scene": "A developer wants to test an agent against a dataset of several conversation sessions, comparing its responses and tool-use trajectory with reference cases using the agent's development kit. What should they use?",
+    "constraint": "The need is the development kit's test cases and evaluation tools, not a managed model evaluation service, content screening or a traffic layer."
+  },
+  {
+    "id": "managed-genai-evaluation",
+    "correct": "Agent Platform Gen AI evaluation service",
+    "distractors": [
+      "ADK evaluation tooling (evalset)",
+      "Agent Gateway",
+      "Model Armor"
+    ],
+    "scene": "A team wants a managed platform service to evaluate generative models and agents with adaptive rubrics and computation-based metrics. Which should it use?",
+    "constraint": "The need is a managed evaluation service, not development-kit test files, a traffic layer or a content screen."
+  },
+  {
+    "id": "integrated-cloud-observability",
+    "correct": "Google Cloud Observability",
+    "distractors": [
+      "Cloud Logging",
+      "Cloud Trace",
+      "Agent Gateway"
+    ],
+    "scene": "Operations wants Google's integrated offering for monitoring applications, including both log management and distributed tracing, rather than choosing a single service. What should it use?",
+    "constraint": "The need is the combined monitoring, logging and tracing offering, not only logs, only traces or agent traffic governance."
+  },
+  {
+    "id": "scoped-api-authorisation",
+    "correct": "OAuth 2.0",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent2Agent (A2A)",
+      "Agent Identity"
+    ],
+    "scene": "An agent needs a standard authorisation flow to obtain a scoped access token for a user's API data after the user grants permission. Which should it use?",
+    "constraint": "The need is delegated API authorisation with access tokens, not a tool-connection protocol, an agent communication protocol or an agent identity."
   }
 ]
