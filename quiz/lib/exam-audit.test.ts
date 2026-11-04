@@ -36,14 +36,18 @@ test("a switch to the exam already served leaves no line", () => {
   assert.equal(readFileSync(examLogFile(), "utf8").split("\n").length, lines)
 })
 
-test("a log that cannot be written never throws", () => {
+test("a log that cannot be written is reported and never throws", (t) => {
   const blocked = path.join(scratch, "blocked")
   mkdirSync(path.join(blocked, "exam-switches.log"), { recursive: true })
   const saved = process.env.QUIZ_EXAM_SETTING_FILE
+  const errors = t.mock.method(console, "error", () => undefined)
   process.env.QUIZ_EXAM_SETTING_FILE = path.join(blocked, "active-exam.json")
   try {
     assert.doesNotThrow(() => recordExamSwitch("a", "b"))
     assert.equal(existsSync(path.join(blocked, "exam-switches.log")), true, "the folder in the way is untouched")
+    assert.equal(errors.mock.callCount(), 1)
+    assert.equal(errors.mock.calls[0]?.arguments[0], "Could not write the exam switch audit log:")
+    assert.ok(errors.mock.calls[0]?.arguments[1] instanceof Error)
   } finally {
     process.env.QUIZ_EXAM_SETTING_FILE = saved
   }

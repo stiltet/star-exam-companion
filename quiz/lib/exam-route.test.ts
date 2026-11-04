@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdtempSync, readFileSync, rmSync, existsSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, existsSync, mkdirSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
@@ -100,4 +100,18 @@ test("a successful switch to another exam writes one audit line, and a refused o
   await post('{"exam":"no-such-exam"}')
   await post('{"exam":"agentic-architect"}', { origin: "http://evil.example" })
   assert.equal(readFileSync(log, "utf8").trim().split("\n").length, 1, "the same exam, an unknown pack and a foreign site add nothing")
+})
+
+test("a switch succeeds and reports an audit log write failure", async (t) => {
+  const log = path.join(path.dirname(setting), "exam-switches.log")
+  rmSync(log, { force: true })
+  rmSync(setting, { force: true })
+  mkdirSync(log)
+  const errors = t.mock.method(console, "error", () => undefined)
+  const response = await post('{"exam":"agentic-architect"}')
+  assert.equal(response.status, 200)
+  assert.equal(JSON.parse(readFileSync(setting, "utf8")).exam, "agentic-architect")
+  assert.equal(errors.mock.callCount(), 1)
+  assert.equal(errors.mock.calls[0]?.arguments[0], "Could not write the exam switch audit log:")
+  assert.ok(errors.mock.calls[0]?.arguments[1] instanceof Error)
 })

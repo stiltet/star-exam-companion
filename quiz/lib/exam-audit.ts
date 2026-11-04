@@ -12,9 +12,11 @@ export function examLogFile(root?: string): string {
 // cannot be written never fails the switch: the exam is already changed, and the line is a convenience.
 export function recordExamSwitch(from: string, to: string, root?: string, now: () => Date = () => new Date()): void {
   if (from === to) return
+  const file = examLogFile(root)
+  const line = `${now().toISOString()} switched from ${from} to ${to}\n`
   try {
-    appendFileSync(examLogFile(root), `${now().toISOString()} switched from ${from} to ${to}\n`)
-  } catch {
-    // Read-only folder or a full disk: the switch stands without its line.
+    appendFileSync(file, line)
+  } catch (error) {
+    console.error("Could not write the exam switch audit log:", error)
   }
 }

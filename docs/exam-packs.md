@@ -6,7 +6,7 @@ An exam pack is everything that makes the quiz the quiz for one exam. It is a fo
 switch it any time at the bottom of the Progress page. The choice is kept in `quiz/active-exam.json`
 (git ignores it) and every device follows it. Each switch appends one line to `quiz/exam-switches.log`
 (`<ISO time> switched from <old> to <new>`, also ignored by git), beside the choice file; a switch to the exam
-already served adds none, and a log that cannot be written never stops the switch.
+already served adds none. If the log cannot be written, the server reports the error and the switch still succeeds.
 
 Adding an exam means adding a folder. No code changes. The steps for a pull request are at the
 [end of this page](#add-an-exam-with-a-pull-request).
