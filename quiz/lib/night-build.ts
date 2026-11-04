@@ -202,12 +202,14 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
   let status: NightBuildState = { state: "checking" }
   let known = false
   let preloadFailed = false
+  let generation = 0
   const begin = (retry: boolean, preload = false): NightBuildState => {
-    if (job) return status
+    if (job && status.state !== "failed") return status
     if (known && !retry && !preloadFailed) return status
     known = true
     preloadFailed = false
     status = { state: "checking" }
+    const current = ++generation
     let reached = { done: 0, total: 0 }
     job = (async () => {
       try {
@@ -231,7 +233,7 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
         preloadFailed = preload
         await noteFailure(deps.dir, message, done, total)
       } finally {
-        job = null
+        if (generation === current) job = null
       }
     })()
     return status

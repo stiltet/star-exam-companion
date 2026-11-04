@@ -143,6 +143,41 @@ test("a failed build can be tried again, and a stranger is refused before one st
   assert.equal(refused.status, 400)
 })
 
+test("a failed build can retry while its log is still being written", async () => {
+  for (const preload of [false, true]) {
+    const next = Promise.withResolvers<NightPart[]>()
+    let loads = 0
+    const build = createNightBuild({
+      dir: path.join(scratch, `retry-during-log-${preload}`),
+      load: () => {
+        loads += 1
+        return loads === 1 ? Promise.reject(new Error("offline")) : next.promise
+      },
+      render: async (_script, file) => {
+        writeFileSync(file, tone(1))
+        return true
+      },
+      encode: async (_wav, m4a) => {
+        writeFileSync(m4a, "audio")
+      },
+    })
+    build.begin(false, preload)
+    const failedJob = build.idle()
+    await Promise.resolve()
+    if (!preload) assert.equal(build.begin(false).state, "failed")
+    assert.equal(build.begin(!preload).state, "checking")
+    const retryJob = build.idle()
+    assert.equal(loads, 2)
+
+    await failedJob
+    assert.equal(build.begin(true).state, "checking")
+    assert.equal(loads, 2, "the older log must not clear the new build")
+    next.resolve(parts)
+    await retryJob
+    assert.equal(build.begin(false).state, "ready")
+  }
+})
+
 test("the recording answers a byte range and refuses a range past the end", async () => {
   const dir = path.join(scratch, "audio")
   const key = "c".repeat(64)
