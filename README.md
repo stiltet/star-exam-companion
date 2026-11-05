@@ -23,7 +23,7 @@
 > are trademarks of Google LLC. Always check the content against Google's official documentation.
 
 > [!NOTE]
-> **Vibe-coded.** Most of this app was written by AI coding agents (Claude Code), steered by its owner in
+> **Vibe-coded.** Most of this app was written by AI coding agents, steered by its owner in
 > plain language rather than typed by hand. It has tests and an automated review gate, but read the code
 > before you trust it with anything that matters.
 
