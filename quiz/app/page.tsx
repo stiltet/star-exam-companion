@@ -36,7 +36,7 @@ export default function HomePage() {
             <div className="flex flex-col gap-4 lg:shrink-0">
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="filled" href="/study" arrow>START STUDYING</ActionLink>
-                <ActionLink variant="outlined" href="/exam" arrow>PRACTICE EXAM</ActionLink>
+                <ActionLink variant="outlined" href="/exam" arrow>TEST EXAM</ActionLink>
               </div>
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="outlined" href="/voice" arrow>VOICE QUIZ</ActionLink>

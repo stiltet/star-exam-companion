@@ -54,6 +54,9 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.locator("html")).toHaveAttribute("data-exam", "agentic-architect")
     await settleWorker(page)
     await expect(page.getByText("PROFESSIONAL AGENTIC ARCHITECT")).toBeVisible()
+    const home = page.locator("main section").first()
+    await expect(home.getByRole("link", { name: /^TEST EXAM/ })).toHaveAttribute("href", "/exam")
+    await expect(home.getByText("PRACTICE EXAM", { exact: true })).toHaveCount(0)
     await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     // The long exam name stays on one line at this width, shrunk to fit rather than wrapped or cut off.
     const hero = page.getByText("PROFESSIONAL AGENTIC ARCHITECT")
