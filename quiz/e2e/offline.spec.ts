@@ -92,9 +92,19 @@ test.describe("exam changes", () => {
       const bytes = await audio.body()
       expect(bytes.length).toBe(first.bytes)
       expect(bytes.subarray(4, 8).toString()).toBe("ftyp")
+      // An older build's unnamed recording of this exam is replaced by the one now stored.
+      const staleKey = "c".repeat(64)
+      await page.evaluate(async (stale) => {
+        const cache = await caches.open("quiz-night")
+        await cache.put(`/api/night/audio/${stale}`, new Response("old", { headers: { "Content-Type": "audio/mp4" } }))
+      }, staleKey)
       await page.getByRole("button", { name: /^Store on this device/ }).click()
       await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
       await readyOffline(page)
+      expect(await page.evaluate(async (stale) => {
+        const cache = await caches.open("quiz-night")
+        return !!await cache.match(`/api/night/audio/${stale}`)
+      }, staleKey)).toBe(false)
 
       // Recreate the pre-pack storage names, then reopen the same recording without the Mac.
       await page.evaluate(async (key) => {
@@ -136,9 +146,18 @@ test.describe("exam changes", () => {
       expect(await oldStatus.json()).toMatchObject({ state: "failed", wrongExam: "agentic-architect", error: /Reload Night reading/ })
       expect((await page.request.get(`/api/night/audio/${second.key}`)).status()).toBe(409)
       await expect(page.getByRole("button", { name: "Play", exact: true })).toHaveCount(0)
+      // An unnamed entry belongs to the default exam, so storing this exam's recording keeps it.
+      await page.evaluate(async (stale) => {
+        const cache = await caches.open("quiz-night")
+        await cache.put(`/api/night/audio/${stale}`, new Response("old", { headers: { "Content-Type": "audio/mp4" } }))
+      }, staleKey)
       await page.getByRole("button", { name: /^Store on this device/ }).click()
       await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
       await readyOffline(page)
+      expect(await page.evaluate(async (stale) => {
+        const cache = await caches.open("quiz-night")
+        return !!await cache.match(`/api/night/audio/${stale}`)
+      }, staleKey)).toBe(true)
       await context.setOffline(true)
       await page.reload()
       await page.getByRole("button", { name: "Play", exact: true }).click()
