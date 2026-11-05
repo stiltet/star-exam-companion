@@ -192,7 +192,7 @@ test("a pack's links and course bundles must be https and on Google's own hosts"
     ["a javascript: exam page", (f) => { f.meta.examPage = "javascript:alert(1)" }, /pack\.json needs/],
     ["an http learning path", (f) => { f.meta.learningPath = "http://www.skills.google/paths/1" }, /pack\.json needs/],
     ["an http footer link", (f) => { f.meta.links = [{ label: "X", href: "http://example.com" }] }, /pack\.json needs/],
-    ["a bundle base on a LAN host", (f) => { f.courses.bundleBase = "https://192.168.1.5/x" }, /bundleBase must be on/],
+    ["a bundle base on a LAN host", (f) => { f.courses.bundleBase = "https://10.0.0.1/x" }, /bundleBase must be on/],
     ["a bundle base on another host", (f) => { f.courses.bundleBase = "https://evil.example/cls-html5-courses" }, /bundleBase must be on/],
     ["a path on another host", (f) => { f.courses.path = "https://evil.example/paths/1" }, /path on/],
     ["a course folder that climbs out", (f) => { (f.courses.courses as { folder: string }[])[0]!.folder = "../../x" }, /may not contain/],
