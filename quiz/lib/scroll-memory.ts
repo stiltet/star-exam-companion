@@ -15,6 +15,7 @@ export function cameFromApp(referrer: string, origin: string): boolean {
   try {
     return referrer !== "" && new URL(referrer).origin === origin
   } catch {
+    // A referrer that is not an address did not come from a page of this app.
     return false
   }
 }
