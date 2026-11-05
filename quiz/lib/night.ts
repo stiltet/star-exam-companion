@@ -24,6 +24,20 @@ export function nightCacheUrl(key: string, exam: string): string {
   return `/api/night/audio/${key}?exam=${encodeURIComponent(exam)}`
 }
 
+/**
+ * Whether a cached request is an older recording that a newly stored one replaces: the same exam's
+ * audio under another key. An older build stored the default exam's recording with no exam name, so
+ * for the default exam an unnamed entry is replaced too, or it would stay on the device for good.
+ */
+export function replacedNightEntry(requestUrl: string, keepUrl: string, exam: string, defaultExam: string): boolean {
+  const url = new URL(requestUrl, "http://device.invalid")
+  if (!url.pathname.startsWith("/api/night/audio/")) return false
+  const keep = new URL(keepUrl, "http://device.invalid")
+  if (url.pathname + url.search === keep.pathname + keep.search) return false
+  const named = url.searchParams.get("exam")
+  return named === exam || (named === null && exam === defaultExam)
+}
+
 // A store keeps exactly the length the Mac named, and the whole transfer is given five minutes.
 export const STORE_TIMEOUT_MS = 5 * 60 * 1000
 

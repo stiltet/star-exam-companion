@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { ActionButton } from "@/components/atoms/button"
 import {
-  chapterAt, clock, createNightWatch, nightCacheUrl, NIGHT_PLACE_KEY, offlineLine, parsePlace, placeRecord, readStore,
+  chapterAt, clock, createNightWatch, nightCacheUrl, NIGHT_PLACE_KEY, offlineLine, parsePlace, placeRecord, readStore, replacedNightEntry,
   seekWhenReady, STATUS_TIMEOUT_MS, STORE_TIMEOUT_MS, storedMegabytes, storeProblem, StoreRefused,
   type NightChapter, type NightRemote,
 } from "@/lib/night"
@@ -253,8 +253,7 @@ export function NightReader() {
       const cacheUrl = nightCacheUrl(ready.key, exam)
       await cache.put(new Request(cacheUrl), new Response(blob.slice(), { headers: { "Content-Type": "audio/mp4", "Content-Length": String(blob.size) } }))
       for (const request of await cache.keys()) {
-        const url = new URL(request.url)
-        if (url.pathname.startsWith("/api/night/audio/") && url.searchParams.get("exam") === exam && url.href !== new URL(cacheUrl, window.location.origin).href) await cache.delete(request)
+        if (replacedNightEntry(request.url, cacheUrl, exam, DEFAULT_EXAM)) await cache.delete(request)
       }
       const next = { key: ready.key, bytes: blob.size, chapters: ready.chapters, blob }
       writeStored(placeRecord({ key: next.key, seconds: 0, bytes: next.bytes, chapters: next.chapters }))
