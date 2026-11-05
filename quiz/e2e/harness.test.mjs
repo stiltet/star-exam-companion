@@ -28,9 +28,9 @@ test("playwright.config.ts discovers every browser and width without nested or m
   })
   assert.equal(result.status, 0, result.stderr)
   for (const project of ["chromium-375", "chromium-390", "webkit-375", "webkit-390"]) {
-    assert.equal(result.stdout.split(`[${project}]`).length - 1, 36, project)
+    assert.equal(result.stdout.split(`[${project}]`).length - 1, 37, project)
   }
-  assert.match(result.stdout, /Total: 144 tests in 9 files/)
+  assert.match(result.stdout, /Total: 148 tests in 10 files/)
 })
 
 test("content-fixture.mjs serves original synthetic readings and passes other fetches through", () => {
