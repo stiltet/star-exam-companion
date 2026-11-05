@@ -1,4 +1,4 @@
-import { SITE_PAGES } from "./pages.ts"
+import { sitePages } from "./pages.ts"
 
 // What the service worker stores on install: every page, study section and topic, each Practice
 // filter the pages link to, and every static file of this build.
@@ -8,8 +8,9 @@ import { SITE_PAGES } from "./pages.ts"
 
 export const NIGHT_CACHE = "quiz-night"
 
-export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[]): string[] {
-  const pages = ["/", ...SITE_PAGES.map((page) => page.href), "/about", "/read/night", "/practice?unanswered=1"]
+// meta: the exam this install serves, as pack.json gives it.
+export function pageList(sections: { id: string; topics: { id: string }[] }[], practiceSections: string[], meta: { reading: boolean; exam: { questions: number; minutes: number } }): string[] {
+  const pages = ["/", ...sitePages(meta).map((page) => page.href), "/about", ...(meta.reading ? ["/read/night"] : []), "/practice?unanswered=1"]
   for (const id of practiceSections) {
     pages.push(`/practice?section=${encodeURIComponent(id)}`)
     pages.push(`/practice?section=${encodeURIComponent(id)}&unanswered=1`)
@@ -39,7 +40,9 @@ export function readingPages(courses: { id: string; pages: { id: string }[] | nu
 // Each course's readings for the worker. A course that answers before `late` sends its list, kept
 // in `last`; a late or failed one reuses what it last sent, so the worker's bytes stay the same and
 // the phone does not install it all again. One never loaded sends null: its list page only.
-export async function coursePages<C extends { id: string }, P extends { id: string }>(
+// `last` is keyed by the course's Skills number (template) when it has one, since two exams both number
+// their courses from 1.
+export async function coursePages<C extends { id: string; template?: string }, P extends { id: string }>(
   courses: readonly C[],
   load: (course: C) => Promise<{ ok: true; pages: P[] } | { ok: false }>,
   late: Promise<null>,
@@ -47,8 +50,9 @@ export async function coursePages<C extends { id: string }, P extends { id: stri
 ): Promise<{ id: string; pages: P[] | null }[]> {
   return Promise.all(courses.map(async (course) => {
     const loaded = await Promise.race([load(course), late])
-    if (loaded?.ok) last.set(course.id, loaded.pages)
-    return { id: course.id, pages: last.get(course.id) ?? null }
+    const key = course.template ?? course.id
+    if (loaded?.ok) last.set(key, loaded.pages)
+    return { id: course.id, pages: last.get(key) ?? null }
   }))
 }
 

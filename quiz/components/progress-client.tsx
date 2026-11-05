@@ -4,13 +4,14 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { EXAM_TARGET, PRACTICE_TARGET, voiceProgress } from "@/lib/learn"
 import { courseLabel, sectionLabel, examHistory, flashcardProgress, modeLines, practiceProgress, progressFigures, readingProgress, readingStatus } from "@/lib/progress"
-import { COURSES } from "@/lib/reading-view"
 import { readingTotals } from "@/components/reading-progress"
-import { practiceItems, SECTION_OF } from "@/lib/questions"
+import { practiceItems } from "@/lib/questions"
 import { reviewHash } from "@/lib/exam-review"
+import { ExamSwitcher } from "@/components/exam-switcher"
 import { ResetProgress } from "@/components/reset-progress"
 import { SectionBar } from "@/components/atoms/section-bar"
 import { ActionButton } from "@/components/atoms/button"
+import { Text } from "@/components/atoms/text"
 import { sendNow, useWaiting } from "@/components/outbox"
 import { useSnapshot } from "@/components/snapshot"
 import { useConnection } from "@/components/connection-status"
@@ -26,6 +27,15 @@ type SectionStat = {
 
 type Props = {
   stats: {
+    // The exam pack this install studies, so every figure below says whose it is.
+    exam: { id: string; title: string }
+    // The exam's learning-path courses, for the Voice Quiz and Read Aloud tables. None for a pack without any.
+    courses: { id: string; title: string }[]
+    // Every exam pack on this Mac, for the switch under Reset progress.
+    exams: { id: string; title: string }[]
+    // The written questions and the study-section map, from the exam pack.
+    written: { id: string; section: number }[]
+    sectionOf: Record<string, string>
     sections: SectionStat[]
   }
 }
@@ -63,10 +73,10 @@ export function ProgressClient({ stats }: Props) {
   // A copy saved before questions carried a course still groups by the exam-guide section.
   const byCourse = items.some((item) => item.course)
   const voiceSections = byCourse
-    ? COURSES.map((course) => ({ id: Number(course.id), title: courseLabel(course.id), weight: 0 }))
+    ? stats.courses.map((course) => ({ id: Number(course.id), title: courseLabel(course.id), weight: 0 }))
     : sections
   const voice = voiceProgress(items, modeLines(lines, "round"), voiceSections, byCourse ? (item, id) => Number(item.course) === id : undefined)
-  const pool = practiceItems(items)
+  const pool = practiceItems(items, stats.written)
   const practice = practiceProgress(pool, lines, sections)
   const voiceFigures = progressFigures(voice)
   const practiceFigures = progressFigures(practice)
@@ -306,13 +316,18 @@ export function ProgressClient({ stats }: Props) {
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>OFFICIAL COURSE TRACKING - READ ALOUD</SectionBar>
+        {stats.courses.length === 0 && (
+          <Text variant="note" placement="p-4">
+            This exam has no Read Aloud course yet, so there is nothing to track.
+          </Text>
+        )}
         <table className="w-full text-xs sm:text-sm">
           <tbody>
-            {COURSES.map((course, index) => {
+            {stats.courses.map((course, index) => {
               const done = readings[course.id]
               // The state only: with the last day read too, the row ran wider than a phone.
               const value = readingStatus(done?.read.length ?? 0, totals[course.id])
-              return <Row key={course.id} label={`Course ${course.id}`} value={value} last={index === COURSES.length - 1} />
+              return <Row key={course.id} label={`Course ${course.id}`} value={value} last={index === stats.courses.length - 1} />
             })}
           </tbody>
         </table>
@@ -358,7 +373,7 @@ export function ProgressClient({ stats }: Props) {
                   <Link href={`/study/${section.id}`}>{sectionLabel(index + 1, section.weight)}</Link>
                 </td>
                 <td className="px-2 py-3 sm:p-3 text-right">{section.topicCount}</td>
-                <td className="px-2 py-3 sm:p-3 text-right">{pool.filter((item) => String(item.section) === SECTION_OF[section.id]).length}</td>
+                <td className="px-2 py-3 sm:p-3 text-right">{pool.filter((item) => String(item.section) === stats.sectionOf[section.id]).length}</td>
               </tr>
             ))}
           </tbody>
@@ -415,6 +430,19 @@ export function ProgressClient({ stats }: Props) {
         <p className="text-xs text-muted-foreground">
           Your progress is saved on the Mac as you go and backed up at the end of each study day. Clearing this browser does not lose it, and a reset keeps a copy first.
         </p>
+      </div>
+
+      <div className="border-t border-foreground pt-6 mt-6">
+        <div className="border-2 border-foreground mb-6 overflow-x-auto">
+          <SectionBar>EXAM PACKAGE</SectionBar>
+          <table className="w-full text-xs sm:text-sm">
+            <tbody>
+              <Row label="Package" value={stats.exam.title} />
+              <Row label="Id" value={stats.exam.id} last />
+            </tbody>
+          </table>
+        </div>
+        <ExamSwitcher exams={stats.exams} current={stats.exam.id} />
       </div>
     </div>
   )

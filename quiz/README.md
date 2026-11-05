@@ -1,6 +1,6 @@
 # quiz
 
-The Star Exam Companion app: a Next.js study app for the Google Cloud Generative AI Leader exam.
+The Star Exam Companion app: a Next.js study app for Google Cloud certification exams, one exam pack per exam.
 It is a fork of [gail-exam-preparation](https://github.com/ludovicobesana/gail-exam-preparation)
 by Ludovico Besana, MIT licence ([`LICENSE`](LICENSE)).
 

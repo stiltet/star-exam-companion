@@ -17,7 +17,7 @@ export default async function FlashcardsPage() {
         key: term.term,
         term: label(play.glossary, term.term),
         definition: applyNames(play.glossary, term.meaning),
-        category: term.guides[0] ? sectionLabel(term.guides[0].split(".")[0] ?? "", play.weights[Number(term.guides[0].split(".")[0])] ?? 0) : "Study guide",
+        category: term.guides[0] ? sectionLabel(term.guides[0].split(".")[0] ?? "", play.weights[Number(term.guides[0].split(".")[0])] ?? 0) : play.pack.meta.unnumberedLabel,
       }))
     : []
   return (

@@ -1,15 +1,37 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { currentExam } from "@/lib/scope"
+import { voiceCleanup, type VoiceLists } from "@/lib/voice-lists"
 
 // Kept by the service worker across builds; it plays these clips with no connection.
 const VOICE_CACHE = "quiz-voice"
 const STORED = "quiz-voice-stored"
+// The clips each exam last stored, so one exam's clean-up never deletes a clip another exam still uses, and a clip
+// stored before this list existed is never deleted by it.
+const LISTS_KEY = "quiz-voice-lists"
+
+function readLists(): VoiceLists {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(LISTS_KEY) ?? "{}")
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as VoiceLists) : {}
+  } catch {
+    // Storage blocked or unreadable: no lists, so nothing is deleted.
+    return {}
+  }
+}
 // After a failed clip (the Mac restarting, a dropped request), how long until storing tries again.
 const RETRY_MS = 30_000
 
 let storing: Promise<void> | null = null
 let retry: ReturnType<typeof setTimeout> | null = null
+
+// Set when the exam is being switched: the clips still to store belong to the exam being left, so storing stops.
+let stopped = false
+
+export function stopStoringVoice(): void {
+  stopped = true
+}
 
 // A clip from the voice cache on this device if it is there, else from the Mac. Read by the page
 // itself, not through the service worker, which left the voice silent in the home-screen app.
@@ -26,19 +48,27 @@ export async function loadClip(url: string): Promise<Blob> {
 // Stores the Mac's voice for every line the quiz can say, one clip at a time so the Mac runs one
 // `say` for this. Stops at the first failure and tries again after RETRY_MS while the app is on
 // screen, on any page; a hidden app carries on when it comes back (SnapshotPrefetch). Drops clips
-// no line uses any more. Needs HTTPS (or localhost), as the Cache API does.
+// this exam stored and no exam uses any more. Needs HTTPS (or localhost), as the Cache API does.
 export function storeVoice(voice: Record<string, string>): Promise<void> {
   if (storing || typeof window === "undefined" || !("caches" in window)) return storing ?? Promise.resolve()
   if (retry) clearTimeout(retry)
   retry = null
   let failed = false
-  storing = (async () => {
+  const storeAll = async () => {
     const cache = await caches.open(VOICE_CACHE)
     const wanted = new Set(Object.values(voice).map((key) => `/api/speak/${key}`))
+    const cached = (await cache.keys()).map((request) => new URL(request.url).pathname)
+    const { lists, remove } = voiceCleanup(cached, readLists(), currentExam(), [...wanted])
     for (const request of await cache.keys()) {
-      if (!wanted.has(new URL(request.url).pathname)) await cache.delete(request)
+      if (remove.includes(new URL(request.url).pathname)) await cache.delete(request)
+    }
+    try {
+      window.localStorage.setItem(LISTS_KEY, JSON.stringify(lists))
+    } catch {
+      // Storage full or blocked: the next run deletes nothing it cannot account for.
     }
     for (const url of wanted) {
+      if (stopped) break
       if (await cache.match(url)) continue
       try {
         const response = await fetch(url)
@@ -54,7 +84,12 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
         break
       }
     }
-  })().finally(() => {
+  }
+  storing = storeAll().catch(() => {
+    // A browser refuses storage calls while the page is unloading, as WebKit does with "Context is stopped", which
+    // happens when the exam is switched mid-download. It is not an error to report: storing resumes on the next page.
+    failed = true
+  }).finally(() => {
     storing = null
     if (failed) {
       retry = setTimeout(() => {

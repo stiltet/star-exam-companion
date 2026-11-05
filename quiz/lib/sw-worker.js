@@ -11,6 +11,7 @@ const TIMEOUT_MS = 2500
 // After one failure, pages open from the device without asking the Mac for this long.
 const SKIP_MS = 30000
 let downUntil = 0
+let connectionGeneration = 0
 
 const statics = new Set(CONFIG.statics)
 
@@ -24,6 +25,7 @@ async function fromMac(request) {
   if (Date.now() < downUntil) throw new Error("the Mac was not reachable a moment ago")
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const generation = connectionGeneration
   try {
     // A navigation request cannot be copied with new options, so pages are fetched by URL.
     const response = request.mode === "navigate"
@@ -32,7 +34,7 @@ async function fromMac(request) {
     if (response.status >= 500) throw new Error(`the Mac answered ${response.status}`)
     return response
   } catch (error) {
-    downUntil = Date.now() + SKIP_MS
+    if (generation === connectionGeneration) downUntil = Date.now() + SKIP_MS
     throw error
   } finally {
     clearTimeout(timer)
@@ -100,6 +102,14 @@ self.addEventListener("activate", (event) => {
     }
     await self.clients.claim()
   })())
+})
+
+self.addEventListener("message", (event) => {
+  if (event.data !== "quiz-mac-reachable") return
+  downUntil = 0
+  connectionGeneration += 1
+  event.ports[0]?.postMessage("ready")
+  event.ports[0]?.close()
 })
 
 self.addEventListener("fetch", (event) => {

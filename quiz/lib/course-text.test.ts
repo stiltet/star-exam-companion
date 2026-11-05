@@ -1,7 +1,9 @@
 import assert from "node:assert/strict"
 import test, { afterEach, beforeEach } from "node:test"
 import { clearCourseCache, courseBundle, FAILED_MS, RETRY_MS } from "./course-text.ts"
-import { COURSES } from "./reading-view.ts"
+import { testPack } from "./test-pack.ts"
+
+const COURSES = testPack.courses
 
 // fetch and the clock are stubbed: the tests never reach Google, and each starts from a cold cache.
 const realFetch = globalThis.fetch
@@ -54,6 +56,26 @@ test("pages opened together share one load instead of each asking Google", async
   const [one, two] = await Promise.all([courseBundle(course), courseBundle(course)])
   assert.equal(one.ok && two.ok, true)
   assert.equal(asked.length, 5)
+})
+
+test("two courses with the same Skills number but different folders keep their own bundles", async () => {
+  const asked = stubFetch(healthy)
+  const other = { ...course, folder: `${course.folder}-other` }
+  await courseBundle(course)
+  await courseBundle(other)
+  assert.equal(asked.filter((url) => url.includes(`/${encodeURIComponent(other.folder)}/`)).length, 4)
+})
+
+test("a Rise course is read from its one runtime-data.js file and its Skills page, not four JSON files", async () => {
+  const rise = { ...course, template: "9001", folder: "T-X/v1/EN", format: "rise" as const }
+  const lesson = { course: { lessons: [{ id: "l1", type: "blocks", title: "One", items: [{ id: "b1", type: "text", variant: "paragraph", items: [{ paragraph: "<p>Read me.</p>" }] }] }] } }
+  const file = `__jsonp("runtime-data.js","${Buffer.from(JSON.stringify(lesson)).toString("base64")}")`
+  const asked = stubFetch((url) => (url.endsWith("runtime-data.js") ? new Response(file) : new Response("")))
+  const loaded = await courseBundle(rise)
+  assert.equal(loaded.ok, true)
+  assert.equal(asked.length, 2)
+  assert.ok(asked.some((url) => url.endsWith("/T-X/v1/EN/runtime-data.js")))
+  if (loaded.ok) assert.deepEqual(loaded.pages, [{ id: "l1", title: "One" }])
 })
 
 test("after a day the course is read again, and a failed refresh serves yesterday's copy", async () => {

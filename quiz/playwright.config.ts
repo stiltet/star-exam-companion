@@ -34,6 +34,6 @@ export default defineConfig({
     wait: { stdout: /Ready in/ },
     timeout: 300_000,
     reuseExistingServer: false,
-    env: { QUIZ_E2E_PORT: String(port) },
+    env: { QUIZ_E2E_PORT: String(port), QUIZ_NIGHT_PRELOAD: "1" },
   },
 })

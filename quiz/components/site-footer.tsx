@@ -1,8 +1,11 @@
+import { Fragment } from "react"
 import { BuildStamp } from "@/components/build-stamp"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { activePack } from "@/lib/pack"
 import { BASE_PATH } from "@/lib/static-demo"
 // flush drops the top margin, for a page whose last line should sit just above the footer.
 export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
+  const { meta } = activePack()
   return (
     <footer className={`border-t-2 border-foreground ${flush ? "" : "sm:mt-16"}`}>
       {/* footer-bottom: in the installed app, room to keep the last line clear of the floating Back button. */}
@@ -18,28 +21,20 @@ export function SiteFooter({ flush = false }: { flush?: boolean } = {}) {
             </a>
             <span>|</span>
             <a
-              href="https://cloud.google.com/learn/certification/generative-ai-leader"
+              href={meta.examPage}
               target="_blank"
               rel="noopener noreferrer"
             >
               OFFICIAL EXAM INFO
             </a>
-            <span>|</span>
-            <a href="https://www.cloudskillsboost.google/paths/118" target="_blank" rel="noopener noreferrer">
-              INTRO TO GENAI SKILLS BOOST PATH
-            </a>
-            <span>|</span>
-            <a href="https://www.skills.google/paths/1951" target="_blank" rel="noopener noreferrer">
-              GENERATIVE AI LEADER PATH
-            </a>
-            <span>|</span>
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLScNn5oUIFeMQjtsHilQsJPxDsnP-0DbhDVsIXaBeCmPj-dgYw/formResponse"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              SAMPLE QUESTIONS
-            </a>
+            {meta.links.map((link) => (
+              <Fragment key={link.href}>
+                <span>|</span>
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
+                  {link.label}
+                </a>
+              </Fragment>
+            ))}
             <span>|</span>
             <a href={`${BASE_PATH}/about`}>ABOUT</a>
           </div>

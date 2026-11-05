@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Star Exam Companion",
     short_name: "Star Exam",
-    description: "Open-source exam preparation for the Google Cloud Generative AI Leader certification.",
+    description: "Open-source exam preparation for Google Cloud certification exams.",
     start_url: `${BASE_PATH}/`,
     scope: `${BASE_PATH}/`,
     display: "standalone",

@@ -1,8 +1,9 @@
 import type { Store } from "./outbox.ts"
 import { writeSnapshot, type Snapshot } from "./snapshot.ts"
+import { scoped } from "./scope.ts"
 
 // When the copy on the device last came fresh from the Mac, as an ISO time.
-export const SNAPSHOT_AT_KEY = "quiz-snapshot-at"
+export const SNAPSHOT_AT_KEY = scoped("quiz-snapshot-at")
 
 export type Connection = "loading" | "mac" | "device" | "none"
 

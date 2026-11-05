@@ -1,6 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { EXAM_SECTIONS } from "@/lib/exam-data"
+import { activePack } from "@/lib/pack"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
 
@@ -16,7 +16,7 @@ export default function StudyPage() {
         </p>
 
         <div className="space-y-6">
-          {EXAM_SECTIONS.map((section, index) => (
+          {activePack().study.sections.map((section, index) => (
             <section key={section.id} className="border-2 border-foreground">
               <div className="p-4 border-b-2 border-foreground bg-foreground text-background">
                 <h2 className="font-bold">{sectionLabel(index + 1, section.weight)}</h2>

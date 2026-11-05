@@ -5,11 +5,12 @@ import { explanationParts, explanationShown } from "./score.ts"
 import { words } from "./spoken-word.ts"
 import { itemsFromGlossary, reasonFrom, sourceText } from "./round.ts"
 import { parseGlossary } from "./sources.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
 function realItems() {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   if (!parsed.ok) throw new Error(`glossary row ${parsed.row}: ${parsed.error}`)
-  return itemsFromGlossary(parsed.glossary)
+  return itemsFromGlossary(parsed.glossary, testPack.scenes)
 }
 
 test("every question carries why its answer is right, from glossary.md, with its source", () => {

@@ -1,9 +1,10 @@
 import type { RoundItem, ScoreLine } from "./learn.ts"
 import { mergeLines, type Store } from "./outbox.ts"
 import type { Answer } from "./score.ts"
+import { scoped } from "./scope.ts"
 
 // What the device keeps from the Mac, so the Voice Quiz and Progress work with no connection.
-export const SNAPSHOT_KEY = "quiz-snapshot"
+export const SNAPSHOT_KEY = scoped("quiz-snapshot")
 
 export type Snapshot = {
   items: RoundItem[]

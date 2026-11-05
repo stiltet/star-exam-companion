@@ -1,0 +1,119 @@
+import assert from "node:assert/strict"
+import { mkdtempSync, readFileSync, rmSync, existsSync, mkdirSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import test, { after } from "node:test"
+import { fileURLToPath } from "node:url"
+import { examRoute, postExam, switchExam } from "./exam-route.ts"
+import { startNightPreload } from "./night-preload.ts"
+
+// The route reads the repo from the quiz directory, as the running app does, and saves to a scratch file.
+const scratch = mkdtempSync(path.join(tmpdir(), "quiz-exam-route-"))
+const before = { cwd: process.cwd(), setting: process.env.QUIZ_EXAM_SETTING_FILE }
+const quiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+const setting = path.join(scratch, "active-exam.json")
+process.chdir(quiz)
+process.env.QUIZ_EXAM_SETTING_FILE = setting
+// A successful switch starts the new exam's Night recording; a test must not build one.
+process.env.QUIZ_NIGHT_PRELOAD = "0"
+after(() => {
+  process.chdir(before.cwd)
+  if (before.setting === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+  else process.env.QUIZ_EXAM_SETTING_FILE = before.setting
+  rmSync(scratch, { recursive: true, force: true })
+})
+
+const post = (body: string, headers: Record<string, string> = {}, onSwitched: () => void = () => undefined) =>
+  switchExam(new Request("http://localhost/api/exam", {
+    method: "POST",
+    headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json", ...headers },
+    body,
+  }), onSwitched)
+
+test("a same-origin JSON request naming a pack in exams/ switches the exam and saves the choice", async () => {
+  const response = await post('{"exam":"agentic-architect"}')
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { ok: true, exam: "agentic-architect" })
+  assert.equal(JSON.parse(readFileSync(setting, "utf8")).exam, "agentic-architect")
+})
+
+test("every other request is refused and changes nothing", async () => {
+  rmSync(setting, { force: true })
+  const refused: [string, Promise<Response>][] = [
+    ["another site", post('{"exam":"agentic-architect"}', { origin: "http://evil.example" })],
+    ["not JSON by content type", post('{"exam":"agentic-architect"}', { "content-type": "text/plain" })],
+    ["an extra key", post('{"exam":"agentic-architect","x":1}')],
+    ["a number for the exam", post('{"exam":7}')],
+    ["an array body", post('["agentic-architect"]')],
+    ["no exam", post("{}")],
+    ["an unknown pack", post('{"exam":"no-such-exam"}')],
+    ["a path out of exams/", post('{"exam":"../quiz"}')],
+    ["a body that is not JSON", post("exam=agentic-architect")],
+  ]
+  for (const [name, response] of refused) assert.equal((await response).status, 400, name)
+  assert.equal(existsSync(setting), false, "no refused request saved a choice")
+})
+
+test("a successful switch starts the new exam's Night recording, and a refused request does not", async () => {
+  let started = 0
+  await post('{"exam":"agentic-architect"}', {}, () => { started += 1 })
+  assert.equal(started, 1)
+  await post('{"exam":"no-such-exam"}', {}, () => { started += 1 })
+  await post('{"exam":"agentic-architect"}', { origin: "http://evil.example" }, () => { started += 1 })
+  assert.equal(started, 1, "a refused switch starts nothing")
+})
+
+test("the route handler takes the request alone, so Next's second argument cannot replace the switch hook", async () => {
+  assert.equal(postExam.length, 1)
+  const response = await postExam(new Request("http://localhost/api/exam", { method: "POST", headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json" }, body: '{"exam":"no-such-exam"}' }))
+  assert.equal(response.status, 400)
+})
+
+test("the route's default after-switch hook is the Night recording preload", () => {
+  assert.equal(examRoute.onSwitched, startNightPreload)
+})
+
+test("the route handler itself starts the Night recording after a successful switch, and not after a refused one", async () => {
+  const original = examRoute.onSwitched
+  let started = 0
+  examRoute.onSwitched = () => { started += 1 }
+  try {
+    const request = (body: string) => new Request("http://localhost/api/exam", { method: "POST", headers: { host: "localhost", origin: "http://localhost", "content-type": "application/json" }, body })
+    assert.equal((await postExam(request('{"exam":"no-such-exam"}'))).status, 400)
+    assert.equal(started, 0)
+    assert.equal((await postExam(request('{"exam":"agentic-architect"}'))).status, 200)
+    assert.equal(started, 1)
+  } finally {
+    examRoute.onSwitched = original
+  }
+})
+
+test("a successful switch to another exam writes one audit line, and a refused or repeated one writes none", async () => {
+  const log = path.join(path.dirname(setting), "exam-switches.log")
+  rmSync(log, { force: true })
+  rmSync(setting, { force: true })
+  await post('{"exam":"agentic-architect"}')
+  const first = readFileSync(log, "utf8").trim().split("\n")
+  assert.equal(first.length, 1)
+  assert.match(first[0] ?? "", /^\d{4}-\d{2}-\d{2}T[\d:.]+Z switched from .+ to agentic-architect$/)
+  await post('{"exam":"agentic-architect"}')
+  await post('{"exam":"no-such-exam"}')
+  await post('{"exam":"agentic-architect"}', { origin: "http://evil.example" })
+  assert.equal(readFileSync(log, "utf8").trim().split("\n").length, 1, "the same exam, an unknown pack and a foreign site add nothing")
+})
+
+test("a switch succeeds and reports an audit log write failure", async (t) => {
+  const log = path.join(path.dirname(setting), "exam-switches.log")
+  rmSync(log, { force: true })
+  rmSync(setting, { force: true })
+  mkdirSync(log)
+  const errors = t.mock.method(process.stderr, "write", () => true)
+  const response = await post('{"exam":"agentic-architect"}')
+  assert.equal(response.status, 200)
+  assert.equal(JSON.parse(readFileSync(setting, "utf8")).exam, "agentic-architect")
+  assert.equal(errors.mock.callCount(), 1)
+  const report = String(errors.mock.calls[0]?.arguments[0])
+  assert.match(report, /^Could not write the exam switch audit log:/)
+  assert.match(report, /Error:/)
+  assert.match(report, /exam-switches\.log/)
+})

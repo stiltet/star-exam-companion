@@ -5,11 +5,12 @@ import { acceptSpeak, clipsToEvict, MAX_CACHED_CLIPS, MAX_SPEAK_CHARS, speechFil
 import { itemsFromGlossary } from "./round.ts"
 import { answerAloud, explanationParts, questionClips, saidHeading, speakable } from "./score.ts"
 import { parseGlossary } from "./sources.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
 test("every line the Voice Quiz can say has a key, and only those lines do", () => {
-  const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+  const parsed = parseGlossary(testPack.glossaryText)
   if (!parsed.ok) throw new Error(`glossary row ${parsed.row}: ${parsed.error}`)
-  const items = itemsFromGlossary(parsed.glossary)
+  const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
   const keys = voiceKeys(items)
   for (const item of items) {
     for (const part of [...questionClips(item.stem, item.options).map((clip) => clip.text), item.constraint, ...explanationParts(item), "Correct.", answerAloud(true, item.options[item.correctIndex] ?? "")]) {

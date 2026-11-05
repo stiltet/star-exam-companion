@@ -16,7 +16,7 @@ export type ScoreLine = {
   at?: string
 }
 
-// Reads scores.jsonl one line at a time. A torn or hand-broken line is skipped and counted,
+// Reads a scores-<exam>.jsonl file one line at a time. A torn or hand-broken line is skipped and counted,
 // so it costs that one answer, not the whole history.
 export function parseScoreLines(text: string): { lines: ScoreLine[]; skipped: number } {
   const lines: ScoreLine[] = []
