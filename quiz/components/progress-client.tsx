@@ -28,7 +28,7 @@ type SectionStat = {
 type Props = {
   stats: {
     // The exam pack this install studies, so every figure below says whose it is.
-    exam: { id: string; title: string; notice?: string }
+    exam: { id: string; title: string }
     // The exam's learning-path courses, for the Voice Quiz and Read Aloud tables. None for a pack without any.
     courses: { id: string; title: string }[]
     // Every exam pack on this Mac, for the switch under Reset progress.
@@ -316,7 +316,6 @@ export function ProgressClient({ stats }: Props) {
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>OFFICIAL COURSE TRACKING - READ ALOUD</SectionBar>
-        {stats.exam.notice && <Text variant="note" placement="p-4">{stats.exam.notice}</Text>}
         {stats.courses.length === 0 && (
           <Text variant="note" placement="p-4">
             This exam has no Read Aloud course yet, so there is nothing to track.

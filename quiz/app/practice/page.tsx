@@ -43,8 +43,6 @@ export default async function PracticePage({ searchParams }: Props) {
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
         <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
-        {play.ok && play.pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{play.pack.meta.notice}</Text>}
-
         {/* Filter */}
         <div className="border-2 border-foreground p-4 mb-6">
           <h2 className="font-bold mb-2">FILTER BY SECTION</h2>

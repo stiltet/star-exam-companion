@@ -15,7 +15,7 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the Practice, Exam, Read Aloud and Progress pages), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the Read Aloud page only), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
 | `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing pack's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each has a glossary row and is the answer to a voice scene, even if it is listed in `notAsked`. |
@@ -143,7 +143,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 
 A pack that is not finished is welcome as long as it passes `node --test`: list only the terms you
 have covered in `terms.txt`, set `notice` in `pack.json` to a plain statement of what is missing (the
-quiz shows it on the home, Practice, Exam, Read Aloud and Progress pages), and say the same in the pull request. Remove the
+quiz shows it on Read Aloud only), and say the same in the pull request. Remove the
 `notice` when nothing is missing. Keep a pull request to one exam; split a large pack into one pull
 request per file group (for example glossary and scenes first, study data after). A maintainer reviews the
 content against Google's pages, and runs the full gate before merging.

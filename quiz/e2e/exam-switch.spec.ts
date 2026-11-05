@@ -89,6 +89,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(breadcrumb).toContainText(/COURSE \d+/)
     await expect(page.getByText(/Open the course on Google Skills/)).toBeVisible()
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
+    await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goBack()
     // The list says the pack is unfinished, so eight courses are not read as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
@@ -106,20 +107,18 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
 
     // The unfinished pack renders every page in the browser: the fixture fails the test on a script error,
     // and each page must show a heading.
-    for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/progress"]) {
+    for (const route of ["/study", "/practice", "/practice?section=1", "/exam", "/flashcards", "/glossary", "/progress", "/read/night"]) {
       await page.goto(route)
       await expect(page.locator("h1, h2").first(), route).toBeVisible()
-      // The pack says it is unfinished on the Practice page too, in the pack's own words.
-      if (route === "/practice") await expect(page.getByText(UNFINISHED)).toBeVisible()
+      await expect(page.getByText(UNFINISHED), route).toHaveCount(0)
     }
     await openVoice(page)
     await expect(page.locator("h1, h2").first(), "/voice").toBeVisible()
     await page.goto("/progress")
     await expect(page.getByRole("row", { name: /Package/ })).toContainText("Professional Agentic Architect")
-    // The course tracking table carries the same notice.
-    await expect(page.getByText(UNFINISHED)).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goto("/exam")
-    await expect(page.getByText(UNFINISHED)).toBeVisible()
+    await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goto("/")
     await expect(page.getByRole("heading", { name: "DESCRIPTION" })).toBeVisible()
     await expect(page.getByText(UNFINISHED)).toHaveCount(0)

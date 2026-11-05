@@ -26,7 +26,6 @@ export default async function ExamPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        {play.pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{play.pack.meta.notice}</Text>}
         <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
       </main>
       <SiteFooter />
