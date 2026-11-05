@@ -195,6 +195,16 @@ test("the recording answers a byte range and refuses a range past the end", asyn
   assert.equal(missing.status, 404)
 })
 
+test("Night status and audio refuse a page belonging to another exam", async () => {
+  const headers = { host: "localhost", "x-quiz-exam": "another-exam" }
+  const status = nightStatusResponse(new Request("http://localhost/api/night", { headers }))
+  const audio = await nightAudioResponse(new Request("http://localhost/api/night/audio/anything", { headers }), Promise.resolve({ key: "a".repeat(64) }))
+  for (const response of [status, audio]) {
+    assert.equal(response.status, 409)
+    assert.equal(typeof (await response.json()).wrongExam, "string")
+  }
+})
+
 test("a real recording's duration matches its chapter list", { timeout: 180_000, skip: process.platform !== "darwin" && "needs the Mac's say, afconvert and afinfo" }, async () => {
   const spoken = nightParts([
     { id: "1", title: "Example", readings: [{ number: 1, title: "One", paragraphs: [{ text: "Hello.", heading: false }] }, { number: 2, title: "Two", paragraphs: [{ text: "Good night.", heading: false }] }] },

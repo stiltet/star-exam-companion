@@ -7,6 +7,7 @@ import { Select } from "@/components/atoms/select"
 import { sendNow } from "@/components/outbox"
 import { stopStoringVoice } from "@/components/voice-cache"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { resumePageFetches } from "@/lib/exam-header"
 
 type Props = {
   exams: { id: string; title: string }[]
@@ -49,6 +50,7 @@ export function ExamSwitcher({ exams, current }: Props) {
     // Clips still downloading belong to the exam being left; the next page stores the new exam's. Only now, so a
     // failed switch leaves the voice downloads of the exam still studied running.
     stopStoringVoice()
+    await resumePageFetches()
     setMessage(`Switched to ${title(exam)}.`)
     // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
     window.setTimeout(() => window.location.assign("/"), 800)

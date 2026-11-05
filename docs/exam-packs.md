@@ -75,13 +75,16 @@ Each exam keeps its own scores file, `quiz/scores-<id>.jsonl`, its own backups
 (`quiz/scores-backups/scores-<id>-<time>.jsonl`) and its own browser storage, all named after the
 exam, so two exams never mix answers and a copied file says which exam it is. An install that
 studied before exams were named finds its old `quiz/scores.jsonl` and browser data moved to the
-Generative AI Leader names the first time it runs, with a backup copy first.
+Generative AI Leader names the first time it runs, with a backup copy first. Night reading places
+and cached recordings also belong to an exam. An older, unlabelled Night recording is assumed to
+be Generative AI Leader's and remains available offline.
 
 The move to exam-named files is one way. To go back to an older build, copy
 `quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl` to `quiz/scores.jsonl`.
 Answers still waiting on a device sit under exam-named browser keys (for example
 `quiz-outbox-generative-ai-leader`), which an older build cannot read: let each device sync before
-you roll back. If you roll back and later upgrade again, the plain `quiz/scores.jsonl` an older build wrote
+you roll back. An older build cannot read a newly stored, exam-named Night recording either; store
+it again after rolling back. If you roll back and later upgrade again, the plain `quiz/scores.jsonl` an older build wrote
 is merged into `quiz/scores-generative-ai-leader.jsonl` by answer id at the first start, and moved to
 `quiz/scores-backups/`. A device queue (answers waiting to send, refused answers and their reasons) that
 holds text the app cannot read is kept, not deleted, under the same browser key with `-unreadable` added; a second, different unreadable text goes to `-unreadable-2`, then `-3`. Nothing removes these backups but clearing the site's data.

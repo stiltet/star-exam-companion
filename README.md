@@ -145,7 +145,8 @@ ls exams
 
 To switch exams while the quiz runs, open **Progress**, scroll to the bottom, pick the exam under
 **Switch exam** and confirm. Every device on that computer follows the choice, and each exam keeps
-its own scores. The choice is saved in `quiz/active-exam.json`, which git ignores. A change to a different exam also
+its own scores, Night reading place and stored Night recording. The default exam keeps its older
+Night recording too. The choice is saved in `quiz/active-exam.json`, which git ignores. A change to a different exam also
 adds a line (time, the exam left, the exam chosen) to `quiz/exam-switches.log`, next to it and also ignored by git.
 If the log cannot be written, the switch still succeeds and the server reports the error.
 

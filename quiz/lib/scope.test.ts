@@ -37,16 +37,24 @@ test("every item a device keeps for an exam is named after that exam", () => {
 })
 
 test("the default exam takes its plain-named items over once, and another exam leaves them alone", () => {
-  const entries = { "quiz-outbox": '[{"id":"a"}]', "quiz-snapshot": "{}", "quiz-practice:all": "{}", "quiz-theme": "dark" }
+  const entries = { "quiz-outbox": '[{"id":"a"}]', "quiz-snapshot": "{}", "quiz-practice:all": "{}", "quiz-theme": "dark", "night-place": "old place" }
   const other = memory(entries)
   migrateLegacyStorage(other, "agentic-architect")
   assert.deepEqual([...other.data.keys()].sort(), Object.keys(entries).sort())
   const store = memory(entries)
   migrateLegacyStorage(store, DEFAULT_EXAM)
-  assert.deepEqual([...store.data.keys()].sort(), ["quiz-outbox-generative-ai-leader", "quiz-practice-generative-ai-leader:all", "quiz-snapshot-generative-ai-leader", "quiz-theme"])
+  assert.deepEqual([...store.data.keys()].sort(), ["night-place-generative-ai-leader", "quiz-outbox-generative-ai-leader", "quiz-practice-generative-ai-leader:all", "quiz-snapshot-generative-ai-leader", "quiz-theme"])
   assert.equal(store.data.get("quiz-outbox-generative-ai-leader"), '[{"id":"a"}]')
+  assert.equal(store.data.get("night-place-generative-ai-leader"), "old place")
   migrateLegacyStorage(store, DEFAULT_EXAM)
-  assert.equal(store.data.size, 4)
+  assert.equal(store.data.size, 5)
+})
+
+test("a conflicting legacy Night place is kept rather than overwriting the scoped place", () => {
+  const store = memory({ "night-place": "legacy", "night-place-generative-ai-leader": "new" })
+  migrateLegacyStorage(store, DEFAULT_EXAM)
+  assert.equal(store.data.get("night-place"), "legacy")
+  assert.equal(store.data.get("night-place-generative-ai-leader"), "new")
 })
 
 test("a queue written under the plain name after the move is merged by answer id, never dropped", () => {

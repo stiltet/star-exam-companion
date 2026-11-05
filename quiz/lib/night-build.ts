@@ -15,6 +15,7 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
+import { wrongExam } from "./exam-guard.ts"
 import { DEFAULT_EXAM, examId, loadPack, repoRoot } from "./pack.ts"
 import { reading } from "./reading.ts"
 import { renderSpeech } from "./say.ts"
@@ -264,17 +265,22 @@ export function nightStatusResponse(request: Request): Response {
   if (browserOrigin(request) === REFUSED_ORIGIN) {
     return Response.json({ state: "failed", error: "This Mac does not answer to that name.", done: 0, total: 0 }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
+  const wrong = wrongExam(request, examId())
+  if (wrong) return wrong
   const retry = new URL(request.url).searchParams.get("retry") === "1"
   return Response.json(beginNightBuild(retry), { headers: { "Cache-Control": "no-store" } })
 }
 
 export async function nightAudioResponse(request: Request, params: Promise<{ key: string }>): Promise<Response> {
   if (browserOrigin(request) === REFUSED_ORIGIN) return new Response("Not found", { status: 400 })
+  const exam = examId()
+  const wrong = wrongExam(request, exam)
+  if (wrong) return wrong
   const { key } = await params
   const rangeHeader = request.headers.get("range")
   if (!/^[0-9a-f]{64}$/.test(key)) return new Response("Not found", { status: 404 })
-  const file = path.join(nightDirFor(), key, "night.m4a")
-  const manifest = path.join(nightDirFor(), key, "manifest.json")
+  const file = path.join(nightDirFor(exam), key, "night.m4a")
+  const manifest = path.join(nightDirFor(exam), key, "manifest.json")
   if (!existsSync(file) || !existsSync(manifest)) return new Response("Not found", { status: 404 })
   const info = await stat(file)
   const range = byteRange(rangeHeader, info.size)

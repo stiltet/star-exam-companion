@@ -11,6 +11,39 @@ export function examHeaders(): Record<string, string> {
 const RELOADED_KEY = "quiz-exam-reloaded"
 const RELOAD_GAP_MS = 15_000
 
+// A successful API response proves the Mac is reachable. Wait for the worker to stop using its
+// offline backoff before loading a page, or it can return the previous exam's cached HTML.
+export async function resumePageFetches(): Promise<void> {
+  const worker = typeof navigator === "undefined" ? undefined : navigator.serviceWorker?.controller
+  if (!worker || typeof MessageChannel === "undefined") return
+  await new Promise<void>((resolve) => {
+    const channel = new MessageChannel()
+    const finish = () => {
+      window.clearTimeout(timer)
+      channel.port1.close()
+      resolve()
+    }
+    const timer = window.setTimeout(() => {
+      try {
+        window.reportError(new Error("The offline worker did not confirm that page fetching resumed."))
+      } finally {
+        finish()
+      }
+    }, 2000)
+    channel.port1.onmessage = finish
+    try {
+      worker.postMessage("quiz-mac-reachable", [channel.port2])
+    } catch (error) {
+      try {
+        window.reportError(new Error("Could not tell the offline worker that the Mac is reachable.", { cause: error }))
+      } finally {
+        channel.port2.close()
+        finish()
+      }
+    }
+  })
+}
+
 // The Mac refused a request because it now serves another exam. The page is stale, so it reloads once to
 // show the exam served; what it queued stays on the device under its own exam. Returns true when it was
 // such a refusal. Never reloads twice within a few seconds, whatever the Mac says.
@@ -28,6 +61,7 @@ export async function followWrongExam(response: Response): Promise<boolean> {
     const last = Number(window.sessionStorage.getItem(RELOADED_KEY) ?? 0)
     if (served !== currentExam() && Date.now() - last > RELOAD_GAP_MS) {
       window.sessionStorage.setItem(RELOADED_KEY, String(Date.now()))
+      await resumePageFetches()
       window.location.reload()
     }
   } catch {

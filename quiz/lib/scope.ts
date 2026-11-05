@@ -4,6 +4,7 @@
 // imports.
 
 export const DEFAULT_EXAM = "generative-ai-leader"
+export const NIGHT_PLACE_KEY = "night-place"
 
 // The exam this page belongs to, written on <html> by the server for each request (app/layout.tsx).
 // A page keeps its own exam: a copy the worker stored before a switch still reads its own keys.
@@ -31,6 +32,7 @@ const LEGACY_NAMES = [
   "quiz-exam",
   "quiz-flashcards",
   "quiz-reading-totals",
+  NIGHT_PLACE_KEY,
 ]
 const LEGACY_PRACTICE = "quiz-practice:"
 
@@ -93,6 +95,9 @@ export function migrateLegacyStorage(store: Store, exam: string = currentExam())
       if (QUEUES.has(from) && !queued(old)) keepUnreadable(store, to, old)
       if (from === "quiz-rejected-reasons" && !keyed(old)) keepUnreadable(store, to, old)
       store.setItem(to, old)
+    } else if (from === NIGHT_PLACE_KEY && old !== current) {
+      // Another open version may still have the only copy of this recording's place.
+      continue
     } else if (QUEUES.has(from)) {
       // A copy that is not a list holds nothing to send: the other copy is adopted, so no queued answer is
       // stranded under a name the app no longer reads. The unreadable text is kept under a backup name.

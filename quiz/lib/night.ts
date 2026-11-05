@@ -18,7 +18,11 @@ const RENDER_TIMES_FASTER = 8
 
 export const WAV_RATE = 22050
 
-export const NIGHT_PLACE_KEY = "night-place"
+export { NIGHT_PLACE_KEY } from "./scope.ts"
+
+export function nightCacheUrl(key: string, exam: string): string {
+  return `/api/night/audio/${key}?exam=${encodeURIComponent(exam)}`
+}
 
 // A store keeps exactly the length the Mac named, and the whole transfer is given five minutes.
 export const STORE_TIMEOUT_MS = 5 * 60 * 1000

@@ -2,13 +2,18 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { reading, type Bundle } from "./reading.ts"
 import {
-  byteRange, chapterAt, chapterList, clock, createNightWatch, joinWavs, keepWatching, manifestRecord, nightParts, offlineLine,
+  byteRange, chapterAt, chapterList, clock, createNightWatch, joinWavs, keepWatching, manifestRecord, nightCacheUrl, nightParts, offlineLine,
   parseBuildState, parseManifest, parsePlace, pcmOf, placeRecord, readStore, sayTimeoutMs, seekWhenReady, STATUS_GAP_MS,
   STATUS_GIVE_UP_MS, storedMegabytes, storeProblem, StoreRefused, wavFromPcm, WAV_RATE,
   type NightChapter, type NightPart, type NightRemote,
 } from "./night.ts"
 
 const key = "a".repeat(64)
+
+test("Night recordings have a different cache key for each exam", () => {
+  assert.equal(nightCacheUrl(key, "agentic-architect"), `/api/night/audio/${key}?exam=agentic-architect`)
+  assert.notEqual(nightCacheUrl(key, "generative-ai-leader"), nightCacheUrl(key, "agentic-architect"))
+})
 
 function part(script: string, number = 1): NightPart {
   return { courseId: "1", courseTitle: "Example", number, title: "Intro", script }
