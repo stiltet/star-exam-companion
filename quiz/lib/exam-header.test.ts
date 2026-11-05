@@ -119,6 +119,77 @@ test("exam-header: a worker message failure does not reload stale HTML and can b
   }
 })
 
+test("exam-header: a failed message channel keeps the page in place and shows a warning", async () => {
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+  const previousChannel = Object.getOwnPropertyDescriptor(globalThis, "MessageChannel")
+  Object.defineProperty(globalThis, "MessageChannel", {
+    configurable: true,
+    value: class { constructor() { throw new Error("message channel unavailable") } },
+  })
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { serviceWorker: {
+      controller: {},
+      getRegistration: async () => undefined,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    } },
+  })
+  const events: string[] = []
+  try {
+    await withPage("generative-ai-leader", async (reloads) => {
+      assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+      assert.equal(reloads(), 0)
+      assert.deepEqual(events, [EXAM_REFRESH_FAILED])
+    }, events)
+  } finally {
+    if (previousNavigator) Object.defineProperty(globalThis, "navigator", previousNavigator)
+    else Reflect.deleteProperty(globalThis, "navigator")
+    if (previousChannel) Object.defineProperty(globalThis, "MessageChannel", previousChannel)
+    else Reflect.deleteProperty(globalThis, "MessageChannel")
+  }
+})
+
+for (const [failure, getRegistration] of [
+  ["throws", () => { throw new Error("registration unavailable") }],
+  ["rejects", async () => { throw new Error("registration unavailable") }],
+  ["cannot update", async () => ({ update: async () => { throw new Error("update unavailable") } })],
+] as const) {
+  test(`exam-header: a worker registration that ${failure} shows a warning`, async () => {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { serviceWorker: {
+        controller: { postMessage: () => { throw new Error("old worker unavailable") } },
+        getRegistration,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      } },
+    })
+    const events: string[] = []
+    try {
+      await withPage("generative-ai-leader", async (reloads) => {
+        assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+        assert.equal(reloads(), 0)
+        assert.deepEqual(events, [EXAM_REFRESH_FAILED])
+      }, events)
+    } finally {
+      if (previous) Object.defineProperty(globalThis, "navigator", previous)
+      else Reflect.deleteProperty(globalThis, "navigator")
+    }
+  })
+}
+
+test("exam-header: blocked session storage keeps the page in place and shows a warning", async () => {
+  const events: string[] = []
+  await withPage("generative-ai-leader", async (reloads) => {
+    window.sessionStorage.getItem = () => { throw new Error("storage unavailable") }
+    assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+    assert.equal(reloads(), 0)
+    assert.deepEqual(events, [EXAM_REFRESH_FAILED])
+  }, events)
+})
+
 test("exam-header: an unresponsive worker leaves the page in place and shows a warning", async () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
   Object.defineProperty(globalThis, "navigator", {

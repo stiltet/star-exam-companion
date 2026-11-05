@@ -32,6 +32,7 @@ async function tellWorker(worker: ServiceWorker): Promise<boolean> {
   try {
     channel = new MessageChannel()
   } catch {
+    // Try an updated worker; if that fails, the caller offers a retry.
     return false
   }
   return new Promise<boolean>((resolve) => {
@@ -49,6 +50,7 @@ async function tellWorker(worker: ServiceWorker): Promise<boolean> {
     try {
       worker.postMessage("quiz-mac-reachable", [channel.port2])
     } catch {
+      // Try an updated worker; if that fails, the caller offers a retry.
       channel.port2.close()
       finish(false)
     }
@@ -79,6 +81,7 @@ async function updatedController(container: ServiceWorkerContainer, previous: Se
     try {
       registration = container.getRegistration()
     } catch {
+      // The caller keeps the page in place and offers a retry.
       finish(null)
       return
     }
@@ -136,6 +139,7 @@ export async function followWrongExam(response: Response): Promise<boolean> {
     if (Date.now() - last <= RELOAD_GAP_MS) return true
     window.sessionStorage.setItem(RELOADED_KEY, String(Date.now()))
   } catch {
+    // Without the reload guard, keep the page in place and offer a retry.
     showRefreshFailure()
     return true
   }
