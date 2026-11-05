@@ -77,7 +77,9 @@ exam, so two exams never mix answers and a copied file says which exam it is. An
 studied before exams were named finds its old `quiz/scores.jsonl` and browser data moved to the
 Generative AI Leader names the first time it runs, with a backup copy first. Night reading places
 and cached recordings also belong to an exam. An older, unlabelled Night recording is assumed to
-be Generative AI Leader's and remains available offline.
+be Generative AI Leader's and remains available offline. An older Night page that does not name its
+exam is refused a different exam's recording and asks to be reloaded, so it cannot store that
+recording under the old unlabelled name.
 
 The move to exam-named files is one way. To go back to an older build, copy
 `quiz/scores-backups/scores-generative-ai-leader-before-exam-names.jsonl` to `quiz/scores.jsonl`.

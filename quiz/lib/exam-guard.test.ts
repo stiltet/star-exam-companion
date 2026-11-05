@@ -15,3 +15,12 @@ test("exam-guard: the same exam, and a page older than the header, pass", () => 
   assert.equal(wrongExam(request({ "x-quiz-exam": "generative-ai-leader" }), "generative-ai-leader"), null)
   assert.equal(wrongExam(request(), "generative-ai-leader"), null)
 })
+
+test("exam-guard: a caller can limit an older headerless page to its original exam", async () => {
+  const legacy = "generative-ai-leader"
+  assert.equal(wrongExam(request(), legacy, legacy), null)
+  const refused = wrongExam(request(), "agentic-architect", legacy)
+  assert.equal(refused?.status, 409)
+  assert.deepEqual(await refused?.json(), { ok: false, wrongExam: "agentic-architect" })
+  assert.equal(wrongExam(request({ "x-quiz-exam": "agentic-architect" }), "agentic-architect", legacy), null)
+})

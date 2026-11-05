@@ -246,8 +246,7 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
 // One build per exam, since each reads its own courses and keeps its own state.
 const shared = new Map<string, ReturnType<typeof createNightBuild>>()
 
-export function beginNightBuild(retry: boolean, preload = false): NightBuildState {
-  const exam = examId()
+export function beginNightBuild(retry: boolean, preload = false, exam = examId()): NightBuildState {
   let build = shared.get(exam)
   if (!build) {
     build = createNightBuild({
@@ -265,16 +264,25 @@ export function nightStatusResponse(request: Request): Response {
   if (browserOrigin(request) === REFUSED_ORIGIN) {
     return Response.json({ state: "failed", error: "This Mac does not answer to that name.", done: 0, total: 0 }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
-  const wrong = wrongExam(request, examId())
-  if (wrong) return wrong
+  const exam = examId()
+  const wrong = wrongExam(request, exam, DEFAULT_EXAM)
+  if (wrong) {
+    if (!request.headers.has("x-quiz-exam")) {
+      return Response.json(
+        { ok: false, wrongExam: exam, state: "failed", error: "The exam changed. Reload Night reading for the exam the Mac now serves.", done: 0, total: 0 },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
+      )
+    }
+    return wrong
+  }
   const retry = new URL(request.url).searchParams.get("retry") === "1"
-  return Response.json(beginNightBuild(retry), { headers: { "Cache-Control": "no-store" } })
+  return Response.json(beginNightBuild(retry, false, exam), { headers: { "Cache-Control": "no-store" } })
 }
 
 export async function nightAudioResponse(request: Request, params: Promise<{ key: string }>): Promise<Response> {
   if (browserOrigin(request) === REFUSED_ORIGIN) return new Response("Not found", { status: 400 })
   const exam = examId()
-  const wrong = wrongExam(request, exam)
+  const wrong = wrongExam(request, exam, DEFAULT_EXAM)
   if (wrong) return wrong
   const { key } = await params
   const rangeHeader = request.headers.get("range")

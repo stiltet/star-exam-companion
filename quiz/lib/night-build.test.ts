@@ -205,6 +205,33 @@ test("Night status and audio refuse a page belonging to another exam", async () 
   }
 })
 
+test("a headerless older Night page cannot store another exam's recording under a legacy key", async () => {
+  const before = { exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
+  process.env.QUIZ_EXAM = "agentic-architect"
+  process.env.QUIZ_EXAM_SETTING_FILE = path.join(scratch, "no-exam-setting.json")
+  try {
+    const headers = { host: "localhost" }
+    const status = nightStatusResponse(new Request("http://localhost/api/night", { headers }))
+    const audio = await nightAudioResponse(new Request("http://localhost/api/night/audio/anything", { headers }), Promise.resolve({ key: "a".repeat(64) }))
+    assert.equal(status.status, 409)
+    assert.deepEqual(await status.json(), {
+      ok: false,
+      wrongExam: "agentic-architect",
+      state: "failed",
+      error: "The exam changed. Reload Night reading for the exam the Mac now serves.",
+      done: 0,
+      total: 0,
+    })
+    assert.equal(audio.status, 409)
+    assert.deepEqual(await audio.json(), { ok: false, wrongExam: "agentic-architect" })
+  } finally {
+    if (before.exam === undefined) delete process.env.QUIZ_EXAM
+    else process.env.QUIZ_EXAM = before.exam
+    if (before.setting === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+    else process.env.QUIZ_EXAM_SETTING_FILE = before.setting
+  }
+})
+
 test("a real recording's duration matches its chapter list", { timeout: 180_000, skip: process.platform !== "darwin" && "needs the Mac's say, afconvert and afinfo" }, async () => {
   const spoken = nightParts([
     { id: "1", title: "Example", readings: [{ number: 1, title: "One", paragraphs: [{ text: "Hello.", heading: false }] }, { number: 2, title: "Two", paragraphs: [{ text: "Good night.", heading: false }] }] },
