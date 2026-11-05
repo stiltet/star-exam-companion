@@ -8,7 +8,7 @@ import { loadPlay, readScores } from "./load.ts"
 import { practiceItems, writtenPool } from "./questions.ts"
 import { postScores } from "./scores-route.ts"
 import type { Answer } from "./score.ts"
-import { testBank, testPack } from "./test-pack.ts"
+import { testBank, testPack, whileServing } from "./test-pack.ts"
 
 // A test reads the default exam, whatever exam this machine has chosen on the Progress page.
 process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
@@ -99,4 +99,14 @@ test("a page of another exam than the Mac serves is refused with the exam served
   assert.equal(current.status, 200)
   const older = await postScores(request([answer(903)]))
   assert.equal(older.status, 200, "a page older than the exam header is still accepted")
+})
+
+test("a page older than the exam header belongs to the default exam: after a switch its answers are refused and kept, never marked gone", async () => {
+  const before = readScores(file).lines.length
+  // q1 is a Generative AI Leader question. Checked against Agentic Architect it would be "gone", and the page would delete it.
+  const queued = [answer(904), answer(905)]
+  const stale = await whileServing("agentic-architect", () => postScores(request(queued)))
+  assert.equal(stale.status, 409, "refused, so the older page keeps its queue for the exam it belongs to")
+  assert.deepEqual(await stale.json(), { ok: false, wrongExam: "agentic-architect" })
+  assert.equal(readScores(file).lines.length, before, "nothing was stored against the other exam")
 })

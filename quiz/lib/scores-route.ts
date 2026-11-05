@@ -4,6 +4,7 @@ import { readJsonBody } from "./body.ts"
 import { browserOrigin, sameOrigin } from "./origin.ts"
 import { acceptBatch, storeAnswers } from "./score.ts"
 import { wrongExam } from "./exam-guard.ts"
+import { DEFAULT_EXAM } from "./scope.ts"
 import { practiceItems, writtenPool } from "./questions.ts"
 
 const MAX_BATCH_BYTES = 1024 * 1024
@@ -13,7 +14,9 @@ export async function postScores(request: Request): Promise<Response> {
   const body = await readJsonBody(request, MAX_BATCH_BYTES)
   const play = loadPlay()
   if (!play.ok) return Response.json({ ok: false }, { status: 400 })
-  const wrong = wrongExam(request, play.pack.meta.id)
+  // A page older than the exam header can only belong to the default exam, the one exam the quiz had before packs.
+  // Checked as that exam, so after a switch its queued answers are refused (and kept on the device), never marked gone.
+  const wrong = wrongExam(request, play.pack.meta.id, DEFAULT_EXAM)
   if (wrong) return wrong
   const decision = acceptBatch({
     origin: request.headers.get("origin"),

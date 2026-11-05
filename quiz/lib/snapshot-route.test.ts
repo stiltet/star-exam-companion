@@ -5,6 +5,7 @@ import path from "node:path"
 import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
 import { getSnapshot } from "./snapshot-route.ts"
+import { whileServing } from "./test-pack.ts"
 
 // A test reads the default exam, whatever exam this machine has chosen on the Progress page.
 process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
@@ -37,4 +38,10 @@ test("snapshot-route: the exam served, and a page older than the header, get the
     assert.equal(body.ok, true)
     assert.ok(body.snapshot.items.length > 0)
   }
+})
+
+test("snapshot-route: a page older than the exam header belongs to the default exam, so it gets no other exam's snapshot", async () => {
+  const response = await whileServing("agentic-architect", () => getSnapshot(request()))
+  assert.equal(response.status, 409)
+  assert.deepEqual(await response.json(), { ok: false, wrongExam: "agentic-architect" })
 })

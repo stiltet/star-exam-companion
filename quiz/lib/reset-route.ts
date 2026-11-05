@@ -1,6 +1,7 @@
 import path from "node:path"
 import { readJsonBody } from "./body.ts"
 import { wrongExam } from "./exam-guard.ts"
+import { DEFAULT_EXAM } from "./scope.ts"
 import { loadPlay, scoresFile } from "./load.ts"
 import { browserOrigin, sameOrigin } from "./origin.ts"
 import { acceptReset, resetScores } from "./reset.ts"
@@ -11,7 +12,8 @@ export async function postReset(request: Request): Promise<Response> {
   if (!sameOrigin(request)) return Response.json({ ok: false }, { status: 400 })
   const play = loadPlay()
   if (!play.ok) return Response.json({ ok: false }, { status: 400 })
-  const wrong = wrongExam(request, play.pack.meta.id)
+  // A page older than the exam header belongs to the default exam, so it can never empty another exam's scores.
+  const wrong = wrongExam(request, play.pack.meta.id, DEFAULT_EXAM)
   if (wrong) return wrong
   const accepted = acceptReset({
     origin: request.headers.get("origin"),

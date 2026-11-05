@@ -5,6 +5,7 @@ import path from "node:path"
 import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
 import { postReset } from "./reset-route.ts"
+import { whileServing } from "./test-pack.ts"
 
 // A test reads the default exam, whatever exam this machine has chosen on the Progress page.
 process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
@@ -44,4 +45,12 @@ test("reset-route: the exam served, and a page older than the header, reset afte
   assert.equal(readFileSync(file, "utf8"), "")
   writeFileSync(file, '{"id":"again"}\n')
   assert.equal((await postReset(request())).status, 200)
+})
+
+test("reset-route: a page older than the exam header belongs to the default exam, so it cannot empty another exam's scores", async () => {
+  writeFileSync(file, '{"id":"kept"}\n')
+  const response = await whileServing("agentic-architect", () => postReset(request()))
+  assert.equal(response.status, 409)
+  assert.deepEqual(await response.json(), { ok: false, wrongExam: "agentic-architect" })
+  assert.equal(readFileSync(file, "utf8"), '{"id":"kept"}\n', "the scores are untouched")
 })
