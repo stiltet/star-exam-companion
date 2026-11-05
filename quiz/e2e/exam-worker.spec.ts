@@ -22,13 +22,25 @@ self.addEventListener("fetch", (event) => {
 
 async function workerProxy(baseURL: string) {
   let legacy = true
+  const base = new URL(baseURL)
   const server = createServer((incoming, outgoing) => {
-    if (legacy && new URL(incoming.url ?? "/", baseURL).pathname === "/sw.js") {
+    // Only a path on the app under test is forwarded: the host, port and protocol come from baseURL alone.
+    const target = incoming.url ?? "/"
+    if (!target.startsWith("/") || target.startsWith("//")) {
+      outgoing.writeHead(400)
+      outgoing.end()
+      return
+    }
+    if (legacy && new URL(target, base).pathname === "/sw.js") {
       outgoing.writeHead(200, { "Content-Type": "application/javascript", "Cache-Control": "no-store" })
       outgoing.end(LEGACY_WORKER)
       return
     }
-    const upstream = request(new URL(incoming.url ?? "/", baseURL), {
+    const upstream = request({
+      protocol: base.protocol,
+      hostname: base.hostname,
+      port: base.port,
+      path: target,
       method: incoming.method,
       headers: incoming.headers,
     }, (response) => {
