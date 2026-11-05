@@ -8,6 +8,9 @@ import { BUILD_LOG, buildProblem, buildRecording, createNightBuild, encodeNightA
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
 
+// A test reads the default exam, whatever exam this machine has chosen on the Progress page.
+process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
+
 const scratch = mkdtempSync(path.join(tmpdir(), "night-"))
 after(() => {
   delete process.env.NIGHT_DIR

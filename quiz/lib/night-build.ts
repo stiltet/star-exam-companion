@@ -265,7 +265,7 @@ export function nightStatusResponse(request: Request): Response {
     return Response.json({ state: "failed", error: "This Mac does not answer to that name.", done: 0, total: 0 }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
   const exam = examId()
-  const wrong = wrongExam(request, exam, DEFAULT_EXAM)
+  const wrong = wrongExam(request, exam)
   if (wrong) {
     if (!request.headers.has("x-quiz-exam")) {
       return Response.json(
@@ -282,7 +282,7 @@ export function nightStatusResponse(request: Request): Response {
 export async function nightAudioResponse(request: Request, params: Promise<{ key: string }>): Promise<Response> {
   if (browserOrigin(request) === REFUSED_ORIGIN) return new Response("Not found", { status: 400 })
   const exam = examId()
-  const wrong = wrongExam(request, exam, DEFAULT_EXAM)
+  const wrong = wrongExam(request, exam)
   if (wrong) return wrong
   const { key } = await params
   const rangeHeader = request.headers.get("range")

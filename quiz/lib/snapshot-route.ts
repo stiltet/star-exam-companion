@@ -1,5 +1,4 @@
 import { wrongExam } from "./exam-guard.ts"
-import { DEFAULT_EXAM } from "./scope.ts"
 import { loadPlay } from "./load.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
 import type { Snapshot } from "./snapshot.ts"
@@ -14,9 +13,7 @@ export async function getSnapshot(request: Request): Promise<Response> {
   if (browserOrigin(request) === REFUSED_ORIGIN) return Response.json({ ok: false }, { status: 400, headers: NO_STORE })
   const play = loadPlay()
   if (!play.ok) return Response.json({ ok: false, row: play.row, error: play.error }, { status: 409, headers: NO_STORE })
-  // A page older than the exam header belongs to the default exam: it must not store another exam's snapshot under
-  // the plain names, which the default exam later takes over as its own.
-  const wrong = wrongExam(request, play.pack.meta.id, DEFAULT_EXAM)
+  const wrong = wrongExam(request, play.pack.meta.id)
   if (wrong) return wrong
   const snapshot: Snapshot = {
     items: play.items,
