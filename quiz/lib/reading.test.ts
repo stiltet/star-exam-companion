@@ -56,7 +56,16 @@ test("HTML becomes plain paragraphs with entities decoded", () => {
   assert.deepEqual(htmlParagraphs(undefined), [])
   assert.deepEqual(htmlParagraphs("<p><span>Gen</span>AI, <b>x</b>.</p>"), ["GenAI, x."])
   assert.deepEqual(htmlParagraphs("<p>Bad &#99999999; code</p>"), ["Bad &#99999999; code"])
+  assert.deepEqual(htmlParagraphs("<p>&copy; &#0; &amp;amp; &lt;tag&gt;</p>"), ["&copy; &#0; &amp; <tag>"])
   assert.deepEqual(htmlParagraphs("<p>Before<script>hidden</script>after<style>hidden</style>end</p>"), ["Before after end"])
+})
+
+test("ignored closing tags do not leak into text split around a list", () => {
+  assert.deepEqual(htmlBlocks("<div>Intro<ul><li>X</li></ul>end</div> tail"), [
+    { text: "Intro" },
+    { items: ["X"] },
+    { text: "end tail" },
+  ])
 })
 
 test("noscript markup is extracted as text", () => {
@@ -84,7 +93,7 @@ test("malformed nested script-like tags remain escaped text", () => {
     ...htmlParagraphs("<p><scr<script>x</script>ipt>alert(1)</p>"),
     ...htmlParagraphs("<p><<b>script></p>"),
   ]
-  assert.deepEqual(paragraphs, ["x</script>ipt>alert(1)", "<script>"])
+  assert.deepEqual(paragraphs, ["xipt>alert(1)", "<script>"])
   const markup = paragraphs.map((paragraph) => renderToStaticMarkup(createElement("p", null, paragraph))).join("")
   assert.doesNotMatch(markup, /<\/?script\b/i)
 })

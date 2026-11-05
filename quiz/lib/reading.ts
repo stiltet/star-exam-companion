@@ -68,8 +68,8 @@ function decode(text: string): string {
 // The paragraphs of an HTML fragment as plain text: block ends and <br> break paragraphs.
 export function htmlParagraphs(input: unknown): string[] {
   if (typeof input !== "string") return []
-  const html = input
-  const fragment = parseFragment(html, { sourceCodeLocationInfo: true, scriptingEnabled: false })
+  // Keep the existing entity rules while letting the parser discard ignored markup.
+  const fragment = parseFragment(input.replaceAll("&", "&amp;"), { scriptingEnabled: false })
   const paragraphs: string[] = []
   const blockTags = new Set(["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "ul", "ol", "blockquote"])
   let paragraph = ""
@@ -79,10 +79,7 @@ export function htmlParagraphs(input: unknown): string[] {
   }
   function visit(node: DefaultTreeAdapterMap["childNode"]): void {
     if (node.nodeName === "#text" && "value" in node) {
-      const location = node.sourceCodeLocation
-      paragraph += location
-        ? decode(html.slice(location.startOffset, location.endOffset))
-        : node.value
+      paragraph += decode(node.value)
       return
     }
     const tag = "tagName" in node ? node.tagName : undefined
