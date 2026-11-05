@@ -9,8 +9,12 @@ import { STATIC_DEMO } from "@/lib/static-demo"
 // pages before it takes over and drops the old caches, so offline keeps working throughout.
 async function refreshWorker(): Promise<void> {
   if (!("serviceWorker" in navigator)) return
-  const registration = await navigator.serviceWorker.getRegistration()
-  await registration?.update()
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    await registration?.update()
+  } catch {
+    // No worker to ask, or the page is unloading ("Context is stopped" in WebKit): the next visit asks again.
+  }
 }
 
 // A laptop, for the Mac: a tick on its screen when the questions came fresh from it, a slash

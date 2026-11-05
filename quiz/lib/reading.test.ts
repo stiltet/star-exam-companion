@@ -3,9 +3,13 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { readFileSync } from "node:fs"
 import test from "node:test"
+import { loadPack } from "./pack.ts"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
-import { COURSES, reviewStop } from "./reading-view.ts"
-import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewUrl, splitLong, type Bundle } from "./reading.ts"
+import { reviewStop } from "./reading-view.ts"
+import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewUrl, riseUrl, splitLong, type Bundle } from "./reading.ts"
+import { testPack, testRoot } from "./test-pack.ts"
+
+const COURSES = testPack.courses
 
 // A made-up bundle in the shape of Google's course/en/*.json: page → article → block → component.
 function bundle(): Bundle {
@@ -52,7 +56,16 @@ test("HTML becomes plain paragraphs with entities decoded", () => {
   assert.deepEqual(htmlParagraphs(undefined), [])
   assert.deepEqual(htmlParagraphs("<p><span>Gen</span>AI, <b>x</b>.</p>"), ["GenAI, x."])
   assert.deepEqual(htmlParagraphs("<p>Bad &#99999999; code</p>"), ["Bad &#99999999; code"])
+  assert.deepEqual(htmlParagraphs("<p>&copy; &#0; &amp;amp; &lt;tag&gt;</p>"), ["&copy; &#0; &amp; <tag>"])
   assert.deepEqual(htmlParagraphs("<p>Before<script>hidden</script>after<style>hidden</style>end</p>"), ["Before after end"])
+})
+
+test("ignored closing tags do not leak into text split around a list", () => {
+  assert.deepEqual(htmlBlocks("<div>Intro<ul><li>X</li></ul>end</div> tail"), [
+    { text: "Intro" },
+    { items: ["X"] },
+    { text: "end tail" },
+  ])
 })
 
 test("noscript markup is extracted as text", () => {
@@ -80,7 +93,7 @@ test("malformed nested script-like tags remain escaped text", () => {
     ...htmlParagraphs("<p><scr<script>x</script>ipt>alert(1)</p>"),
     ...htmlParagraphs("<p><<b>script></p>"),
   ]
-  assert.deepEqual(paragraphs, ["x</script>ipt>alert(1)", "<script>"])
+  assert.deepEqual(paragraphs, ["xipt>alert(1)", "<script>"])
   const markup = paragraphs.map((paragraph) => renderToStaticMarkup(createElement("p", null, paragraph))).join("")
   assert.doesNotMatch(markup, /<\/?script\b/i)
 })
@@ -201,16 +214,16 @@ test("a flip card's back or a tab's body that repeats its name reads the name on
 const twoPages = [{ id: "x", title: "First" }, { id: "y", title: "Last" }]
 
 test("NEXT leads to the course's next reading", () => {
-  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "x"), { href: "/read/2/y", title: "Last" })
+  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "x", COURSES), { href: "/read/2/y", title: "Last" })
 })
 
 test("after a course's last reading, NEXT leads to the next course", () => {
-  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "y"), { href: "/read/3", title: `Course 3, ${COURSES[2]!.title}` })
+  assert.deepEqual(nextReading(COURSES[1]!, twoPages, "y", COURSES), { href: "/read/3", title: `Course 3, ${COURSES[2]!.title}` })
 })
 
 test("after the last course, and from an unknown page, there is no NEXT", () => {
-  assert.equal(nextReading(COURSES[COURSES.length - 1]!, twoPages, "y"), null)
-  assert.equal(nextReading(COURSES[1]!, twoPages, "nope"), null)
+  assert.equal(nextReading(COURSES[COURSES.length - 1]!, twoPages, "y", COURSES), null)
+  assert.equal(nextReading(COURSES[1]!, twoPages, "nope", COURSES), null)
 })
 
 test("an unknown or switched-off page has no reading", () => {
@@ -231,6 +244,18 @@ test("each reading links to its own page on Google Skills, or to the course when
   assert.deepEqual(ids, ["652141", "652142"])
   assert.deepEqual(reviewUrl(course, ids, 2, 1), { url: "https://www.skills.google/paths/1951/course_templates/1265/html_bundles/652142", direct: true })
   assert.deepEqual(reviewUrl(course, ids, 3, 1), { url: "https://www.skills.google/paths/1951/course_templates/1265", direct: false })
+})
+
+test("reading navigation and source URLs follow the selected exam pack", () => {
+  const courses = loadPack(testRoot, "agentic-architect").courses
+  const first = courses[0]
+  const rise = courses.find((course) => course.format === "rise")
+  assert.ok(first)
+  assert.ok(rise)
+  assert.deepEqual(nextReading(first, twoPages, "y", courses), { href: "/read/2", title: "Course 2, Optimize Agent Behavior" })
+  assert.deepEqual(reviewUrl(first, ["123"], 1, 0), { url: "https://www.skills.google/paths/4525/course_templates/1584/html_bundles/123", direct: true })
+  assert.equal(bundleUrl(first, "components"), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-DEVAGENTMEM-B/2.0/course/en/components.json")
+  assert.equal(riseUrl(rise), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-AGTOPS-I/v1.0.0/EN/runtime-data.js")
 })
 
 test("a short paragraph that is all bold, or an HTML heading, is a heading; bold inside text is not", () => {

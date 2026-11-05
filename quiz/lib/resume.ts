@@ -1,4 +1,5 @@
 import type { Store } from "./outbox.ts"
+import { scoped } from "./scope.ts"
 
 // Where each mode left off, kept on the device only. Anything unreadable, or pointing at a
 // question or term no longer in the glossary, starts afresh instead of guessing.
@@ -38,7 +39,7 @@ function names(value: unknown, ids: ReadonlySet<string>): string[] | null {
   return value as string[]
 }
 
-export const practiceKey = (filter: string) => `quiz-practice:${filter}`
+export const practiceKey = (filter: string) => `${scoped("quiz-practice")}:${filter}`
 
 export type PracticePlace = { id: string; picked: Record<string, number> }
 
@@ -50,7 +51,7 @@ export function practicePlace(ids: string[], saved: unknown): { index: number; p
   return { index: Math.max(0, index), picked: choices(place?.picked, new Set(ids)) }
 }
 
-export const EXAM_KEY = "quiz-exam"
+export const EXAM_KEY = scoped("quiz-exam")
 
 export type ExamSaved = {
   ids: string[]
@@ -94,7 +95,7 @@ export function examSeconds(startedAt: number, finishedAt: number, duration: num
   return Math.min(duration, Math.max(0, Math.round((finishedAt - startedAt) / 1000)))
 }
 
-export const CARDS_KEY = "quiz-flashcards"
+export const CARDS_KEY = scoped("quiz-flashcards")
 
 // After a reset every mode starts afresh: the Practice places, the exam and the flashcards.
 export function clearDeviceSessions(store: Pick<Storage, "length" | "key" | "removeItem">): void {

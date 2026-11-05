@@ -1,9 +1,7 @@
 node_modules
-.next
-.next-service
+.next*
 .DS_Store
 next-env.d.ts
 tsconfig.tsbuildinfo
-.next-e2e
 test-results/
 playwright-report/

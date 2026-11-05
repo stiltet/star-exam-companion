@@ -4,9 +4,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, buildProblem, buildRecording, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, buildProblem, buildRecording, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
+
+// A test reads the default exam, whatever exam this machine has chosen on the Progress page.
+process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
 
 const scratch = mkdtempSync(path.join(tmpdir(), "night-"))
 after(() => {
@@ -143,6 +146,41 @@ test("a failed build can be tried again, and a stranger is refused before one st
   assert.equal(refused.status, 400)
 })
 
+test("a failed build can retry while its log is still being written", async () => {
+  for (const preload of [false, true]) {
+    const next = Promise.withResolvers<NightPart[]>()
+    let loads = 0
+    const build = createNightBuild({
+      dir: path.join(scratch, `retry-during-log-${preload}`),
+      load: () => {
+        loads += 1
+        return loads === 1 ? Promise.reject(new Error("offline")) : next.promise
+      },
+      render: async (_script, file) => {
+        writeFileSync(file, tone(1))
+        return true
+      },
+      encode: async (_wav, m4a) => {
+        writeFileSync(m4a, "audio")
+      },
+    })
+    build.begin(false, preload)
+    const failedJob = build.idle()
+    await Promise.resolve()
+    if (!preload) assert.equal(build.begin(false).state, "failed")
+    assert.equal(build.begin(!preload).state, "checking")
+    const retryJob = build.idle()
+    assert.equal(loads, 2)
+
+    await failedJob
+    assert.equal(build.begin(true).state, "checking")
+    assert.equal(loads, 2, "the older log must not clear the new build")
+    next.resolve(parts)
+    await retryJob
+    assert.equal(build.begin(false).state, "ready")
+  }
+})
+
 test("the recording answers a byte range and refuses a range past the end", async () => {
   const dir = path.join(scratch, "audio")
   const key = "c".repeat(64)
@@ -158,6 +196,43 @@ test("the recording answers a byte range and refuses a range past the end", asyn
   assert.equal(past.status, 416)
   const missing = await nightAudioResponse(new Request("http://localhost/api/night/audio/nope", { headers: { host: "localhost" } }), Promise.resolve({ key: "../secret" }))
   assert.equal(missing.status, 404)
+})
+
+test("Night status and audio refuse a page belonging to another exam", async () => {
+  const headers = { host: "localhost", "x-quiz-exam": "another-exam" }
+  const status = nightStatusResponse(new Request("http://localhost/api/night", { headers }))
+  const audio = await nightAudioResponse(new Request("http://localhost/api/night/audio/anything", { headers }), Promise.resolve({ key: "a".repeat(64) }))
+  for (const response of [status, audio]) {
+    assert.equal(response.status, 409)
+    assert.equal(typeof (await response.json()).wrongExam, "string")
+  }
+})
+
+test("a headerless older Night page cannot store another exam's recording under a legacy key", async () => {
+  const before = { exam: process.env.QUIZ_EXAM, setting: process.env.QUIZ_EXAM_SETTING_FILE }
+  process.env.QUIZ_EXAM = "agentic-architect"
+  process.env.QUIZ_EXAM_SETTING_FILE = path.join(scratch, "no-exam-setting.json")
+  try {
+    const headers = { host: "localhost" }
+    const status = nightStatusResponse(new Request("http://localhost/api/night", { headers }))
+    const audio = await nightAudioResponse(new Request("http://localhost/api/night/audio/anything", { headers }), Promise.resolve({ key: "a".repeat(64) }))
+    assert.equal(status.status, 409)
+    assert.deepEqual(await status.json(), {
+      ok: false,
+      wrongExam: "agentic-architect",
+      state: "failed",
+      error: "The exam changed. Reload Night reading for the exam the Mac now serves.",
+      done: 0,
+      total: 0,
+    })
+    assert.equal(audio.status, 409)
+    assert.deepEqual(await audio.json(), { ok: false, wrongExam: "agentic-architect" })
+  } finally {
+    if (before.exam === undefined) delete process.env.QUIZ_EXAM
+    else process.env.QUIZ_EXAM = before.exam
+    if (before.setting === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+    else process.env.QUIZ_EXAM_SETTING_FILE = before.setting
+  }
 })
 
 test("a real recording's duration matches its chapter list", { timeout: 180_000, skip: process.platform !== "darwin" && "needs the Mac's say, afconvert and afinfo" }, async () => {
@@ -227,4 +302,47 @@ test("a system error reaches the page as a sentence without the Mac's paths", ()
 test("the phone fetches the recording past the browser's cache, since a rebuild keeps its address", () => {
   const source = readFileSync(new URL("../components/night-reader.tsx", import.meta.url), "utf8")
   assert.match(source, /fetch\(`\/api\/night\/audio\/\$\{ready\.key\}`, \{ cache: "no-store"/)
+})
+
+test("each exam keeps its night recording in its own folder, so one exam's build never clears another's", () => {
+  const before = process.env.NIGHT_DIR
+  delete process.env.NIGHT_DIR
+  try {
+    assert.equal(nightDirFor("generative-ai-leader"), nightDir(), "the default exam keeps the cache folder where its recording already is")
+    assert.equal(nightDirFor("agentic-architect"), path.join(nightDir(), "agentic-architect"))
+  } finally {
+    if (before !== undefined) process.env.NIGHT_DIR = before
+  }
+})
+
+test("a build in the default exam's folder clears its own old recordings and leaves another exam's folder alone", async () => {
+  const before = process.env.NIGHT_DIR
+  process.env.NIGHT_DIR = path.join(scratch, "per-exam")
+  try {
+    const mine = nightDirFor("generative-ai-leader")
+    const theirs = nightDirFor("agentic-architect")
+    assert.equal(path.dirname(theirs), mine, "the other exam's folder sits inside the default one, the case a prune could harm")
+    const staleKey = "c".repeat(64)
+    const theirKey = "d".repeat(64)
+    mkdirSync(path.join(mine, staleKey), { recursive: true })
+    writeFileSync(path.join(mine, staleKey, "night.m4a"), "old")
+    mkdirSync(path.join(theirs, theirKey), { recursive: true })
+    writeFileSync(path.join(theirs, theirKey, "night.m4a"), "theirs")
+    writeFileSync(path.join(theirs, "partial.partial"), "theirs too")
+    const encode = async (_wav: string, m4a: string) => {
+      writeFileSync(m4a, "audio")
+    }
+    const render = async (script: string, file: string) => {
+      writeFileSync(file, tone(script === "One." ? 1 : 2))
+      return true
+    }
+    const ready = await buildRecording({ dir: mine, parts, render, encode })
+    assert.equal(exists(path.join(mine, staleKey)), false, "this exam's old recording is cleared")
+    assert.equal(exists(path.join(mine, ready.key, "night.m4a")), true, "and its new one is kept")
+    assert.equal(readFileSync(path.join(theirs, theirKey, "night.m4a"), "utf8"), "theirs", "the other exam's recording is untouched")
+    assert.equal(exists(path.join(theirs, "partial.partial")), true, "so is its unfinished work")
+  } finally {
+    if (before === undefined) delete process.env.NIGHT_DIR
+    else process.env.NIGHT_DIR = before
+  }
 })

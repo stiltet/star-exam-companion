@@ -6,10 +6,11 @@ import { answeredIds, courseLabel, sectionLabel, examHistory, flashcardProgress,
 import { itemsFromGlossary } from "./round.ts"
 import { absorbSent, isSnapshot, readSnapshot, SNAPSHOT_KEY, writeSnapshot, type Snapshot } from "./snapshot.ts"
 import { parseGlossary } from "./sources.ts"
+import { testBank, testPack } from "./test-pack.ts"
 
-const parsed = parseGlossary(readFileSync(new URL("../../glossary.md", import.meta.url), "utf8"))
+const parsed = parseGlossary(testPack.glossaryText)
 if (!parsed.ok) throw new Error(`glossary row ${parsed.row}: ${parsed.error}`)
-const items = itemsFromGlossary(parsed.glossary)
+const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
 const first = items[0]?.id ?? ""
 const sections = [{ id: 1, title: "fundamentals", weight: 30 }]
 const line = (mode: string, asked: string[], missed: string[] = [], extra: Partial<ScoreLine> = {}): ScoreLine => ({ date: "2026-10-01", session: 1, mode, asked, missed, ...extra })

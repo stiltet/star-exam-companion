@@ -1,12 +1,19 @@
 import { test as base, expect, type Page } from "@playwright/test"
 
-export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean }>({
+// A page load that interrupts the page it replaces, as switching the exam does, makes WebKit report the requests and
+// storage calls it cut off as uncaught errors.
+const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
+
+export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean }>({
   offlineNetwork: [false, { option: true }],
-  browserChecks: [async ({ context, page, baseURL, offlineNetwork }, use) => {
+  navigationCutOff: [false, { option: true }],
+  expectedWrongExam: [false, { option: true }],
+  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff, expectedWrongExam }, use) => {
     const errors: string[] = []
     page.on("pageerror", (error) => {
       // WebKit reports refused offline prefetches and background voice downloads as pageerrors.
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/speak\/).+ due to access control checks\.$/.test(error.message)) return
+      if (navigationCutOff && CUT_OFF.test(error.message)) return
       errors.push(error.message)
     })
     page.on("console", (message) => {
@@ -17,23 +24,17 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean }
         if (url.pathname.startsWith("/api/") || url.searchParams.has("_rsc") || /^\/(?:favicon|apple-touch-icon)\.png$/.test(url.pathname)) return
       }
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
+      if (navigationCutOff && CUT_OFF.test(message.text())) return
+      if (expectedWrongExam && /status of 409\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === "/api/snapshot") return
       errors.push(message.text())
     })
     await context.addInitScript(() => {
       HTMLMediaElement.prototype.play = () => Promise.resolve()
     })
-    await context.route(/\/api\/(?:speak|night\/audio)(?:\/|$|\?)/, (route) =>
+    await context.route(/\/api\/speak(?:\/|$|\?)/, (route) =>
       route.fulfill({
         contentType: "audio/wav",
         body: Buffer.from("UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=", "base64"),
-      }),
-    )
-    await context.route(/\/api\/night(?:\?|$)/, (route) =>
-      route.fulfill({
-        json: {
-          state: "ready", key: "0".repeat(64), bytes: 44, duration: 1,
-          chapters: [{ courseId: "1", courseTitle: "Test course", number: 1, title: "Test chapter", start: 0 }],
-        },
       }),
     )
     const reset = await page.request.post("/api/scores/reset", {
@@ -55,9 +56,10 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean }
 
 export { expect }
 
-export async function openVoice(page: Page) {
+export async function openVoice(page: Page, beforeVoice?: () => Promise<void>) {
   await page.goto("/progress")
   await page.waitForLoadState("networkidle")
+  await beforeVoice?.()
   await page.getByRole("button", { name: "Open menu" }).click()
   await page.locator("header").getByRole("link", { name: /voice quiz/i }).filter({ visible: true }).click()
   await expect(page.getByRole("button", { name: /^A\./ })).toBeVisible()

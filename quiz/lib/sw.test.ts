@@ -53,7 +53,12 @@ function load(net: Net) {
     handlers.fetch?.(event)
     return answer === null ? null : await (answer as Promise<Response>)
   }
-  return { stores, store, calls, lifecycle, request }
+  const message = (data: string) => {
+    let reply: string | null = null
+    handlers.message?.({ data, ports: [{ postMessage: (value: string) => { reply = value }, close: () => {} }] })
+    return reply
+  }
+  return { stores, store, calls, lifecycle, request, message }
 }
 
 const ok = (body: string) => new Response(body, { status: 200 })
@@ -83,6 +88,40 @@ test("with no connection a page opens from the device, and the Mac is skipped fo
   assert.equal(sw.calls.length, 1, "the second visit does not wait for the Mac again")
   const missing = await sw.request("/glossary", { mode: "navigate" })
   assert.equal(missing?.status, 503)
+})
+
+test("a confirmed Mac response clears the offline backoff before the next page load", async () => {
+  let online = false
+  const sw = load(() => online ? ok("current exam") : offline())
+  sw.store("quiz-pages-b2").set(`${ORIGIN}/`, ok("previous exam"))
+  assert.equal(await (await sw.request("/", { mode: "navigate" }))?.text(), "previous exam")
+  online = true
+  assert.equal(sw.message("unrelated"), null)
+  assert.equal(await (await sw.request("/", { mode: "navigate" }))?.text(), "previous exam")
+  assert.equal(sw.message("quiz-mac-reachable"), "ready")
+  assert.equal(await (await sw.request("/", { mode: "navigate" }))?.text(), "current exam")
+  assert.equal(sw.calls.length, 2)
+})
+
+test("an older failed request cannot restore backoff after the Mac responds", async () => {
+  let started: () => void = () => {}
+  let fail: (error: Error) => void = () => {}
+  const waiting = new Promise<Response>((_resolve, reject) => { fail = reject })
+  const began = new Promise<void>((resolve) => { started = resolve })
+  let first = true
+  const sw = load(() => {
+    if (!first) return ok("current exam")
+    first = false
+    started()
+    return waiting
+  })
+  sw.store("quiz-pages-b2").set(`${ORIGIN}/`, ok("previous exam"))
+  const older = sw.request("/", { mode: "navigate" })
+  await began
+  assert.equal(sw.message("quiz-mac-reachable"), "ready")
+  fail(new TypeError("Earlier request failed"))
+  assert.equal(await (await older)?.text(), "previous exam")
+  assert.equal(await (await sw.request("/", { mode: "navigate" }))?.text(), "current exam")
 })
 
 test("a Mac error is treated like no connection", async () => {
@@ -155,9 +194,20 @@ test("a course late to answer reuses the readings it last sent, so the worker st
 })
 
 test("the page list covers every page, section, topic and Practice filter", () => {
-  const pages = pageList([{ id: "fundamentals", topics: [{ id: "ml basics" }] }], ["1", "2"])
+  const pages = pageList([{ id: "fundamentals", topics: [{ id: "ml basics" }] }], ["1", "2"], { reading: true, exam: { questions: 60, minutes: 90 } })
   for (const page of ["/", "/voice", "/read", "/read/night", "/progress", "/study/fundamentals", "/study/fundamentals/ml%20basics", "/practice?topic=ml%20basics", "/practice?section=2", "/practice?unanswered=1", "/practice?section=2&unanswered=1", "/practice?topic=ml%20basics&unanswered=1"]) {
     assert.ok(pages.includes(page), page)
   }
   assert.deepEqual(staticList(["chunks/a b.js"], "/_next/static"), ["/_next/static/chunks/a%20b.js"])
+})
+
+test("two exams that number their courses from 1 never share a course's remembered readings", async () => {
+  const last = new Map<string, { id: string }[]>()
+  const never = new Promise<null>(() => undefined)
+  const first = { id: "1", template: "1268" }
+  const other = { id: "1", template: "1584" }
+  await coursePages([first], async () => ({ ok: true as const, pages: [{ id: "gen-ai-page" }] }), never, last)
+  // The other exam's course 1 fails to load: it must not borrow the first exam's pages.
+  const result = await coursePages([other], async () => ({ ok: false as const }), Promise.resolve(null), last)
+  assert.deepEqual(result, [{ id: "1", pages: null }])
 })

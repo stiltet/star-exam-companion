@@ -1,5 +1,4 @@
 import { assignSessions, type ScoreLine } from "./learn.ts"
-import { COURSES } from "./reading-view.ts"
 
 export const MODES = ["round", "practice", "exam", "flashcard", "reading"] as const
 export type Mode = (typeof MODES)[number]
@@ -11,18 +10,31 @@ export type Mode = (typeof MODES)[number]
 export type Answer = { id: string; at: string; mode: Mode; asked: string[]; missed: string[]; seconds?: number; answers?: Record<string, number>; flagged?: string[]; retake?: true }
 
 export const MAX_BATCH = 500
-export const EXAM_SECONDS = 90 * 60
-export const MAX_EXAM_QUESTIONS = 60
+// The Practice exam's length comes from the exam pack (pack.json "exam"), as the real exam's does.
+export type ExamLength = { questions: number; minutes: number }
+export const examSeconds = (length: ExamLength): number => length.minutes * 60
 // An answer is at most this far ahead of the Mac's clock, or this far behind it.
 const CLOCK_SKEW_MS = 10 * 60 * 1000
 const OLDEST_MS = 400 * 24 * 60 * 60 * 1000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
-const READING = new RegExp(`^(${COURSES.map((course) => course.id).join("|")})/[0-9a-f]{24}$`)
+
+// One pattern per list of courses, built once rather than for every reading in a batch.
+const patterns = new Map<string, RegExp>()
+function readingPattern(ids: readonly string[]): RegExp {
+  const key = ids.join("|")
+  let pattern = patterns.get(key)
+  if (!pattern) {
+    pattern = new RegExp(`^(${key})/[0-9a-f]{24}$`)
+    patterns.set(key, pattern)
+  }
+  return pattern
+}
 
 // One answer from a batch, or null. Round and practice ask a question, flashcard a glossary term,
 // one per line; an exam lists its questions and the seconds it took.
-type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string> }
+// examLength and courseIds come from the exam pack, so no exam is the default.
+type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string>; examLength: ExamLength; courseIds: readonly string[] }
 
 function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer | string {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "The saved answer is not an object."
@@ -42,7 +54,10 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   // never missed. The page itself is not checked against Google's bundle, which may be offline.
   if (mode === "reading") {
     if (asked.length !== 1 || missed.length !== 0) return "A reading is saved one at a time and is never missed."
-    if (!asked.every((item) => typeof item === "string" && READING.test(item))) return "The reading is not a known course's page."
+    // A pack with no course has nothing to read: an empty list would otherwise make a pattern that matches any course.
+    if (known.courseIds.length === 0) return "The reading is not a known course's page."
+    const reading = readingPattern(known.courseIds)
+    if (!asked.every((item) => typeof item === "string" && reading.test(item))) return "The reading is not a known course's page."
     return { id, at, mode, asked: asked as string[], missed: [] }
   }
   const pool = mode === "flashcard" ? known.termNames : mode === "round" ? known.roundIds ?? known.bankIds : known.bankIds
@@ -50,8 +65,9 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   if (!missed.every((item) => typeof item === "string" && asked.includes(item))) return "A missed question is not in the saved answer's question list."
   if (new Set(asked).size !== asked.length || new Set(missed).size !== missed.length) return "The saved question lists contain duplicates."
   if (mode === "exam") {
-    if (asked.length < 1 || asked.length > MAX_EXAM_QUESTIONS) return `An exam must contain 1 to ${MAX_EXAM_QUESTIONS} questions.`
-    if (typeof seconds !== "number" || !Number.isInteger(seconds) || seconds < 0 || seconds > EXAM_SECONDS) return "The exam duration must be between 0 and 5400 whole seconds."
+    const length = known.examLength
+    if (asked.length < 1 || asked.length > length.questions) return `An exam must contain 1 to ${length.questions} questions.`
+    if (typeof seconds !== "number" || !Number.isInteger(seconds) || seconds < 0 || seconds > examSeconds(length)) return `The exam duration must be between 0 and ${examSeconds(length)} whole seconds.`
     const review = examReview(asked as string[], missed as string[], answers, flagged)
     if (typeof review === "string") return review
     if (retake !== undefined && retake !== true) return "Only true marks an exam as a retake."
@@ -106,6 +122,8 @@ export function acceptBatch(input: {
   bankIds: ReadonlySet<string>
   roundIds?: ReadonlySet<string>
   termNames: ReadonlySet<string>
+  examLength: ExamLength
+  courseIds: readonly string[]
   now: number
 }): { ok: true; answers: Answer[]; rejected: string[]; gone: string[]; reasons: Record<string, string> } | { ok: false } {
   if (input.origin !== input.allowedOrigin) return { ok: false }

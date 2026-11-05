@@ -1,0 +1,707 @@
+[
+  {
+    "id": "screen-prompts",
+    "correct": "Model Armor",
+    "distractors": [
+      "Agent Registry",
+      "Skill Registry",
+      "Agents CLI"
+    ],
+    "scene": "A support agent passes customer messages to a language model and returns its replies. The security team wants every prompt and every reply screened for prompt injection attempts and leaked card numbers before anything reaches the customer. Which should they use?",
+    "constraint": "The need is to screen the content of prompts and replies, not to catalogue agents, package skills or build the agent."
+  },
+  {
+    "id": "agent-catalog",
+    "correct": "Agent Registry",
+    "distractors": [
+      "Agent Gateway",
+      "Model Armor",
+      "Skill Registry"
+    ],
+    "scene": "A platform team has dozens of agents and MCP servers written by different teams, and nobody can tell what already exists. They want one central catalog where agents are discovered and registered. Which should they use?",
+    "constraint": "The need is a catalog to discover and register, not a control point for network traffic and not a screen for content."
+  },
+  {
+    "id": "agent-traffic",
+    "correct": "Agent Gateway",
+    "distractors": [
+      "Agent Registry",
+      "Model Armor",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "A company wants to secure and govern how its agents connect to tools and to each other across the network, in one place, rather than in each agent's code. Which should it use?",
+    "constraint": "The need is governance of connectivity as the networking component, not a catalog of agents and not a content screen."
+  },
+  {
+    "id": "agent-in-code",
+    "correct": "Agent Development Kit (ADK)",
+    "distractors": [
+      "Agent Gateway",
+      "Agents CLI",
+      "Skill Registry"
+    ],
+    "scene": "A developer team wants an open-source framework to write the agent itself in code, with sequential, parallel and loop workflows, then debug and deploy it. Which should they use?",
+    "constraint": "The need is the framework the agent is written in, not a command-line tool around the project and not a store for skills."
+  },
+  {
+    "id": "agent-lifecycle-cli",
+    "correct": "Agents CLI",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Agent Registry"
+    ],
+    "scene": "A developer wants one command-line tool to scaffold a new agent project, then evaluate and deploy it on Google Cloud, with skills that a coding agent can use for each step. Which should they use?",
+    "constraint": "The need is a CLI for the life of an agent project, not the framework the agent is written in and not a catalog."
+  },
+  {
+    "id": "skill-store",
+    "correct": "Skill Registry",
+    "distractors": [
+      "Agent Registry",
+      "Agents CLI",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "An organisation wants a secure, private repository where reusable skills are stored as self-contained packages for its agents to use. Which should it use?",
+    "constraint": "The need is storage for skills as packages, not a catalog of agents and MCP servers and not a tool for building them.",
+    "guide": "3.1"
+  },
+  {
+    "id": "memory-across-sessions",
+    "correct": "Agent Platform Memory Bank",
+    "distractors": [
+      "Agent Platform Sessions",
+      "Vector Search",
+      "RAG Engine"
+    ],
+    "scene": "A travel assistant forgets a customer's seat and meal preferences every time a new conversation starts. The team wants preferences drawn from past conversations and recalled in later ones, managed by Google rather than built by the team. Which should they use?",
+    "constraint": "The need is long-term memory that carries across conversations, not the history of one conversation and not retrieval over company documents."
+  },
+  {
+    "id": "conversation-history",
+    "correct": "Agent Platform Sessions",
+    "distractors": [
+      "Agent Platform Memory Bank",
+      "Model Garden",
+      "Agent Runtime"
+    ],
+    "scene": "A support agent must keep the turns of one ongoing chat, so that each reply sees what was said earlier in that same conversation. The team wants Google to store those interactions. Which should they use?",
+    "constraint": "The need is the record of individual interactions in one conversation, not long-term memories drawn from many."
+  },
+  {
+    "id": "managed-deploy",
+    "correct": "Agent Runtime",
+    "distractors": [
+      "Model Garden",
+      "Agent Platform Sessions",
+      "Vector Search"
+    ],
+    "scene": "A team built an agent with the Agent Development Kit and wants to deploy, operate and scale it without running servers itself. Which should they use?",
+    "constraint": "The need is a managed place for the agent to run, not a catalogue of models and not a data store."
+  },
+  {
+    "id": "agent-own-identity",
+    "correct": "Agent Identity",
+    "distractors": [
+      "Agent Registry",
+      "Agent Gateway",
+      "Model Armor"
+    ],
+    "scene": "Auditors want every agent to act as its own distinct principal, so that access to resources can be controlled and audited per agent instead of through a shared service account. Which should the company use?",
+    "constraint": "The need is a managed identity for each agent, not a catalog entry, a traffic control point or a content screen."
+  },
+  {
+    "id": "outbound-agent-calls",
+    "correct": "Agent-to-Anywhere",
+    "distractors": [
+      "Client-to-Agent",
+      "Agent Registry",
+      "Model Armor"
+    ],
+    "scene": "Security wants to govern the requests that an agent itself sends out to external tools and services. Which Agent Gateway mode covers this?",
+    "constraint": "The traffic is outbound, started by the agent, not inbound calls from clients to the agent."
+  },
+  {
+    "id": "inbound-client-calls",
+    "correct": "Client-to-Agent",
+    "distractors": [
+      "Agent-to-Anywhere",
+      "Agent Identity",
+      "Skill Registry"
+    ],
+    "scene": "Security wants to secure the communications between client applications and the agents or MCP tools hosted on the platform. Which Agent Gateway mode covers this?",
+    "constraint": "The traffic is inbound, from clients to the agents, not outbound calls that the agents make."
+  },
+  {
+    "id": "rag-private-data",
+    "correct": "RAG Engine",
+    "distractors": [
+      "Vector Search",
+      "Agent Platform Memory Bank",
+      "Model Garden"
+    ],
+    "scene": "A bank's assistant gives plausible but wrong answers about internal policies. The team wants Google's managed component to connect the private documents to the model, to raise answer accuracy and reduce hallucinations. Which should they use?",
+    "constraint": "The need is a managed retrieval-augmented generation component that connects private data to the model, not only an engine to store and query embeddings."
+  },
+  {
+    "id": "embedding-engine",
+    "correct": "Vector Search",
+    "distractors": [
+      "RAG Engine",
+      "Model Garden",
+      "Agent Platform Sessions"
+    ],
+    "scene": "A team needs an engine to store and query embeddings at scale for an AI application, and it will write its own retrieval logic around it. Which should they use?",
+    "constraint": "The need is the engine that stores and searches the embeddings, not the managed pipeline that connects data to the model."
+  },
+  {
+    "id": "choose-a-model",
+    "correct": "Model Garden",
+    "distractors": [
+      "Vector Search",
+      "Agent Runtime",
+      "RAG Engine"
+    ],
+    "scene": "Before it builds its agent, a team wants one place to explore and access Google's own models, third-party models and open-source models, and to pick one. Which should it use?",
+    "constraint": "The need is a catalogue of models to choose from, not where the agent runs and not how it retrieves data.",
+    "guide": "3.1"
+  },
+  {
+    "id": "measure-agent-quality",
+    "correct": "Agent evaluation",
+    "distractors": [
+      "Model Armor",
+      "Agent Gateway",
+      "Agent Registry"
+    ],
+    "scene": "Before release, a team wants to measure the quality of its agent's multi-turn conversations with prebuilt or custom raters, and to keep checking live traffic afterwards. Which should it use?",
+    "constraint": "The need is to measure how well the agent performs, not to secure it, govern it or catalogue it."
+  },
+  {
+    "id": "no-code-agent",
+    "correct": "Workflow Builder",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Agents CLI",
+      "Agent Runtime"
+    ],
+    "scene": "A business analyst with no programming background wants to create and publish a chat agent inside the Gemini Enterprise web app, using prompts and a visual editor. Which should they use?",
+    "constraint": "The need is a no-code or low-code builder, not a code framework and not a command-line tool."
+  },
+  {
+    "id": "sessions-keep-history",
+    "correct": "Agent Platform Sessions",
+    "distractors": [
+      "Agent Platform Memory Bank",
+      "Vector Search",
+      "Model Garden"
+    ],
+    "scene": "A chat agent must keep the history of each ongoing conversation, so a user's follow-up question still makes sense within the same exchange. Which should store those individual interactions?",
+    "constraint": "The need is the stored interactions of one conversation, not long-term memories recalled in later sessions, retrieval or a model catalogue."
+  },
+  {
+    "id": "recall-preferences-later",
+    "correct": "Agent Platform Memory Bank",
+    "distractors": [
+      "Agent Platform Sessions",
+      "RAG Engine",
+      "Agent Identity"
+    ],
+    "scene": "A travel agent should remember a customer's seat preference from a conversation last month and use it when the customer returns. The memories are to be generated dynamically from past conversations. Which should provide this?",
+    "constraint": "The need is long-term memories generated from conversations and recalled in later sessions, not the history of one conversation."
+  },
+  {
+    "id": "ground-on-private-docs",
+    "correct": "RAG Engine",
+    "distractors": [
+      "Vector Search",
+      "Model Garden",
+      "Agent Runtime"
+    ],
+    "scene": "An agent hallucinates about company policy. The team wants a managed component that connects private enterprise data to the model so answers are more accurate. Which should they use?",
+    "constraint": "The need is a managed retrieval-augmented generation component, not the raw vector engine, a model catalogue or a hosting environment."
+  },
+  {
+    "id": "vector-engine-itself",
+    "correct": "Vector Search",
+    "distractors": [
+      "RAG Engine",
+      "Agent Registry",
+      "Agent evaluation"
+    ],
+    "scene": "A team is building its own retrieval pipeline and needs an AI-native engine to store, search and manage the embeddings behind it. Which should they pick?",
+    "constraint": "The need is the engine that stores and searches the vectors, not a managed component that wires private data to a model."
+  },
+  {
+    "id": "pick-open-model",
+    "correct": "Model Garden",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Agent Runtime"
+    ],
+    "scene": "An architect wants to compare Google's frontier models with third-party and open-source models before choosing one for a cost-sensitive agent. Where should they browse them?",
+    "constraint": "The need is a catalogue of models, not a framework, a skill repository or a hosting environment.",
+    "guide": "3.1"
+  },
+  {
+    "id": "scale-in-production",
+    "correct": "Agent Runtime",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Agents CLI",
+      "Model Garden"
+    ],
+    "scene": "A prototype agent works on a laptop. The team now needs a high-performance, scalable environment to deploy, operate and scale it in production. Which should host it?",
+    "constraint": "The need is a managed place to run and scale the agent, not a framework to write it, a command-line tool or a model catalogue."
+  },
+  {
+    "id": "workflow-shapes-in-code",
+    "correct": "Agent Development Kit (ADK)",
+    "distractors": [
+      "Agents CLI",
+      "Agent Runtime",
+      "Workflow Builder"
+    ],
+    "scene": "Developers want an open-source, model-agnostic framework to write an agent in code, using template workflows that run steps one after another, in a loop or in parallel. Which should they use?",
+    "constraint": "The need is a code framework with template workflows, not a no-code builder, a hosting environment or a command-line tool."
+  },
+  {
+    "id": "per-agent-audit",
+    "correct": "Agent Identity",
+    "distractors": [
+      "Agent Gateway",
+      "Agent Registry",
+      "Model Armor"
+    ],
+    "scene": "Security wants to control and audit access to cloud resources separately for each agent, rather than letting all agents share one account. Which should they set up?",
+    "constraint": "The need is a unique managed identity per agent, not traffic policy, a catalogue or content screening."
+  },
+  {
+    "id": "catalogue-mcp-servers",
+    "correct": "Agent Registry",
+    "distractors": [
+      "Skill Registry",
+      "Agent Identity",
+      "Agent Gateway"
+    ],
+    "scene": "An organisation has many agents, tools and MCP servers built by different teams. It wants one central catalogue to discover, track and manage them all. Which should it use?",
+    "constraint": "The need is a central catalogue of agents, tools and MCP servers, not skills packages, identities or traffic enforcement."
+  },
+  {
+    "id": "package-skills-privately",
+    "correct": "Skill Registry",
+    "distractors": [
+      "Agent Registry",
+      "Agents CLI",
+      "Model Garden"
+    ],
+    "scene": "A team wants a secure, private repository on Agent Platform that stores its agent skills as self-contained packages. Which should it use?",
+    "constraint": "The need is a private store for skills packages, not a catalogue of agents, a command-line tool or a model catalogue.",
+    "guide": "3.1"
+  },
+  {
+    "id": "continuous-agent-checks",
+    "correct": "Agent evaluation",
+    "distractors": [
+      "Agent Runtime",
+      "Model Armor",
+      "Agent Platform Sessions"
+    ],
+    "scene": "After launch, a team wants to keep assessing its agent's quality by evaluating live traffic online, using autoraters for multi-turn conversations. Which should it use?",
+    "constraint": "The need is ongoing quality assessment of the agent, not hosting, content screening or stored conversations."
+  },
+  {
+    "id": "model-output-screening",
+    "correct": "Model Armor",
+    "distractors": [
+      "Agent Gateway",
+      "Agent Identity",
+      "Agent evaluation"
+    ],
+    "scene": "A company is worried that a model's replies might contain malicious links or a user's jailbreak attempt might get through. It wants a Google Cloud service to screen prompts and responses for these threats. Which should it use?",
+    "constraint": "The need is to screen prompt and response content for harmful material, not to govern tool calls, identify agents or measure quality."
+  },
+  {
+    "id": "central-policy-point",
+    "correct": "Agent Gateway",
+    "distractors": [
+      "Model Armor",
+      "Agent Registry",
+      "Agent Identity"
+    ],
+    "scene": "A platform team wants one central place that enforces authentication and security policies on every tool call its agents make. Which should it use?",
+    "constraint": "The need is a policy enforcement point for agent traffic, not content screening, a catalogue or a per-agent identity."
+  },
+  {
+    "id": "agent-skills-package",
+    "correct": "Agents CLI",
+    "distractors": [
+      "Agent Development Kit (ADK)",
+      "Skill Registry",
+      "Workflow Builder"
+    ],
+    "scene": "A developer wants a command-line tool, with a skills package, to build, evaluate and deploy AI agents on Google Cloud from the terminal. Which should they use?",
+    "constraint": "The need is a command-line tool for the whole agent lifecycle, not a code framework, a skill store or a no-code builder."
+  },
+  {
+    "id": "chat-agent-no-code",
+    "correct": "Workflow Builder",
+    "distractors": [
+      "Agents CLI",
+      "Agent Development Kit (ADK)",
+      "Agent Runtime"
+    ],
+    "scene": "A business team with no developers wants to create and turn on chat agents and workflows in the Gemini Enterprise web app using a no-code, low-code platform. Which should they use?",
+    "constraint": "The need is a no-code, low-code builder inside the Gemini Enterprise web app, not a command-line tool, a code framework or hosting."
+  },
+  {
+    "id": "secure-inbound-clients",
+    "correct": "Client-to-Agent",
+    "distractors": [
+      "Agent-to-Anywhere",
+      "Agent Identity",
+      "Model Armor"
+    ],
+    "scene": "A security architect needs the Agent Gateway mode that secures inbound traffic between clients and the agents or MCP tools they reach. Which mode is it?",
+    "constraint": "The need is the inbound mode of Agent Gateway, not the outbound mode, an agent identity or content screening."
+  },
+  {
+    "id": "govern-outbound-requests",
+    "correct": "Agent-to-Anywhere",
+    "distractors": [
+      "Client-to-Agent",
+      "Agent Registry",
+      "Agent Runtime"
+    ],
+    "scene": "An agent sends requests to external tools and services, and the security team wants the Agent Gateway mode that governs those outbound requests. Which mode is it?",
+    "constraint": "The need is the outbound mode of Agent Gateway, not the inbound mode, a catalogue or hosting."
+  },
+  {
+    "id": "search-with-foundation-models",
+    "correct": "Agent Search",
+    "distractors": [
+      "RAG Engine",
+      "Vector Search",
+      "Model Garden"
+    ],
+    "scene": "A team with limited machine learning skills wants to build a search and question-answering application using Google's foundation models and search and recommendation expertise, formerly called Vertex AI Search. Which should it use?",
+    "constraint": "The need is a ready-made search and recommendation service, formerly Vertex AI Search, not a retrieval component or a model catalogue."
+  },
+  {
+    "id": "enterprise-knowledge-agent",
+    "correct": "Gemini Enterprise",
+    "distractors": [
+      "Antigravity",
+      "Agent Runtime",
+      "Agents CLI"
+    ],
+    "scene": "A company wants one agent where Gemini answers staff questions, handles knowledge work, and writes and runs code. Which should it use?",
+    "constraint": "The need is Google's enterprise offering for everyday knowledge work, not a coding-agent platform, a hosting service or a command-line tool."
+  },
+  {
+    "id": "agent-first-coding",
+    "correct": "Antigravity",
+    "distractors": [
+      "Agents CLI",
+      "Gemini Enterprise",
+      "Agent Development Kit (ADK)"
+    ],
+    "scene": "Developers want an agent-first platform that orchestrates subagents across environments and comes as an App, a CLI and an SDK. Which should they use?",
+    "constraint": "The need is the agent-first coding platform with an App, CLI and SDK, not the agent lifecycle command-line tool, the enterprise offering or an agent framework."
+  },
+  {
+    "id": "gemini-family-models",
+    "correct": "Gemini LLMs",
+    "distractors": [
+      "Model Garden",
+      "Agent Search",
+      "Vector Search"
+    ],
+    "scene": "A team needs Google's own family of models for complex coding and multimodal reasoning. Which does it name?",
+    "constraint": "The need is the Gemini models themselves, not the catalogue that lists them or a search service.",
+    "guide": "3.1"
+  },
+  {
+    "id": "open-tool-standard",
+    "correct": "Model Context Protocol (MCP)",
+    "distractors": [
+      "Agent2Agent (A2A)",
+      "Auth Manager",
+      "Agent Gateway"
+    ],
+    "scene": "An architect wants an open-source standard for connecting an AI application to external systems such as data sources, tools and workflows. Which should it use?",
+    "constraint": "The need is the open standard that connects applications to tools and data, not the standard between agents, a credential vault or a traffic layer."
+  },
+  {
+    "id": "agents-talk-to-agents",
+    "correct": "Agent2Agent (A2A)",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agent Gateway"
+    ],
+    "scene": "Agents built by different teams must securely communicate, collaborate and solve problems together through an open standard. Which should they use?",
+    "constraint": "The need is the open standard for agents working with one another, not the standard for tools, a catalogue or a gateway."
+  },
+  {
+    "id": "collections-of-data-objects",
+    "correct": "Agent Retrieval",
+    "distractors": [
+      "Vector Search",
+      "RAG Engine",
+      "Agent Search"
+    ],
+    "scene": "A team wants Google's fully managed, AI-native search engine in which you work with Collections of Data Objects instead of managing indexes, formerly called Vector Search 2.0. Which should it use?",
+    "constraint": "The need is the engine that evolves Vector Search into storage and retrieval, formerly Vector Search 2.0, not the original index service, the grounding component or a search application service.",
+    "guide": "3.2"
+  },
+  {
+    "id": "analyse-warehouse-data",
+    "correct": "BigQuery",
+    "distractors": [
+      "Cloud SQL",
+      "Firestore",
+      "Cloud Storage"
+    ],
+    "scene": "An analyst wants a fully managed, serverless, AI-ready data platform to analyse data with SQL and Python. Which should they use?",
+    "constraint": "The need is an analytics data platform, not a transactional relational database, a document database or object storage.",
+    "guide": "3.2"
+  },
+  {
+    "id": "managed-relational-database",
+    "correct": "Cloud SQL",
+    "distractors": [
+      "BigQuery",
+      "Firestore",
+      "Memorystore for Redis"
+    ],
+    "scene": "An agent needs a fully managed relational database for MySQL, PostgreSQL or SQL Server. Which should be used?",
+    "constraint": "The need is a managed relational database, not an analytics platform, a document database or a cache.",
+    "guide": "3.2"
+  },
+  {
+    "id": "store-any-amount-of-objects",
+    "correct": "Cloud Storage",
+    "distractors": [
+      "Firestore",
+      "Cloud SQL",
+      "BigQuery"
+    ],
+    "scene": "A team wants scalable, managed object storage to store and retrieve any amount of data at any time. Which should it use?",
+    "constraint": "The need is object storage, not a document database, a relational database or an analytics platform.",
+    "guide": "3.2"
+  },
+  {
+    "id": "serverless-document-store",
+    "correct": "Firestore",
+    "distractors": [
+      "Cloud SQL",
+      "Cloud Storage",
+      "Memorystore for Redis"
+    ],
+    "scene": "An agent needs a fully managed, scalable, serverless document database. Which should it use?",
+    "constraint": "The need is a document database, not a relational database, object storage or a cache.",
+    "guide": "3.2"
+  },
+  {
+    "id": "fast-agent-cache",
+    "correct": "Memorystore for Redis",
+    "distractors": [
+      "Firestore",
+      "Cloud SQL",
+      "Cloud Storage"
+    ],
+    "scene": "An agent needs an application cache with sub-millisecond data access, powered by the Redis in-memory data store, fully managed. Which should it use?",
+    "constraint": "The need is an in-memory cache, not a document database, a relational database or object storage.",
+    "guide": "3.2"
+  },
+  {
+    "id": "run-a-container-managed",
+    "correct": "Cloud Run",
+    "distractors": [
+      "Google Kubernetes Engine (GKE)",
+      "Agent Runtime",
+      "Cloud Logging"
+    ],
+    "scene": "A team wants a fully managed application platform to run its code, function or container on Google's scalable infrastructure, with no cluster to run. Which should it choose?",
+    "constraint": "The need is a fully managed platform for containers and code, not a Kubernetes service, an agent-specific runtime or a logging system."
+  },
+  {
+    "id": "managed-kubernetes",
+    "correct": "Google Kubernetes Engine (GKE)",
+    "distractors": [
+      "Cloud Run",
+      "Agent Runtime",
+      "Cloud Trace"
+    ],
+    "scene": "A platform team wants a managed Kubernetes service for deploying containerised applications on Google Cloud, which also serves as a secure sandbox for coding agents. Which should it use?",
+    "constraint": "The need is a managed Kubernetes service, not a serverless container platform, an agent runtime or a tracing system."
+  },
+  {
+    "id": "collect-and-search-logs",
+    "correct": "Cloud Logging",
+    "distractors": [
+      "Cloud Trace",
+      "Agent evaluation",
+      "Model Armor"
+    ],
+    "scene": "Operations needs a real-time log-management system with storage, search, analysis and monitoring support for its agents. Which should it use?",
+    "constraint": "The need is log management, not request tracing, quality evaluation or content screening."
+  },
+  {
+    "id": "find-latency-bottleneck",
+    "correct": "Cloud Trace",
+    "distractors": [
+      "Cloud Logging",
+      "Agent evaluation",
+      "Agent Gateway"
+    ],
+    "scene": "An agent is slow, and the team needs a distributed tracing system that tracks request latency to find the bottleneck across services. Which should it use?",
+    "constraint": "The need is tracing of request latency, not log storage, quality evaluation or traffic governance."
+  },
+  {
+    "id": "vault-for-tool-credentials",
+    "correct": "Auth Manager",
+    "distractors": [
+      "Agent Identity",
+      "Model Armor",
+      "Agent Gateway"
+    ],
+    "scene": "An agent must call external tools using 3-legged OAuth, 2-legged OAuth and API keys, and the team wants a centralised credentials vault and authentication broker. Which should it use?",
+    "constraint": "The need is a vault and broker for outbound tool credentials, not the agent's own identity, content screening or a traffic layer."
+  },
+  {
+    "id": "discover-and-deidentify",
+    "correct": "Sensitive Data Protection",
+    "distractors": [
+      "Model Armor",
+      "Agent Identity",
+      "Cloud Storage"
+    ],
+    "scene": "A security team wants to discover, classify and de-identify sensitive data inside and outside Google Cloud. Which service should it use?",
+    "constraint": "The need is discovering and de-identifying sensitive data, not screening prompts and replies, identifying an agent or storing objects.",
+    "guide": "5.1"
+  },
+  {
+    "id": "enterprise-no-code-agent",
+    "correct": "Gemini Enterprise Agent Designer",
+    "distractors": [
+      "Customer Experience Agent Studio (CX Agent Studio)",
+      "Agent Development Kit (ADK)",
+      "Cloud Workstations"
+    ],
+    "scene": "A business team wants to create and share an agent with little or no code inside its Gemini Enterprise application. Which tool should it use?",
+    "constraint": "The need is the no-code agent creator inside the enterprise application, not a customer-contact platform, a code framework or a development environment."
+  },
+  {
+    "id": "customer-conversation-builder",
+    "correct": "Customer Experience Agent Studio (CX Agent Studio)",
+    "distractors": [
+      "Gemini Enterprise Agent Designer",
+      "Agent Registry",
+      "Cloud Workstations"
+    ],
+    "scene": "A contact centre wants a low-code platform to build, evaluate and deploy multimodal conversational agents for customer support across voice and chat. Which should it use?",
+    "constraint": "The need is a platform focused on customer conversations, not an enterprise agent creator, an agent catalogue or a developer workstation."
+  },
+  {
+    "id": "anthropic-coding-agent",
+    "correct": "Claude Code",
+    "distractors": [
+      "Antigravity",
+      "Agents CLI",
+      "Cloud Workstations"
+    ],
+    "scene": "A developer wants Anthropic's coding-agent harness to plan, change and test code using Claude models hosted on Google Cloud. Which should they choose?",
+    "constraint": "The need is Anthropic's coding agent, not Google's agent-first coding platform, an agent lifecycle CLI or a managed development environment."
+  },
+  {
+    "id": "managed-coding-workstation",
+    "correct": "Cloud Workstations",
+    "distractors": [
+      "Google Kubernetes Engine (GKE)",
+      "Cloud Run",
+      "Claude Code"
+    ],
+    "scene": "A team wants centrally configured, managed development environments on Google Cloud that developers can access through a browser or local editor while using coding agents. Which should it use?",
+    "constraint": "The need is a managed development environment, not a Kubernetes service, a container runtime or a coding agent."
+  },
+  {
+    "id": "original-vector-index",
+    "correct": "Vector Search 1.0",
+    "distractors": [
+      "Agent Retrieval",
+      "RAG Engine",
+      "Agent Search"
+    ],
+    "scene": "A team is migrating data from Google's original index-based vector service into the newer collections-based retrieval service. Which version is it migrating from?",
+    "constraint": "The need is the original index-based version, not its collections-based successor, a grounding component or a search application service."
+  },
+  {
+    "id": "expose-tools-to-agent",
+    "correct": "MCP servers",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agents CLI"
+    ],
+    "scene": "An AI application needs programs that expose APIs or databases as tools through a standard interface. The programs can run on the developer's machine or remotely. What should the team configure?",
+    "constraint": "The need is programs exposing capabilities, not the protocol itself, a catalogue or an agent lifecycle CLI."
+  },
+  {
+    "id": "managed-google-mcp",
+    "correct": "Google Cloud MCP Servers",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent Registry",
+      "Agents CLI"
+    ],
+    "scene": "An agent needs managed remote endpoints that expose Google Cloud service capabilities through a standard interface, without the team hosting the endpoints itself. What should it connect to?",
+    "constraint": "The need is managed service endpoints, not the protocol itself, a catalogue or an agent lifecycle CLI."
+  },
+  {
+    "id": "evaluate-with-adk-cases",
+    "correct": "ADK evaluation tooling (evalset)",
+    "distractors": [
+      "Agent Platform Gen AI evaluation service",
+      "Model Armor",
+      "Agent Gateway"
+    ],
+    "scene": "A developer wants to test an agent against a dataset of several conversation sessions, comparing its responses and tool-use trajectory with reference cases using the agent's development kit. What should they use?",
+    "constraint": "The need is the development kit's test cases and evaluation tools, not a managed model evaluation service, content screening or a traffic layer."
+  },
+  {
+    "id": "managed-genai-evaluation",
+    "correct": "Agent Platform Gen AI evaluation service",
+    "distractors": [
+      "ADK evaluation tooling (evalset)",
+      "Agent Gateway",
+      "Model Armor"
+    ],
+    "scene": "A team wants a managed platform service to evaluate generative models and agents with adaptive rubrics and computation-based metrics. Which should it use?",
+    "constraint": "The need is a managed evaluation service, not development-kit test files, a traffic layer or a content screen."
+  },
+  {
+    "id": "integrated-cloud-observability",
+    "correct": "Google Cloud Observability",
+    "distractors": [
+      "Cloud Logging",
+      "Cloud Trace",
+      "Agent Gateway"
+    ],
+    "scene": "Operations wants Google's integrated offering for monitoring applications, including both log management and distributed tracing, rather than choosing a single service. What should it use?",
+    "constraint": "The need is the combined monitoring, logging and tracing offering, not only logs, only traces or agent traffic governance."
+  },
+  {
+    "id": "scoped-api-authorisation",
+    "correct": "OAuth 2.0",
+    "distractors": [
+      "Model Context Protocol (MCP)",
+      "Agent2Agent (A2A)",
+      "Agent Identity"
+    ],
+    "scene": "An agent needs a standard authorisation flow to obtain a scoped access token for a user's API data after the user grants permission. Which should it use?",
+    "constraint": "The need is delegated API authorisation with access tokens, not a tool-connection protocol, an agent communication protocol or an agent identity."
+  }
+]

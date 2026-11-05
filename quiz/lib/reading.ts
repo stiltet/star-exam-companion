@@ -4,14 +4,10 @@
 // server reads the bundle when a page is asked for.
 
 import { parseFragment, type DefaultTreeAdapterMap } from "parse5"
-import { COURSES, type Course, type PageSummary, type Paragraph, type Reading } from "./reading-view.ts"
+import type { Course, PageSummary, Paragraph, Reading } from "./reading-view.ts"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
 
-const BUNDLES = "https://storage.googleapis.com/cloud-training/cls-html5-courses/GAIL-Chunked"
-
 export const PARTS = ["contentObjects", "articles", "blocks", "components"] as const
-
-const PATH = "https://www.skills.google/paths/1951"
 
 // The course's public page on Google Skills, which lists its readings in order.
 export function coursePageUrl(course: Course): string {
@@ -30,12 +26,17 @@ export function readingIds(coursePage: string, course: Course): string[] {
 export function reviewUrl(course: Course, ids: string[], pageCount: number, pageIndex: number): { url: string; direct: boolean } {
   const id = ids.length === pageCount ? ids[pageIndex] : undefined
   return id
-    ? { url: `${PATH}/course_templates/${course.template}/html_bundles/${id}`, direct: true }
-    : { url: `${PATH}/course_templates/${course.template}`, direct: false }
+    ? { url: `${course.path}/course_templates/${course.template}/html_bundles/${id}`, direct: true }
+    : { url: `${course.path}/course_templates/${course.template}`, direct: false }
+}
+
+// A Rise course's one file; its folder already names the language, so the path ends there.
+export function riseUrl(course: Course): string {
+  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/runtime-data.js`
 }
 
 export function bundleUrl(course: Course, part: (typeof PARTS)[number]): string {
-  return `${BUNDLES}/${encodeURIComponent(course.folder)}/course/en/${part}.json`
+  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/course/en/${part}.json`
 }
 
 // The longest text one clip may carry: the speak routes' own limit.
@@ -67,8 +68,8 @@ function decode(text: string): string {
 // The paragraphs of an HTML fragment as plain text: block ends and <br> break paragraphs.
 export function htmlParagraphs(input: unknown): string[] {
   if (typeof input !== "string") return []
-  const html = input
-  const fragment = parseFragment(html, { sourceCodeLocationInfo: true, scriptingEnabled: false })
+  // Keep the existing entity rules while letting the parser discard ignored markup.
+  const fragment = parseFragment(input.replaceAll("&", "&amp;"), { scriptingEnabled: false })
   const paragraphs: string[] = []
   const blockTags = new Set(["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "ul", "ol", "blockquote"])
   let paragraph = ""
@@ -78,10 +79,7 @@ export function htmlParagraphs(input: unknown): string[] {
   }
   function visit(node: DefaultTreeAdapterMap["childNode"]): void {
     if (node.nodeName === "#text" && "value" in node) {
-      const location = node.sourceCodeLocation
-      paragraph += location
-        ? decode(html.slice(location.startOffset, location.endOffset))
-        : node.value
+      paragraph += decode(node.value)
       return
     }
     const tag = "tagName" in node ? node.tagName : undefined
@@ -439,15 +437,15 @@ export function reading(bundle: Bundle, pageId: string): Reading | null {
 
 // Where NEXT leads: the course's next reading, or after its last one the next course's list of
 // readings, so a course read through carries on into the next. None after the last course.
-export function nextReading(course: Course, pages: PageSummary[], pageId: string): { href: string; title: string } | null {
+export function nextReading(course: Course, pages: PageSummary[], pageId: string, courses: readonly Course[]): { href: string; title: string } | null {
   const at = pages.findIndex((page) => page.id === pageId)
   const page = at >= 0 ? pages[at + 1] : undefined
   if (page) return { href: `/read/${course.id}/${page.id}`, title: page.title }
-  const index = COURSES.findIndex((entry) => entry.id === course.id)
-  const following = index >= 0 ? COURSES[index + 1] : undefined
+  const index = courses.findIndex((entry) => entry.id === course.id)
+  const following = index >= 0 ? courses[index + 1] : undefined
   return at >= 0 && following ? { href: `/read/${following.id}`, title: `Course ${following.id}, ${following.title}` } : null
 }
 
-export function courseById(id: string): Course | undefined {
-  return COURSES.find((course) => course.id === id)
+export function courseById(courses: readonly Course[], id: string): Course | undefined {
+  return courses.find((course) => course.id === id)
 }

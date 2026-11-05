@@ -1,3 +1,4 @@
+import { activePack } from "@/lib/pack"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
@@ -15,7 +16,7 @@ export default function AboutPage() {
         <section className="border-2 border-foreground p-6 mb-6">
           <h2 className="font-bold mb-4">WHAT IS THIS?</h2>
           <p className="mb-4">
-            An open-source study platform for the Google Cloud Generative AI Leader certification exam. 
+            An open-source study platform for the {activePack().meta.certification} certification exam. 
             Brutalist design: minimal, functional, distraction-free.
           </p>
           <p className="text-muted-foreground text-sm">

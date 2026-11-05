@@ -17,7 +17,7 @@ export default async function GlossaryPage() {
     ? play.glossary.terms.map((term) => ({
         term: label(play.glossary, term.term),
         definition: applyNames(play.glossary, term.meaning),
-        category: term.guides[0] ? sectionLabel(term.guides[0].split(".")[0] ?? "", play.weights[Number(term.guides[0].split(".")[0])] ?? 0) : "Study guide",
+        category: term.guides[0] ? sectionLabel(term.guides[0].split(".")[0] ?? "", play.weights[Number(term.guides[0].split(".")[0])] ?? 0) : play.pack.meta.unnumberedLabel,
       }))
     : []
   const grouped = GLOSSARY.reduce(
@@ -40,7 +40,7 @@ export default async function GlossaryPage() {
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">GLOSSARY</h1>
         <p className="text-muted-foreground mb-8">
-          All terms from official Google Cloud GenAI documentation. {GLOSSARY.length} entries.
+          All terms for the {play.ok ? play.pack.meta.title : ""} exam, from official Google Cloud documentation. {GLOSSARY.length} entries.
         </p>
 
         {/* Quick Nav */}

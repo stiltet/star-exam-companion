@@ -2,13 +2,18 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { reading, type Bundle } from "./reading.ts"
 import {
-  byteRange, chapterAt, chapterList, clock, createNightWatch, joinWavs, keepWatching, manifestRecord, nightParts, offlineLine,
-  parseBuildState, parseManifest, parsePlace, pcmOf, placeRecord, readStore, sayTimeoutMs, seekWhenReady, STATUS_GAP_MS,
+  byteRange, chapterAt, chapterList, clock, createNightWatch, joinWavs, keepWatching, manifestRecord, nightCacheUrl, nightParts, offlineLine,
+  parseBuildState, parseManifest, parsePlace, pcmOf, placeRecord, readStore, replacedNightEntry, sayTimeoutMs, seekWhenReady, STATUS_GAP_MS,
   STATUS_GIVE_UP_MS, storedMegabytes, storeProblem, StoreRefused, wavFromPcm, WAV_RATE,
   type NightChapter, type NightPart, type NightRemote,
 } from "./night.ts"
 
 const key = "a".repeat(64)
+
+test("Night recordings have a different cache key for each exam", () => {
+  assert.equal(nightCacheUrl(key, "agentic-architect"), `/api/night/audio/${key}?exam=agentic-architect`)
+  assert.notEqual(nightCacheUrl(key, "generative-ai-leader"), nightCacheUrl(key, "agentic-architect"))
+})
 
 function part(script: string, number = 1): NightPart {
   return { courseId: "1", courseTitle: "Example", number, title: "Intro", script }
@@ -325,4 +330,16 @@ test("the Mac checking its recording is a state of its own, and it is watched", 
   assert.deepEqual(parseBuildState({ state: "checking" }), { state: "checking" })
   assert.equal(keepWatching("checking", true, null), true)
   assert.equal(keepWatching("checking", false, STATUS_GIVE_UP_MS), false)
+})
+
+test("a stored recording replaces the same exam's older audio, and an unnamed one only for the default exam", () => {
+  const old = "b".repeat(64)
+  const keep = nightCacheUrl(key, "generative-ai-leader")
+  const unnamed = `/api/night/audio/${old}`
+  assert.equal(replacedNightEntry(`https://x.test${unnamed}?exam=generative-ai-leader`, keep, "generative-ai-leader", "generative-ai-leader"), true)
+  assert.equal(replacedNightEntry(`https://x.test${unnamed}`, keep, "generative-ai-leader", "generative-ai-leader"), true)
+  assert.equal(replacedNightEntry(`https://x.test${unnamed}`, nightCacheUrl(key, "agentic-architect"), "agentic-architect", "generative-ai-leader"), false)
+  assert.equal(replacedNightEntry(`https://x.test${unnamed}?exam=agentic-architect`, keep, "generative-ai-leader", "generative-ai-leader"), false)
+  assert.equal(replacedNightEntry(`https://x.test${keep}`, keep, "generative-ai-leader", "generative-ai-leader"), false)
+  assert.equal(replacedNightEntry("https://x.test/api/other", keep, "generative-ai-leader", "generative-ai-leader"), false)
 })

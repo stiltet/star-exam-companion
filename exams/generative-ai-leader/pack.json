@@ -1,0 +1,40 @@
+{
+  "id": "generative-ai-leader",
+  "title": "Generative AI Leader",
+  "certification": "Google Cloud Generative AI Leader",
+  "description": "Google Cloud's certification for leaders who understand, evaluate and guide the adoption of generative AI on Google Cloud. It tests concepts and business decisions, not hands-on implementation.",
+  "keywords": ["Generative AI", "GCGAI Leader"],
+  "unnumberedLabel": "Study guide",
+  "examPage": "https://cloud.google.com/learn/certification/generative-ai-leader",
+  "examGuide": "https://services.google.com/fh/files/misc/generative_ai_leader_exam_guide_english.pdf",
+  "exam": {
+    "questions": 60,
+    "minutes": 90
+  },
+  "learningPath": "https://www.skills.google/paths/1951",
+  "reading": true,
+  "links": [
+    {
+      "label": "INTRO TO GENAI SKILLS BOOST PATH",
+      "href": "https://www.cloudskillsboost.google/paths/118"
+    },
+    {
+      "label": "GENERATIVE AI LEADER PATH",
+      "href": "https://www.skills.google/paths/1951"
+    },
+    {
+      "label": "SAMPLE QUESTIONS",
+      "href": "https://docs.google.com/forms/d/e/1FAIpQLScNn5oUIFeMQjtsHilQsJPxDsnP-0DbhDVsIXaBeCmPj-dgYw/formResponse"
+    }
+  ],
+  "notAsked": [
+    "Gemini platform"
+  ],
+  "sectionOf": {
+    "fundamentals": "1",
+    "ai-ml-fundamentals": "1",
+    "google-cloud-offerings": "2",
+    "improve-output": "3",
+    "business-strategies": "4"
+  }
+}

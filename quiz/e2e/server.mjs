@@ -1,9 +1,12 @@
 import { spawn } from "node:child_process"
-import { mkdtemp, rm } from "node:fs/promises"
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import "./content-fixture.mjs"
+import { seedNight } from "./night-fixture.mjs"
+import { browserServerEnv } from "./server-env.mjs"
 
 const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
 async function checkPort() {
@@ -21,13 +24,20 @@ async function checkPort() {
 await checkPort()
 
 const scratch = await mkdtemp(path.join(tmpdir(), "quiz-e2e-"))
-const env = {
-  ...process.env,
-  NEXT_TELEMETRY_DISABLED: "1",
-  QUIZ_DIST_DIR: ".next-e2e",
-  QUIZ_SCORES_FILE: path.join(scratch, "scores.jsonl"),
-  NIGHT_DIR: path.join(scratch, "night"),
-}
+await mkdir(path.join(scratch, "scores"))
+// A scratch copy of the packs, with one more that has no course to read, so the tests can serve a pack the repo
+// does not ship. It is the second pack with its Read Aloud courses taken out.
+const root = path.join(scratch, "root")
+await mkdir(path.join(root, "quiz"), { recursive: true })
+await cp(fileURLToPath(new URL("../../exams", import.meta.url)), path.join(root, "exams"), { recursive: true })
+const bare = path.join(root, "exams", "no-course-test")
+await cp(path.join(root, "exams", "agentic-architect"), bare, { recursive: true })
+const meta = JSON.parse(await readFile(path.join(bare, "pack.json"), "utf8"))
+await writeFile(path.join(bare, "pack.json"), JSON.stringify({ ...meta, id: "no-course-test", title: "Exam With No Course", reading: false }, null, 2))
+await rm(path.join(bare, "courses.json"))
+// An explicit empty file override also blocks a QUIZ_SCORES_FILE from .env.local. The scratch folder
+// keeps one file per exam, and the chosen exam and Night recording stay in scratch as well.
+const env = browserServerEnv(process.env, scratch, root)
 const next = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url))
 const preload = fileURLToPath(new URL("./content-fixture.mjs", import.meta.url))
 let child
@@ -52,6 +62,9 @@ function run(args) {
 }
 
 try {
+  process.env.QUIZ_ROOT = root
+  process.env.NIGHT_DIR = env.NIGHT_DIR
+  await seedNight()
   await run(["build"])
   if (!stopping) {
     await checkPort()

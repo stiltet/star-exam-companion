@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
 import { courseBundle } from "@/lib/course-text"
+import { activePack } from "@/lib/pack"
 import { courseById, nextReading, reading, reviewUrl } from "@/lib/reading"
 
 export const dynamic = "force-dynamic"
@@ -13,7 +14,8 @@ type Props = { params: Promise<{ course: string; page: string }> }
 
 export default async function ReadingPage({ params }: Props) {
   const { course: courseId, page: pageId } = await params
-  const course = courseById(courseId)
+  const courses = activePack().courses
+  const course = courseById(courses, courseId)
   if (!course) notFound()
   const loaded = await courseBundle(course)
 
@@ -55,7 +57,7 @@ export default async function ReadingPage({ params }: Props) {
           place={`${course.id}/${pageId}`}
           title={page.title}
           paragraphs={page.paragraphs}
-          next={nextReading(course, list, pageId)}
+          next={nextReading(course, list, pageId, courses)}
           review={page.review ? google : null}
           reviewAt={page.reviewAt}
           video={page.videoAt.length > 0 ? google : null}

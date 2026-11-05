@@ -1,5 +1,6 @@
-import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, type Bundle } from "./reading.ts"
-import { COURSES, type Course, type PageSummary } from "./reading-view.ts"
+import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, riseUrl, type Bundle } from "./reading.ts"
+import type { Course, PageSummary } from "./reading-view.ts"
+import { decodeRise, riseBundle } from "./rise.ts"
 
 // Each course's bundle, read from Google at most once a day per running quiz. The text is
 // Google's, so the Mac keeps it in memory only, never on its disk; only its spoken clips are
@@ -38,6 +39,17 @@ async function part(course: Course, name: (typeof PARTS)[number]): Promise<Bundl
   return data
 }
 
+// A course's text as the reader's four lists: its four JSON files, or one Rise file turned into them.
+async function bundleOf(course: Course): Promise<Bundle> {
+  if (course.format === "rise") {
+    const response = await fetch(riseUrl(course), { cache: "no-store", signal: AbortSignal.timeout(30_000) })
+    if (!response.ok) throw new Error(`Google answered ${response.status} for runtime-data.js`)
+    return riseBundle(decodeRise(await response.text()))
+  }
+  const [contentObjects, articles, blocks, components] = await Promise.all(PARTS.map((name) => part(course, name)))
+  return { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
+}
+
 // The readings' ids on Google Skills, for the review links; none when the page cannot be read,
 // and then each review button goes to the course instead and says so.
 async function ids(course: Course): Promise<string[]> {
@@ -54,15 +66,18 @@ function loaded(entry: Entry): Loaded {
   return { ok: true, bundle: entry.bundle, pages: entry.pages, ids: entry.ids }
 }
 
+// Two packs may list the same Skills number with different bundles, so the folder is part of the key.
+function key(course: Course): string {
+  return `${course.template}:${course.folder}`
+}
+
 async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
   try {
-    const [found, ...lists] = await Promise.all([ids(course), ...PARTS.map((name) => part(course, name))])
-    const [contentObjects, articles, blocks, components] = lists
-    const bundle: Bundle = { contentObjects: contentObjects!, articles: articles!, blocks: blocks!, components: components! }
+    const [found, bundle] = await Promise.all([ids(course), bundleOf(course)])
     const now = Date.now()
     const entry: Entry = { at: now, bundle, pages: pageList(bundle), ids: found, idsAt: now }
-    cache.set(course.id, entry)
-    failed.delete(course.id)
+    cache.set(key(course), entry)
+    failed.delete(key(course))
     return loaded(entry)
   } catch (error) {
     if (kept) {
@@ -72,14 +87,14 @@ async function load(course: Course, kept: Entry | undefined): Promise<Loaded> {
       return loaded(kept)
     }
     const reason = error instanceof Error ? error.message : String(error)
-    failed.set(course.id, { at: Date.now(), error: reason })
+    failed.set(key(course), { at: Date.now(), error: reason })
     return { ok: false, error: reason }
   }
 }
 
 // The course's bundle, its readings and their ids on Google Skills, or why it could not be read.
 export async function courseBundle(course: Course): Promise<Loaded> {
-  const kept = cache.get(course.id)
+  const kept = cache.get(key(course))
   const now = Date.now()
   if (kept && now - kept.at < DAY_MS) {
     // A course page that failed once is asked again after RETRY_MS, not kept empty for a day.
@@ -89,12 +104,12 @@ export async function courseBundle(course: Course): Promise<Loaded> {
     }
     return loaded(kept)
   }
-  const recent = kept ? undefined : failed.get(course.id)
+  const recent = kept ? undefined : failed.get(key(course))
   if (recent && now - recent.at < FAILED_MS) return { ok: false, error: recent.error }
-  let run = loading.get(course.id)
+  let run = loading.get(key(course))
   if (!run) {
-    run = load(course, kept).finally(() => loading.delete(course.id))
-    loading.set(course.id, run)
+    run = load(course, kept).finally(() => loading.delete(key(course)))
+    loading.set(key(course), run)
   }
   return run
 }

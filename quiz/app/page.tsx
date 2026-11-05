@@ -1,21 +1,17 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
-import { Heading } from "@/components/atoms/heading"
+import { Heading, HeroTitle } from "@/components/atoms/heading"
 import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
 import { Text } from "@/components/atoms/text"
-import { SITE_PAGES } from "@/lib/pages"
+import { activePack } from "@/lib/pack"
+import { sitePages } from "@/lib/pages"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
 
-const DOMAINS = [
-  { id: "fundamentals", weight: 30 },
-  { id: "google-cloud-offerings", weight: 35 },
-  { id: "improve-output", weight: 20 },
-  { id: "business-strategies", weight: 15 },
-]
-
 export default function HomePage() {
+  const { meta, study } = activePack()
+  const DOMAINS = study.sections
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -24,38 +20,43 @@ export default function HomePage() {
         {/* Hero */}
         <section className="border-2 border-foreground p-6 mb-8">
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
-          <Heading variant="hero" placement="mb-4">
+          <Heading variant="hero" placement="mb-3.5 md:mb-5">
             <GoogleCloudLogo placement="mb-3 md:mb-0" />
-            <span className="block">GENERATIVE AI LEADER</span>
+            <HeroTitle>{meta.title.toUpperCase()}</HeroTitle>
           </Heading>
           {/* The tagline sits over the buttons, and from lg up right of them in the space they leave (owner, 28 Oct). */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
             <Text variant="tagline" placement="mb-4 lg:mb-0 lg:order-last lg:flex-1 lg:min-w-0">
-              <span className="lg:hidden">Brutalist. Minimal. Exam-Focused. Voice Assisted. Tracked Progress.</span>
+              <span className="lg:hidden">Brutalist. Minimal. Exam Focused. Voice Assisted. Tracked Progress.</span>
               <span className="hidden lg:flex lg:flex-col lg:whitespace-nowrap">
-                <span>Brutalist</span><span>Minimal</span><span>Exam-Focused</span><span>Voice-Assisted</span><span>Tracked Progress</span><span>Open-Source</span>
+                <span>Brutalist</span><span>Minimal</span><span>Exam Focused</span><span>Voice Assisted</span><span>Tracked Progress</span><span>Open-Source</span>
               </span>
             </Text>
             {/* Voice Quiz starts the second row (owner, 20 Oct), Learning Path the third; each row still wraps on a phone. */}
             <div className="flex flex-col gap-4 lg:shrink-0">
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="filled" href="/study" arrow>START STUDYING</ActionLink>
-                <ActionLink variant="outlined" href="/exam" arrow>PRACTICE EXAM</ActionLink>
+                <ActionLink variant="outlined" href="/exam" arrow>TEST EXAM</ActionLink>
               </div>
               <div className="flex flex-wrap gap-4">
                 <ActionLink variant="outlined" href="/voice" arrow>VOICE QUIZ</ActionLink>
                 <ActionLink variant="outlined" href="/read" arrow wrap>OFFICIAL LEARNING READ ALOUD</ActionLink>
               </div>
               <div className="flex flex-wrap gap-4">
-                <ActionLink variant="filled" href="https://www.skills.google/paths/1951" newTab>OFFICIAL LEARNING PATH</ActionLink>
+                <ActionLink variant="filled" href={meta.learningPath} newTab>OFFICIAL LEARNING PATH</ActionLink>
               </div>
             </div>
           </div>
         </section>
 
+        {/* The exam in a sentence or two, from its pack. */}
+        <section className="mb-8">
+          <Heading variant="rule" placement="mb-4">DESCRIPTION</Heading>
+          <Text variant="muted">{meta.description}</Text>        </section>
+
         {/* Exam Structure */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">EXAM STRUCTURE</h2>
+          <Heading variant="rule" placement="mb-4">EXAM STRUCTURE</Heading>
           <div className="border-2 border-foreground">
             <table className="w-full text-sm">
               <thead>
@@ -80,9 +81,9 @@ export default function HomePage() {
 
         {/* Quick Access */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-foreground pb-2 mb-4">NAVIGATION</h2>
+          <Heading variant="rule" placement="mb-4">NAVIGATION</Heading>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SITE_PAGES.map((page) => (
+            {sitePages(meta).map((page) => (
               <Link
                 key={page.href}
                 href={page.href}

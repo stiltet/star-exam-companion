@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { sendNow } from "@/components/outbox"
+import { examHeaders, followWrongExam } from "@/lib/exam-header"
 import { clearDeviceSessions } from "@/lib/resume"
 import {
   AlertDialog,
@@ -29,9 +30,13 @@ export function ResetProgress() {
     try {
       const response = await fetch("/api/scores/reset", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...examHeaders() },
         body: JSON.stringify({ confirm: true }),
       })
+      if (await followWrongExam(response)) {
+        setMessage("The Mac now serves another exam. Reload this page. Nothing was deleted.")
+        return
+      }
       body = (await response.json()) as typeof body
     } catch {
       // The Mac did not answer, or answered with no JSON: shown below as a failed reset.

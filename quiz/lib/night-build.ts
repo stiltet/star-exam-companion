@@ -15,8 +15,9 @@ import {
   type NightBuildState, type NightPart, type NightSource,
 } from "./night.ts"
 import { browserOrigin, REFUSED_ORIGIN } from "./origin.ts"
+import { wrongExam } from "./exam-guard.ts"
+import { DEFAULT_EXAM, examId, loadPack, repoRoot } from "./pack.ts"
 import { reading } from "./reading.ts"
-import { COURSES } from "./reading-view.ts"
 import { renderSpeech } from "./say.ts"
 
 const ENCODE_TIMEOUT_MS = 10 * 60 * 1000
@@ -29,14 +30,22 @@ export function nightDir(): string {
   return chosen && chosen.startsWith("/") ? chosen : path.join(homedir(), "Library", "Caches", "star-exam-night")
 }
 
+// Each exam keeps its recording in its own folder, so one exam's build never clears another's. The
+// default exam keeps the cache folder itself, where its recording already is.
+export function nightDirFor(exam: string = examId()): string {
+  return exam === DEFAULT_EXAM ? nightDir() : path.join(nightDir(), exam)
+}
+
 export function scriptKey(parts: readonly NightPart[]): string {
   return createHash("sha256").update(parts.map((part) => part.script).join("\n")).digest("hex")
 }
 
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
 // reading never receives it, so it reads every paragraph straight through.
-export async function loadCourseParts(): Promise<NightPart[]> {
-  const courses: NightSource[] = await Promise.all(COURSES.map(async (course) => {
+// The exam is named by the caller, so a switch part way through a build cannot read another exam's courses
+// into this exam's folder.
+export async function loadCourseParts(exam: string): Promise<NightPart[]> {
+  const courses: NightSource[] = await Promise.all(loadPack(repoRoot(), exam).courses.map(async (course) => {
     const loaded = await courseBundle(course)
     if (!loaded.ok) throw new Error(loaded.error)
     return {
@@ -187,15 +196,21 @@ export function buildProblem(error: unknown): string {
   return error instanceof Error ? error.message : "The Mac could not finish the recording. Try again."
 }
 
-export function createNightBuild(deps: Runner): { begin: (retry: boolean) => NightBuildState } {
+// preload: the start made when the server boots or the exam is switched, not by someone opening the page. If it fails
+// (the network not up yet), the next ordinary start, the page being opened, tries again without pressing Retry.
+export function createNightBuild(deps: Runner): { begin: (retry: boolean, preload?: boolean) => NightBuildState; idle: () => Promise<void> } {
   let job: Promise<void> | null = null
   let status: NightBuildState = { state: "checking" }
   let known = false
-  const begin = (retry: boolean): NightBuildState => {
-    if (job) return status
-    if (known && !retry) return status
+  let preloadFailed = false
+  let generation = 0
+  const begin = (retry: boolean, preload = false): NightBuildState => {
+    if (job && status.state !== "failed") return status
+    if (known && !retry && !preloadFailed) return status
     known = true
+    preloadFailed = false
     status = { state: "checking" }
+    const current = ++generation
     let reached = { done: 0, total: 0 }
     job = (async () => {
       try {
@@ -216,45 +231,64 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean) => Nig
         const { done, total } = reached
         const message = error instanceof Error ? error.message : String(error)
         status = { state: "failed", error: buildProblem(error), done, total }
+        preloadFailed = preload
         await noteFailure(deps.dir, message, done, total)
       } finally {
-        job = null
+        if (generation === current) job = null
       }
     })()
     return status
   }
-  return { begin }
+  // Resolves when the build now running has settled; a test waits on this instead of a timer.
+  return { begin, idle: () => job ?? Promise.resolve() }
 }
 
-let shared: ReturnType<typeof createNightBuild> | null = null
+// One build per exam, since each reads its own courses and keeps its own state.
+const shared = new Map<string, ReturnType<typeof createNightBuild>>()
 
-export function beginNightBuild(retry: boolean): NightBuildState {
-  if (!shared) {
-    shared = createNightBuild({
-      dir: nightDir(),
-      load: loadCourseParts,
+export function beginNightBuild(retry: boolean, preload = false, exam = examId()): NightBuildState {
+  let build = shared.get(exam)
+  if (!build) {
+    build = createNightBuild({
+      dir: nightDirFor(exam),
+      load: () => loadCourseParts(exam),
       render: (script, file) => renderSpeech(script, file, sayTimeoutMs(script)),
       encode: encodeNightAudio,
     })
+    shared.set(exam, build)
   }
-  return shared.begin(retry)
+  return build.begin(retry, preload)
 }
 
 export function nightStatusResponse(request: Request): Response {
   if (browserOrigin(request) === REFUSED_ORIGIN) {
     return Response.json({ state: "failed", error: "This Mac does not answer to that name.", done: 0, total: 0 }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
+  const exam = examId()
+  const wrong = wrongExam(request, exam)
+  if (wrong) {
+    if (!request.headers.has("x-quiz-exam")) {
+      return Response.json(
+        { ok: false, wrongExam: exam, state: "failed", error: "The exam changed. Reload Night reading for the exam the Mac now serves.", done: 0, total: 0 },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
+      )
+    }
+    return wrong
+  }
   const retry = new URL(request.url).searchParams.get("retry") === "1"
-  return Response.json(beginNightBuild(retry), { headers: { "Cache-Control": "no-store" } })
+  return Response.json(beginNightBuild(retry, false, exam), { headers: { "Cache-Control": "no-store" } })
 }
 
 export async function nightAudioResponse(request: Request, params: Promise<{ key: string }>): Promise<Response> {
   if (browserOrigin(request) === REFUSED_ORIGIN) return new Response("Not found", { status: 400 })
+  const exam = examId()
+  const wrong = wrongExam(request, exam)
+  if (wrong) return wrong
   const { key } = await params
   const rangeHeader = request.headers.get("range")
   if (!/^[0-9a-f]{64}$/.test(key)) return new Response("Not found", { status: 404 })
-  const file = path.join(nightDir(), key, "night.m4a")
-  const manifest = path.join(nightDir(), key, "manifest.json")
+  const file = path.join(nightDirFor(exam), key, "night.m4a")
+  const manifest = path.join(nightDirFor(exam), key, "manifest.json")
   if (!existsSync(file) || !existsSync(manifest)) return new Response("Not found", { status: 404 })
   const info = await stat(file)
   const range = byteRange(rangeHeader, info.size)

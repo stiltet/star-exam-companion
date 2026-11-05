@@ -19,7 +19,7 @@ export default async function PracticePage({ searchParams }: Props) {
   // that combines with ALL, a section or a topic (owner, 28 Oct).
   const onlyUnanswered = unanswered === "1"
   const play = loadPlay()
-  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items) : []
+  const questions: Question[] = play.ok ? quizQuestions(play.glossary, play.items, play.bank) : []
   let filteredQuestions = questions
   if (topic) filteredQuestions = questions.filter((q) => q.topicId === topic)
   else if (section) filteredQuestions = questions.filter((q) => q.sectionId === section)
@@ -30,7 +30,7 @@ export default async function PracticePage({ searchParams }: Props) {
     return query ? `/practice?${query}` : "/practice"
   }
   const place: Record<string, string> = topic ? { topic } : section ? { section } : {}
-  const sections = [1, 2, 3, 4].map((id) => ({
+  const sections = (play.ok ? Object.keys(play.weights).map(Number).sort((a, b) => a - b) : []).map((id) => ({
     id: String(id),
     title: sectionLabel(id, play.ok ? (play.weights[id] ?? 0) : 0),
     ids: questions.filter((q) => q.sectionId === String(id)).map((q) => q.id),
@@ -43,7 +43,6 @@ export default async function PracticePage({ searchParams }: Props) {
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
         <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
-
         {/* Filter */}
         <div className="border-2 border-foreground p-4 mb-6">
           <h2 className="font-bold mb-2">FILTER BY SECTION</h2>

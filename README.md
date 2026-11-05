@@ -4,7 +4,7 @@
 
 # Star Exam Companion
 
-**An open-source, voice-first study app for the Google Cloud Generative AI Leader exam**
+**An open-source, voice-first study app for Google Cloud certification exams, one exam pack per exam.**
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933.svg)](https://nodejs.org)
@@ -22,9 +22,14 @@
 > sponsored or endorsed by Google. The Google Cloud name and logo and the other Google product names
 > are trademarks of Google LLC. Always check the content against Google's official documentation.
 
+> [!NOTE]
+> **Vibe-coded.** Most of this app was written by AI coding agents (Claude Code), steered by its owner in
+> plain language rather than typed by hand. It has tests and an automated review gate, but read the code
+> before you trust it with anything that matters.
+
 **[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
 Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
-are core features that need the quiz on your own computer; the [full local setup](#full-local-setup)
+are core features that need the quiz on your own computer; every exam pack has its own copy of the demo, linked from the bar under the header; the [full local setup](#full-local-setup)
 below gets everything working.
 
 ## Contents
@@ -34,6 +39,7 @@ below gets everything working.
 - [How it works](#how-it-works)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
+- [Choose your exam](#choose-your-exam)
 - [Configuration](#configuration)
 - [Full local setup](#full-local-setup)
 - [Data and privacy](#data-and-privacy)
@@ -45,7 +51,8 @@ below gets everything working.
 
 ## Why Star Exam Companion
 
-It was built to pass the Google Cloud Generative AI Leader exam, and it did. Stellan Lindell passed the exam on first try. It turns the exam
+It started as a way to pass the Google Cloud Generative AI Leader exam, and its author passed it on the first try. It now serves
+any Google Cloud exam that has a pack, starting with that one and Professional Agentic Architect. It turns an exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
@@ -66,11 +73,13 @@ machine, keeps your answers there, and works on a phone without a connection onc
 ## How it works
 
 - A **Next.js** app in `quiz/` renders every page and serves a few local API routes.
+- Everything about one exam lives in an **exam pack**, the folder `exams/<id>/`. Questions are
+  built from the pack's glossary, scenes and section weights, read at run time. One install serves
+  one exam: set `QUIZ_EXAM` to its pack name. Adding an exam is adding a folder; see
+  [`docs/exam-packs.md`](docs/exam-packs.md).
 - Read Aloud parses official course HTML on the server and sends plain text to the device; its HTML parser is not shipped to browsers.
-- Questions are built from [`glossary.md`](glossary.md) and the section weights in
-  [`exam-sections.md`](exam-sections.md); both are read at run time.
 - Answers are saved **on the device first** and then sent to the server, which appends them to
-  `quiz/scores.jsonl` on your machine. Your answers are sent nowhere else.
+  `quiz/scores-<exam>.jsonl` on your machine. Your answers are sent nowhere else.
 - Speech comes from the **macOS text-to-speech voice** (`say`), rendered on your machine and cached.
 - A **service worker** stores the pages, so the installed app works offline.
 
@@ -117,6 +126,51 @@ NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1
 `-H 127.0.0.1` keeps the quiz on your machine; the package's own `dev` and `start` scripts listen
 on every network interface.
 
+## Choose your exam
+
+One install studies one exam. The exam is an **exam pack**, a folder under [`exams/`](exams/), and
+you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you get the default,
+`generative-ai-leader`.
+
+| Pack (`QUIZ_EXAM`) | Exam |
+|---|---|
+| `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud (eight courses: seven of the learning path's twelve, plus the related Build Your First Agent with ADK) all work. The other five are in the same Read Aloud list, marked as having no text, and open to a note and a link to the official course. |
+
+To see which packs your copy has:
+
+```bash
+ls exams
+```
+
+To switch exams while the quiz runs, open **Progress**, scroll to the bottom, pick the exam under
+**Switch exam** and confirm. Every device on that computer follows the choice, and each exam keeps
+its own scores, Night reading place and stored Night recording. The default exam keeps its older
+Night recording too. The choice is saved in `quiz/active-exam.json`, which git ignores. A change to a different exam also
+adds a line (time, the exam left, the exam chosen) to `quiz/exam-switches.log`, next to it and also ignored by git.
+If the log cannot be written, the switch still succeeds and the server reports the error.
+If a device cannot update its older offline worker after a switch, it says so and offers **Try loading again**;
+it does not quietly reopen the previous exam.
+
+`QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
+build and for the start. Replace `PACK` with a name from the list:
+
+```bash
+QUIZ_EXAM=PACK pnpm --dir quiz build
+```
+
+```bash
+QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1
+```
+
+For development, `QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1`
+serves the same pack. If you run the quiz as a login service ([full local setup](#full-local-setup)),
+put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
+each exam, so switching never mixes them.
+
+Missing your exam? A pack is a folder of data, with no code to change: see
+[`docs/exam-packs.md`](docs/exam-packs.md) and [Contributing and support](#contributing-and-support).
+
 ## Configuration
 
 All settings are optional environment variables. Put them in `quiz/.env.local` (git ignores it) or
@@ -125,8 +179,13 @@ in the shell that starts the quiz.
 | Variable | Default | Purpose |
 |---|---|---|
 | `QUIZ_LAN_HOST` | unset | The one address or name, without a port, that other devices open. Unset, only pages opened on this machine (`localhost`, `127.0.0.1`, `[::1]`) can save answers. |
-| `QUIZ_SCORES_FILE` | `quiz/scores.jsonl` | Where answers are saved. |
+| `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Only the starting exam: once you switch on the Progress page, that choice wins. |
+| `QUIZ_EXAM_SETTING_FILE` | `quiz/active-exam.json` | Where the exam chosen on the Progress page is saved. |
+| `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
+| `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
+| `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
+| `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite enables it with pre-seeded scratch recordings. Any other test instance must set it to `0` or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
 ## Full local setup
@@ -303,18 +362,18 @@ start.
 | Stop and remove | `launchctl bootout gui/$UID/com.star-exam-companion`, then delete the plist | `systemctl --user disable --now star-exam-companion`, then delete the unit file |
 
 To go back to an earlier version, check it out with git, install, build and restart. Your answers in
-`quiz/scores.jsonl` are not touched by any of this; copy that file before you re-clone. The
+`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. An install that studied before exams were named had its scores file renamed on the first run of this version, so read [Running a pack](docs/exam-packs.md#running-a-pack) before going back. The
 certificate lasts 825 days; see [Renewing or removing it](docs/https.md#renewing-or-removing-it) in
 the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new certificate.
 
 ## Data and privacy
 
-- **Your answers stay on your machine**, in `quiz/scores.jsonl` and in the browser of each device
+- **Your answers stay on your machine**, in `quiz/scores-<exam>.jsonl` and in the browser of each device
   you study on. Git ignores the scores file and its backups.
 - **No accounts, analytics or tracking.** The app's own scripts and the start and dev commands
   here switch Next.js telemetry off.
-- **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores.jsonl`
-  after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores.jsonl` and
+- **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores-<exam>.jsonl`
+  after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores-*.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
 - **The online demo** is hosted by GitHub Pages, which, like any web host, sees visitors' IP
   addresses. The demo has no accounts, analytics or server of its own, and keeps your answers only
@@ -328,9 +387,7 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
 .
 ├── quiz/                 The Next.js app: pages, components, API routes and tests
 ├── pages-static/         The online demo's own files, laid out like quiz/
-├── glossary.md           Every exam term, one row each, with its source
-├── exam-sections.md      The four exam sections and their weights
-├── checks/               The exam guide's term list, used by the tests
+├── exams/                One exam pack per exam: glossary, scenes, sections, study questions
 ├── docs/https.md         HTTPS, certificates and offline mode on every platform
 ├── scripts/              make-cert.sh (HTTPS certificate), build-pages.sh (online demo)
 ├── .github/workflows/    Builds and deploys the online demo to GitHub Pages
@@ -356,7 +413,7 @@ Install the browser test engines once after installing dependencies:
 pnpm --dir quiz exec playwright install chromium webkit
 ```
 
-Run the complete gate (unit tests, production build and browser tests) from the repository root:
+Run the complete gate (unit tests, then the browser tests, which build and type-check the production app in their own folder, `quiz/.next-e2e`, so a running quiz is never built over) from the repository root:
 
 ```bash
 pnpm --dir quiz gate
@@ -370,7 +427,8 @@ pnpm --dir quiz e2e
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
 `http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
-a running server or writes personal scores. If that port is in use, set `QUIZ_E2E_PORT` to another
+a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
+`quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
 unused port:
 
 ```bash
@@ -381,17 +439,18 @@ Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, 
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
 scripts run; speech requests return silent test audio. Reading pages use original synthetic
-course text, not Google's live content. Night recording status and audio are mocked; storing and
-reopening that recording offline are tested without generating speech. Each test has fresh browser
-storage and scratch scores.
+course text, not Google's live content. Night tests use the real status and audio routes with
+pre-seeded, silent recordings, not generated speech. They check separate recordings and places
+for both exams, including an older default-exam recording. Cross-device switching tests also check
+that a queued answer stays with its original exam. Each test has fresh browser storage and scratch scores.
 Failed tests leave screenshots and traces under `quiz/test-results/` (gitignored).
 
-All three gate stages must pass before a change is proposed. This automates the smoke journeys
+Both gate stages must pass before a change is proposed. This automates the smoke journeys
 listed above, not every possible action or device behaviour: actual iPhone installation, sound output,
 macOS voice generation, LAN certificates and Google's live course responses are not exercised.
 
-The online demo is a static export of the same app. `bash scripts/build-pages.sh` builds it into
-`pages-out/`; it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
+The online demo is a static export of the same app, built once for every exam pack. `bash scripts/build-pages.sh` builds it into
+`pages-out/` (the default exam at the root, every other exam under `pages-out/<pack id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
 Read Aloud and Progress with a panel that says they need the local install, and filters Practice
 in the browser. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
 Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
@@ -400,6 +459,9 @@ Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 
 - **Bugs and ideas:** open a [GitHub issue](https://github.com/stiltet/star-exam-companion/issues).
 - **Changes:** fork the repository, keep each pull request to one change, and include tests.
+- **A new exam:** it is a folder of data, with no code to change. Follow
+  [Add an exam with a pull request](docs/exam-packs.md#add-an-exam-with-a-pull-request), and
+  read [`CONTRIBUTING.md`](CONTRIBUTING.md) first.
 - **Content corrections:** every glossary row names its source; point to the official page that
   shows the correct wording.
 - **Security problems:** please do not open a public issue. Report them privately with GitHub's

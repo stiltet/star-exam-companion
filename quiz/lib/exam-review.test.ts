@@ -44,9 +44,10 @@ test("a retake asks the wrong and flagged questions still in the bank, in exam o
 })
 
 test("a shorter exam gets the same time per question as the full one", () => {
-  assert.equal(examDuration(60), 5400)
-  assert.equal(examDuration(10), 900)
-  assert.equal(examDuration(0), 90)
+  const full = { questions: 60, minutes: 90 }
+  assert.equal(examDuration(60, full), 5400)
+  assert.equal(examDuration(10, full), 900)
+  assert.equal(examDuration(0, full), 90)
 })
 
 test("a review is opened by its exam id in the address hash", () => {
@@ -63,4 +64,11 @@ test("the shuffle keeps every item once", () => {
   assert.deepEqual([...mixed].sort((a, b) => a - b), values)
   assert.notDeepEqual(mixed, values)
   assert.deepEqual(values, Array.from({ length: 50 }, (_, n) => n), "the input is not changed")
+})
+
+test("an exam with fewer questions than the real one gets time in proportion, not the whole clock", () => {
+  const agentic = { questions: 80, minutes: 180 }
+  assert.equal(examDuration(80, agentic), 10800)
+  assert.equal(examDuration(17, agentic), 2295)
+  assert.equal(examDuration(200, agentic), 10800, "never more than the real exam's")
 })

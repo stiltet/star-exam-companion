@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react"
 import { ActionButton } from "@/components/atoms/button"
 import {
-  chapterAt, clock, createNightWatch, NIGHT_PLACE_KEY, offlineLine, parsePlace, placeRecord, readStore,
+  chapterAt, clock, createNightWatch, nightCacheUrl, NIGHT_PLACE_KEY, offlineLine, parsePlace, placeRecord, readStore, replacedNightEntry,
   seekWhenReady, STATUS_TIMEOUT_MS, STORE_TIMEOUT_MS, storedMegabytes, storeProblem, StoreRefused,
   type NightChapter, type NightRemote,
 } from "@/lib/night"
+import { examHeaders, followWrongExam } from "@/lib/exam-header"
+import { currentExam, DEFAULT_EXAM, scoped } from "@/lib/scope"
 import { NIGHT_CACHE } from "@/lib/sw"
 
 // No sleep timer, no volume change and no screen wake lock. The listener keeps the device awake,
@@ -18,7 +20,7 @@ const wide = "self-stretch sm:self-start"
 
 function readStored(): string | null {
   try {
-    return window.localStorage.getItem(NIGHT_PLACE_KEY)
+    return window.localStorage.getItem(scoped(NIGHT_PLACE_KEY))
   } catch {
     // A private window keeps no place. The recording can still be stored for this visit.
     return null
@@ -27,7 +29,7 @@ function readStored(): string | null {
 
 function writeStored(value: string) {
   try {
-    window.localStorage.setItem(NIGHT_PLACE_KEY, value)
+    window.localStorage.setItem(scoped(NIGHT_PLACE_KEY), value)
   } catch {
     // A private window keeps no place. Playback for this visit still works.
   }
@@ -94,10 +96,12 @@ export function NightReader() {
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession
     if (session) session.type = "playback"
     const place = parsePlace(readStored())
+    const exam = currentExam()
     let live = true
     if (place && "caches" in window) {
       void caches.open(NIGHT_CACHE).then(async (cache) => {
-        const hit = await cache.match(`/api/night/audio/${place.key}`)
+        const hit = await cache.match(nightCacheUrl(place.key, exam))
+          ?? (exam === DEFAULT_EXAM ? await cache.match(`/api/night/audio/${place.key}`) : undefined)
         if (!live || !hit) return
         const blob = await hit.blob()
         setStored({ key: place.key, bytes: place.bytes || blob.size, chapters: place.chapters, blob })
@@ -107,7 +111,10 @@ export function NightReader() {
     }
     const watch = createNightWatch({
       status: async (retry) => {
-        const response = await fetch(retry ? "/api/night?retry=1" : "/api/night", { cache: "no-store", signal: AbortSignal.timeout(STATUS_TIMEOUT_MS) })
+        const response = await fetch(retry ? "/api/night?retry=1" : "/api/night", {
+          cache: "no-store", signal: AbortSignal.timeout(STATUS_TIMEOUT_MS), headers: examHeaders(),
+        })
+        if (await followWrongExam(response)) throw new Error("The exam changed.")
         return response.json()
       },
       stored: () => storedRef.current !== null,
@@ -236,14 +243,17 @@ export function NightReader() {
       } catch {
         // The browser refused a lasting store. The recording still goes into the cache.
       }
-      const response = await fetch(`/api/night/audio/${ready.key}`, { cache: "no-store", signal: AbortSignal.timeout(STORE_TIMEOUT_MS) })
+      const response = await fetch(`/api/night/audio/${ready.key}`, { cache: "no-store", signal: AbortSignal.timeout(STORE_TIMEOUT_MS), headers: examHeaders() })
+      if (await followWrongExam(response)) throw new StoreRefused("The exam changed. Reopen Night reading for the current exam.")
       if (!response.ok || !response.body) throw new StoreRefused(`The Mac answered ${response.status}, so nothing was stored. Try again.`)
       const blob = await readStore(response.body, ready.bytes, setReceived)
       if (!("caches" in window)) throw new StoreRefused("This browser cannot store the recording.")
       const cache = await caches.open(NIGHT_CACHE)
-      await cache.put(new Request(`/api/night/audio/${ready.key}`), new Response(blob.slice(), { headers: { "Content-Type": "audio/mp4", "Content-Length": String(blob.size) } }))
+      const exam = currentExam()
+      const cacheUrl = nightCacheUrl(ready.key, exam)
+      await cache.put(new Request(cacheUrl), new Response(blob.slice(), { headers: { "Content-Type": "audio/mp4", "Content-Length": String(blob.size) } }))
       for (const request of await cache.keys()) {
-        if (new URL(request.url).pathname !== `/api/night/audio/${ready.key}`) await cache.delete(request)
+        if (replacedNightEntry(request.url, cacheUrl, exam, DEFAULT_EXAM)) await cache.delete(request)
       }
       const next = { key: ready.key, bytes: blob.size, chapters: ready.chapters, blob }
       writeStored(placeRecord({ key: next.key, seconds: 0, bytes: next.bytes, chapters: next.chapters }))

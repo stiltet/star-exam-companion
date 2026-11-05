@@ -5,9 +5,13 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import test, { after } from "node:test"
 import { loadPlay, readScores } from "./load.ts"
-import { practiceItems } from "./questions.ts"
+import { practiceItems, writtenPool } from "./questions.ts"
 import { postScores } from "./scores-route.ts"
 import type { Answer } from "./score.ts"
+import { testBank, testPack, whileServing } from "./test-pack.ts"
+
+// A test reads the default exam, whatever exam this machine has chosen on the Progress page.
+process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
 
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-scores-route-"))
 const before = { cwd: process.cwd(), scores: process.env.QUIZ_SCORES_FILE }
@@ -26,9 +30,9 @@ const answer = (n: number, extra: Partial<Answer> = {}): Answer => ({
   id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
   at: new Date().toISOString(), mode: "practice", asked: ["q1"], missed: [], ...extra,
 })
-const request = (answers: Answer[], origin = "http://localhost") => new Request("http://localhost/api/scores", {
+const request = (answers: Answer[], origin = "http://localhost", extra: Record<string, string> = {}) => new Request("http://localhost/api/scores", {
   method: "POST",
-  headers: { host: "localhost", origin, "content-type": "application/json" },
+  headers: { host: "localhost", origin, "content-type": "application/json", ...extra },
   body: JSON.stringify({ answers }),
 })
 
@@ -40,7 +44,7 @@ test("the actual score handler stores every offered question, including written 
   const play = loadPlay()
   assert.ok(play.ok)
   if (!play.ok) return
-  const practice = practiceItems(play.items).map((item, n) => answer(n + 1, { asked: [item.id], missed: n % 2 ? [item.id] : [] }))
+  const practice = practiceItems(play.items, writtenPool(testBank)).map((item, n) => answer(n + 1, { asked: [item.id], missed: n % 2 ? [item.id] : [] }))
   const round = play.items.map((item, n) => answer(n + 1001, { mode: "round", asked: [item.id] }))
   const exam = answer(2001, { mode: "exam", asked: ["q1", play.items[0]!.id], missed: ["q1"], seconds: 420 })
   const cards = answer(2002, { mode: "flashcard", asked: [play.glossary.terms[0]!.term] })
@@ -83,4 +87,26 @@ test("the actual handler keeps mode, time and origin validation and explains ind
   assert.match(body.reasons[invalid[3]!.id], /duration/)
   assert.equal((await postScores(request([answer(4001)], "http://other.example"))).status, 400)
   assert.equal(readScores(file).lines.length, count)
+})
+
+test("a page of another exam than the Mac serves is refused with the exam served, and its answers are neither stored nor lost", async () => {
+  const before = readScores(file).lines.length
+  const stale = await postScores(request([answer(901)], "http://localhost", { "x-quiz-exam": "agentic-architect" }))
+  assert.equal(stale.status, 409)
+  assert.deepEqual(await stale.json(), { ok: false, wrongExam: "generative-ai-leader" })
+  assert.equal(readScores(file).lines.length, before, "nothing was stored")
+  const current = await postScores(request([answer(902)], "http://localhost", { "x-quiz-exam": "generative-ai-leader" }))
+  assert.equal(current.status, 200)
+  const older = await postScores(request([answer(903)]))
+  assert.equal(older.status, 200, "a page older than the exam header is still accepted")
+})
+
+test("a page older than the exam header belongs to the default exam: after a switch its answers are refused and kept, never marked gone", async () => {
+  const before = readScores(file).lines.length
+  // q1 is a Generative AI Leader question. Checked against Agentic Architect it would be "gone", and the page would delete it.
+  const queued = [answer(904), answer(905)]
+  const stale = await whileServing("agentic-architect", () => postScores(request(queued)))
+  assert.equal(stale.status, 409, "refused, so the older page keeps its queue for the exam it belongs to")
+  assert.deepEqual(await stale.json(), { ok: false, wrongExam: "agentic-architect" })
+  assert.equal(readScores(file).lines.length, before, "nothing was stored against the other exam")
 })
