@@ -57,6 +57,7 @@ export function BackButton() {
   }
 
   useEffect(() => {
+    if (!standalone) return
     // A page loaded in full still has the page it came from: Back goes there, not up a level.
     if (cameFromApp(document.referrer, window.location.origin)) movedInApp.current = true
     const navigation = window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
@@ -73,11 +74,12 @@ export function BackButton() {
       window.removeEventListener("popstate", onPop, true)
       window.removeEventListener("pagehide", save)
     }
-    // Set up once: save and restore only read refs.
+    // Save and restore only read refs, so navigation does not replace the listeners.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [standalone])
 
   useEffect(() => {
+    if (!standalone) return
     if (pathname !== firstPath.current) movedInApp.current = true
     if (pathname === lastPath.current) return
     lastPath.current = pathname
@@ -86,7 +88,7 @@ export function BackButton() {
       restore(pathname)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname, standalone])
 
   const up = parentPath(pathname)
   if (up === null || !standalone) return null
