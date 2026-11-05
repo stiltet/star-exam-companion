@@ -119,10 +119,13 @@ describe('the GitHub Pages build', () => {
       const otherHome = readFileSync(path.join(other, 'index.html'), 'utf8');
       assert.match(otherHome, /PROFESSIONAL AGENTIC ARCHITECT/);
       assert.match(otherHome, /href="\/demo-test\/agentic-architect\/favicon\.png"/, 'the second exam carries its own base path');
+      // components/demo-exams.tsx uses components/atoms/page-link.tsx for each pack choice.
       for (const page of [home, otherHome]) {
         assert.match(page, /href="\/demo-test\/"[^>]*>Generative AI Leader</, 'the default exam is linked at the root');
         assert.match(page, /href="\/demo-test\/agentic-architect\/"[^>]*>Professional Agentic Architect</, 'the other exam is linked under its name');
       }
+      assert.match(home, /href="\/demo-test\/"[^>]*aria-current="page"[^>]*>Generative AI Leader</);
+      assert.match(otherHome, /href="\/demo-test\/agentic-architect\/"[^>]*aria-current="page"[^>]*>Professional Agentic Architect</);
 
       // A second run replaces its own output instead of refusing it.
       const second = build(out, { QUIZ_BASE_PATH: '/demo-test' });

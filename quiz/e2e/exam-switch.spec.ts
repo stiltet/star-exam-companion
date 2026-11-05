@@ -22,7 +22,8 @@ const UNFINISHED = /Unfinished: Read Aloud covers eight courses, seven of the le
 
 test.use({ navigationCutOff: true })
 
-// Covers components/exam-switcher.tsx (the dropdown and its confirmation), components/site-header-view.tsx
+// Covers components/atoms/select.tsx through components/exam-switcher.tsx (the dropdown and its confirmation),
+// components/site-header-view.tsx
 // (the menu of the exam served, rendered on every page) and app/read/layout.tsx (the Read Aloud guard) through the
 // Progress page.
 test("exam-switcher: a tap outside the confirmation cancels, and confirming switches the exam for the whole install", async ({ page, baseURL }) => {
@@ -82,6 +83,10 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
+    // The course page's components/atoms/breadcrumb.tsx links back to the Read Aloud list.
+    const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb" })
+    await expect(breadcrumb.getByRole("link", { name: "READ ALOUD" })).toHaveAttribute("href", "/read")
+    await expect(breadcrumb).toContainText(/COURSE \d+/)
     await expect(page.getByText(/Open the course on Google Skills/)).toBeVisible()
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
     await page.goBack()
