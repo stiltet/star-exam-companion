@@ -27,9 +27,9 @@ export default function HomePage() {
           {/* The tagline sits over the buttons, and from lg up right of them in the space they leave (owner, 28 Oct). */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
             <Text variant="tagline" placement="mb-4 lg:mb-0 lg:order-last lg:flex-1 lg:min-w-0">
-              <span className="lg:hidden">Brutalist. Minimal. Exam-Focused. Voice Assisted. Tracked Progress.</span>
+              <span className="lg:hidden">Brutalist. Minimal. Exam Focused. Voice Assisted. Tracked Progress.</span>
               <span className="hidden lg:flex lg:flex-col lg:whitespace-nowrap">
-                <span>Brutalist</span><span>Minimal</span><span>Exam-Focused</span><span>Voice-Assisted</span><span>Tracked Progress</span><span>Open-Source</span>
+                <span>Brutalist</span><span>Minimal</span><span>Exam Focused</span><span>Voice Assisted</span><span>Tracked Progress</span><span>Open-Source</span>
               </span>
             </Text>
             {/* Voice Quiz starts the second row (owner, 20 Oct), Learning Path the third; each row still wraps on a phone. */}

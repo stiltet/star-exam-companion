@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const pack = activePack().meta
   return {
     title: "Star Exam Companion",
-    description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam-focused.`,
+    description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam Focused.`,
     keywords: ["Google Cloud", ...(pack.keywords ?? []), "Certification", "Exam Prep", pack.title],
     icons: {
       icon: `${base}/favicon.png`,
