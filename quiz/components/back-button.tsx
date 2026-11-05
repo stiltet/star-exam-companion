@@ -35,6 +35,7 @@ export function BackButton() {
     try {
       target = parseScroll(window.sessionStorage.getItem(scrollKey(path)))
     } catch {
+      // Without storage there is no saved position to put back; the page stays where it opened.
       return
     }
     if (!target) return
