@@ -79,8 +79,30 @@ test.describe("in the installed app", () => {
   })
 })
 
-test("a browser tab shows no floating Back button", async ({ page }) => {
-  await page.goto("/study/fundamentals")
-  await expect(page.locator("h1")).not.toBeEmpty()
+test("a browser tab keeps native history scroll and shows no floating Back button", async ({ page, baseURL }) => {
+  await saveExams(page, baseURL!)
+  await page.goto("/")
+
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.getByRole("link", { name: "PROGRESS", exact: true }).click()
+  await expect(page).toHaveURL(/\/progress$/)
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.getByRole("link", { name: "STUDY", exact: true }).click()
+  await expect(page).toHaveURL(/\/study$/)
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.getByRole("link", { name: "PROGRESS", exact: true }).click()
+  await expect(page).toHaveURL(/\/progress$/)
+
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)
+  expect(maxScroll).toBeGreaterThan(200)
+  await page.evaluate(() => window.scrollTo(0, 200))
+  const laterPosition = await page.evaluate(() => window.scrollY)
+  expect(laterPosition).toBe(200)
+
+  await page.goBack()
+  await expect(page).toHaveURL(/\/study$/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/progress$/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(5)
   await expect(backButton(page)).toHaveCount(0)
 })
