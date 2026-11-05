@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { EXAM_HEADER, examHeaders, followWrongExam } from "./exam-header.ts"
+import { EXAM_HEADER, EXAM_REFRESH_FAILED, examHeaders, followWrongExam } from "./exam-header.ts"
 
 test("exam-header: a request names the page's exam", () => {
   // Outside a browser a page has no exam of its own, so it is the default exam's.
@@ -16,16 +16,20 @@ test("exam-header: only a 409 that names the exam served is a wrong-exam refusal
 })
 
 // A page for followWrongExam: a session store, a counter for reloads and the exam on <html>.
-function withPage(exam: string, run: (reloads: () => number) => Promise<void>, reported: Error[] = []): Promise<void> {
+function withPage(exam: string, run: (reloads: () => number) => Promise<void>, events: string[] = []): Promise<void> {
   const store = new Map<string, string>()
   let reloaded = 0
   const globals = globalThis as unknown as Record<string, unknown>
   const before = { window: globals.window, document: globals.document }
   globals.document = { documentElement: { dataset: { exam } } }
   globals.window = {
-    sessionStorage: { getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => void store.set(key, value) },
+    sessionStorage: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
+      removeItem: (key: string) => void store.delete(key),
+    },
     location: { reload: () => void (reloaded += 1) },
-    reportError: (error: Error) => reported.push(error),
+    dispatchEvent: (event: Event) => void events.push(event.type),
     setTimeout,
     clearTimeout,
   }
@@ -83,41 +87,126 @@ test("exam-header: a wrong-exam reload waits for the offline worker to resume pa
   }
 })
 
-test("exam-header: a worker message failure is reported and does not strand a reload", async () => {
+test("exam-header: a worker message failure does not reload stale HTML and can be retried", async () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+  let fails = true
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
-    value: { serviceWorker: { controller: { postMessage: () => { throw new Error("worker unavailable") } } } },
+    value: { serviceWorker: {
+      controller: { postMessage: (_message: string, ports: MessagePort[]) => {
+        if (fails) throw new Error("worker unavailable")
+        ports[0]?.postMessage("ready")
+        ports[0]?.close()
+      } },
+      getRegistration: async () => undefined,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    } },
   })
-  const reported: Error[] = []
+  const events: string[] = []
   try {
     await withPage("generative-ai-leader", async (reloads) => {
       assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+      assert.equal(reloads(), 0)
+      assert.deepEqual(events, [EXAM_REFRESH_FAILED])
+      fails = false
+      assert.equal(await followWrongExam(wrong("agentic-architect")), true)
       assert.equal(reloads(), 1)
-      assert.equal(reported.length, 1)
-      assert.match(reported[0]?.message ?? "", /Could not tell the offline worker/)
-      assert.match(String(reported[0]?.cause), /worker unavailable/)
-    }, reported)
+    }, events)
   } finally {
     if (previous) Object.defineProperty(globalThis, "navigator", previous)
     else Reflect.deleteProperty(globalThis, "navigator")
   }
 })
 
-test("exam-header: an unresponsive worker is reported and does not strand a reload", async () => {
+test("exam-header: an unresponsive worker leaves the page in place and shows a warning", async () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
-    value: { serviceWorker: { controller: { postMessage: (_message: string, ports: MessagePort[]) => ports[0]?.close() } } },
+    value: { serviceWorker: {
+      controller: { postMessage: (_message: string, ports: MessagePort[]) => ports[0]?.close() },
+      getRegistration: async () => undefined,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    } },
   })
-  const reported: Error[] = []
+  const events: string[] = []
+  try {
+    await withPage("generative-ai-leader", async (reloads) => {
+      assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+      assert.equal(reloads(), 0)
+      assert.deepEqual(events, [EXAM_REFRESH_FAILED])
+    }, events)
+  } finally {
+    if (previous) Object.defineProperty(globalThis, "navigator", previous)
+    else Reflect.deleteProperty(globalThis, "navigator")
+  }
+})
+
+test("exam-header: an older worker is updated before the wrong-exam page reloads", async () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+  const listeners = new Set<() => void>()
+  const older = { postMessage: (_message: string, _ports: MessagePort[]): void => { throw new Error("old worker") } }
+  const newer = { postMessage: (_message: string, ports: MessagePort[]) => {
+    ports[0]?.postMessage("ready")
+    ports[0]?.close()
+  } }
+  let controller = older
+  const registration = {
+    active: older,
+    installing: null,
+    waiting: null,
+    update: async () => {
+      controller = newer
+      for (const listener of listeners) listener()
+    },
+  }
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { serviceWorker: {
+      get controller() { return controller },
+      getRegistration: async () => registration,
+      addEventListener: (_type: string, listener: () => void) => void listeners.add(listener),
+      removeEventListener: (_type: string, listener: () => void) => void listeners.delete(listener),
+    } },
+  })
   try {
     await withPage("generative-ai-leader", async (reloads) => {
       assert.equal(await followWrongExam(wrong("agentic-architect")), true)
       assert.equal(reloads(), 1)
-      assert.equal(reported.length, 1)
-      assert.match(reported[0]?.message ?? "", /did not confirm/)
-    }, reported)
+      assert.equal(controller, newer)
+      assert.equal(listeners.size, 0)
+    })
+  } finally {
+    if (previous) Object.defineProperty(globalThis, "navigator", previous)
+    else Reflect.deleteProperty(globalThis, "navigator")
+  }
+})
+
+test("exam-header: a replacement controller is acknowledged even if the older worker replied", async () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+  let acknowledgements = 0
+  const newer = { postMessage: (_message: string, ports: MessagePort[]) => {
+    acknowledgements += 1
+    ports[0]?.postMessage("ready")
+    ports[0]?.close()
+  } }
+  const older = { postMessage: (_message: string, ports: MessagePort[]) => {
+    controller = newer
+    ports[0]?.postMessage("ready")
+    ports[0]?.close()
+  } }
+  let controller = older
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { serviceWorker: { get controller() { return controller } } },
+  })
+  try {
+    await withPage("generative-ai-leader", async (reloads) => {
+      assert.equal(await followWrongExam(wrong("agentic-architect")), true)
+      assert.equal(acknowledgements, 1)
+      assert.equal(reloads(), 1)
+    })
   } finally {
     if (previous) Object.defineProperty(globalThis, "navigator", previous)
     else Reflect.deleteProperty(globalThis, "navigator")

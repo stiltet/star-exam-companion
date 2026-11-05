@@ -149,6 +149,8 @@ its own scores, Night reading place and stored Night recording. The default exam
 Night recording too. The choice is saved in `quiz/active-exam.json`, which git ignores. A change to a different exam also
 adds a line (time, the exam left, the exam chosen) to `quiz/exam-switches.log`, next to it and also ignored by git.
 If the log cannot be written, the switch still succeeds and the server reports the error.
+If a device cannot update its older offline worker after a switch, it says so and offers **Try loading again**;
+it does not quietly reopen the previous exam.
 
 `QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
 build and for the start. Replace `PACK` with a name from the list:
@@ -425,7 +427,8 @@ pnpm --dir quiz e2e
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
 `http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
-a running server or writes personal scores. If that port is in use, set `QUIZ_E2E_PORT` to another
+a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
+`quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
 unused port:
 
 ```bash

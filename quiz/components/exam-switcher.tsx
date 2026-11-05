@@ -21,13 +21,28 @@ export function ExamSwitcher({ exams, current }: Props) {
   const [pending, setPending] = useState<string | null>(null)
   const [switching, setSwitching] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState<string | null>(null)
   // The name the dialog shows is kept while it fades out, so it never flips to the old exam's.
   const [shown, setShown] = useState(current)
   const target = pending ?? shown
   const title = (id: string) => exams.find((exam) => exam.id === id)?.title ?? id
 
+  async function loadSwitchedExam(exam: string) {
+    if (!await resumePageFetches()) {
+      setSwitching(false)
+      setLoadFailed(exam)
+      setMessage(`The Mac now serves ${title(exam)}, but this device could not update its offline worker. Try loading again.`)
+      return
+    }
+    setLoadFailed(null)
+    setMessage(`Switched to ${title(exam)}.`)
+    // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
+    window.setTimeout(() => window.location.assign("/"), 800)
+  }
+
   async function switchExam(exam: string) {
     setSwitching(true)
+    setLoadFailed(null)
     setMessage(`Switching to ${title(exam)}…`)
     // Answers still on this device reach the Mac first, while it still serves the exam they belong to.
     await sendNow()
@@ -50,10 +65,7 @@ export function ExamSwitcher({ exams, current }: Props) {
     // Clips still downloading belong to the exam being left; the next page stores the new exam's. Only now, so a
     // failed switch leaves the voice downloads of the exam still studied running.
     stopStoringVoice()
-    await resumePageFetches()
-    setMessage(`Switched to ${title(exam)}.`)
-    // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
-    window.setTimeout(() => window.location.assign("/"), 800)
+    await loadSwitchedExam(exam)
   }
 
   return (
@@ -90,7 +102,14 @@ export function ExamSwitcher({ exams, current }: Props) {
         </DialogContent>
       </Dialog>
       {/* Announced as it changes, so a screen-reader user hears the progress and the outcome. */}
-      <p role="status" aria-live="polite" className={message ? "mt-4" : "sr-only"}>{message ?? ""}</p>
+      <p role={loadFailed ? "alert" : "status"} aria-live={loadFailed ? "assertive" : "polite"} className={message ? "mt-4" : "sr-only"}>{message ?? ""}</p>
+      {loadFailed && (
+        <ActionButton variant="outlined" placement="mt-4" disabled={switching} onClick={() => {
+          setSwitching(true)
+          setMessage("Checking the offline worker…")
+          void loadSwitchedExam(loadFailed)
+        }}>Try loading again</ActionButton>
+      )}
     </div>
   )
 }

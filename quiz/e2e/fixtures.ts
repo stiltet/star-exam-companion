@@ -4,10 +4,11 @@ import { test as base, expect, type Page } from "@playwright/test"
 // storage calls it cut off as uncaught errors.
 const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
 
-export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean }>({
+export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean }>({
   offlineNetwork: [false, { option: true }],
   navigationCutOff: [false, { option: true }],
-  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff }, use) => {
+  expectedWrongExam: [false, { option: true }],
+  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff, expectedWrongExam }, use) => {
     const errors: string[] = []
     page.on("pageerror", (error) => {
       // WebKit reports refused offline prefetches and background voice downloads as pageerrors.
@@ -24,6 +25,7 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
       }
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
       if (navigationCutOff && CUT_OFF.test(message.text())) return
+      if (expectedWrongExam && /status of 409\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === "/api/snapshot") return
       errors.push(message.text())
     })
     await context.addInitScript(() => {
