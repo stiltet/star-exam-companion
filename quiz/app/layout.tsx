@@ -20,7 +20,7 @@ const base = BASE_PATH
 export const metadata: Metadata = {
   title: "Star Exam Companion",
   description:
-    "Open-source exam preparation for Google Cloud Generative AI Leader certification. Brutalist. Minimal. Exam-focused.",
+    "Open-source exam preparation for Google Cloud Generative AI Leader certification. Brutalist. Minimal. Exam Focused.",
   keywords: ["Google Cloud", "Generative AI", "Certification", "Exam Prep", "GCGAI Leader"],
   icons: {
     icon: `${base}/favicon.png`,
