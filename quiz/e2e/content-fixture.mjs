@@ -1,3 +1,6 @@
+import childProcess from "node:child_process"
+import { syncBuiltinESMExports } from "node:module"
+
 // Synthetic course text keeps browser tests independent of Google's availability and copyright. It answers for every
 // exam pack's course bundles, since the exam can be switched while the tests run.
 const bundle = {
@@ -18,10 +21,33 @@ const bundle = {
     { _id: "text-two", _parentId: "block-two", _sortOrder: 1, _component: "text", body: "<p>This is the second original test paragraph.</p>" },
   ],
 }
+const rise = {
+  course: {
+    lessons: [
+      {
+        id: "000000000000000000000001", type: "blocks", title: "Test Rise reading one",
+        items: [{ id: "rise-one", type: "text", items: [{ paragraph: "<div>Rise introduction<ul><li>Rise item</li></ul>Rise ending</div> tail" }] }],
+      },
+      {
+        id: "000000000000000000000002", type: "blocks", title: "Test Rise reading two",
+        items: [{ id: "rise-two", type: "text", items: [{ paragraph: "<p>This is the second synthetic Rise reading.</p>" }] }],
+      },
+    ],
+  },
+}
+const runtime = `__jsonp("runtime-data.js","${Buffer.from(JSON.stringify(rise)).toString("base64")}")`
+const originalSpawn = childProcess.spawn
+childProcess.spawn = function (command, ...args) {
+  if (command === "say" || command === "afconvert") throw new Error(`Browser tests must not run ${command}`)
+  return originalSpawn.call(this, command, ...args)
+}
+syncBuiltinESMExports()
+
 const originalFetch = globalThis.fetch
 globalThis.fetch = async (input, init) => {
   const url = new URL(input instanceof Request ? input.url : input.toString())
   if (url.hostname === "storage.googleapis.com" && url.pathname.includes("/cls-html5-courses/")) {
+    if (url.pathname.endsWith("/runtime-data.js")) return new Response(runtime)
     const part = url.pathname.split("/").at(-1)?.replace(".json", "")
     if (!Object.hasOwn(bundle, part)) throw new Error(`Unknown test bundle request: ${url}`)
     return Response.json(bundle[part])

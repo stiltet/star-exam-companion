@@ -29,18 +29,10 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
     await context.addInitScript(() => {
       HTMLMediaElement.prototype.play = () => Promise.resolve()
     })
-    await context.route(/\/api\/(?:speak|night\/audio)(?:\/|$|\?)/, (route) =>
+    await context.route(/\/api\/speak(?:\/|$|\?)/, (route) =>
       route.fulfill({
         contentType: "audio/wav",
         body: Buffer.from("UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=", "base64"),
-      }),
-    )
-    await context.route(/\/api\/night(?:\?|$)/, (route) =>
-      route.fulfill({
-        json: {
-          state: "ready", key: "0".repeat(64), bytes: 44, duration: 1,
-          chapters: [{ courseId: "1", courseTitle: "Test course", number: 1, title: "Test chapter", start: 0 }],
-        },
       }),
     )
     const reset = await page.request.post("/api/scores/reset", {
@@ -62,9 +54,10 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
 
 export { expect }
 
-export async function openVoice(page: Page) {
+export async function openVoice(page: Page, beforeVoice?: () => Promise<void>) {
   await page.goto("/progress")
   await page.waitForLoadState("networkidle")
+  await beforeVoice?.()
   await page.getByRole("button", { name: "Open menu" }).click()
   await page.locator("header").getByRole("link", { name: /voice quiz/i }).filter({ visible: true }).click()
   await expect(page.getByRole("button", { name: /^A\./ })).toBeVisible()

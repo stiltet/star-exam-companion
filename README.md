@@ -183,7 +183,7 @@ in the shell that starts the quiz.
 | `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
 | `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
-| `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite (`pnpm --dir quiz e2e`, the instance on port 47822) sets it. Any other test instance must set it too, or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
+| `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite enables it with pre-seeded scratch recordings. Any other test instance must set it to `0` or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
 
 ## Full local setup
@@ -436,9 +436,10 @@ Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, 
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
 scripts run; speech requests return silent test audio. Reading pages use original synthetic
-course text, not Google's live content. Night recording status and audio are mocked; storing and
-reopening that recording offline are tested without generating speech. Each test has fresh browser
-storage and scratch scores.
+course text, not Google's live content. Night tests use the real status and audio routes with
+pre-seeded, silent recordings, not generated speech. They check separate recordings and places
+for both exams, including an older default-exam recording. Cross-device switching tests also check
+that a queued answer stays with its original exam. Each test has fresh browser storage and scratch scores.
 Failed tests leave screenshots and traces under `quiz/test-results/` (gitignored).
 
 Both gate stages must pass before a change is proposed. This automates the smoke journeys

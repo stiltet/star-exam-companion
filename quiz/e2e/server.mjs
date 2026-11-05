@@ -4,6 +4,8 @@ import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import "./content-fixture.mjs"
+import { seedNight } from "./night-fixture.mjs"
 
 const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
 async function checkPort() {
@@ -68,6 +70,9 @@ function run(args) {
 }
 
 try {
+  process.env.QUIZ_ROOT = root
+  process.env.NIGHT_DIR = env.NIGHT_DIR
+  await seedNight()
   await run(["build"])
   if (!stopping) {
     await checkPort()
