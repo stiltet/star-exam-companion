@@ -183,5 +183,5 @@
 
 /* In the installed app only: room below the footer for the floating Back button. */
 html[data-standalone] .footer-bottom {
-  padding-bottom: 5rem;
+  padding-bottom: 6rem;
 }
