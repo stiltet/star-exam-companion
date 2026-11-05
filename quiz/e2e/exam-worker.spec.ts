@@ -152,6 +152,8 @@ test("another device reports an unavailable worker and can retry its wrong-exam 
     const notice = page.getByRole("complementary", { name: "EXAM CHANGED" })
     await expect(notice.getByRole("alert")).toContainText("The Mac now serves another exam")
     await expect(page.locator("html")).toHaveAttribute("data-exam", "generative-ai-leader")
+    await notice.getByRole("button", { name: "Try loading again", exact: true }).click()
+    await expect(notice.getByRole("alert")).toContainText("It still could not load it", { timeout: 60_000 })
     await allowWorkerUpdate(page)
     await notice.getByRole("button", { name: "Try loading again", exact: true }).click()
     await expect(page.locator("html")).toHaveAttribute("data-exam", "agentic-architect", { timeout: 30_000 })

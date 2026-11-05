@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ActionButton } from "@/components/atoms/button"
 import { Heading } from "@/components/atoms/heading"
 import { Select } from "@/components/atoms/select"
+import { Text } from "@/components/atoms/text"
 import { sendNow } from "@/components/outbox"
 import { stopStoringVoice } from "@/components/voice-cache"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -102,7 +103,7 @@ export function ExamSwitcher({ exams, current }: Props) {
         </DialogContent>
       </Dialog>
       {/* Announced as it changes, so a screen-reader user hears the progress and the outcome. */}
-      <p role={loadFailed ? "alert" : "status"} aria-live={loadFailed ? "assertive" : "polite"} className={message ? "mt-4" : "sr-only"}>{message ?? ""}</p>
+      <Text variant="muted" role={loadFailed ? "alert" : "status"} placement={message ? "mt-4" : "sr-only"}>{message ?? ""}</Text>
       {loadFailed && (
         <ActionButton variant="outlined" placement="mt-4" disabled={switching} onClick={() => {
           setSwitching(true)

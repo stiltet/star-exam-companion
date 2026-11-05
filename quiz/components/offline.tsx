@@ -16,6 +16,7 @@ const WORKER_FAILED = "quiz-worker-failed"
 export function OfflineShell() {
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [retrying, setRetrying] = useState(false)
+  const [retryFailed, setRetryFailed] = useState(false)
   useEffect(() => {
     const update = () => setRefreshFailed(examRefreshFailed())
     window.addEventListener(EXAM_REFRESH_FAILED, update)
@@ -39,12 +40,16 @@ export function OfflineShell() {
   if (!refreshFailed) return null
   return (
     <Callout title="EXAM CHANGED">
-      <Text variant="muted" role="alert">The Mac now serves another exam, but this device could not load it. Try again; queued answers stay on this device.</Text>
+      <Text variant="muted" role="alert">
+        The Mac now serves another exam, but this device could not load it. Try again; queued answers stay on this device.
+        {retryFailed ? " It still could not load it. Try again in a moment." : ""}
+      </Text>
       <ActionButton variant="outlined" disabled={retrying} onClick={() => {
         setRetrying(true)
+        setRetryFailed(false)
         void resumePageFetches().then((ready) => {
           if (ready) window.location.reload()
-          else setRetrying(false)
+          else { setRetrying(false); setRetryFailed(true) }
         })
       }}>{retrying ? "Checking…" : "Try loading again"}</ActionButton>
     </Callout>
