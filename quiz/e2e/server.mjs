@@ -6,6 +6,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
 import { seedNight } from "./night-fixture.mjs"
+import { browserServerEnv } from "./server-env.mjs"
 
 const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
 async function checkPort() {
@@ -34,18 +35,9 @@ await cp(path.join(root, "exams", "agentic-architect"), bare, { recursive: true 
 const meta = JSON.parse(await readFile(path.join(bare, "pack.json"), "utf8"))
 await writeFile(path.join(bare, "pack.json"), JSON.stringify({ ...meta, id: "no-course-test", title: "Exam With No Course", reading: false }, null, 2))
 await rm(path.join(bare, "courses.json"))
-const env = {
-  ...process.env,
-  NEXT_TELEMETRY_DISABLED: "1",
-  QUIZ_DIST_DIR: ".next-e2e",
-  // A scratch folder, with one file per exam as the real app keeps them, so a test can answer in two exams.
-  QUIZ_SCORES_DIR: path.join(scratch, "scores"),
-  QUIZ_ROOT: root,
-  // The tests run Generative AI Leader, whatever exam this machine has chosen on the Progress page.
-  QUIZ_EXAM: "generative-ai-leader",
-  QUIZ_EXAM_SETTING_FILE: path.join(scratch, "active-exam.json"),
-  NIGHT_DIR: path.join(scratch, "night"),
-}
+// An explicit empty file override also blocks a QUIZ_SCORES_FILE from .env.local. The scratch folder
+// keeps one file per exam, and the chosen exam and Night recording stay in scratch as well.
+const env = browserServerEnv(process.env, scratch, root)
 const next = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url))
 const preload = fileURLToPath(new URL("./content-fixture.mjs", import.meta.url))
 let child
