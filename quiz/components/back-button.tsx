@@ -34,7 +34,7 @@ export function BackButton() {
         firstPath.current = up
         router.push(up)
       }}
-      className="round-float fixed bottom-4 left-4 z-50 flex size-11 items-center justify-center bg-black text-white shadow-lg ring-1 ring-white/20 active:scale-95"
+      className="round-float fixed bottom-8 left-8 z-50 flex size-11 items-center justify-center bg-black text-white shadow-lg ring-1 ring-white/20 active:scale-95"
     >
       <ArrowLeft aria-hidden="true" className="size-5" />
     </button>
