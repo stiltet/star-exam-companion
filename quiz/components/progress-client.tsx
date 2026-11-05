@@ -269,7 +269,7 @@ export function ProgressClient({ stats }: Props) {
                   <td className={`${cell} text-right`}>{exam.correct} / {exam.total} ({exam.percent}%)</td>
                   <td className={`${cell} text-right`}>{minutes(exam.seconds)}</td>
                   <td className={`${cell} text-right font-bold whitespace-nowrap`}>{exam.percent >= EXAM_TARGET ? "Passed" : "Not passed"}</td>
-                  <td className={`${cell} text-right whitespace-nowrap`}>{exam.id ? <a href={`/exam${reviewHash(exam.id)}`} className="font-bold">Review →</a> : null}</td>
+                  <td className={`${cell} text-right whitespace-nowrap`}>{exam.id ? <Link href={`/exam${reviewHash(exam.id)}`} className="font-bold">Review →</Link> : null}</td>
                 </tr>
               ))}
             </tbody>
@@ -296,7 +296,7 @@ export function ProgressClient({ stats }: Props) {
                   <td className={cell}>{exam.date}</td>
                   <td className={`${cell} text-right`}>{exam.correct} / {exam.total}</td>
                   <td className={`${cell} text-right`}>{minutes(exam.seconds)}</td>
-                  <td className={`${cell} text-right whitespace-nowrap`}>{exam.id ? <a href={`/exam${reviewHash(exam.id)}`} className="font-bold">Review →</a> : null}</td>
+                  <td className={`${cell} text-right whitespace-nowrap`}>{exam.id ? <Link href={`/exam${reviewHash(exam.id)}`} className="font-bold">Review →</Link> : null}</td>
                 </tr>
               ))}
             </tbody>
