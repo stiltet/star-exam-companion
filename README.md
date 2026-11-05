@@ -4,7 +4,7 @@
 
 # Star Exam Companion
 
-**An open-source, voice-first study app for Google Cloud certification exams, one exam pack per exam**
+**An open-source, voice-first study app for any Google Cloud certification exam**
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933.svg)](https://nodejs.org)
