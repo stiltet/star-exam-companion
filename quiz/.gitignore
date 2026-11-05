@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-gate
 .next-service
 .DS_Store
 next-env.d.ts
