@@ -32,11 +32,16 @@ export function reviewUrl(course: Course, ids: string[], pageCount: number, page
 
 // A Rise course's one file; its folder already names the language, so the path ends there.
 export function riseUrl(course: Course): string {
-  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/runtime-data.js`
+  return `${course.bundleBase}/${bundleFolder(course)}/runtime-data.js`
 }
 
 export function bundleUrl(course: Course, part: (typeof PARTS)[number]): string {
-  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/course/en/${part}.json`
+  return `${course.bundleBase}/${bundleFolder(course)}/course/en/${part}.json`
+}
+
+function bundleFolder(course: Course): string {
+  if (!course.folder) throw new Error(`Course ${course.id} has no public bundle folder.`)
+  return course.folder.split("/").map(encodeURIComponent).join("/")
 }
 
 // The longest text one clip may carry: the speak routes' own limit.

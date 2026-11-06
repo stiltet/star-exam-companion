@@ -53,6 +53,18 @@
       "title": "Liftoff with Google Antigravity: Build a Video Game with AI",
       "folder": "T-LWGA-B/v2.0/T-LWGA-B",
       "format": "rise"
+    },
+    {
+      "id": "12",
+      "template": "1786",
+      "title": "Orchestrate Workflows with the Data Agent Kit",
+      "provider": "private"
+    },
+    {
+      "id": "13",
+      "template": "1832",
+      "title": "Build Agent Skills with Google",
+      "provider": "private"
     }
   ],
   "noReading": [
@@ -73,18 +85,6 @@
       "template": "1275",
       "title": "Deploy Multi-Agent Systems with Gemini Enterprise Agent Platform",
       "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
-    },
-    {
-      "id": "12",
-      "template": "1786",
-      "title": "Orchestrate Workflows with the Data Agent Kit",
-      "why": "This course has readings on Google Skills, but the quiz could not find them as public text. Open the course on Google Skills."
-    },
-    {
-      "id": "13",
-      "template": "1832",
-      "title": "Build Agent Skills with Google",
-      "why": "This course has readings on Google Skills, but the quiz could not find them as public text. Open the course on Google Skills."
     }
   ]
 }

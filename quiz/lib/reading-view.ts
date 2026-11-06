@@ -3,7 +3,9 @@ export type Course = {
   id: string
   template: string
   title: string
-  folder: string
+  packId: string
+  provider: "google" | "private"
+  folder?: string
   format?: "rise"
   bundleBase: string
   path: string

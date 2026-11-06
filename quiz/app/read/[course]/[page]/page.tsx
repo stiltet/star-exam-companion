@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { Text } from "@/components/atoms/text"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
 import { courseBundle } from "@/lib/reading-provider"
@@ -52,6 +53,9 @@ export default async function ReadingPage({ params }: Props) {
         </nav>
       </div>
       <main className="flex-1 max-w-4xl mx-auto px-4 pb-8 w-full">
+        {course.provider === "private" && (
+          <Text variant="note" placement="mb-4">This reading is from a private copy on this server.</Text>
+        )}
         <ReadAloud
           key={`${course.id}/${pageId}`}
           place={`${course.id}/${pageId}`}

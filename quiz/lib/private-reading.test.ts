@@ -4,6 +4,9 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
 import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { privateReadingProvider } from "./reading-provider.ts"
+import { loadPack } from "./pack.ts"
+import { reading } from "./reading.ts"
 import { testRoot } from "./test-pack.ts"
 
 const before = process.env.QUIZ_PRIVATE_DIR
@@ -33,6 +36,25 @@ test("private readings are isolated by pack and course and kept outside the repo
   assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Synthetic fixture text.")
   assert.equal(path.relative(testRoot, root).startsWith(".."), true)
   assert.match(stored.savedAt, /^\d{4}-\d\d-\d\dT/)
+})
+
+test("the private provider turns a saved page into a Read Aloud page", async () => {
+  await useScratch()
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  await savePrivateReading(course.packId, course.id, {
+    pageId: "101",
+    title: "Synthetic title",
+    text: "Synthetic first paragraph.\n\nSynthetic second paragraph.",
+  })
+
+  const loaded = await privateReadingProvider.load(course)
+  assert.equal(loaded.ok, true)
+  assert.deepEqual(loaded.pages, [{ id: "101", title: "Synthetic title" }])
+  assert.deepEqual(reading(loaded.bundle, "101")?.paragraphs.map((paragraph) => paragraph.text), [
+    "Synthetic first paragraph.",
+    "Synthetic second paragraph.",
+  ])
 })
 
 test("private records are stored in restricted JSON files", async () => {

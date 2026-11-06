@@ -44,8 +44,17 @@ export default async function CourseReadingsPage({ params }: Props) {
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="mb-6" />
         <Heading variant="page" placement="mb-6">{course.title}</Heading>
+        {course.provider === "private" && (
+          <Text variant="note" placement="mb-6">This course is read from a private copy on this server. It is not included in the repository or a build.</Text>
+        )}
         {loaded.ok ? (
-          <ReadingList course={course.id} pages={loaded.pages} />
+          <ReadingList
+            course={course.id}
+            pages={loaded.pages}
+            emptyLabel={course.provider === "private"
+              ? "No private copy is saved on this server yet."
+              : undefined}
+          />
         ) : (
           <CourseTextError detail={loaded.error} again={`/read/${course.id}`} />
         )}

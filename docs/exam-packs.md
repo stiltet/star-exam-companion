@@ -24,9 +24,14 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 | `study.json` | `sections` (the Study pages: topics, study Q and A, official docs) and `questions` (the written practice questions). |
 
 `reading` is `true` for a pack whose exam has an official course to read aloud, and then the pack
-needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder, format? }] }`. `path` is
+needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, provider?, folder?, format? }] }`. `path` is
 the learning path on Google Skills, `bundleBase` is the public Google Cloud Storage folder that
-holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
+holds public courses' text, and each course gives its Skills number (`template`) and, unless it uses
+the private provider, its folder there. `provider` is omitted for public Google bundles or set to
+`"private"` for a course whose pages are saved by the user in a private store on this server. Private
+courses do not have a public `folder` or `format`; their captured text is outside the repository and
+build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
+app-data directory is used.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read
 (a lab or video course, say). Read Aloud lists them in the same list as the others, marked "No text to read aloud";
 opening one shows `why` and a link to the course on Google Skills. Say in `why` only what its Skills page shows: a lab or video course lists no readings, and a course whose readings sit behind a login says so. Their ids continue after the readable courses' ids.

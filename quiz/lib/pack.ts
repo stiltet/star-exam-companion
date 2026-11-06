@@ -207,8 +207,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
   return meta as PackMeta
 }
 
-// courses.json: { path, bundleBase, courses: [{ id, template, title, folder, format? }] }, each course carrying
-// the path and bundle base so it describes itself.
+// courses.json: { path, bundleBase, courses: [{ id, template, title, provider?, folder?, format? }] }.
 function readCourses(file: string, id: string): Course[] {
   const data = readJson(file) as { path?: unknown; bundleBase?: unknown; courses?: unknown } | null
   const list = data?.courses
@@ -221,14 +220,37 @@ function readCourses(file: string, id: string): Course[] {
   }
   const seen = new Set<string>()
   return list.map((entry: Partial<Course>) => {
-    if (!isText(entry.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.folder)) {
-      throw new Error(`Exam pack ${id}: a course in courses.json needs a numeric id and template, a title and a folder`)
+    const provider = entry.provider ?? "google"
+    if (provider !== "google" && provider !== "private") {
+      throw new Error(`Exam pack ${id}: a course provider in courses.json can only be "google" or "private"`)
     }
-    if (entry.folder.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam pack ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
+    if (!isText(entry.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title)) {
+      throw new Error(`Exam pack ${id}: a course in courses.json needs a numeric id and template and a title`)
+    }
+    if (provider === "google" && !isText(entry.folder)) {
+      throw new Error(`Exam pack ${id}: a Google course in courses.json needs a folder`)
+    }
+    if (entry.folder !== undefined && !isText(entry.folder)) {
+      throw new Error(`Exam pack ${id}: a course folder in courses.json must be non-empty text`)
+    }
+    if (provider === "private" && entry.folder !== undefined) {
+      throw new Error(`Exam pack ${id}: a private course in courses.json cannot have a public bundle folder`)
+    }
+    if (entry.folder?.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam pack ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
     if (seen.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
     if (entry.format !== undefined && entry.format !== "rise") throw new Error(`Exam pack ${id}: a course format in courses.json can only be "rise"`)
+    if (provider === "private" && entry.format !== undefined) throw new Error(`Exam pack ${id}: a private course in courses.json cannot have a public bundle format`)
     seen.add(entry.id)
-    const course: Course = { id: entry.id, template: entry.template, title: entry.title, folder: entry.folder, bundleBase: data.bundleBase as string, path: data.path as string }
+    const course: Course = {
+      id: entry.id,
+      template: entry.template,
+      title: entry.title,
+      packId: id,
+      provider,
+      bundleBase: data.bundleBase,
+      path: data.path,
+      ...(entry.folder ? { folder: entry.folder } : {}),
+    }
     return entry.format ? { ...course, format: entry.format } : course
   })
 }

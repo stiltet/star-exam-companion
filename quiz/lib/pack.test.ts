@@ -140,9 +140,11 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
 
 test("courses without reading text are listed with a reason, and a malformed entry is refused", () => {
   const aa = loadPack(testRoot, "agentic-architect")
-  assert.equal(aa.noReading.length, 5)
-  assert.equal(aa.courses.length, 8)
+  assert.equal(aa.noReading.length, 3)
+  assert.equal(aa.courses.length, 10)
   assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.id) && /^\d+$/.test(course.template) && course.title && course.why))
+  assert.deepEqual(aa.noReading.map((course) => course.template), ["1596", "1672", "1275"])
+  assert.deepEqual(aa.courses.filter((course) => course.provider === "private").map((course) => course.template), ["1786", "1832"])
   assert.equal(new Set([...aa.courses, ...aa.noReading].map((course) => course.id)).size, 13, "every course of the path has its own id")
   assert.equal(loadPack(testRoot, "generative-ai-leader").noReading.length, 0)
   const root = packWith(() => {})
@@ -197,6 +199,8 @@ test("a pack's links and course bundles must be https and on Google's own hosts"
     ["a path on another host", (f) => { f.courses.path = "https://evil.example/paths/1" }, /path on/],
     ["a course folder that climbs out", (f) => { (f.courses.courses as { folder: string }[])[0]!.folder = "../../x" }, /may not contain/],
     ["a course format that is not rise", (f) => { (f.courses.courses as { format?: string }[])[0]!.format = "scorm" }, /can only be "rise"/],
+    ["an unknown reading provider", (f) => { (f.courses.courses as { provider?: string }[])[0]!.provider = "remote" }, /provider.*can only be/],
+    ["a private course with a public folder", (f) => { (f.courses.courses as { provider?: string }[])[0]!.provider = "private" }, /cannot have a public bundle folder/],
   ]
   for (const [name, change, message] of bad) assert.throws(() => loadPack(packWith(change), "agentic-architect"), message, name)
   assert.doesNotThrow(() => loadPack(packWith(() => undefined), "agentic-architect"), "the unchanged copy loads")
