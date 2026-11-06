@@ -140,6 +140,7 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
 
 test("courses without reading text are listed with a reason, and a malformed entry is refused", () => {
   const aa = loadPack(testRoot, "agentic-architect")
+  assert.match(aa.meta.notice ?? "", /^Unfinished:/, "the Pages demo keeps its static Unfinished notice")
   assert.equal(aa.noReading.length, 3)
   assert.equal(aa.courses.length, 10)
   assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.id) && /^\d+$/.test(course.template) && course.title && course.why))

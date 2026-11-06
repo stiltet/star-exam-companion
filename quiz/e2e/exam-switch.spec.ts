@@ -17,8 +17,8 @@ async function settleWorker(page: Page) {
 }
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
-// The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
-const UNFINISHED = /Unfinished: Read Aloud covers eight courses, seven of the learning path's twelve/
+// The E2E server has no captured private pages; its eight public courses are readable from the synthetic bundles.
+const UNFINISHED = /^Unfinished: Read Aloud can read 8 of 13 courses on this server; 5 courses need reading text\.$/
 
 test.use({ navigationCutOff: true })
 
@@ -78,11 +78,10 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
     await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
-    // The two newer courses that were found are read aloud. The path's other five are in the same list, marked as
-    // having no text; opening one says why and links to the official course.
+    // The public courses are read aloud. The path's three courses with no reading text stay in the same list.
     await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
     await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
-    await expect(page.getByText("No text to read aloud")).toHaveCount(5)
+    await expect(page.getByText("No text to read aloud")).toHaveCount(3)
     await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
@@ -90,7 +89,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb" })
     await expect(breadcrumb.getByRole("link", { name: "READ ALOUD" })).toHaveAttribute("href", "/read")
     await expect(breadcrumb).toContainText(/COURSE \d+/)
-    await expect(page.getByText(/Open the course on Google Skills/)).toBeVisible()
+    await expect(page.getByText(/No private copy is saved on this server yet/)).toBeVisible()
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
     await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goBack()
