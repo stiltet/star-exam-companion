@@ -29,7 +29,7 @@ export function pageList(sections: { id: string; topics: { id: string }[] }[], p
 // Read Aloud's pages: the overview, each course's list and each reading, so they open offline.
 // A course whose readings Google did not send (pages null) stores its list only.
 export function readingPages(courses: { id: string; pages: { id: string }[] | null }[]): string[] {
-  const pages = ["/read"]
+  const pages = ["/read", "/read/capture"]
   for (const course of courses) {
     pages.push(`/read/${encodeURIComponent(course.id)}`)
     for (const page of course.pages ?? []) pages.push(`/read/${encodeURIComponent(course.id)}/${encodeURIComponent(page.id)}`)

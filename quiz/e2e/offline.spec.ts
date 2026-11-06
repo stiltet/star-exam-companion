@@ -277,8 +277,22 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await readyOffline(page)
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
     await expect.poll(() => page.evaluate(async () => (await caches.keys()).length > 0)).toBe(true)
+    await expect.poll(() => page.evaluate(async () => {
+      const pageUrl = new URL("/read/12/98001", location.origin)
+      return Boolean(await caches.match(pageUrl))
+    })).toBe(true)
     await page.waitForLoadState("networkidle")
     await context.setOffline(true)
+    const privateReading = await page.goto("/read/12/98001")
+    expect(privateReading?.status()).toBe(200)
+    const privateText = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
+    await expect(page.locator("main")).toContainText(privateText)
+    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
+    await expect(page.getByText("This reading is from a private copy on this server.")).toBeVisible()
+    const speech = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/speak/reading")
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    const speechRequest = await speech
+    expect(JSON.parse(speechRequest.postData() ?? "{}").text).toContain(privateText)
     for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/about"]) {
       const response = await page.goto(path)
       expect(response?.status(), path).toBe(200)

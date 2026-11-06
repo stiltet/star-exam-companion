@@ -112,6 +112,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   const clipUrl = useRef<string | null>(null)
   const frame = useRef<number | null>(null)
   const gap = useRef<number | null>(null)
+  const browserVoice = useRef<SpeechSynthesisUtterance | null>(null)
   // The clip paused part-way, so Play carries on from the same word.
   const paused = useRef<{ index: number; sentence: number; mine: number } | null>(null)
   const shown = useRef<(HTMLElement | null)[]>([])
@@ -201,14 +202,17 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
 
   async function run(index: number, mine: number, sentence = 0) {
     at.current = { index, sentence }
+    if (!navigator.onLine) {
+      runOnDevice(index, sentence, mine)
+      return
+    }
     let blob: Blob
     try {
       blob = await clip(index, sentence)
     } catch (error) {
       // A stale run's failure is safe to drop: a newer run owns the voice and reports its own.
       if (generation.current !== mine) return
-      setPlaying(false)
-      setNote(`The voice for this paragraph could not be loaded (${error instanceof Error ? error.message : String(error)}).`)
+      runOnDevice(index, sentence, mine, error)
       return
     }
     if (generation.current !== mine) return
@@ -219,8 +223,66 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     releaseClip()
     clipUrl.current = URL.createObjectURL(blob)
     audio.src = clipUrl.current
-    audio.onended = () => {
+    audio.onended = () => advance(index, sentence, mine)
+    try {
+      await audio.play()
       if (generation.current !== mine) return
+      setNote(null)
+      track(index, sentence, mine)
+    } catch (error) {
+      // A pause tapped while play() was starting aborts it: that is the pause, not a fault.
+      if (generation.current !== mine || (error instanceof DOMException && error.name === "AbortError")) return
+      setPlaying(false)
+      // Shown, not swallowed: the reason is the evidence for why the voice is silent.
+      setNote(error instanceof DOMException && error.name === "NotAllowedError"
+        ? "This device refused to play the voice. Tap Play again."
+        : `The voice could not play (${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}).`)
+    }
+  }
+
+  function runOnDevice(index: number, sentence: number, mine: number, cause?: unknown) {
+    const voice = typeof speechSynthesis === "undefined" ? undefined : speechSynthesis.getVoices().find((entry) => entry.localService && /^en(?:-|$)/i.test(entry.lang))
+    if (!voice) {
+      setPlaying(false)
+      setNote(`The Mac is unreachable and no local English voice is available on this device. Install a device voice to read aloud offline.${cause instanceof Error ? ` (${cause.message})` : ""}`)
+      return
+    }
+    const text = speakable(parts[index]?.[sentence]?.text ?? "")
+    const utterance = new SpeechSynthesisUtterance(paragraphs[index]?.heading ? saidHeading(text) : text)
+    utterance.voice = voice
+    utterance.lang = voice.lang
+    browserVoice.current = utterance
+    utterance.onboundary = (event) => {
+      if (generation.current !== mine || event.name !== "word") return
+      const before = utterance.text.slice(0, event.charIndex).trim()
+      setWord((parts[index]?.[sentence]?.first ?? 0) + (before ? before.split(/\s+/).length : 0))
+    }
+    utterance.onend = () => {
+      if (generation.current !== mine) return
+      browserVoice.current = null
+      advance(index, sentence, mine)
+    }
+    utterance.onerror = (event) => {
+      if (generation.current !== mine) return
+      browserVoice.current = null
+      setPlaying(false)
+      setNote(`The device voice could not play (${event.error}). Tap Play to try again.`)
+    }
+    setNote("The Mac is unreachable. Reading with this device's local voice; the text stays on this device.")
+    speechSynthesis.speak(utterance)
+  }
+
+  function stopBrowserVoice() {
+    if (!browserVoice.current) return
+    browserVoice.current.onend = null
+    browserVoice.current.onerror = null
+    browserVoice.current = null
+    speechSynthesis.cancel()
+  }
+
+  function advance(index: number, sentence: number, mine: number) {
+      if (generation.current !== mine) return
+      const then = following(index, sentence)
       stopTracking()
       releaseClip()
       clips.current.delete(`${index}:${sentence}`)
@@ -253,26 +315,12 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
         keepPlace(storeKey, then.index)
         void run(then.index, mine)
       }, paragraphs[index]?.heading ? HEADING_PAUSE_MS : PAUSE_MS)
-    }
-    try {
-      await audio.play()
-      if (generation.current !== mine) return
-      setNote(null)
-      track(index, sentence, mine)
-    } catch (error) {
-      // A pause tapped while play() was starting aborts it: that is the pause, not a fault.
-      if (generation.current !== mine || (error instanceof DOMException && error.name === "AbortError")) return
-      setPlaying(false)
-      // Shown, not swallowed: the reason is the evidence for why the voice is silent.
-      setNote(error instanceof DOMException && error.name === "NotAllowedError"
-        ? "This device refused to play the voice. Tap Play again."
-        : `The voice could not play (${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}).`)
-    }
   }
 
   // Inside the tap: a silent clip first, so iOS lets the voice play once its clip arrives.
   function playFrom(index: number, sentence = 0) {
     const mine = ++generation.current
+    stopBrowserVoice()
     const audio = sharedAudio()
     clearGap()
     stopTracking()
@@ -293,10 +341,17 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     const audio = sharedAudio()
     stopTracking()
     setPlaying(false)
+    if (browserVoice.current) {
+      generation.current += 1
+      stopBrowserVoice()
+      paused.current = { ...at.current, mine: -1 }
+      return
+    }
     if (gap.current !== null) {
       // Between paragraphs: Play starts the next one from its first word.
       clearGap()
       generation.current += 1
+      stopBrowserVoice()
       paused.current = null
       const after = Math.min(current + 1, paragraphs.length - 1)
       setCurrent(after)
@@ -311,6 +366,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     }
     // The clip is still being made: it must not start once it arrives. Play starts that sentence.
     generation.current += 1
+    stopBrowserVoice()
     paused.current = { ...at.current, mine: -1 }
   }
 
@@ -345,6 +401,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   useEffect(() => {
     return () => {
       generation.current += 1
+      stopBrowserVoice()
       if (gap.current !== null) window.clearTimeout(gap.current)
       if (frame.current !== null) cancelAnimationFrame(frame.current)
       const audio = sharedAudio()

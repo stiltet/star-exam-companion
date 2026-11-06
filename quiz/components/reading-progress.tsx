@@ -64,7 +64,7 @@ export function ReadingList({ course, pages, emptyLabel }: { course: string; pag
 // One course on the overview, coloured by its state. The total comes from the provider when
 // available, else from this device; either way it is kept here for Progress.
 // noText: a course of the path with nothing to read aloud; its page says why and links to Google Skills.
-export function CourseCard({ course, title, total, noText, privateCopy }: { course: string; title: string; total?: number; noText?: boolean; privateCopy?: boolean }) {
+export function CourseCard({ course, title, total, noText, privateCopy, reason }: { course: string; title: string; total?: number; noText?: boolean; privateCopy?: boolean; reason?: string }) {
   const { lines } = useSnapshot()
   const [kept, setKept] = useState<number | undefined>(undefined)
   useEffect(() => {
@@ -76,8 +76,10 @@ export function CourseCard({ course, title, total, noText, privateCopy }: { cour
     <StatusLink href={`/read/${course}`} layout="stack" state={noText ? "none" : readingState(read, kept)}>
       <span className="font-bold">Course {course}</span>: {title}
       <span className="block text-sm font-bold mt-1">
-        {noText ? "No text to read aloud" : privateCopy ? "Private copy on this server" : readingStatus(read, kept)}
+        {noText ? "No text to read aloud" : readingStatus(read, kept)}
       </span>
+      {privateCopy && <Text variant="muted">Private copy on this server</Text>}
+      {reason && <Text variant="muted">{reason}</Text>}
     </StatusLink>
   )
 }

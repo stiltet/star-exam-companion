@@ -18,7 +18,7 @@ async function settleWorker(page: Page) {
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
 // The E2E server has no captured private pages; its eight public courses are readable from the synthetic bundles.
-const UNFINISHED = /^Unfinished: Read Aloud can read 8 of 13 courses on this server; 5 courses need reading text\.$/
+const UNFINISHED = /^Unfinished: Read Aloud can read 9 of 13 courses on this server; 4 courses need reading text\.$/
 
 test.use({ navigationCutOff: true })
 
@@ -82,7 +82,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
     await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
     await expect(page.getByText("No text to read aloud")).toHaveCount(3)
-    await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
+    await expect(page.getByRole("heading", { name: "Not read aloud", exact: true })).toBeVisible()
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
     // The course page's components/atoms/breadcrumb.tsx links back to the Read Aloud list.
