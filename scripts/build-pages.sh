@@ -26,6 +26,9 @@ command -v rsync >/dev/null 2>&1 || { echo "build-pages: rsync not found" >&2; e
 [ -d "$ROOT/pages-static/app" ] || { echo "build-pages: $ROOT/pages-static/app is missing" >&2; exit 1; }
 case "$BASE" in "" | /*) ;; *) echo "build-pages: QUIZ_BASE_PATH must be empty or start with /: $BASE" >&2; exit 1 ;; esac
 
+# Check every pack and keep the private reading store outside the static build's source tree.
+QUIZ_ROOT="$ROOT" node "$ROOT/quiz/lib/check-static-packs.ts" "$ROOT"
+
 # Only an output folder this script made, or an empty one, may be replaced.
 if [ -e "$OUT" ] && [ ! -f "$OUT/.nojekyll" ] && [ -n "$(ls -A "$OUT" 2>/dev/null)" ]; then
   echo "build-pages: $OUT exists and was not made by this script; choose another folder or remove it" >&2
@@ -40,7 +43,7 @@ cp -R "$ROOT/exams" "$work/exams"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.
 cp -R "$ROOT/pages-static/." "$work/quiz/"
-rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
+rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/capture" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
 
 pnpm --dir "$work/quiz" install --frozen-lockfile --silent
 

@@ -72,7 +72,10 @@ sections.md".
 
 `node --test` runs the pack validator over every folder in `exams/`. It names the file and the
 line that fails. A pack is ready when the whole run passes and `pnpm --dir quiz build` succeeds
-with `QUIZ_EXAM=<id>`.
+with `QUIZ_EXAM=<id>`. The validator rejects private-reading directories and stored-record shapes
+inside a pack. `scripts/build-pages.sh` also checks the pack, app and demo source trees against all
+private records before exporting, including records from removed packs; the demo has no
+Read Aloud routes or service worker.
 
 ## Running a pack
 

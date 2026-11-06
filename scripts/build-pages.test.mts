@@ -4,6 +4,7 @@
  * cannot run on static hosting, or it leaves the real Voice Quiz where the demo's panel should be.
  */
 import { strict as assert } from 'node:assert';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
@@ -30,6 +31,14 @@ function htmlFiles(dir: string): string[] {
   });
 }
 
+function filesUnder(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return filesUnder(full);
+    return [full];
+  });
+}
+
 function build(out: string, env: Record<string, string> = {}) {
   const result = spawnSync('bash', [script, out], { encoding: 'utf8', timeout: 800_000, env: { ...process.env, ...env } });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
@@ -50,6 +59,14 @@ describe('the GitHub Pages build', () => {
     const run = build(path.join(scratch(t), 'site'), { QUIZ_BASE_PATH: 'demo' });
     assert.notEqual(run.status, 0);
     assert.match(run.stderr, /QUIZ_BASE_PATH must be empty or start with \//);
+  });
+
+  test('it refuses a private reading store located inside the repository', (t) => {
+    const out = path.join(scratch(t), 'site');
+    const run = build(out, { QUIZ_PRIVATE_DIR: path.join(root, 'quiz/private-reading-fixture') });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /Private readings must be stored outside the repository/);
+    assert.equal(existsSync(out), false);
   });
 
   test('the demo files that replace the server features exist, laid out like quiz/', () => {
@@ -75,7 +92,19 @@ describe('the GitHub Pages build', () => {
     { skip: !hasPnpm && 'pnpm is not installed', timeout: 1_700_000 },
     (t) => {
       const out = path.join(scratch(t), 'site');
-      const first = build(out, { QUIZ_BASE_PATH: '/demo-test' });
+      const privateRoot = path.join(scratch(t), 'private');
+      const pageId = '1801';
+      const privateText = 'Synthetic private fixture text; not course material.';
+      const courseDir = path.join(privateRoot, 'agentic-architect', '12');
+      mkdirSync(courseDir, { recursive: true });
+      writeFileSync(path.join(courseDir, `${createHash('sha256').update(pageId).digest('hex')}.json`), JSON.stringify({
+        pageId,
+        title: 'Synthetic private fixture',
+        text: privateText,
+        savedAt: '2026-01-01T00:00:00.000Z',
+      }));
+      const privateEnv = { QUIZ_BASE_PATH: '/demo-test', QUIZ_PRIVATE_DIR: privateRoot };
+      const first = build(out, privateEnv);
       assert.equal(first.status, 0, first.stderr + first.stdout.slice(-2000));
 
       assert.ok(existsSync(path.join(out, '.nojekyll')));
@@ -99,12 +128,17 @@ describe('the GitHub Pages build', () => {
       for (const page of ['practice', 'exam', 'flashcards', 'glossary', 'about', 'study/fundamentals']) {
         assert.ok(existsSync(path.join(out, page, 'index.html')), page);
       }
-      for (const gone of ['api', 'sw.js', 'read/night']) {
+      for (const gone of ['api', 'sw.js', 'read/capture', 'read/night']) {
         assert.equal(existsSync(path.join(out, gone)), false, gone);
       }
       // Read Aloud is only its panel: no course or reading page may leak into the export.
       const readFolders = readdirSync(path.join(out, 'read'), { withFileTypes: true }).filter((entry) => entry.isDirectory());
       assert.deepEqual(readFolders.map((entry) => entry.name), []);
+      assert.equal(
+        filesUnder(out).some((file) => readFileSync(file).includes(Buffer.from(privateText))),
+        false,
+        'private reading text must not appear in the static build',
+      );
 
       // Every link, script and image on every page is under the base path, so none 404 on Pages.
       for (const file of htmlFiles(out)) {
@@ -128,7 +162,7 @@ describe('the GitHub Pages build', () => {
       assert.match(otherHome, /href="\/demo-test\/agentic-architect\/"[^>]*aria-current="page"[^>]*>Professional Agentic Architect</);
 
       // A second run replaces its own output instead of refusing it.
-      const second = build(out, { QUIZ_BASE_PATH: '/demo-test' });
+      const second = build(out, privateEnv);
       assert.equal(second.status, 0, second.stderr + second.stdout.slice(-2000));
     },
   );
