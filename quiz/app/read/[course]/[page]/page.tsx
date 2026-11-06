@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
-import { courseBundle } from "@/lib/course-text"
+import { courseBundle } from "@/lib/reading-provider"
 import { activePack } from "@/lib/pack"
 import { courseById, nextReading, reading, reviewUrl } from "@/lib/reading"
 

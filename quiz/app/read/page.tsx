@@ -3,7 +3,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
 import { CourseCard } from "@/components/reading-progress"
-import { courseBundle } from "@/lib/course-text"
+import { courseBundle } from "@/lib/reading-provider"
 import { activePack } from "@/lib/pack"
 
 export const dynamic = "force-dynamic"
