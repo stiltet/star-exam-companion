@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
+import { Heading } from "@/components/atoms/heading"
 import { CourseCard } from "@/components/reading-progress"
 import { SendToStarSetup } from "@/components/send-to-star-setup"
 import { courseBundle } from "@/lib/reading-provider"
@@ -21,7 +22,7 @@ export default async function ReadPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        <h1 className="sr-only text-2xl font-bold mb-4">Read Aloud</h1>
+        <Heading variant="page" placement="sr-only">Read Aloud</Heading>
         {!pack.meta.reading && (
           <>
             <Text variant="muted" placement="mb-6">Read Aloud has no course for {pack.meta.title} yet: this exam has no readable course text in the quiz. The official learning path is on Google Skills.</Text>
@@ -36,8 +37,13 @@ export default async function ReadPage() {
             const result = loaded[index]
             return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} privateCopy={course.provider === "private"} />
           })}
-          {pack.noReading.map((course) => <CourseCard key={course.id} course={course.id} title={course.title} noText />)}
         </div>}
+        {pack.noReading.length > 0 && <section className="mt-8" aria-labelledby="not-read-aloud">
+          <Heading variant="label" id="not-read-aloud" placement="mb-4">Not read aloud</Heading>
+          <div className="divide-y-2 divide-foreground border-2 border-foreground">
+            {pack.noReading.map((course) => <CourseCard key={course.id} course={course.id} title={course.title} reason={course.why} noText />)}
+          </div>
+        </section>}
         {pack.meta.reading && (
           <div className="mt-8">
             <ActionLink variant="outlined" placement="self-stretch" href="/read/night">Night reading</ActionLink>

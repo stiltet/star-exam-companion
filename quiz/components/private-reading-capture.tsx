@@ -27,6 +27,10 @@ export function PrivateReadingCapture({ packId, templates }: { packId: string; t
   const [status, setStatus] = useState("Open this page with the Send to Star bookmarklet from a signed-in Google Skills course.")
 
   useEffect(() => {
+    if (!navigator.onLine) {
+      setStatus("Saving a private copy needs this server. Your previously stored readings remain available offline.")
+      return
+    }
     const opener = window.opener
     if (!opener) return
     let live = true
