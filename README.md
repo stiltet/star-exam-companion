@@ -137,6 +137,14 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
 | `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud work. Eight courses have public text; two more can use private copies saved on this server. The remaining three have no reading text and stay in the Read Aloud list with their reason and a link to Google Skills. |
 
+### Private course readings
+
+For Agentic Architect courses 1786 and 1832, open Read Aloud on the same server where the quiz runs,
+copy the Send to Star bookmarklet and add it as a browser bookmark. Sign in to Google Skills in that
+browser, open a reading page, optionally select just the passage to save, then use the bookmark.
+The local capture tab saves it to the server's private store. See
+[`skills/send-to-star/SKILL.md`](skills/send-to-star/SKILL.md) for the steps.
+
 To see which packs your copy has:
 
 ```bash

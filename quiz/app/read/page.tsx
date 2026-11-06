@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
 import { CourseCard } from "@/components/reading-progress"
+import { SendToStarSetup } from "@/components/send-to-star-setup"
 import { courseBundle } from "@/lib/reading-provider"
 import { activePack } from "@/lib/pack"
 
@@ -27,6 +28,7 @@ export default async function ReadPage() {
         )}
         {pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{pack.meta.notice}</Text>}
         {pack.meta.reading && <Text variant="muted" placement="mb-6">Public learning-path readings and private copies saved on this server, read aloud in the Mac&apos;s voice. Pick a course.</Text>}
+        {courses.some((course) => course.provider === "private") && <SendToStarSetup />}
         {pack.meta.reading && <div className="divide-y-2 divide-foreground border-2 border-foreground">
           {courses.map((course, index) => {
             const result = loaded[index]
