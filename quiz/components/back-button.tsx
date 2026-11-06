@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { parentPath } from "@/lib/parent-path"
 import { cameFromApp, parseScroll, scrollKey } from "@/lib/scroll-memory"
-import { useStandalone } from "@/components/standalone"
+import { readStandalone, useStandalone } from "@/components/standalone"
 
 // A round Back button floating at the bottom left, only in the installed app, which has no browser
 // back button. In a browser tab the browser's own back is there, so this one is not shown.
@@ -23,6 +23,7 @@ export function BackButton() {
   const standalone = useStandalone()
 
   const save = () => {
+    if (!readStandalone()) return
     try {
       window.sessionStorage.setItem(scrollKey(lastPath.current), String(Math.max(0, Math.round(window.scrollY))))
     } catch {
@@ -31,6 +32,7 @@ export function BackButton() {
   }
 
   const restore = (path: string) => {
+    if (!readStandalone()) return
     let target: number | null = null
     try {
       target = parseScroll(window.sessionStorage.getItem(scrollKey(path)))
@@ -57,12 +59,13 @@ export function BackButton() {
   }
 
   useEffect(() => {
-    if (!standalone) return
+    const installed = readStandalone()
     // A page loaded in full still has the page it came from: Back goes there, not up a level.
-    if (cameFromApp(document.referrer, window.location.origin)) movedInApp.current = true
+    if (installed && cameFromApp(document.referrer, window.location.origin)) movedInApp.current = true
     const navigation = window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
-    if (navigation?.type === "back_forward") restore(lastPath.current)
+    if (installed && navigation?.type === "back_forward") restore(lastPath.current)
     const onPop = () => {
+      if (!readStandalone()) return
       save()
       popped.current = true
     }
@@ -74,12 +77,12 @@ export function BackButton() {
       window.removeEventListener("popstate", onPop, true)
       window.removeEventListener("pagehide", save)
     }
-    // Save and restore only read refs, so navigation does not replace the listeners.
+    // Keep listeners stable and check display mode when they run.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [standalone])
+  }, [])
 
   useEffect(() => {
-    if (!standalone) return
+    if (!readStandalone()) return
     if (pathname !== firstPath.current) movedInApp.current = true
     if (pathname === lastPath.current) return
     lastPath.current = pathname

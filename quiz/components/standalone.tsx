@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { isStandalone } from "@/lib/standalone"
 
-function readStandalone(): boolean {
+export function readStandalone(): boolean {
   return isStandalone({
     displayModeStandalone: window.matchMedia("(display-mode: standalone)").matches,
     iosStandalone: (navigator as Navigator & { standalone?: boolean }).standalone,
