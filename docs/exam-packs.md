@@ -32,6 +32,10 @@ the private provider, its folder there. `provider` is omitted for public Google 
 courses do not have a public `folder` or `format`; their captured text is outside the repository and
 build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
 app-data directory is used.
+The Read Aloud page provides the Send to Star bookmarklet. It opens a local capture tab, which
+accepts messages from Google Skills and saves the page through the same-origin
+`POST /api/reading/private`; the endpoint accepts only a configured private course. See
+[`../skills/send-to-star/SKILL.md`](../skills/send-to-star/SKILL.md) for the capture steps.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read
 (a lab or video course, say). Read Aloud lists them in the same list as the others, marked "No text to read aloud";
 opening one shows `why` and a link to the course on Google Skills. Say in `why` only what its Skills page shows: a lab or video course lists no readings, and a course whose readings sit behind a login says so. Their ids continue after the readable courses' ids.

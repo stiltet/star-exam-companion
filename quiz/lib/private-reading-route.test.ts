@@ -1,0 +1,96 @@
+import assert from "node:assert/strict"
+import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import test, { after } from "node:test"
+import { readPrivateReadings } from "./private-reading.ts"
+import { postPrivateReading } from "./private-reading-route.ts"
+import { whileServing } from "./test-pack.ts"
+
+const scratch = mkdtempSync(path.join(tmpdir(), "quiz-private-reading-route-"))
+const before = {
+  cwd: process.cwd(),
+  exam: process.env.QUIZ_EXAM,
+  setting: process.env.QUIZ_EXAM_SETTING_FILE,
+  privateDir: process.env.QUIZ_PRIVATE_DIR,
+}
+const quiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+process.chdir(quiz)
+process.env.QUIZ_EXAM_SETTING_FILE = path.join(scratch, "missing-active-exam.json")
+process.env.QUIZ_PRIVATE_DIR = path.join(scratch, "private-store")
+after(() => {
+  process.chdir(before.cwd)
+  if (before.exam === undefined) delete process.env.QUIZ_EXAM
+  else process.env.QUIZ_EXAM = before.exam
+  if (before.setting === undefined) delete process.env.QUIZ_EXAM_SETTING_FILE
+  else process.env.QUIZ_EXAM_SETTING_FILE = before.setting
+  if (before.privateDir === undefined) delete process.env.QUIZ_PRIVATE_DIR
+  else process.env.QUIZ_PRIVATE_DIR = before.privateDir
+  rmSync(scratch, { recursive: true, force: true })
+})
+
+const body = {
+  template: "1786",
+  pageId: "9001",
+  title: "Synthetic reading title",
+  text: "Synthetic captured paragraph.",
+}
+const request = (value: unknown = body, origin = "http://localhost", extra: Record<string, string> = {}) => new Request("http://localhost/api/reading/private", {
+  method: "POST",
+  headers: { host: "localhost", origin, "content-type": "application/json", "x-quiz-exam": "agentic-architect", ...extra },
+  body: JSON.stringify(value),
+})
+
+test("the API route exports the handler these tests exercise", () => {
+  assert.equal(
+    readFileSync(path.join(quiz, "app/api/reading/private/route.ts"), "utf8").trim(),
+    'export { postPrivateReading as POST } from "@/lib/private-reading-route"',
+  )
+})
+
+test("a same-origin request saves only to a configured private course", async () => {
+  const response = await whileServing("agentic-architect", () => postPrivateReading(request()))
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { ok: true, pageId: body.pageId })
+  const saved = await readPrivateReadings("agentic-architect", "12")
+  assert.equal(saved.length, 1)
+  assert.deepEqual({ pageId: saved[0]?.pageId, title: saved[0]?.title, text: saved[0]?.text }, {
+    pageId: body.pageId,
+    title: body.title,
+    text: body.text,
+  })
+  assert.match(saved[0]?.savedAt ?? "", /^\d{4}-\d\d-\d\dT/)
+})
+
+test("foreign origins, stale exams, public courses and invalid payloads are refused", async () => {
+  const before = await readPrivateReadings("agentic-architect", "12")
+  const refused = await whileServing("agentic-architect", async () => {
+    const foreign = await postPrivateReading(request(body, "http://other.example"))
+    const stale = await postPrivateReading(request(body, "http://localhost", { "x-quiz-exam": "generative-ai-leader" }))
+    const publicCourse = await postPrivateReading(request({ ...body, template: "1596" }))
+    const extraKey = await postPrivateReading(request({ ...body, other: "value" }))
+    const invalidText = await postPrivateReading(request({ ...body, text: "  " }))
+    const badContentType = await postPrivateReading(new Request("http://localhost/api/reading/private", {
+      method: "POST",
+      headers: { host: "localhost", origin: "http://localhost", "content-type": "text/plain", "x-quiz-exam": "agentic-architect" },
+      body: JSON.stringify(body),
+    }))
+    return { foreign, stale, publicCourse, extraKey, invalidText, badContentType }
+  })
+  assert.equal(refused.foreign.status, 400)
+  assert.equal(refused.stale.status, 409)
+  assert.equal(refused.publicCourse.status, 400)
+  assert.equal(refused.extraKey.status, 400)
+  assert.equal(refused.invalidText.status, 400)
+  assert.equal(refused.badContentType.status, 400)
+  assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), before)
+})
+
+test("private input rejects JSON records larger than the store can safely read back", async () => {
+  const before = await readPrivateReadings("agentic-architect", "12")
+  const tooLarge = { ...body, text: "\u0000".repeat(1_000_000) }
+  const response = await whileServing("agentic-architect", () => postPrivateReading(request(tooLarge)))
+  assert.equal(response.status, 400)
+  assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), before)
+})

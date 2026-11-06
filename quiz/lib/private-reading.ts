@@ -19,6 +19,30 @@ export type PrivateReadingRecord = {
   savedAt: string
 }
 
+export type PrivateReadingInput = Pick<PrivateReadingRecord, "pageId" | "title" | "text">
+
+export function isPrivateReadingInput(value: unknown): value is PrivateReadingInput {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const input = value as Partial<PrivateReadingInput>
+  if (
+    typeof input.pageId !== "string" ||
+    !PAGE_ID.test(input.pageId) ||
+    typeof input.title !== "string" ||
+    input.title.trim().length === 0 ||
+    input.title.length > MAX_TITLE_CHARS ||
+    typeof input.text !== "string" ||
+    input.text.trim().length === 0 ||
+    input.text.length > MAX_TEXT_CHARS
+  ) return false
+  const record = JSON.stringify({
+    pageId: input.pageId,
+    title: input.title.trim(),
+    text: input.text.trim(),
+    savedAt: "2000-01-01T00:00:00.000Z",
+  })
+  return new TextEncoder().encode(record).byteLength <= MAX_RECORD_BYTES
+}
+
 function isWithin(parent: string, candidate: string): boolean {
   const relative = path.relative(parent, candidate)
   return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
@@ -132,14 +156,7 @@ export async function savePrivateReading(
   const root = await checkedRoot()
   const directory = courseDirectory(root, packId, courseId)
   const file = recordFile(directory, input.pageId)
-  if (
-    typeof input.title !== "string" ||
-    input.title.trim().length === 0 ||
-    input.title.length > MAX_TITLE_CHARS ||
-    typeof input.text !== "string" ||
-    input.text.trim().length === 0 ||
-    input.text.length > MAX_TEXT_CHARS
-  ) {
+  if (!isPrivateReadingInput(input)) {
     throw new Error("The private reading needs a title and text within the allowed size.")
   }
   await mkdir(directory, { recursive: true, mode: 0o700 })
