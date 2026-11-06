@@ -68,6 +68,7 @@ function loaded(entry: Entry): Loaded {
 
 // Two packs may list the same Skills number with different bundles, so the folder is part of the key.
 function key(course: Course): string {
+  if (!course.folder) throw new Error(`Course ${course.id} has no public bundle folder.`)
   return `${course.template}:${course.folder}`
 }
 

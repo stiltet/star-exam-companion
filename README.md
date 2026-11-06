@@ -62,7 +62,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | Feature | What it does | Requires |
 |---|---|---|
 | **Voice Quiz** | Reads each exam-style scene and its four options aloud, explains a wrong answer and its binding constraint, and keeps asking until each term is learned. | The local server, on macOS |
-| **Read Aloud** | Reads Google's learning-path course text aloud, sentence by sentence, with a night-reading mode. | The local server, on macOS |
+| **Read Aloud** | Reads public Google learning-path text and private copies saved on this server, sentence by sentence, with a night-reading mode. Private copies stay outside the repository and build. | The local server, on macOS |
 | **Practice** | Exam-style questions by section or topic, with explanations and an "unanswered only" filter. | The local server, to save answers |
 | **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
@@ -135,7 +135,7 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 | Pack (`QUIZ_EXAM`) | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
-| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud (eight courses: seven of the learning path's twelve, plus the related Build Your First Agent with ADK) all work. The other five are in the same Read Aloud list, marked as having no text, and open to a note and a link to the official course. |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud work. Eight courses have public text; two more can use private copies saved on this server. The remaining three have no reading text and stay in the Read Aloud list with their reason and a link to Google Skills. |
 
 To see which packs your copy has:
 
@@ -184,6 +184,7 @@ in the shell that starts the quiz.
 | `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
 | `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
 | `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
+| `QUIZ_PRIVATE_DIR` | the OS app-data folder's `star-exam-companion/private-reading` directory | Where private reading copies are stored, outside the repository and build. Must be an absolute path. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite enables it with pre-seeded scratch recordings. Any other test instance must set it to `0` or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |

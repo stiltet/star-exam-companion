@@ -26,11 +26,11 @@ export default async function ReadPage() {
           </>
         )}
         {pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{pack.meta.notice}</Text>}
-        {pack.meta.reading && <Text variant="muted" placement="mb-6">The official learning path&apos;s readings, read aloud in the Mac&apos;s voice. Pick a course.</Text>}
+        {pack.meta.reading && <Text variant="muted" placement="mb-6">Public learning-path readings and private copies saved on this server, read aloud in the Mac&apos;s voice. Pick a course.</Text>}
         {pack.meta.reading && <div className="divide-y-2 divide-foreground border-2 border-foreground">
           {courses.map((course, index) => {
             const result = loaded[index]
-            return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} />
+            return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} privateCopy={course.provider === "private"} />
           })}
           {pack.noReading.map((course) => <CourseCard key={course.id} course={course.id} title={course.title} noText />)}
         </div>}
