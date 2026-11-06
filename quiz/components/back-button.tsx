@@ -44,14 +44,31 @@ export function BackButton() {
     const token = ++restoring.current
     let frames = 0
     let held = 0
+    let interrupted = false
+    const interrupt = () => { interrupted = true }
+    const finish = () => {
+      window.removeEventListener("wheel", interrupt)
+      window.removeEventListener("touchstart", interrupt)
+      window.removeEventListener("pointerdown", interrupt)
+      window.removeEventListener("keydown", interrupt)
+    }
+    window.addEventListener("wheel", interrupt, { passive: true })
+    window.addEventListener("touchstart", interrupt, { passive: true })
+    window.addEventListener("pointerdown", interrupt)
+    window.addEventListener("keydown", interrupt)
     const step = () => {
-      if (token !== restoring.current) return
+      if (token !== restoring.current || interrupted) {
+        finish()
+        return
+      }
       const tall = document.documentElement.scrollHeight - window.innerHeight >= target
       if (tall || frames > 180) {
-        // The router may send the page back to the top just after it opens, so keep it in place for
-        // half a second, putting it back only when it was sent to the top.
-        if (held === 0 || window.scrollY === 0) window.scrollTo(0, target)
-        if (++held > 30) return
+        // The router may restore a stale non-zero position after this one; honour user input instead.
+        window.scrollTo(0, target)
+        if (++held > 30) {
+          finish()
+          return
+        }
       } else frames++
       window.requestAnimationFrame(step)
     }

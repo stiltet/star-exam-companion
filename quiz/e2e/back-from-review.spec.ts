@@ -25,6 +25,22 @@ async function saveExams(page: Page, origin: string) {
 
 const backButton = (page: Page) => page.getByLabel("Back", { exact: true })
 
+async function waitForScrollToSettle(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    let lastY = window.scrollY
+    let stillSince = performance.now()
+    const check = () => {
+      if (window.scrollY !== lastY) {
+        lastY = window.scrollY
+        stillSince = performance.now()
+      }
+      if (performance.now() - stillSince >= 200) resolve()
+      else requestAnimationFrame(check)
+    }
+    requestAnimationFrame(check)
+  }))
+}
+
 test.describe("in the installed app", () => {
   test.beforeEach(async ({ page }) => {
     await page.context().addInitScript(standalone)
@@ -36,6 +52,7 @@ test.describe("in the installed app", () => {
     await expect(backButton(page)).toBeVisible()
     const last = page.getByRole("link", { name: "Review →" }).last()
     await last.scrollIntoViewIfNeeded()
+    await waitForScrollToSettle(page)
     const scrollBefore = await page.evaluate(() => window.scrollY)
     expect(scrollBefore).toBeGreaterThan(0)
 
