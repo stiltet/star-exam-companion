@@ -16,14 +16,15 @@ export async function postPrivateReading(request: Request): Promise<Response> {
   const body: unknown = await readJsonBody(request, MAX_PRIVATE_BODY_BYTES)
   if (!body || typeof body !== "object" || Array.isArray(body)) return Response.json({ ok: false }, { status: 400 })
   const data = body as Record<string, unknown>
+  const template = data.template
   if (
     Object.keys(data).length !== REQUEST_KEYS.length ||
     !REQUEST_KEYS.every((key) => Object.hasOwn(data, key)) ||
-    typeof data.template !== "string" ||
-    !/^\d+$/.test(data.template) ||
+    typeof template !== "string" ||
+    !/^\d+$/.test(template) ||
     !isPrivateReadingInput(data)
   ) return Response.json({ ok: false }, { status: 400 })
-  const course = pack.courses.find((entry) => entry.provider === "private" && entry.template === data.template)
+  const course = pack.courses.find((entry) => entry.provider === "private" && entry.template === template)
   if (!course) return Response.json({ ok: false }, { status: 400 })
   const saved = await savePrivateReading(pack.meta.id, course.id, data)
   return Response.json({ ok: true, pageId: saved.pageId })

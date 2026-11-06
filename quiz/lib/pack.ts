@@ -211,11 +211,13 @@ function checkMeta(value: unknown, id: string): PackMeta {
 function readCourses(file: string, id: string): Course[] {
   const data = readJson(file) as { path?: unknown; bundleBase?: unknown; courses?: unknown } | null
   const list = data?.courses
-  if (!data || !isText(data.path) || !isText(data.bundleBase) || !Array.isArray(list) || list.length === 0) {
+  const coursePath = data?.path
+  const bundleBase = data?.bundleBase
+  if (!data || !isText(coursePath) || !isText(bundleBase) || !Array.isArray(list) || list.length === 0) {
     throw new Error(`Exam pack ${id}: courses.json needs path, bundleBase and a list of courses`)
   }
   // The Mac fetches the text from bundleBase: only Google's public course bucket, and a path on Google Skills.
-  if (!data.bundleBase.startsWith("https://storage.googleapis.com/") || !data.path.startsWith("https://www.skills.google/")) {
+  if (!bundleBase.startsWith("https://storage.googleapis.com/") || !coursePath.startsWith("https://www.skills.google/")) {
     throw new Error(`Exam pack ${id}: courses.json bundleBase must be on https://storage.googleapis.com/ and path on https://www.skills.google/`)
   }
   const seen = new Set<string>()
@@ -247,8 +249,8 @@ function readCourses(file: string, id: string): Course[] {
       title: entry.title,
       packId: id,
       provider,
-      bundleBase: data.bundleBase,
-      path: data.path,
+      bundleBase,
+      path: coursePath,
       ...(entry.folder ? { folder: entry.folder } : {}),
     }
     return entry.format ? { ...course, format: entry.format } : course
@@ -275,6 +277,39 @@ function readNoReading(file: string, id: string): NoReading[] {
 const PACK_FILES = ["pack.json", "scenes.json", "study.json", "courses.json", "terms.txt", "glossary.md", "sections.md"]
 const packCache = new Map<string, { stamp: string; pack: Pack }>()
 
+function containsPrivateReadingRecord(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(containsPrivateReadingRecord)
+  if (!value || typeof value !== "object") return false
+  const record = value as Record<string, unknown>
+  if (
+    typeof record.pageId === "string" &&
+    typeof record.title === "string" &&
+    typeof record.text === "string" &&
+    typeof record.savedAt === "string"
+  ) return true
+  return Object.values(record).some(containsPrivateReadingRecord)
+}
+
+function assertNoPrivateReadingFiles(dir: string, id: string): void {
+  if (!existsSync(dir)) return
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) {
+      throw new Error(`Exam pack ${id} must not contain linked files.`)
+    }
+    if (entry.isDirectory()) {
+      if (/^private-readings?$/i.test(entry.name)) {
+        throw new Error(`Exam pack ${id} must not contain private reading files.`)
+      }
+      assertNoPrivateReadingFiles(path.join(dir, entry.name), id)
+    } else if (entry.isFile() && entry.name.endsWith(".json")) {
+      const file = path.join(dir, entry.name)
+      if (containsPrivateReadingRecord(readJson(file))) {
+        throw new Error(`Exam pack ${id} must not contain private reading files.`)
+      }
+    }
+  }
+}
+
 // A pack is read once and served from memory until one of its files changes: every page, route and exam check
 // asks for it, and without this each ask read and parsed all of it again.
 function packStamp(dir: string): string {
@@ -291,6 +326,7 @@ function packStamp(dir: string): string {
 
 export function loadPack(root: string, id: string = examId(root)): Pack {
   const dir = packDir(root, id)
+  assertNoPrivateReadingFiles(dir, id)
   const stamp = packStamp(dir)
   const cached = packCache.get(dir)
   if (cached?.stamp === stamp) return cached.pack
@@ -300,9 +336,10 @@ export function loadPack(root: string, id: string = examId(root)): Pack {
 }
 
 function readPack(dir: string, id: string): Pack {
-  const meta = checkMeta(readJson(requirePackFile(dir, "pack.json")), id)
+  const metaData = readJson(requirePackFile(dir, "pack.json"))
   const scenes = readJson(requirePackFile(dir, "scenes.json"))
   const study = readJson(requirePackFile(dir, "study.json")) as Partial<Study> | null
+  const meta = checkMeta(metaData, id)
   if (!Array.isArray(scenes)) throw new Error(`Exam pack ${id}: scenes.json must be a list`)
   if (!study || !Array.isArray(study.sections) || !Array.isArray(study.questions)) {
     throw new Error(`Exam pack ${id}: study.json needs sections and questions`)

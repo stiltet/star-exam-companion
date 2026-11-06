@@ -81,11 +81,28 @@ function configuredRoot(): string {
 
 async function checkedRoot(): Promise<string> {
   const root = configuredRoot()
-  const [physicalRoot, physicalRepo] = await Promise.all([physicalPath(root), realpath(repoRoot())])
+  await assertOutsideRepository(root, repoRoot())
+  return root
+}
+
+async function assertOutsideRepository(root: string, repositoryRoot: string): Promise<void> {
+  const [physicalRoot, physicalRepo] = await Promise.all([physicalPath(root), realpath(repositoryRoot)])
   if (isWithin(physicalRepo, physicalRoot)) {
     throw new Error("Private readings must be stored outside the repository.")
   }
-  return root
+  for (let ancestor = physicalRoot; ; ancestor = path.dirname(ancestor)) {
+    try {
+      await stat(path.join(ancestor, ".git"))
+      throw new Error("Private readings must be stored outside the repository.")
+    } catch (error) {
+      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") throw error
+    }
+    if (path.dirname(ancestor) === ancestor) break
+  }
+}
+
+export async function assertPrivateReadingOutsideRepo(repositoryRoot: string): Promise<void> {
+  await assertOutsideRepository(configuredRoot(), repositoryRoot)
 }
 
 function courseDirectory(root: string, packId: string, courseId: string): string {
@@ -137,6 +154,9 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
   if (!isWithin(physicalRoot, physicalDirectory)) {
     throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
   }
+  if (entries.some((entry) => entry.isSymbolicLink())) {
+    throw new Error("The private reading store must not contain linked records.")
+  }
   const files = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".json")).map((entry) => entry.name).sort()
   const records = await Promise.all(files.map(async (name) => {
     const file = path.join(directory, name)
@@ -146,6 +166,28 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
     return parseRecord(JSON.parse(await readFile(file, "utf8")), file)
   }))
   return records.sort((a, b) => Date.parse(a.savedAt) - Date.parse(b.savedAt) || a.pageId.localeCompare(b.pageId, undefined, { numeric: true }))
+}
+
+export async function allPrivateReadings(): Promise<PrivateReadingRecord[]> {
+  const root = await checkedRoot()
+  async function directories(directory: string, pattern: RegExp): Promise<string[]> {
+    let entries: Dirent[]
+    try {
+      entries = await readdir(directory, { withFileTypes: true })
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") return []
+      throw error
+    }
+    if (entries.some((entry) => entry.isSymbolicLink())) throw new Error("The private reading store must not contain linked directories.")
+    return entries.filter((entry) => entry.isDirectory() && pattern.test(entry.name)).map((entry) => entry.name)
+  }
+  const records: PrivateReadingRecord[] = []
+  for (const pack of await directories(root, PACK_ID)) {
+    for (const course of await directories(path.join(root, pack), COURSE_ID)) {
+      records.push(...await readPrivateReadings(pack, course))
+    }
+  }
+  return records
 }
 
 export async function savePrivateReading(
@@ -159,11 +201,13 @@ export async function savePrivateReading(
   if (!isPrivateReadingInput(input)) {
     throw new Error("The private reading needs a title and text within the allowed size.")
   }
-  await mkdir(directory, { recursive: true, mode: 0o700 })
-  await chmod(directory, 0o700)
-  const [physicalDirectory, physicalRoot] = await Promise.all([realpath(directory), physicalPath(root)])
+  const [physicalDirectory, physicalRoot] = await Promise.all([physicalPath(directory), physicalPath(root)])
   if (!isWithin(physicalRoot, physicalDirectory)) {
     throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
+  }
+  for (const part of [root, path.join(root, packId), directory]) {
+    await mkdir(part, { recursive: true, mode: 0o700 })
+    await chmod(part, 0o700)
   }
   const existing = await readPrivateReadings(packId, courseId)
   const savedAt = existing.find((record) => record.pageId === input.pageId)?.savedAt ?? new Date().toISOString()

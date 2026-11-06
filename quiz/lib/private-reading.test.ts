@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
-import { mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
-import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { allPrivateReadings, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
@@ -68,7 +68,43 @@ test("private records are stored in restricted JSON files", async () => {
   assert.ok(name)
   const file = path.join(directory, name)
   assert.equal((await stat(file)).mode & 0o777, 0o600)
+  assert.equal((await stat(root)).mode & 0o777, 0o700)
+  assert.equal((await stat(path.dirname(directory))).mode & 0o777, 0o700)
   assert.match(await readFile(file, "utf8"), /Synthetic fixture text\./)
+})
+
+test("the store refuses another checkout, including the shared main checkout", async () => {
+  await useScratch()
+  const checkout = path.join(scratch, "synthetic-checkout")
+  await mkdir(path.join(checkout, ".git"), { recursive: true })
+  process.env.QUIZ_PRIVATE_DIR = path.join(checkout, "store")
+  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /outside the repository/)
+})
+
+test("privacy guards include records whose pack is no longer installed", async () => {
+  await useScratch()
+  await savePrivateReading("removed-pack", "99", { pageId: "101", title: "Synthetic title", text: "Synthetic orphan fixture." })
+  assert.equal((await allPrivateReadings())[0]?.text, "Synthetic orphan fixture.")
+})
+
+test("a linked course is refused before any directory is created or permissions are changed", async () => {
+  const root = await useScratch()
+  const elsewhere = path.join(scratch, "elsewhere")
+  await mkdir(elsewhere, { mode: 0o755 })
+  await mkdir(root, { recursive: true })
+  await symlink(elsewhere, path.join(root, "agentic-architect"))
+  await assert.rejects(savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /points outside/)
+  assert.equal((await stat(elsewhere)).mode & 0o777, 0o755)
+  assert.deepEqual(await readdir(elsewhere), [])
+})
+
+test("linked records fail explicitly instead of hiding a saved page", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic", text: "Synthetic." })
+  const target = path.join(scratch, "synthetic.json")
+  await writeFile(target, "{}")
+  await symlink(target, path.join(root, "agentic-architect", "12", "linked.json"))
+  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /linked records/)
 })
 
 test("private store paths and captured values are validated", async () => {

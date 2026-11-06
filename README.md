@@ -381,6 +381,9 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
   you study on. Git ignores the scores file and its backups.
 - **No accounts, analytics or tracking.** The app's own scripts and the start and dev commands
   here switch Next.js telemetry off.
+- **Private course copies** stay under `QUIZ_PRIVATE_DIR`, outside the repository. The Pages build
+  refuses a store inside a Git checkout and checks that saved text is not present in its source trees; its
+  static export contains neither reading pages nor a service worker.
 - **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores-<exam>.jsonl`
   after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores-*.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
@@ -461,7 +464,8 @@ macOS voice generation, LAN certificates and Google's live course responses are 
 The online demo is a static export of the same app, built once for every exam pack. `bash scripts/build-pages.sh` builds it into
 `pages-out/` (the default exam at the root, every other exam under `pages-out/<pack id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
 Read Aloud and Progress with a panel that says they need the local install, and filters Practice
-in the browser. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
+in the browser. Before exporting, it refuses private reading data in packs and verifies that the
+private store stays outside the repository. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
 Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 
 ## Contributing and support

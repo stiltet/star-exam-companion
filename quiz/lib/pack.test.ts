@@ -207,6 +207,28 @@ test("a pack's links and course bundles must be https and on Google's own hosts"
   assert.doesNotThrow(() => loadPack(packWith(() => undefined), "agentic-architect"), "the unchanged copy loads")
 })
 
+test("a private reading store or record inside a pack is refused", () => {
+  const root = packWith(() => undefined)
+  const directory = path.join(root, "exams/agentic-architect/private-reading/1786")
+  mkdirSync(directory, { recursive: true })
+  writeFileSync(path.join(directory, "synthetic.json"), JSON.stringify({
+    pageId: "1",
+    title: "Synthetic fixture",
+    text: "Synthetic fixture text only.",
+    savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a private record under an unrelated filename is refused even after a pack was cached", () => {
+  const root = packWith(() => undefined)
+  loadPack(root, "agentic-architect")
+  writeFileSync(path.join(root, "exams/agentic-architect/unrelated.json"), JSON.stringify({
+    nested: [{ pageId: "1", title: "Synthetic fixture", text: "Synthetic fixture text only.", savedAt: "2026-01-01T00:00:00.000Z" }],
+  }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
 test("a chosen pack that no longer reads is ignored, so Progress still opens and the exam can be switched back", () => {
   const before = { file: process.env.QUIZ_EXAM_SETTING_FILE, exam: process.env.QUIZ_EXAM }
   const root = tempDir("broken-")
