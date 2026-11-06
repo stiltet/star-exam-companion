@@ -34,7 +34,7 @@ export type PackMeta = {
   certification: string
   // A short description of the exam, shown on the home page above Exam Structure.
   description: string
-  // Said on the Read Aloud page while the pack is unfinished, such as "17 terms so far". Absent when it is finished.
+  // Static Pages-demo notice. The local Read Aloud page computes its notice from available reading sources.
   notice?: string
   // Extra search keywords for the page's metadata, beside Google Cloud, Certification, Exam Prep and the title.
   keywords?: string[]

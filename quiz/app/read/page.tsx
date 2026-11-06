@@ -5,6 +5,7 @@ import { Text } from "@/components/atoms/text"
 import { CourseCard } from "@/components/reading-progress"
 import { SendToStarSetup } from "@/components/send-to-star-setup"
 import { courseBundle } from "@/lib/reading-provider"
+import { readingCompletion } from "@/lib/reading-completion"
 import { activePack } from "@/lib/pack"
 
 export const dynamic = "force-dynamic"
@@ -15,6 +16,7 @@ export default async function ReadPage() {
   const pack = activePack()
   const courses = pack.courses
   const loaded = await Promise.all(courses.map((course) => courseBundle(course)))
+  const completion = readingCompletion(pack, loaded)
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -26,7 +28,7 @@ export default async function ReadPage() {
             <ActionLink variant="filled" href={pack.meta.learningPath} newTab>OFFICIAL LEARNING PATH</ActionLink>
           </>
         )}
-        {pack.meta.notice && <Text variant="notice" role="status" placement="mb-6">{pack.meta.notice}</Text>}
+        {completion.notice && <Text variant="notice" role="status" placement="mb-6">{completion.notice}</Text>}
         {pack.meta.reading && <Text variant="muted" placement="mb-6">Public learning-path readings and private copies saved on this server, read aloud in the Mac&apos;s voice. Pick a course.</Text>}
         {courses.some((course) => course.provider === "private") && <SendToStarSetup />}
         {pack.meta.reading && <div className="divide-y-2 divide-foreground border-2 border-foreground">

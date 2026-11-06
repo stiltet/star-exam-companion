@@ -8,6 +8,7 @@ export function browserServerEnv(parent, scratch, root) {
     QUIZ_SCORES_FILE: "",
     QUIZ_SCORES_DIR: path.join(scratch, "scores"),
     QUIZ_ROOT: root,
+    QUIZ_PRIVATE_DIR: path.join(scratch, "private-reading"),
     QUIZ_EXAM: "generative-ai-leader",
     QUIZ_EXAM_SETTING_FILE: path.join(scratch, "active-exam.json"),
     NIGHT_DIR: path.join(scratch, "night"),
