@@ -19,13 +19,14 @@ const OLDEST_MS = 400 * 24 * 60 * 60 * 1000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
+// A page id is a 24-digit hex id in Google's bundles, or the plain number of a privately captured page.
 // One pattern per list of courses, built once rather than for every reading in a batch.
 const patterns = new Map<string, RegExp>()
 function readingPattern(ids: readonly string[]): RegExp {
   const key = ids.join("|")
   let pattern = patterns.get(key)
   if (!pattern) {
-    pattern = new RegExp(`^(${key})/[0-9a-f]{24}$`)
+    pattern = new RegExp(`^(${key})/(?:[0-9a-f]{24}|[0-9]{1,18})$`)
     patterns.set(key, pattern)
   }
   return pattern
