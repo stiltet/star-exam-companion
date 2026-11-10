@@ -74,6 +74,31 @@ test.describe("Send to Star", () => {
     await expect(page.getByText("This reading is from a private copy on this server.")).toBeVisible()
   })
 
+  test("a selected passage is saved as its own copy and never replaces the whole page", async ({ page, context }) => {
+    const source = await bookmarklet(page)
+    const lessonPage = await context.newPage()
+    await lessonPage.goto(`${SKILLS}/course_templates/1786/documents/7`)
+    const send = async () => {
+      const popupEvent = lessonPage.waitForEvent("popup")
+      await lessonPage.evaluate((code) => (0, eval)(code), source)
+      const popup = await popupEvent
+      await expect(popup.getByRole("status")).toHaveText("Saved the private reading on this server. You can close this tab.")
+      await popup.close()
+    }
+    await send()
+    // Select just the passage, as the setup text suggests, and send the same page again.
+    await lessonPage.evaluate(() => {
+      const range = document.createRange()
+      range.selectNodeContents(document.querySelector("p")!)
+      const selection = window.getSelection()!
+      selection.removeAllRanges()
+      selection.addRange(range)
+    })
+    await send()
+    await page.goto("/read/12")
+    await expect(page.getByRole("link", { name: /Synthetic lesson 1786/ })).toHaveCount(2)
+  })
+
   test("a course the pack does not list is refused and nothing is sent to the server", async ({ page, context }) => {
     const source = await bookmarklet(page)
     const posts: string[] = []
