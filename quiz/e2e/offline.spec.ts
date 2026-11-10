@@ -273,6 +273,43 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
     // The fixture clears only the first exam's scratch scores, so clear this exam's too.
     expect((await page.request.post("/api/scores/reset", { headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true } })).ok()).toBe(true)
+    await context.addInitScript(() => {
+      const w = window as unknown as Record<string, unknown>
+      w.__spoken = []
+      w.__cancelled = 0
+      class Utterance {
+        text: string
+        voice: unknown = null
+        lang = ""
+        onboundary: ((event: { name: string; charIndex: number }) => void) | null = null
+        onend: (() => void) | null = null
+        onerror: ((event: { error: string }) => void) | null = null
+        constructor(text: string) {
+          this.text = text
+        }
+      }
+      let timer: number | undefined
+      const voices = [{ name: "Synthetic local", lang: "en-US", localService: true }, { name: "Synthetic remote", lang: "en-GB", localService: false }]
+      Object.defineProperty(window, "SpeechSynthesisUtterance", { value: Utterance, configurable: true })
+      Object.defineProperty(window, "speechSynthesis", {
+        configurable: true,
+        value: {
+          getVoices: () => voices,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          cancel: () => {
+            ;(w.__cancelled as number)++
+            window.clearTimeout(timer)
+          },
+          speak: (utterance: Utterance) => {
+            ;(w.__spoken as string[]).push(utterance.text)
+            if ((utterance.voice as { localService?: boolean } | null)?.localService !== true) throw new Error("A non-local voice was chosen")
+            utterance.onboundary?.({ name: "word", charIndex: 0 })
+            timer = window.setTimeout(() => utterance.onend?.(), 300)
+          },
+        },
+      })
+    })
     await page.goto("/progress")
     await readyOffline(page)
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
@@ -289,10 +326,22 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await expect(page.locator("main")).toContainText(privateText)
     await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
     await expect(page.getByText("This reading is from a private copy on this server.")).toBeVisible()
-    const speech = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/speak/reading")
+    // The Mac's speech route is aborted, so a pass cannot come from a mocked network answer.
+    // The device voice is a silent stub that records what it is asked to say and ends each sentence itself.
+    await page.route(/\/api\/speak(?:\/|$|\?)/, (route) => route.abort())
     await page.getByRole("button", { name: "Play", exact: true }).click()
-    const speechRequest = await speech
-    expect(JSON.parse(speechRequest.postData() ?? "{}").text).toContain(privateText)
+    await expect(page.getByText("The Mac is unreachable. Reading with this device's local voice; the text stays on this device.")).toBeVisible()
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)).toContain(privateText)
+    const spoken = await page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)
+    expect(spoken.every((text) => typeof text === "string" && text.length > 0)).toBe(true)
+    // Pause stops the stub's voice; Play carries on and speaks the same sentence again.
+    const count = spoken.length
+    await page.getByRole("button", { name: "Pause", exact: true }).click()
+    expect(await page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)).toBeGreaterThan(0)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.length)).toBeGreaterThan(count)
+    // The reading finishes on the device and is queued as read, with no request to the Mac.
+    await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
     for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/about"]) {
       const response = await page.goto(path)
       expect(response?.status(), path).toBe(200)
@@ -301,12 +350,14 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await page.goto("/practice")
     await page.getByRole("button", { name: /^A\./ }).click()
     const queue = () => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]").length)
-    await expect.poll(queue).toBe(1)
-    const queuedId: string = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]")[0].id)
+    // The finished private reading and the practice answer are both waiting in this exam's outbox.
+    await expect.poll(queue).toBe(2)
+    const queued: { id: string; mode: string }[] = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]"))
+    expect(queued.map((line) => line.mode).sort()).toEqual(["practice", "reading"])
     await context.setOffline(false)
     await expect.poll(queue).toBe(0)
     const response = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "agentic-architect" } })
-    expect(await response.json()).toMatchObject({ ok: true, snapshot: { lines: [expect.objectContaining({ id: queuedId, mode: "practice" })] } })
+    expect(await response.json()).toMatchObject({ ok: true, snapshot: { lines: expect.arrayContaining(queued.map((line) => expect.objectContaining({ id: line.id, mode: line.mode }))) } })
     // The first exam's queue was never touched.
     expect(await page.evaluate(() => localStorage.getItem("quiz-outbox-generative-ai-leader"))).toBeNull()
   } finally {
