@@ -324,12 +324,35 @@ function packStamp(dir: string): string {
   }).join("|")
 }
 
+// The name, size and modified time of everything under the pack folder, so a file added or changed anywhere in it,
+// including one with an unrelated name, changes the stamp and gets the private-reading scan again.
+function treeStamp(dir: string): string {
+  const parts: string[] = []
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    // A pack folder that is not there has no stamp; readPack then says which file it lacks.
+    return "-"
+  }
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const file = path.join(dir, entry.name)
+    if (entry.isDirectory()) parts.push(`${entry.name}/{${treeStamp(file)}}`)
+    else {
+      const stat = statSync(file)
+      parts.push(`${entry.name}:${stat.mtimeMs}:${stat.size}`)
+    }
+  }
+  return parts.join(",")
+}
+
 export function loadPack(root: string, id: string = examId(root)): Pack {
   const dir = packDir(root, id)
-  assertNoPrivateReadingFiles(dir, id)
-  const stamp = packStamp(dir)
+  const stamp = `${packStamp(dir)}#${treeStamp(dir)}`
   const cached = packCache.get(dir)
   if (cached?.stamp === stamp) return cached.pack
+  // Only a pack that is new or changed is scanned and parsed again.
+  assertNoPrivateReadingFiles(dir, id)
   const pack = readPack(dir, id)
   packCache.set(dir, { stamp, pack })
   return pack

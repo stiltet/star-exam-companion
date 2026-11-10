@@ -17,7 +17,7 @@ function fixture(t: TestContext) {
   cpSync(path.join(testRoot, "exams"), path.join(root, "exams"), { recursive: true })
   const course = path.join(store, "removed-pack", "99")
   mkdirSync(course, { recursive: true })
-  const text = ["Synthetic guarded private sentence.", "Second fixture line."].join("\n")
+  const text = ["Synthetic guarded private sentence for the static privacy guard test.", "Second fixture line, long enough to be compared."].join("\n")
   writeFileSync(path.join(course, `${createHash("sha256").update("101").digest("hex")}.json`), JSON.stringify({
     pageId: "101", title: "Synthetic fixture", text, savedAt: "2026-01-01T00:00:00.000Z",
   }))
@@ -51,4 +51,34 @@ test("the static privacy guard rejects a configured store path without printing 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /contain the private reading store path/)
   assert.equal(result.stderr.includes(store), false)
+})
+
+// A tracked source file is still checked when its name only starts like a local file's.
+for (const name of ["scores.ts", "scores-panel.tsx", ".env.ts", ".environment.json"]) {
+  test(`the static privacy guard still checks ${name}, which is not a local-only file`, (t) => {
+    const { root, text, run } = fixture(t)
+    writeFileSync(path.join(root, "quiz", name), name.endsWith(".json") ? JSON.stringify({ text }) : text)
+    const result = run()
+    assert.equal(result.status, 1, name)
+    assert.match(result.stderr, /contain text from the private reading store/)
+  })
+}
+
+// The local files that really never reach a build are skipped, by exact name.
+for (const name of ["scores-agentic-architect.jsonl", ".env.local", "active-exam.json"]) {
+  test(`the static privacy guard skips the local file ${name}`, (t) => {
+    const { root, text, run } = fixture(t)
+    writeFileSync(path.join(root, "quiz", name), text)
+    assert.equal(run().status, 0, name)
+  })
+}
+
+test("a short capture such as one word does not block the build, only a full reading is compared", (t) => {
+  const { root, store, run } = fixture(t)
+  const course = path.join(store, "removed-pack", "99")
+  writeFileSync(path.join(course, `${createHash("sha256").update("102").digest("hex")}.json`), JSON.stringify({
+    pageId: "102", title: "Synthetic short", text: "Continue", savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+  writeFileSync(path.join(root, "quiz", "button.json"), JSON.stringify({ label: "Continue" }))
+  assert.equal(run().status, 0)
 })

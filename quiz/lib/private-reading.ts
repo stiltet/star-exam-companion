@@ -4,13 +4,29 @@ import { chmod, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile 
 import { homedir } from "node:os"
 import path from "node:path"
 import { repoRoot } from "./pack.ts"
+import { PRIVATE_PAGE_ID } from "./page-id.ts"
 
 const PACK_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const COURSE_ID = /^\d+$/
-const PAGE_ID = /^\d+$/
+const PAGE_ID = PRIVATE_PAGE_ID
 const MAX_TITLE_CHARS = 500
 const MAX_TEXT_CHARS = 1_000_000
 const MAX_RECORD_BYTES = 4_000_000
+// What one course may hold, so nobody who can reach the capture route can fill the disk.
+export const MAX_RECORDS_PER_COURSE = 300
+export const MAX_COURSE_BYTES = 200_000_000
+
+// The course is full: a new page is refused, replacing an existing page still works.
+export class PrivateStoreLimitError extends Error {
+  constructor() {
+    super("This course's private store is full.")
+    this.name = "PrivateStoreLimitError"
+  }
+}
+
+// Parsed records, kept until a file in the course changes (its name, size or modified time), so a page view does not
+// read and parse every saved reading again.
+const recordCache = new Map<string, { stamp: string; records: PrivateReadingRecord[] }>()
 
 export type PrivateReadingRecord = {
   pageId: string
@@ -158,13 +174,23 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
     throw new Error("The private reading store must not contain linked records.")
   }
   const files = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".json")).map((entry) => entry.name).sort()
+  const stats = await Promise.all(files.map(async (name) => ({ name, info: await stat(path.join(directory, name)) })))
+  for (const { name, info } of stats) {
+    if (info.size > MAX_RECORD_BYTES) throw new Error(`Private reading record ${name} is too large.`)
+  }
+  const stamp = stats.map(({ name, info }) => `${name}:${info.size}:${info.mtimeMs}`).join("|")
+  const kept = recordCache.get(directory)
+  if (kept?.stamp === stamp) return kept.records
   const records = await Promise.all(files.map(async (name) => {
     const file = path.join(directory, name)
-    if ((await stat(file)).size > MAX_RECORD_BYTES) {
-      throw new Error(`Private reading record ${name} is too large.`)
-    }
     return parseRecord(JSON.parse(await readFile(file, "utf8")), file)
   }))
+  const sorted = sortRecords(records)
+  recordCache.set(directory, { stamp, records: sorted })
+  return sorted
+}
+
+function sortRecords(records: PrivateReadingRecord[]): PrivateReadingRecord[] {
   return records.sort((a, b) => Date.parse(a.savedAt) - Date.parse(b.savedAt) || a.pageId.localeCompare(b.pageId, undefined, { numeric: true }))
 }
 
@@ -209,8 +235,23 @@ export async function savePrivateReading(
     await mkdir(part, { recursive: true, mode: 0o700 })
     await chmod(part, 0o700)
   }
-  const existing = await readPrivateReadings(packId, courseId)
-  const savedAt = existing.find((record) => record.pageId === input.pageId)?.savedAt ?? new Date().toISOString()
+  const listed = (await readdir(directory, { withFileTypes: true })).filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+  const sizes = await Promise.all(listed.map(async (entry) => ({ name: entry.name, size: (await stat(path.join(directory, entry.name))).size })))
+  const replacing = sizes.find((entry) => entry.name === path.basename(file))
+  const others = sizes.filter((entry) => entry !== replacing)
+  const newBytes = new TextEncoder().encode(input.text.trim()).byteLength + new TextEncoder().encode(input.title.trim()).byteLength
+  if (others.length + 1 > MAX_RECORDS_PER_COURSE || others.reduce((sum, entry) => sum + entry.size, 0) + newBytes > MAX_COURSE_BYTES) {
+    throw new PrivateStoreLimitError()
+  }
+  // Only the page being replaced is read, to keep the day it was first saved.
+  let savedAt = new Date().toISOString()
+  if (replacing) {
+    try {
+      savedAt = parseRecord(JSON.parse(await readFile(file, "utf8")), file).savedAt
+    } catch {
+      // A damaged copy of this page is being replaced by a good one, so its old date is not worth keeping.
+    }
+  }
   const record: PrivateReadingRecord = {
     pageId: input.pageId,
     title: input.title.trim(),
