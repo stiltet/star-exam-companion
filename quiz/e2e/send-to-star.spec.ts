@@ -32,6 +32,8 @@ test.describe("Send to Star", () => {
     // Remove what the test captured, keeping the server's own synthetic fixture: a stray page would change the
     // Night script, and the seeded recording for it would no longer match.
     const course = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "12")
+    // Course 13 holds nothing in the test server, so anything saved there (the full-course test) is removed whole.
+    await rm(path.join(path.dirname(course), "13"), { recursive: true, force: true })
     for (const name of await readdir(course)) {
       const record = JSON.parse(await readFile(path.join(course, name), "utf8")) as { pageId: string }
       if (!["98001", "98002"].includes(record.pageId)) await rm(path.join(course, name))
@@ -42,10 +44,18 @@ test.describe("Send to Star", () => {
     await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
     // The shared fixture unregisters the worker from the quiz page, so the page must be back on the quiz.
     await page.goto("/progress")
-    // The fixture unregisters the worker, which stalls while it is still installing.
-    await readyOffline(page)
+    // The fixture unregisters the worker, which stalls while it is still installing. Only "ready" is waited for here: a page that
+    // has just registered the worker may have been taken over before this line runs, and waiting for that event would hang.
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
     await page.waitForLoadState("networkidle")
   })
+
+  // The text of every reading the test saved in course 12, apart from the server's own two fixture pages.
+  async function savedTexts(): Promise<string[]> {
+    const course = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "12")
+    const records = await Promise.all((await readdir(course)).map(async (name) => JSON.parse(await readFile(path.join(course, name), "utf8")) as { pageId: string; text: string }))
+    return records.filter((record) => !["98001", "98002"].includes(record.pageId)).map((record) => record.text)
+  }
 
   async function bookmarklet(page: import("@playwright/test").Page): Promise<string> {
     await page.goto("/read")
@@ -97,6 +107,41 @@ test.describe("Send to Star", () => {
     await send()
     await page.goto("/read/12")
     await expect(page.getByRole("link", { name: /Synthetic lesson 1786/ })).toHaveCount(2)
+    // One copy is exactly the selected passage, the other is the whole page, which also holds its heading.
+    const texts = await savedTexts()
+    expect(texts).toHaveLength(2)
+    expect(texts, "one copy is only the selected passage").toContain(SYNTHETIC)
+    const whole = texts.find((text) => text !== SYNTHETIC)
+    expect(whole, "the other copy is the whole page, not a second copy of the passage").toContain("Synthetic lesson 1786")
+    expect(whole).toContain(SYNTHETIC)
+  })
+
+  test("a full course tells the person in the capture tab how to make room", async ({ page, browser, baseURL }) => {
+    const source = await bookmarklet(page)
+    const headers = { origin: baseURL!, "x-quiz-exam": "agentic-architect" }
+    const course13 = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "13")
+    // A browser with no offline worker takes the capture tab: with 300 readings in the course the worker would try to keep
+    // every one of them, and that is not what this test is about.
+    const quiet = await browser.newContext({ serviceWorkers: "block" })
+    try {
+      // Course 13 (template 1832) holds nothing yet. Fill it with small synthetic readings through the route the bookmarklet uses.
+      for (let id = 1; id <= 300; id += 1) {
+        const saved = await page.request.post("/api/reading/private", { headers, data: { template: "1832", pageId: String(id), title: "Synthetic", text: "Synthetic text." } })
+        expect(saved.status(), `reading ${id}`).toBe(200)
+      }
+      expect((await page.request.post("/api/reading/private", { headers, data: { template: "1832", pageId: "301", title: "Synthetic", text: "Synthetic text." } })).status()).toBe(413)
+      await quiet.route(`${SKILLS}/**`, (route) => route.fulfill({ contentType: "text/html", body: lesson("Synthetic lesson 1832", SYNTHETIC) }))
+      const lessonPage = await quiet.newPage()
+      await lessonPage.goto(`${SKILLS}/course_templates/1832/documents/1`)
+      const popupEvent = lessonPage.waitForEvent("popup")
+      await lessonPage.evaluate((code) => (0, eval)(code), source)
+      const popup = await popupEvent
+      await expect(popup.getByRole("status")).toHaveText("This course already holds as many private readings as it can. To make room, remove a saved reading's file from the private-reading folder (the README says where), then send this one again.")
+    } finally {
+      await quiet.close()
+      // Gone at once, so no later page load makes the offline worker keep 300 readings.
+      await rm(course13, { recursive: true, force: true })
+    }
   })
 
   test("a course the pack does not list is refused and nothing is sent to the server", async ({ page, context }) => {
@@ -214,7 +259,7 @@ test.describe("Send to Star", () => {
     for (const pageId of ["1".repeat(21), "abc", ""]) {
       const refused = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId } })
       expect(refused.status(), `page id "${pageId}"`).toBe(400)
-      expect(await refused.json()).toMatchObject({ reason: "reading" })
+      expect(await refused.json()).toMatchObject({ reason: "id" })
     }
     // The largest id the bookmarklet can make is accepted.
     const largest = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId: "18446744073709551615" } })
