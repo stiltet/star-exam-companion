@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, truncate, utimes,
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
-import { MAX_COURSE_BYTES, MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { MAX_COURSE_BYTES, MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, cachedCourseCount, privateReadingProblem, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
@@ -246,10 +246,14 @@ test("a changed record is read again", async () => {
 
 test("deleting a course folder drops its text from memory too", async () => {
   const root = await useScratch()
+  // Other tests leave their own courses in memory, so the count is compared with what it was before this course was read.
+  const baseline = cachedCourseCount()
   await savePrivateReading("agentic-architect", "12", { pageId: "41", title: "Synthetic", text: "Text that must not outlive its folder." })
   assert.equal((await readPrivateReadings("agentic-architect", "12")).length, 1)
   await rm(path.join(root, "agentic-architect", "12"), { recursive: true })
+  assert.equal(cachedCourseCount(), baseline + 1, "the course's text is held in memory while its folder exists")
   assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), [])
+  assert.equal(cachedCourseCount(), baseline, "and dropped from memory once the folder is gone")
   // A new course folder is read fresh, not merged with what was there before.
   await savePrivateReading("agentic-architect", "12", { pageId: "42", title: "Synthetic", text: "Fresh synthetic text." })
   assert.deepEqual((await readPrivateReadings("agentic-architect", "12")).map((record) => record.pageId), ["42"])
@@ -290,4 +294,35 @@ test("a course at its byte limit refuses a new page but still replaces an existi
   await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: "62", title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
   const replaced = await savePrivateReading("agentic-architect", "12", { pageId: "61", title: "Synthetic", text: "Replacement text." })
   assert.equal(replaced.text, "Replacement text.")
+})
+
+test("the course byte limit counts a new reading as it will be written, escapes included", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "71", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "12")
+  const file = path.join(folder, (await readdir(folder))[0]!)
+  // One million bytes of room are left. 400,000 control characters are 400,000 bytes raw but about 2.4 MB as JSON.
+  await truncate(file, MAX_COURSE_BYTES - 1_000_000)
+  const text = "\u0001".repeat(400_000)
+  assert.equal(new TextEncoder().encode(text).byteLength < 1_000_000, true, "the raw text would fit")
+  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: "72", title: "Synthetic", text }), PrivateStoreLimitError)
+  const small = await savePrivateReading("agentic-architect", "12", { pageId: "73", title: "Synthetic", text: "Synthetic text." })
+  assert.equal(small.pageId, "73", "a reading that does fit is still saved")
+})
+
+test("the text limit counts UTF-16 units, so an emoji counts as two", () => {
+  const input = (text: string) => ({ pageId: "1", title: "Synthetic", text })
+  assert.equal(isPrivateReadingInput(input("\u{1F600}".repeat(500_000))), true, "1,000,000 units")
+  assert.equal(isPrivateReadingInput(input("\u{1F600}".repeat(500_001))), false, "1,000,002 units")
+})
+
+test("each refusal has its own problem: id, reading or size", () => {
+  const input = (pageId: string, text: string) => ({ pageId, title: "Synthetic", text })
+  assert.equal(privateReadingProblem(input("1", "Synthetic text.")), null)
+  assert.equal(privateReadingProblem(input("1".repeat(21), "Synthetic text.")), "id")
+  assert.equal(privateReadingProblem(input("abc", "Synthetic text.")), "id")
+  assert.equal(privateReadingProblem(input("1", "  ")), "reading")
+  assert.equal(privateReadingProblem(input("1", "a".repeat(1_000_001))), "reading")
+  assert.equal(privateReadingProblem(input("1", "\u0001".repeat(1_000_000))), "size", "within the character limit but too large once written")
+  assert.equal(privateReadingProblem(null), "reading")
 })

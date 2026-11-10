@@ -14,27 +14,53 @@ function stringsIn(value: unknown): string[] {
   return []
 }
 
-// Whether a source file holds any of the parts, as plain text or as a string inside its JSON. The file is read, normalised and
-// parsed once, however many captures are checked.
-function fileContains(file: string, parts: string[]): boolean {
+// A source file as the text it can say: its content, the content with spaces collapsed, and each string inside its JSON.
+function variantsOf(file: string): string[] {
   const content = readFileSync(file, "utf8")
-  const normalised = normalizeText(content)
-  const strings = file.endsWith(".json") ? stringsIn(JSON.parse(content)).map(normalizeText) : []
-  return parts.some((part) => content.includes(part) || normalised.includes(part) || strings.some((value) => value.includes(part)))
+  const variants = [content, normalizeText(content)]
+  if (file.endsWith(".json")) variants.push(...stringsIn(JSON.parse(content)).map(normalizeText))
+  return variants
 }
 
 // Only the local files that never reach a build are skipped, by their exact names: a tracked source file whose
 // name merely starts with "scores" or ".env" is still checked.
 const LOCAL_ONLY = [/^node_modules$/, /^\.next[\w.-]*$/, /^scores(?:-[a-z0-9-]+)?\.jsonl$/, /^scores-backups$/, /^\.env(?:\.(?:local|development|production|test))*$/, /^active-exam\.json$/]
-// A line of a capture shorter than this is not compared: a few words such as "Continue" would match ordinary interface text
-// and block the build. The whole text and each line of it are compared, so a capture is checked as soon as it holds one
-// line this long; a capture made only of shorter lines is not checked, which the README says.
+// What is compared of a capture: its whole text if that is at least this many characters, and each of its lines that is. A few
+// words such as "Continue" would match ordinary interface text and block the build, so a capture whose whole text and every
+// line are shorter than this is not compared, which the README says.
 export const MIN_CHECKED_CHARS = 40
 
 // What to look for in the sources for one capture: its whole text and each of its long enough lines, normalised once.
 export function checkedParts(text: string): string[] {
   const parts = [normalizeText(text), ...text.split(/\r?\n/).map(normalizeText)]
   return [...new Set(parts.filter((part) => part.length >= MIN_CHECKED_CHARS))]
+}
+
+// The captured parts by their first MIN_CHECKED_CHARS characters (every part is at least that long), so a source file is
+// scanned once whatever the number of captured lines: each position is looked up, and only a match on the start is confirmed.
+export function indexParts(parts: string[]): Map<string, string[]> {
+  const index = new Map<string, string[]>()
+  for (const part of parts) {
+    const start = part.slice(0, MIN_CHECKED_CHARS)
+    index.set(start, [...(index.get(start) ?? []), part])
+  }
+  return index
+}
+
+function findsAny(variant: string, index: Map<string, string[]>): boolean {
+  for (let at = 0; at + MIN_CHECKED_CHARS <= variant.length; at += 1) {
+    const candidates = index.get(variant.slice(at, at + MIN_CHECKED_CHARS))
+    if (candidates?.some((part) => variant.startsWith(part, at))) return true
+  }
+  return false
+}
+
+// What a source file leaks, if anything: the store's own path or captured text. The file is read, normalised and parsed once.
+export function leakIn(file: string, storePath: string, captured: Map<string, string[]>): "path" | "text" | null {
+  const variants = variantsOf(file)
+  if (variants.some((variant) => variant.includes(storePath))) return "path"
+  if (captured.size > 0 && variants.some((variant) => findsAny(variant, captured))) return "text"
+  return null
 }
 
 function filesUnder(directory: string): string[] {
@@ -53,11 +79,12 @@ async function checkStaticPacks(root: string): Promise<void> {
   for (const { id } of listPacks(root)) loadPack(root, id)
   const records = await allPrivateReadings()
   const files = ["exams", "quiz", "pages-static"].flatMap((folder) => filesUnder(path.join(root, folder)))
-  const storePath = [normalizeText(privateReadingRoot())]
-  const captured = [...new Set(records.flatMap((record) => checkedParts(record.text)))]
+  const storePath = normalizeText(privateReadingRoot())
+  const captured = indexParts([...new Set(records.flatMap((record) => checkedParts(record.text)))])
   for (const file of files) {
-    if (fileContains(file, storePath)) throw new Error("Static build sources contain the private reading store path.")
-    if (captured.length > 0 && fileContains(file, captured)) throw new Error("Static build sources contain text from the private reading store.")
+    const leak = leakIn(file, storePath, captured)
+    if (leak === "path") throw new Error("Static build sources contain the private reading store path.")
+    if (leak === "text") throw new Error("Static build sources contain text from the private reading store.")
   }
 }
 
