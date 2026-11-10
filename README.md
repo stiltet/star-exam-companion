@@ -145,6 +145,22 @@ browser, open a reading page, optionally select just the passage to save, then u
 The local capture tab saves it to the server's private store. See
 [`skills/send-to-star/SKILL.md`](skills/send-to-star/SKILL.md) for the steps.
 
+Good to know about private readings:
+
+- **Unfinished.** Read Aloud still says **Unfinished** while any course cannot be read here. Without
+  your own captures the Agentic Architect pack reads 8 of its 13 courses. Courses 1596, 1672 and 1275
+  have no reading text on Google Skills, so they sit under **Not read aloud** with their reason.
+- **Where the text lives.** Each capture is one file per page in a folder outside this repository:
+  `QUIZ_PRIVATE_DIR` if you set it, otherwise `star-exam-companion/private-reading` in your operating
+  system's application-data folder. A page may hold up to 1,000,000 characters. The folder is never
+  committed and is never part of a static build or the online demo.
+- **Deleting it.** Delete a page's file, or the folder, to remove the server copies. The phone or
+  browser also keeps pages it has opened for offline use, so clear this site's data there to remove
+  those. Night reading rebuilds its recording from the text that remains.
+- **Offline voice.** When the Mac cannot be reached, Read Aloud uses an English voice installed on the
+  device itself and says so. It never falls back to a remote voice. A device with no local English voice
+  shows a message instead of staying silent, and the rest of the quiz still works.
+
 To see which packs your copy has:
 
 ```bash
