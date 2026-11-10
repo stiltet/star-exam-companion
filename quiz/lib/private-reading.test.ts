@@ -7,6 +7,8 @@ import { allPrivateReadings, privateReadingRoot, readPrivateReadings, savePrivat
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
+import { buildRecording } from "./night-build.ts"
+import { nightParts, wavFromPcm } from "./night.ts"
 import { testRoot } from "./test-pack.ts"
 
 const before = process.env.QUIZ_PRIVATE_DIR
@@ -124,4 +126,51 @@ test("a private directory inside the repository is refused, including through a 
   await symlink(testRoot, link)
   process.env.QUIZ_PRIVATE_DIR = path.join(link, "private-readings-test")
   await assert.rejects(readPrivateReadings("agentic-architect", "12"), /outside the repository/)
+})
+
+test("private text reaches Read Aloud as captured, and instructional phrases are not filtered out", async () => {
+  await useScratch()
+  const lines = ["Click Next to continue.", "Skip to main content", "Mark as complete", "Copyright Synthetic Example", "Review the diagram, then answer below."]
+  await savePrivateReading("agentic-architect", "12", { pageId: "201", title: "Synthetic phrases", text: lines.join("\n") })
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  const loaded = await privateReadingProvider.load(course)
+  assert.equal(loaded.ok, true)
+  if (!loaded.ok) return
+  const found = reading(loaded.bundle, "201")
+  assert.deepEqual(found?.paragraphs.filter((paragraph) => !paragraph.heading).map((paragraph) => paragraph.text), lines)
+})
+
+test("a new capture changes the Night script, so the old recording is replaced, not kept", async () => {
+  const root = await useScratch()
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  async function parts() {
+    const loaded = await privateReadingProvider.load(course!)
+    assert.equal(loaded.ok, true)
+    if (!loaded.ok) throw new Error("not loaded")
+    return nightParts([{
+      id: course!.id,
+      title: course!.title,
+      readings: loaded.pages.map((page, index) => ({
+        number: index + 1,
+        title: page.title,
+        paragraphs: (reading(loaded.bundle, page.id)?.paragraphs ?? []).map((paragraph) => ({ text: paragraph.text, heading: paragraph.heading })),
+      })),
+    }])
+  }
+  const dir = path.join(root, "night-scratch")
+  const render = async (_script: string, file: string) => {
+    await writeFile(file, wavFromPcm(new Uint8Array(4)))
+    return true
+  }
+  const encode = async (_wav: string, m4a: string) => {
+    await writeFile(m4a, "audio")
+  }
+  await savePrivateReading("agentic-architect", "12", { pageId: "301", title: "Synthetic first", text: "First synthetic sentence." })
+  const first = await buildRecording({ dir, parts: await parts(), render, encode })
+  await savePrivateReading("agentic-architect", "12", { pageId: "302", title: "Synthetic second", text: "Second synthetic sentence." })
+  const second = await buildRecording({ dir, parts: await parts(), render, encode })
+  assert.notEqual(second.key, first.key)
+  assert.deepEqual((await readdir(dir)).filter((name) => /^[0-9a-f]{64}$/.test(name)), [second.key])
 })
