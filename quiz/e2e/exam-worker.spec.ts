@@ -90,6 +90,9 @@ async function allowWorkerUpdate(page: Page) {
   })
 }
 
+// The worker may still start a voice download of its own before the voice list is blanked; see fixtures.ts.
+test.use({ backgroundVoiceDownloads: true })
+
 // These journeys exercise page fetching, not storing the thousands of unrelated voice clips.
 async function leaveVoiceDownloadsOut(page: Page) {
   await page.route("**/api/snapshot", async (route) => {
