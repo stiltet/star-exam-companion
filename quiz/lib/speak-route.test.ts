@@ -50,5 +50,7 @@ test("Read Aloud speaks into its own pool and the Voice Quiz into its own", () =
   const route = (relative: string) => readFileSync(path.join(quiz, relative), "utf8")
   assert.match(route("app/api/speak/reading/route.ts"), /speakHandler\(READING_POOL\)/)
   assert.match(route("app/api/speak/route.ts"), /speakHandler\(VOICE_POOL\)/)
-  assert.match(route("components/read-aloud.tsx"), /fetch\("\/api\/speak\/reading"/)
+  // Read Aloud asks for its clips through the clip helper, which is what names the reading pool's route.
+  assert.match(route("lib/clip.ts"), /fetcher\("\/api\/speak\/reading"/)
+  assert.match(route("components/read-aloud.tsx"), /fetchClip\(text\)/)
 })
