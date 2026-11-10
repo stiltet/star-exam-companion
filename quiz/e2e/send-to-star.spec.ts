@@ -34,7 +34,7 @@ test.describe("Send to Star", () => {
     const course = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "12")
     for (const name of await readdir(course)) {
       const record = JSON.parse(await readFile(path.join(course, name), "utf8")) as { pageId: string }
-      if (record.pageId !== "98001") await rm(path.join(course, name))
+      if (!["98001", "98002"].includes(record.pageId)) await rm(path.join(course, name))
     }
     // Close the synthetic tabs first: the fixture's worker clean-up stalls in a page that is not in front.
     await Promise.all(context.pages().filter((other) => other !== page).map((other) => other.close()))
@@ -85,11 +85,22 @@ test.describe("Send to Star", () => {
     const popupEvent = lessonPage.waitForEvent("popup")
     await lessonPage.evaluate((code) => (0, eval)(code), source)
     const popup = await popupEvent
-    await expect(popup.getByRole("status")).toHaveText("This course is not configured for private reading in the active pack.")
+    await expect(popup.getByRole("status")).toHaveText("This course is not one this exam saves private copies for.")
     expect(posts).toEqual([])
   })
 
-  test("a page from any other origin cannot make the receiver save text", async ({ page, context, baseURL }) => {
+  // Records every message the receiver tab is sent, so a test can prove the forged one arrived and was refused.
+  async function watchMessages(popup: import("@playwright/test").Page) {
+    await popup.waitForLoadState("load")
+    await popup.evaluate(() => {
+      const w = window as unknown as { __seen: { origin: string; fromOpener: boolean; type: unknown }[] }
+      w.__seen = []
+      window.addEventListener("message", (event) => w.__seen.push({ origin: event.origin, fromOpener: event.source === window.opener, type: (event.data as { type?: unknown } | null)?.type }))
+    })
+  }
+  const seenBy = (popup: import("@playwright/test").Page) => popup.evaluate(() => (window as unknown as { __seen: { origin: string; fromOpener: boolean; type: unknown }[] }).__seen)
+
+  test("a page from any other origin cannot make the receiver save text", async ({ context, baseURL }) => {
     const posts: string[] = []
     context.on("request", (request) => {
       if (request.method() === "POST" && new URL(request.url()).pathname === "/api/reading/private") posts.push(request.url())
@@ -100,13 +111,58 @@ test.describe("Send to Star", () => {
     await other.evaluate((origin) => {
       const target = window.open(`${origin}/read/capture`, "_blank")
       const send = () => target?.postMessage({ type: "star-reading", template: "1786", pageId: "7", title: "Forged", text: "Forged text" }, "*")
-      for (const wait of [300, 900, 1800]) setTimeout(send, wait)
+      for (const wait of [300, 900, 1800, 2700]) setTimeout(send, wait)
     }, baseURL!)
     const popup = await popupEvent
-    await popup.waitForLoadState("load")
-    await other.waitForTimeout(2500)
+    await watchMessages(popup)
+    // Delivery is proved by the tab's own record of messages, so a pass cannot come from a message that never arrived.
+    await expect.poll(async () => (await seenBy(popup)).filter((seen) => seen.origin === EVIL && seen.type === "star-reading").length, { timeout: 10_000 }).toBeGreaterThan(0)
+    await popup.waitForTimeout(500)
     await expect(popup.getByRole("status")).toHaveText("Open this page with the Send to Star bookmarklet from a signed-in Google Skills course.")
     expect(posts).toEqual([])
+  })
+
+  test("a Google Skills page that did not open the receiver cannot make it save text either", async ({ context, baseURL }) => {
+    const posts: string[] = []
+    context.on("request", (request) => {
+      if (request.method() === "POST" && new URL(request.url()).pathname === "/api/reading/private") posts.push(request.url())
+    })
+    const opener = await context.newPage()
+    await opener.goto(`${SKILLS}/course_templates/1786/documents/1`)
+    const popupEvent = opener.waitForEvent("popup")
+    await opener.evaluate((origin) => {
+      const w = window as unknown as { recv: Window | null; __ready: boolean }
+      w.__ready = false
+      w.recv = window.open(`${origin}/read/capture`, "_blank")
+      window.addEventListener("message", (event) => {
+        if (event.source === w.recv && (event.data as { type?: unknown } | null)?.type === "star-reading-ready") w.__ready = true
+      })
+    }, baseURL!)
+    const popup = await popupEvent
+    await watchMessages(popup)
+    // The receiver has said it is listening, so what follows reaches a receiver that is ready.
+    await opener.waitForFunction(() => (window as unknown as { __ready: boolean }).__ready)
+    // A frame inside the opener has the Skills origin but is not the window that opened the receiver.
+    await opener.evaluate(() => {
+      const w = window as unknown as { recv: Window }
+      const frame = document.createElement("iframe")
+      document.body.appendChild(frame)
+      const send = (frame.contentWindow as unknown as { Function: FunctionConstructor }).Function("target", "target.postMessage({ type: 'star-reading', template: '1786', pageId: '8', title: 'Forged', text: 'Forged text' }, '*')")
+      send(w.recv)
+    })
+    await expect.poll(async () => (await seenBy(popup)).filter((seen) => seen.type === "star-reading").length, { timeout: 10_000 }).toBeGreaterThan(0)
+    const forged = (await seenBy(popup)).filter((seen) => seen.type === "star-reading")
+    expect(forged.every((seen) => seen.origin === SKILLS && seen.fromOpener === false), "it came from the Skills origin, but not from the opener").toBe(true)
+    await popup.waitForTimeout(500)
+    await expect(popup.getByRole("status")).toHaveText("Open this page with the Send to Star bookmarklet from a signed-in Google Skills course.")
+    expect(posts).toEqual([])
+    // The real opener, sending the same kind of message, is accepted: the receiver was working all along.
+    await opener.evaluate(() => {
+      const w = window as unknown as { recv: Window }
+      w.recv.postMessage({ type: "star-reading", template: "1786", pageId: "9", title: "Control", text: "Control text" }, "*")
+    })
+    await expect(popup.getByRole("status")).toHaveText("Saved the private reading on this server. You can close this tab.")
+    expect(posts).toHaveLength(1)
   })
 
   test("a page the server refuses is reported to the person, not hidden", async ({ page, context }) => {
@@ -116,17 +172,28 @@ test.describe("Send to Star", () => {
     const popupEvent = lessonPage.waitForEvent("popup")
     await lessonPage.evaluate((code) => (0, eval)(code), source)
     const popup = await popupEvent
-    await expect(popup.getByRole("status")).toHaveText("The server could not save this reading (HTTP 400).")
+    await expect(popup.getByRole("status")).toHaveText("This page was not saved: it is empty or longer than 1,000,000 characters. Select just the passage you want and try again.")
   })
 
   test("the server rejects a save for the wrong exam or from another origin", async ({ page, baseURL }) => {
     const body = { template: "1786", pageId: "11", title: "Synthetic", text: "Synthetic text" }
     const wrongExam = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "generative-ai-leader" }, data: body })
-    expect(wrongExam.ok()).toBe(false)
+    expect(wrongExam.status()).toBe(409)
+    expect(await wrongExam.json()).toMatchObject({ wrongExam: "agentic-architect" })
     const foreign = await page.request.post("/api/reading/private", { headers: { origin: EVIL, "x-quiz-exam": "agentic-architect" }, data: body })
     expect(foreign.status()).toBe(400)
     const wrongTemplate = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, template: "999" } })
     expect(wrongTemplate.status()).toBe(400)
+    expect(await wrongTemplate.json()).toMatchObject({ reason: "template" })
+    // A page id longer than 20 digits is refused before anything is saved, as is an id that is not digits.
+    for (const pageId of ["1".repeat(21), "abc", ""]) {
+      const refused = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId } })
+      expect(refused.status(), `page id "${pageId}"`).toBe(400)
+      expect(await refused.json()).toMatchObject({ reason: "reading" })
+    }
+    // The largest id the bookmarklet can make is accepted.
+    const largest = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId: "18446744073709551615" } })
+    expect(largest.status()).toBe(200)
   })
 
   test("the Read list keeps courses without text in their own section, each with its reason, without sideways scrolling", async ({ page }) => {
@@ -135,7 +202,8 @@ test.describe("Send to Star", () => {
     await page.waitForLoadState("networkidle")
     await expect(page.getByRole("heading", { name: "Not read aloud", exact: true })).toBeVisible()
     await expect(page.getByText("No text to read aloud")).toHaveCount(3)
-    await expect(page.getByText("Private copy on this server")).toHaveCount(2)
+    // Only the course with a saved copy (12, seeded by the test server) is marked; course 13 has none yet.
+    await expect(page.getByText("Private copy on this server")).toHaveCount(1)
     const section = page.getByRole("region", { name: "Not read aloud" })
     await expect(section.getByRole("link")).toHaveCount(3)
     for (const link of await section.getByRole("link").all()) await expect(link).toBeVisible()
