@@ -1,4 +1,7 @@
+import { readdir, readFile, rm } from "node:fs/promises"
+import path from "node:path"
 import { expect, readyOffline, test } from "./fixtures"
+import { e2eScratch } from "./server-env.mjs"
 
 // The real Send to Star bookmarklet, run on synthetic pages that are served at the Google Skills origin
 // without touching the network. No real course text is used anywhere.
@@ -26,6 +29,13 @@ test.describe("Send to Star", () => {
     await context.route(`${EVIL}/**`, (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>x</title>" }))
   })
   test.afterEach(async ({ page, context, baseURL }) => {
+    // Remove what the test captured, keeping the server's own synthetic fixture: a stray page would change the
+    // Night script, and the seeded recording for it would no longer match.
+    const course = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "12")
+    for (const name of await readdir(course)) {
+      const record = JSON.parse(await readFile(path.join(course, name), "utf8")) as { pageId: string }
+      if (record.pageId !== "98001") await rm(path.join(course, name))
+    }
     // Close the synthetic tabs first: the fixture's worker clean-up stalls in a page that is not in front.
     await Promise.all(context.pages().filter((other) => other !== page).map((other) => other.close()))
     await page.bringToFront()
