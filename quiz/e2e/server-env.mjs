@@ -1,4 +1,10 @@
+import { tmpdir } from "node:os"
 import path from "node:path"
+
+// A fixed scratch folder per port, so the tests know where the server keeps its private readings.
+export function e2eScratch(port) {
+  return path.join(tmpdir(), `quiz-e2e-scratch-${port}`)
+}
 
 export function browserServerEnv(parent, scratch, root) {
   return {

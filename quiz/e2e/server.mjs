@@ -7,7 +7,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
 import { seedNight } from "./night-fixture.mjs"
-import { browserServerEnv } from "./server-env.mjs"
+import { browserServerEnv, e2eScratch } from "./server-env.mjs"
 
 const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
 async function checkPort() {
@@ -24,7 +24,15 @@ async function checkPort() {
 }
 await checkPort()
 
-const scratch = await mkdtemp(path.join(tmpdir(), "quiz-e2e-"))
+// With QUIZ_E2E_SCRATCH set (the Playwright config does), the scratch folder is the fixed one the tests also know.
+let scratch
+if (process.env.QUIZ_E2E_SCRATCH === "1") {
+  scratch = e2eScratch(port)
+  await rm(scratch, { recursive: true, force: true })
+  await mkdir(scratch, { recursive: true, mode: 0o700 })
+} else {
+  scratch = await mkdtemp(path.join(tmpdir(), "quiz-e2e-"))
+}
 await mkdir(path.join(scratch, "scores"))
 // A scratch copy of the packs, with one more that has no course to read, so the tests can serve a pack the repo
 // does not ship. It is the second pack with its Read Aloud courses taken out.
@@ -97,6 +105,8 @@ function run(args) {
 try {
   process.env.QUIZ_ROOT = root
   process.env.NIGHT_DIR = env.NIGHT_DIR
+  // The seeded Night recording must be for the same readings the server will see, private fixture included.
+  process.env.QUIZ_PRIVATE_DIR = env.QUIZ_PRIVATE_DIR
   await seedNight()
   await run(["build"])
   if (await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), privateText)) {
