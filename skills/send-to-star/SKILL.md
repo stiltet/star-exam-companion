@@ -17,4 +17,5 @@ store on the Star Exam Companion server.
 5. Keep the local capture tab open until it confirms the page was saved. The page is stored outside
    the repository and build output, on the server that received it.
 6. Open the course in Read Aloud to confirm the saved page is listed. Repeat for other reading
-   pages; saving the same page again replaces its existing private copy.
+   pages; saving the same page again replaces its existing private copy, and a selected passage is saved
+   as its own copy, so it never replaces a whole saved page.

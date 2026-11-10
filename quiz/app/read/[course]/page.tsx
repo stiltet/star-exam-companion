@@ -45,7 +45,7 @@ export default async function CourseReadingsPage({ params }: Props) {
         <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="mb-6" />
         <Heading variant="page" placement="mb-6">{course.title}</Heading>
         {course.provider === "private" && (
-          <Text variant="note" placement="mb-6">This course is read from a private copy on this server. It is not included in the repository or a build.</Text>
+          <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project's files or the online demo.</Text>
         )}
         {loaded.ok ? (
           <ReadingList

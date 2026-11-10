@@ -35,7 +35,7 @@ export default async function ReadPage() {
         {pack.meta.reading && <div className="divide-y-2 divide-foreground border-2 border-foreground">
           {courses.map((course, index) => {
             const result = loaded[index]
-            return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} privateCopy={course.provider === "private"} />
+            return <CourseCard key={course.id} course={course.id} title={course.title} total={result?.ok ? result.pages.length : undefined} privateCopy={course.provider === "private" && result?.ok === true && result.pages.length > 0} />
           })}
         </div>}
         {pack.noReading.length > 0 && <section className="mt-8" aria-labelledby="not-read-aloud">

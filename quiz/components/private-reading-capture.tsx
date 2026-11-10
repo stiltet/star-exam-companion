@@ -38,7 +38,7 @@ export function PrivateReadingCapture({ packId, templates }: { packId: string; t
       if (!live || event.origin !== SKILLS_ORIGIN || event.source !== opener || !isCaptureMessage(event.data)) return
       const { template, pageId, title, text } = event.data
       if (!templates.includes(template)) {
-        setStatus("This course is not configured for private reading in the active pack.")
+        setStatus("This course is not one this exam saves private copies for.")
         return
       }
       setStatus("Saving the private copy on this server…")
@@ -47,13 +47,17 @@ export function PrivateReadingCapture({ packId, templates }: { packId: string; t
         headers: { "content-type": "application/json", "x-quiz-exam": packId },
         body: JSON.stringify({ template, pageId, title, text }),
       }).then(async (response) => {
-        const result: unknown = await response.json()
+        const result: unknown = await response.json().catch(() => null)
         if (!live) return
         if (response.ok && result && typeof result === "object" && "ok" in result && result.ok === true) {
           setStatus("Saved the private reading on this server. You can close this tab.")
-        } else {
-          setStatus(`The server could not save this reading (HTTP ${response.status}).`)
+          return
         }
+        const reason = result && typeof result === "object" && "reason" in result ? result.reason : undefined
+        if (response.status === 409) setStatus("The quiz is set to another exam. Switch to Agentic Architect (bottom of the Progress page), then send the reading again.")
+        else if (response.status === 413) setStatus("This course already holds as many private readings as it can. Delete some saved readings, then send this one again.")
+        else if (reason === "reading") setStatus("This page was not saved: it is empty or longer than 1,000,000 characters. Select just the passage you want and try again.")
+        else setStatus(`The server could not save this reading (HTTP ${response.status}).`)
       }).catch(() => {
         if (live) setStatus("The server could not save this reading. Check the local quiz and try again.")
       })

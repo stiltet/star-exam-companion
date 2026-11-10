@@ -15,7 +15,7 @@ export default function PrivateReadingCapturePage() {
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <Heading variant="page" placement="mb-4">Send to Star</Heading>
-        <Text variant="muted" placement="mb-6">A private copy is saved only on this server. Keep this tab open while the bookmarklet sends the reading.</Text>
+        <Text variant="muted" placement="mb-6">A private copy is saved on this server, and your devices keep it for offline use. Keep this tab open while the bookmarklet sends the reading.</Text>
         <PrivateReadingCapture packId={pack.meta.id} templates={templates} />
       </main>
       <SiteFooter />

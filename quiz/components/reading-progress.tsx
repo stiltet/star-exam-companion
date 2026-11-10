@@ -75,9 +75,9 @@ export function CourseCard({ course, title, total, noText, privateCopy, reason }
   return (
     <StatusLink href={`/read/${course}`} layout="stack" state={noText ? "none" : readingState(read, kept)}>
       <span className="font-bold">Course {course}</span>: {title}
-      <span className="block text-sm font-bold mt-1">
+      <Text variant="label" placement="mt-1">
         {noText ? "No text to read aloud" : readingStatus(read, kept)}
-      </span>
+      </Text>
       {privateCopy && <Text variant="muted">Private copy on this server</Text>}
       {reason && <Text variant="muted">{reason}</Text>}
     </StatusLink>
