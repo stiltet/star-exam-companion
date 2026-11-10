@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import test, { after } from "node:test"
-import { readPrivateReadings } from "./private-reading.ts"
+import { MAX_RECORDS_PER_COURSE, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { postPrivateReading } from "./private-reading-route.ts"
 import { whileServing } from "./test-pack.ts"
 
@@ -93,4 +93,30 @@ test("private input rejects JSON records larger than the store can safely read b
   const response = await whileServing("agentic-architect", () => postPrivateReading(request(tooLarge)))
   assert.equal(response.status, 400)
   assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), before)
+})
+
+test("a full course answers 413 with the reason, and an existing page can still be replaced", async () => {
+  for (let id = 1; id <= MAX_RECORDS_PER_COURSE; id += 1) {
+    await savePrivateReading("agentic-architect", "13", { pageId: String(id), title: "Synthetic", text: "Synthetic text." })
+  }
+  const full = await whileServing("agentic-architect", () => postPrivateReading(request({ ...body, template: "1832", pageId: "99999" })))
+  assert.equal(full.status, 413)
+  assert.deepEqual(await full.json(), { ok: false, reason: "limit" })
+  const replace = await whileServing("agentic-architect", () => postPrivateReading(request({ ...body, template: "1832", pageId: "1", text: "Replacement synthetic text." })))
+  assert.equal(replace.status, 200)
+})
+
+test("each refusal says what kind it was", async () => {
+  const reasons = await whileServing("agentic-architect", async () => ({
+    origin: await (await postPrivateReading(request(body, "http://other.example"))).json(),
+    reading: await (await postPrivateReading(request({ ...body, text: "  " }))).json(),
+    template: await (await postPrivateReading(request({ ...body, template: "1596" }))).json(),
+    longId: await (await postPrivateReading(request({ ...body, pageId: "1".repeat(21) }))).json(),
+  }))
+  assert.deepEqual(reasons, {
+    origin: { ok: false, reason: "origin" },
+    reading: { ok: false, reason: "reading" },
+    template: { ok: false, reason: "template" },
+    longId: { ok: false, reason: "reading" },
+  })
 })

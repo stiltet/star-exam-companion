@@ -12,14 +12,13 @@ import { useSnapshot } from "@/components/snapshot"
 import { needsSaving, readToday } from "@/lib/progress"
 import { reviewStop, type Paragraph } from "@/lib/reading-view"
 import { saidHeading, speakable } from "@/lib/score"
+import { fetchClip, macGate } from "@/lib/clip"
 import { MAX_SPEAK_CHARS } from "@/lib/speak-limit"
 import { fitClips, sentences, spokenWord, words } from "@/lib/spoken-word"
 
 // The pause after a paragraph, a little longer after a heading.
 const PAUSE_MS = 350
 const HEADING_PAUSE_MS = 700
-// How long the Mac has to make one sentence's clip before the device's own voice takes over.
-const CLIP_TIMEOUT_MS = 10_000
 
 type Props = {
   // Where the place is kept on this device: "<course>/<page>".
@@ -135,6 +134,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   const clipUrl = useRef<string | null>(null)
   const frame = useRef<number | null>(null)
   const gap = useRef<number | null>(null)
+  // Once the Mac has failed, later sentences go straight to the device voice until the next Play.
+  const mac = useRef(macGate())
   const browserVoice = useRef<SpeechSynthesisUtterance | null>(null)
   // The clip paused part-way, so Play carries on from the same word.
   const paused = useRef<{ index: number; sentence: number; mine: number } | null>(null)
@@ -192,9 +193,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     if (kept) return kept
     const said = speakable(parts[index]?.[sentence]?.text ?? "")
     const text = paragraphs[index]?.heading ? saidHeading(said) : said
-    // A Mac that does not answer within the limit counts as failed, so reading moves to the device voice instead of waiting on the network.
-    const loading = fetch("/api/speak/reading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }), signal: AbortSignal.timeout(CLIP_TIMEOUT_MS) })
-      .then((response) => (response.ok ? response.blob() : Promise.reject(new Error(`the Mac answered ${response.status}`))))
+    // A Mac that does not answer in time counts as failed, so reading moves to the device voice instead of waiting on the network.
+    const loading = fetchClip(text)
     clips.current.set(key, loading)
     loading.catch(() => clips.current.delete(key))
     return loading
@@ -226,8 +226,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
 
   async function run(index: number, mine: number, sentence = 0) {
     at.current = { index, sentence }
-    if (!navigator.onLine) {
-      void runOnDevice(index, sentence, mine)
+    if (!navigator.onLine || mac.current.skipped()) {
+      void runOnDevice(index, sentence, mine, mac.current.skipped() ?? undefined)
       return
     }
     let blob: Blob
@@ -236,6 +236,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     } catch (error) {
       // A stale run's failure is safe to drop: a newer run owns the voice and reports its own.
       if (generation.current !== mine) return
+      mac.current.failed(error)
       void runOnDevice(index, sentence, mine, error)
       return
     }
@@ -345,6 +346,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   // Inside the tap: a silent clip first, so iOS lets the voice play once its clip arrives.
   function playFrom(index: number, sentence = 0) {
     const mine = ++generation.current
+    // A new Play tries the Mac again.
+    mac.current.reset()
     stopBrowserVoice()
     const audio = sharedAudio()
     clearGap()

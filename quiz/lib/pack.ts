@@ -337,7 +337,8 @@ function treeStamp(dir: string): string {
   }
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     const file = path.join(dir, entry.name)
-    if (entry.isDirectory()) parts.push(`${entry.name}/{${treeStamp(file)}}`)
+    if (entry.isSymbolicLink()) parts.push(`${entry.name}:link`)
+    else if (entry.isDirectory()) parts.push(`${entry.name}/{${treeStamp(file)}}`)
     else {
       const stat = statSync(file)
       parts.push(`${entry.name}:${stat.mtimeMs}:${stat.size}`)
