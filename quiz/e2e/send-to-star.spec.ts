@@ -118,4 +118,17 @@ test.describe("Send to Star", () => {
     const wrongTemplate = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, template: "999" } })
     expect(wrongTemplate.status()).toBe(400)
   })
+
+  test("the Read list keeps courses without text in their own section, each with its reason, without sideways scrolling", async ({ page }) => {
+    await page.goto("/read")
+    await readyOffline(page)
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "Not read aloud", exact: true })).toBeVisible()
+    await expect(page.getByText("No text to read aloud")).toHaveCount(3)
+    await expect(page.getByText("Private copy on this server")).toHaveCount(2)
+    const section = page.getByRole("region", { name: "Not read aloud" })
+    await expect(section.getByRole("link")).toHaveCount(3)
+    for (const link of await section.getByRole("link").all()) await expect(link).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+  })
 })
