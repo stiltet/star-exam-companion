@@ -18,6 +18,8 @@ import { fitClips, sentences, spokenWord, words } from "@/lib/spoken-word"
 // The pause after a paragraph, a little longer after a heading.
 const PAUSE_MS = 350
 const HEADING_PAUSE_MS = 700
+// How long the Mac has to make one sentence's clip before the device's own voice takes over.
+const CLIP_TIMEOUT_MS = 10_000
 
 type Props = {
   // Where the place is kept on this device: "<course>/<page>".
@@ -190,7 +192,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     if (kept) return kept
     const said = speakable(parts[index]?.[sentence]?.text ?? "")
     const text = paragraphs[index]?.heading ? saidHeading(said) : said
-    const loading = fetch("/api/speak/reading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) })
+    // A Mac that does not answer within the limit counts as failed, so reading moves to the device voice instead of waiting on the network.
+    const loading = fetch("/api/speak/reading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }), signal: AbortSignal.timeout(CLIP_TIMEOUT_MS) })
       .then((response) => (response.ok ? response.blob() : Promise.reject(new Error(`the Mac answered ${response.status}`))))
     clips.current.set(key, loading)
     loading.catch(() => clips.current.delete(key))
@@ -266,7 +269,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     if (generation.current !== mine) return
     if (!voice) {
       setPlaying(false)
-      setNote(`The Mac is unreachable and no local English voice is available on this device. Install a device voice to read aloud offline.${cause instanceof Error ? ` (${cause.message})` : ""}`)
+      setNote(`${cause instanceof Error ? `The Mac could not make this voice (${cause.message}). ` : "The Mac is unreachable. "}No local English voice is available on this device either. Install a device voice to read aloud without the Mac.`)
       return
     }
     const text = speakable(parts[index]?.[sentence]?.text ?? "")
@@ -288,9 +291,9 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
       if (generation.current !== mine) return
       browserVoice.current = null
       setPlaying(false)
-      setNote(`The device voice could not play (${event.error}). Tap Play to try again.`)
+      setNote("The device voice stopped and could not carry on. Tap Play to try again.")
     }
-    setNote("The Mac is unreachable. Reading with this device's local voice; the text stays on this device.")
+    setNote(`${cause instanceof Error ? `The Mac could not make this voice (${cause.message}). ` : "The Mac is unreachable. "}Reading with this device's local voice; the text stays on this device.`)
     speechSynthesis.speak(utterance)
   }
 
