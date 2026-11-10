@@ -316,7 +316,8 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
     // The fixture clears only the first exam's scratch scores, so clear this exam's too.
     expect((await page.request.post("/api/scores/reset", { headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true } })).ok()).toBe(true)
-    await context.addInitScript(voiceStub, { voices: true })
+    // Each sentence takes 1.5 s, so the reading is still playing when the test pauses it, even on a slow browser.
+    await context.addInitScript(voiceStub, { voices: true, ms: 1500 })
     await page.goto("/progress")
     await readyOffline(page)
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
@@ -344,7 +345,7 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     // Pause stops the stub's voice; Play carries on and speaks the same sentence again, word for word.
     const count = spoken.length
     const paused = spoken[count - 1]
-    await page.getByRole("button", { name: "Pause", exact: true }).click()
+    await page.getByRole("button", { name: "Pause", exact: true }).click({ timeout: 10_000 })
     expect(await page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)).toBeGreaterThan(0)
     await page.getByRole("button", { name: "Play", exact: true }).click()
     await expect.poll(async () => (await spokenNow(page))[count]).toBe(paused)
