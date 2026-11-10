@@ -167,8 +167,10 @@ Good to know about private readings:
   lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
   the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
   copy does not remove the ticks you earned for it, which stay in your saved scores.
-- **Demo build check.** Building the online demo stops if any source file holds a captured page's text. A
-  capture shorter than 80 characters is not compared, so a word such as "Continue" cannot block the build.
+- **Demo build check.** Building the online demo stops if any source file holds a captured page's text, either
+  all of it or any one line of it that is at least 40 characters long. Lines shorter than that are not
+  compared, so a capture made only of short lines, or a word such as "Continue", is not checked and cannot
+  block the build.
 - **If a copy is lost.** The store is not in the repository or its backups. Recover by capturing the page
   again from Google Skills while signed in.
 - **Offline voice.** When the Mac cannot be reached, Read Aloud uses an English voice installed on the
