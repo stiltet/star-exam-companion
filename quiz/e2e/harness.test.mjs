@@ -12,6 +12,16 @@ const server = fileURLToPath(new URL("./server.mjs", import.meta.url))
 const cli = fileURLToPath(new URL("../node_modules/@playwright/test/cli.js", import.meta.url))
 const quiz = fileURLToPath(new URL("../", import.meta.url))
 
+test("a refused voice clip is the only 500 a spec may declare expected", async () => {
+  const { isRefusedClipFetch } = await import("./expected-errors.ts")
+  const failed500 = "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  assert.equal(isRefusedClipFetch(failed500, "/api/speak/a497db02c1067c99d4807792205fe8bd495a1e9d280b3c12653db8ab0fa130ba"), true)
+  assert.equal(isRefusedClipFetch(failed500, "/api/snapshot"), false, "another path still fails the test")
+  assert.equal(isRefusedClipFetch(failed500, "/api/speak/reading/x"), false, "only a clip, not a nested path")
+  assert.equal(isRefusedClipFetch("Failed to load resource: the server responded with a status of 404 (Not Found)", "/api/speak/abc"), false, "another status still fails")
+  assert.equal(isRefusedClipFetch("Uncaught TypeError", "/api/speak/abc"), false, "another message still fails")
+})
+
 test("playwright.config.ts refuses unsafe ports before starting a server", () => {
   for (const port of ["3000", "0", "65536", "not-a-port"]) {
     const result = spawnSync(process.execPath, [cli, "test", "--list"], {
