@@ -11,9 +11,9 @@ type NightReady = {
 }
 
 // A silent device voice. It records what it is asked to say in window.__spoken, counts cancels in window.__cancelled, and ends
-// each sentence itself after 300 ms (or options.ms). With hold: true no sentence ends by itself: it stays being said until the test calls window.__release(), so a test can pause or leave at an exact moment. With voices: false the browser lists no voice and never says it loaded one. It must
+// each sentence itself after 300 ms (or options.ms). With clips: "ok-then-fail" the page's first request for a Mac clip gets a good answer and every later one a 500, with audioEnds: true each clip "plays" for 50 ms and then ends, so a test can reach the second request while the first clip plays. With hold: true no sentence ends by itself: it stays being said until the test calls window.__release(), so a test can pause or leave at an exact moment. With voices: false the browser lists no voice and never says it loaded one. It must
 // stay self-contained: Playwright sends its source into the page.
-function voiceStub(options: { voices: boolean; ms?: number; hold?: boolean }) {
+function voiceStub(options: { voices: boolean; ms?: number; hold?: boolean; clips?: "ok-then-fail"; audioEnds?: boolean }) {
   const w = window as unknown as Record<string, unknown>
   w.__spoken = []
   w.__cancelled = 0
@@ -33,8 +33,21 @@ function voiceStub(options: { voices: boolean; ms?: number; hold?: boolean }) {
   const realFetch = window.fetch.bind(window)
   window.fetch = (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
-    if (new URL(url, location.href).pathname === "/api/speak/reading") (w.__clipRequests as number)++
+    if (new URL(url, location.href).pathname === "/api/speak/reading") {
+      const count = ++(w.__clipRequests as number)
+      if (options.clips === "ok-then-fail") {
+        return Promise.resolve(count === 1 ? new Response(new Blob(["audio"]), { status: 200 }) : new Response("{}", { status: 500 }))
+      }
+    }
     return realFetch(input, init)
+  }
+  if (options.audioEnds) {
+    HTMLMediaElement.prototype.play = function play(this: HTMLMediaElement) {
+      // Only a clip from the Mac (a blob address) ends; the silent clip the page plays inside the tap must not, or each
+      // sentence would be ended twice.
+      if (this.src.startsWith("blob:")) window.setTimeout(() => this.onended?.(new Event("ended")), 50)
+      return Promise.resolve()
+    }
   }
   let timer: number | undefined
   const voices = options.voices ? [{ name: "Synthetic local", lang: "en-US", localService: true }, { name: "Synthetic remote", lang: "en-GB", localService: false }] : []
@@ -482,6 +495,17 @@ test.describe("reading aloud when the Mac cannot answer", () => {
     await releaseNow(page)
     await page.waitForTimeout(1500)
     expect((await spokenNow(page)).length).toBe(spokenAtLeave)
+  })
+
+  test("a failed look-ahead clip also sends the rest of the reading to the device voice", async ({ context, page }) => {
+    // The first paragraph's clip from the Mac is good and plays. The clip asked for ahead of time, the second paragraph's, fails.
+    // The second paragraph must then be said by the device voice without another request to the Mac: without the rule that a
+    // failed look-ahead counts, the page would ask again (a third request) before giving up.
+    await context.addInitScript(voiceStub, { voices: true, clips: "ok-then-fail" as const, audioEnds: true })
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(() => spokenNow(page), { timeout: 20_000 }).toEqual([second])
+    expect(await clipRequests(page), "the good clip, the failed look-ahead, and none after that").toBe(2)
   })
 
   test("after one failure the rest of the reading skips the Mac, and a new Play asks it again", async ({ context, page }) => {

@@ -1,4 +1,4 @@
-import { readdir, readFile, rm } from "node:fs/promises"
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { expect, readyOffline, test } from "./fixtures"
 import { e2eScratch } from "./server-env.mjs"
@@ -14,7 +14,8 @@ function lesson(title: string, text: string) {
 }
 
 // Loading a new page over the old one makes WebKit report the cut-off requests as errors; see fixtures.ts.
-test.use({ navigationCutOff: true })
+// The offline worker may start a voice download of its own, which the test server refuses; see expected-errors.ts.
+test.use({ navigationCutOff: true, voiceClipRefusal: true })
 
 test.describe("Send to Star", () => {
   test.beforeEach(async ({ page, baseURL, context }) => {
@@ -140,6 +141,24 @@ test.describe("Send to Star", () => {
     } finally {
       await quiet.close()
       // Gone at once, so no later page load makes the offline worker keep 300 readings.
+      await rm(course13, { recursive: true, force: true })
+    }
+  })
+
+  test("a damaged private copy says to remove that file, with both ways on", async ({ page }) => {
+    const course13 = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "13")
+    await mkdir(course13, { recursive: true })
+    await writeFile(path.join(course13, "damaged.json"), "{ not json at all")
+    try {
+      await page.goto("/read/13")
+      await expect(page.locator("p[role=alert]")).toHaveText("This server could not read one of the private copies of this course. A saved file may be damaged: remove it from the private-reading folder (see the README), then try again.")
+      await expect(page.getByRole("link", { name: "TRY AGAIN" })).toBeVisible()
+      await expect(page.getByRole("link", { name: "ALL COURSES" })).toBeVisible()
+      await expect(page.getByText(/^Detail: Private reading record .+ is not valid JSON\.$/)).toBeVisible()
+      // The page has started the offline worker; it must finish installing before the exam is switched back.
+      await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
+    } finally {
+      // Gone before anything else loads the course, so the offline worker and Night reading never meet the damaged file.
       await rm(course13, { recursive: true, force: true })
     }
   })
