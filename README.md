@@ -152,8 +152,9 @@ Good to know about private readings:
   have no reading text on Google Skills, so they sit under **Not read aloud** with their reason.
 - **Where the text lives.** Each capture is one file per page in a folder outside this repository:
   `QUIZ_PRIVATE_DIR` if you set it, otherwise `star-exam-companion/private-reading` in your operating
-  system's application-data folder. A page may hold up to 1,000,000 characters and a course up to 300
-  pages or 200 MB; a full course refuses a new page, and replacing an existing page still works. The
+  system's application-data folder. A page may hold up to 1,000,000 characters and no more than 4 MB once saved
+  (control characters and quotes take more room when saved, so such a page can be refused below the
+  character limit), a heading up to 500 characters, and a course up to 300 pages or 200 MB; a full course refuses a new page, and replacing an existing page still works. The
   folder is never committed and is never part of a static build or the online demo.
 - **Also on your devices.** The offline worker on each device that has the quiz installed keeps every
   captured page, opened or not, so it can be read offline. Private text is therefore on this server and

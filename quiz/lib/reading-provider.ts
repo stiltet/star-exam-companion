@@ -2,7 +2,7 @@ import { courseBundle as loadGoogleCourse } from "./course-text.ts"
 import type { Loaded } from "./course-text.ts"
 import type { Course } from "./reading-view.ts"
 import { pageList, type Bundle } from "./reading.ts"
-import { readPrivateReadings } from "./private-reading.ts"
+import { PrivateRecordError, readPrivateReadings } from "./private-reading.ts"
 
 export interface ReadingProvider {
   load(course: Course): Promise<Loaded>
@@ -48,7 +48,11 @@ export const privateReadingProvider: ReadingProvider = {
       return { ok: true, bundle, pages: pageList(bundle), ids: [] }
     } catch (error) {
       // One damaged file must not take down the Read Aloud overview or the offline worker; the message names no text.
-      return { ok: false, error: error instanceof Error ? error.message : "The private copies could not be read." }
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "The private copies could not be read.",
+        problem: error instanceof PrivateRecordError ? "record" : "folder",
+      }
     }
   },
 }

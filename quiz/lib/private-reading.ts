@@ -16,6 +16,15 @@ const MAX_RECORD_BYTES = 4_000_000
 export const MAX_RECORDS_PER_COURSE = 300
 export const MAX_COURSE_BYTES = 200_000_000
 
+// A saved file (or a link in the course folder) cannot be used, so removing it is the way on. Problems with the folder itself,
+// such as a setting that is not allowed, are plain errors, which is how a page tells the two apart.
+export class PrivateRecordError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "PrivateRecordError"
+  }
+}
+
 // The course is full: a new page is refused, replacing an existing page still works.
 export class PrivateStoreLimitError extends Error {
   constructor() {
@@ -42,23 +51,17 @@ export type PrivateReadingRecord = {
 
 export type PrivateReadingInput = Pick<PrivateReadingRecord, "pageId" | "title" | "text">
 
-// Why a reading is refused, so the capture tab can say it: its page id is not 1 to 20 digits ("id"), it is empty or its text or
-// title is over the limit ("reading", counted in UTF-16 units, so an emoji counts as two), or the record would be larger than
-// the store reads back ("size").
-export type ReadingProblem = "id" | "reading" | "size"
+// Why a reading is refused, so the capture tab can say it: its page id is not 1 to 20 digits ("id"), its title is empty or over
+// 500 characters ("title"), its text is empty or over 1,000,000 characters ("reading", counted in UTF-16 units, so an emoji
+// counts as two), or the record would be larger than the store reads back ("size").
+export type ReadingProblem = "id" | "title" | "reading" | "size"
 
 export function privateReadingProblem(value: unknown): ReadingProblem | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "reading"
   const input = value as Partial<PrivateReadingInput>
   if (typeof input.pageId !== "string" || !PAGE_ID.test(input.pageId)) return "id"
-  if (
-    typeof input.title !== "string" ||
-    input.title.trim().length === 0 ||
-    input.title.length > MAX_TITLE_CHARS ||
-    typeof input.text !== "string" ||
-    input.text.trim().length === 0 ||
-    input.text.length > MAX_TEXT_CHARS
-  ) return "reading"
+  if (typeof input.title !== "string" || input.title.trim().length === 0 || input.title.length > MAX_TITLE_CHARS) return "title"
+  if (typeof input.text !== "string" || input.text.trim().length === 0 || input.text.length > MAX_TEXT_CHARS) return "reading"
   return recordBytes({ pageId: input.pageId, title: input.title, text: input.text }) > MAX_RECORD_BYTES ? "size" : null
 }
 
@@ -152,7 +155,7 @@ function recordFile(directory: string, pageId: string): string {
 
 function parseRecord(value: unknown, file: string): PrivateReadingRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`Private reading record ${path.basename(file)} is invalid.`)
+    throw new PrivateRecordError(`Private reading record ${path.basename(file)} is invalid.`)
   }
   const record = value as Partial<PrivateReadingRecord>
   if (
@@ -168,7 +171,7 @@ function parseRecord(value: unknown, file: string): PrivateReadingRecord {
     !Number.isFinite(Date.parse(record.savedAt)) ||
     path.basename(file) !== `${createHash("sha256").update(record.pageId).digest("hex")}.json`
   ) {
-    throw new Error(`Private reading record ${path.basename(file)} is invalid.`)
+    throw new PrivateRecordError(`Private reading record ${path.basename(file)} is invalid.`)
   }
   return record as PrivateReadingRecord
 }
@@ -192,12 +195,12 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
     throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
   }
   if (entries.some((entry) => entry.isSymbolicLink())) {
-    throw new Error("The private reading store must not contain linked records.")
+    throw new PrivateRecordError("The private reading store must not contain linked records.")
   }
   const files = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".json")).map((entry) => entry.name).sort()
   const stats = await Promise.all(files.map(async (name) => ({ name, info: await stat(path.join(directory, name)) })))
   for (const { name, info } of stats) {
-    if (info.size > MAX_RECORD_BYTES) throw new Error(`Private reading record ${name} is too large.`)
+    if (info.size > MAX_RECORD_BYTES) throw new PrivateRecordError(`Private reading record ${name} is too large.`)
   }
   const stamp = stats.map(({ name, info }) => `${name}:${info.size}:${info.mtimeMs}`).join("|")
   const kept = recordCache.get(directory)
@@ -209,7 +212,7 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
       value = JSON.parse(await readFile(file, "utf8"))
     } catch {
       // The parser's own message can quote the start of the file, which is the reading's text, so it is never passed on.
-      throw new Error(`Private reading record ${name} is not valid JSON.`)
+      throw new PrivateRecordError(`Private reading record ${name} is not valid JSON.`)
     }
     return parseRecord(value, file)
   }))
@@ -232,7 +235,7 @@ export async function allPrivateReadings(): Promise<PrivateReadingRecord[]> {
       if (error instanceof Error && "code" in error && error.code === "ENOENT") return []
       throw error
     }
-    if (entries.some((entry) => entry.isSymbolicLink())) throw new Error("The private reading store must not contain linked directories.")
+    if (entries.some((entry) => entry.isSymbolicLink())) throw new PrivateRecordError("The private reading store must not contain linked directories.")
     return entries.filter((entry) => entry.isDirectory() && pattern.test(entry.name)).map((entry) => entry.name)
   }
   const records: PrivateReadingRecord[] = []

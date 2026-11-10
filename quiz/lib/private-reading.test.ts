@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, truncate, utimes,
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
-import { MAX_COURSE_BYTES, MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, cachedCourseCount, privateReadingProblem, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { MAX_COURSE_BYTES, MAX_RECORDS_PER_COURSE, PrivateRecordError, PrivateStoreLimitError, allPrivateReadings, cachedCourseCount, privateReadingProblem, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
@@ -251,7 +251,7 @@ test("deleting a course folder drops its text from memory too", async () => {
   await savePrivateReading("agentic-architect", "12", { pageId: "41", title: "Synthetic", text: "Text that must not outlive its folder." })
   assert.equal((await readPrivateReadings("agentic-architect", "12")).length, 1)
   await rm(path.join(root, "agentic-architect", "12"), { recursive: true })
-  assert.equal(cachedCourseCount(), baseline + 1, "the course's text is held in memory while its folder exists")
+  assert.equal(cachedCourseCount(), baseline + 1, "the course's text is still held in memory until the next read notices the folder is gone")
   assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), [])
   assert.equal(cachedCourseCount(), baseline, "and dropped from memory once the folder is gone")
   // A new course folder is read fresh, not merged with what was there before.
@@ -271,6 +271,7 @@ test("a damaged record that is plain text makes the course unreadable and its er
   if (!loaded.ok) {
     assert.equal(loaded.error.includes("Synthetic secret"), false)
     assert.match(loaded.error, /damaged\.json is not valid JSON/)
+    assert.equal(loaded.problem, "record", "a damaged file is a record problem, so the page says to remove it")
   }
 })
 
@@ -322,7 +323,51 @@ test("each refusal has its own problem: id, reading or size", () => {
   assert.equal(privateReadingProblem(input("1".repeat(21), "Synthetic text.")), "id")
   assert.equal(privateReadingProblem(input("abc", "Synthetic text.")), "id")
   assert.equal(privateReadingProblem(input("1", "  ")), "reading")
+  assert.equal(privateReadingProblem({ pageId: "1", title: "t".repeat(501), text: "Synthetic text." }), "title", "a title over 500 characters")
+  assert.equal(privateReadingProblem({ pageId: "1", title: "  ", text: "Synthetic text." }), "title", "an empty title")
   assert.equal(privateReadingProblem(input("1", "a".repeat(1_000_001))), "reading")
   assert.equal(privateReadingProblem(input("1", "\u0001".repeat(1_000_000))), "size", "within the character limit but too large once written")
   assert.equal(privateReadingProblem(null), "reading")
+})
+
+test("a record larger than the store reads back is refused on reading, with a record problem and without its text", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "81", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "12")
+  const file = path.join(folder, (await readdir(folder))[0]!)
+  await truncate(file, 4_000_001)
+  await assert.rejects(() => readPrivateReadings("agentic-architect", "12"), (error: unknown) => {
+    assert.ok(error instanceof PrivateRecordError, "it is a record problem")
+    assert.match((error as Error).message, /^Private reading record .+\.json is too large\.$/)
+    return true
+  })
+})
+
+test("each kind of failure the page shows is typed by the store itself, not guessed from its wording", async () => {
+  const root = await useScratch()
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  const problemOf = async () => {
+    const loaded = await privateReadingProvider.load(course)
+    assert.equal(loaded.ok, false)
+    return loaded.ok ? undefined : loaded.problem
+  }
+  await savePrivateReading("agentic-architect", "12", { pageId: "91", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "12")
+  // A link inside the course folder: the way on is to remove the link, which is a record problem.
+  await symlink(path.join(root, "elsewhere.json"), path.join(folder, "link.json"))
+  assert.equal(await problemOf(), "record", "a linked record")
+  await rm(path.join(folder, "link.json"))
+  // A damaged and a too large file.
+  await writeFile(path.join(folder, "damaged.json"), "plain text that is not JSON")
+  assert.equal(await problemOf(), "record", "a damaged file")
+  await rm(path.join(folder, "damaged.json"))
+  // A setting that is not allowed is the folder's problem, and removing a reading would not help.
+  const before = process.env.QUIZ_PRIVATE_DIR
+  process.env.QUIZ_PRIVATE_DIR = "relative/path"
+  try {
+    assert.equal(await problemOf(), "folder", "a setting that is not an absolute path")
+  } finally {
+    process.env.QUIZ_PRIVATE_DIR = before
+  }
 })

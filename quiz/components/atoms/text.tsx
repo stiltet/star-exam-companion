@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 // under a table. notice: a boxed message that fills the place of content, such as "loading" or
 // "nothing left"; give it role="status", or "alert" for an error, so a screen reader announces
 // it. label: a small bold caption at the start of a row, such as EXAM before the demo's exam links.
+// strong: a bold line at body size, such as the sentence that says what went wrong.
 // Its look lives here; the parent places it.
 export type TextVariant = "tagline" | "muted" | "note" | "notice" | "label" | "strong"
 
