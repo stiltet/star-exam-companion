@@ -30,7 +30,11 @@ export function SendToStarSetup() {
   return (
     <section className="mb-6 space-y-3">
       <Text variant="muted">Save a private reading from a Google Skills page where you are signed in. The text goes from your browser to this server and is kept only here and on your devices for offline use, never in the project's files.</Text>
-      <Text variant="muted">1. Copy the bookmarklet and add it as a bookmark in a desktop browser. 2. Sign in to Google Skills and open a reading. 3. Optionally select just the passage to save. 4. Click the bookmark. A new Star tab says when the copy is saved. Sending the same page again replaces its copy; a selected passage is saved as its own copy.</Text>
+      <Text variant="muted">1. Copy the bookmarklet and add it as a bookmark in a desktop browser.</Text>
+      <Text variant="muted">2. Sign in to Google Skills and open a reading.</Text>
+      <Text variant="muted">3. Optionally select just the passage to save.</Text>
+      <Text variant="muted">4. Click the bookmark. A new Star tab says when the copy is saved.</Text>
+      <Text variant="muted">Sending the same page again replaces its copy; a selected passage is saved as its own copy.</Text>
       <ActionButton variant="outlined" onClick={copyBookmarklet} disabled={!bookmarklet}>COPY SEND TO STAR BOOKMARKLET</ActionButton>
       <TextArea aria-label="Send to Star bookmarklet" placement="w-full" readOnly rows={4} value={bookmarklet} />
       {status && <Text variant="note" role="status">{status}</Text>}

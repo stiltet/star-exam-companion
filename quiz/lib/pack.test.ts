@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
@@ -227,6 +227,21 @@ test("a private record under an unrelated filename is refused even after a pack 
     nested: [{ pageId: "1", title: "Synthetic fixture", text: "Synthetic fixture text only.", savedAt: "2026-01-01T00:00:00.000Z" }],
   }))
   assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a private record added in a subfolder of a cached pack is refused on the next load", () => {
+  const root = packWith(() => undefined)
+  loadPack(root, "agentic-architect")
+  const nested = path.join(root, "exams/agentic-architect/notes/deeper")
+  mkdirSync(nested, { recursive: true })
+  writeFileSync(path.join(nested, "whatever.json"), JSON.stringify({ pageId: "1", title: "Synthetic fixture", text: "Synthetic fixture text only.", savedAt: "2026-01-01T00:00:00.000Z" }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a dangling link in a pack gets the linked-files message, not a raw file error", () => {
+  const root = packWith(() => undefined)
+  symlinkSync(path.join(root, "nowhere"), path.join(root, "exams/agentic-architect/dangling.json"))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain linked files/)
 })
 
 test("a chosen pack that no longer reads is ignored, so Progress still opens and the exam can be switched back", () => {

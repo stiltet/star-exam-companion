@@ -73,7 +73,7 @@ for (const name of ["scores-agentic-architect.jsonl", ".env.local", "active-exam
   })
 }
 
-test("a short capture such as one word does not block the build, only a full reading is compared", (t) => {
+test("a short capture such as one word does not block the build", (t) => {
   const { root, store, run } = fixture(t)
   const course = path.join(store, "removed-pack", "99")
   writeFileSync(path.join(course, `${createHash("sha256").update("102").digest("hex")}.json`), JSON.stringify({
@@ -81,4 +81,41 @@ test("a short capture such as one word does not block the build, only a full rea
   }))
   writeFileSync(path.join(root, "quiz", "button.json"), JSON.stringify({ label: "Continue" }))
   assert.equal(run().status, 0)
+})
+
+function addCapture(store: string, pageId: string, text: string) {
+  const course = path.join(store, "removed-pack", "99")
+  writeFileSync(path.join(course, `${createHash("sha256").update(pageId).digest("hex")}.json`), JSON.stringify({
+    pageId, title: "Synthetic", text, savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+}
+
+test("a 64 character capture, the size of the browser tests' own fixture, is checked and blocks the build", (t) => {
+  const { root, store, run } = fixture(t)
+  // Joined, so the whole sentence never appears in a tracked file: the browser test server refuses that.
+  const text = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
+  assert.equal(text.length, 64)
+  addCapture(store, "103", text)
+  writeFileSync(path.join(root, "quiz", "leak.json"), JSON.stringify({ text }))
+  const result = run()
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /contain text from the private reading store/)
+})
+
+test("a line is compared from 40 characters: 39 pass and 40 block", (t) => {
+  const { root, store, run } = fixture(t)
+  addCapture(store, "104", "x".repeat(39))
+  writeFileSync(path.join(root, "quiz", "edge.json"), JSON.stringify({ text: "x".repeat(39) }))
+  assert.equal(run().status, 0, "39 characters are not compared")
+  addCapture(store, "105", "y".repeat(40))
+  writeFileSync(path.join(root, "quiz", "edge2.json"), JSON.stringify({ text: "y".repeat(40) }))
+  assert.equal(run().status, 1, "40 characters are compared")
+})
+
+test("one long line of a capture of many short lines is enough to block the build", (t) => {
+  const { root, store, run } = fixture(t)
+  const long = "A line of the reading that is well over forty characters long."
+  addCapture(store, "106", ["Short.", long, "Also short."].join("\n"))
+  writeFileSync(path.join(root, "quiz", "one-line.json"), JSON.stringify({ quote: long }))
+  assert.equal(run().status, 1)
 })

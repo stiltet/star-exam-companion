@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, truncate, utimes, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
-import { MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { MAX_COURSE_BYTES, MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
@@ -219,11 +219,75 @@ test("one damaged record makes its course unreadable with a message, and never t
   if (!loaded.ok) assert.equal(loaded.error.includes("Synthetic secret text"), false)
 })
 
-test("a changed record is read again, an unchanged one comes from memory", async () => {
+test("an unchanged course comes from memory, and a rewrite of the same size is still noticed by its modified time", async () => {
   const root = await useScratch()
   await savePrivateReading("agentic-architect", "12", { pageId: "31", title: "Synthetic", text: "Original synthetic text." })
+  const first = await readPrivateReadings("agentic-architect", "12")
+  assert.equal(await readPrivateReadings("agentic-architect", "12"), first, "the second read returns the very same parsed records, read from nothing")
+  // A same-length change, with the file's modified time moved on, so only the time can tell it apart.
+  const folder = path.join(root, "agentic-architect", "12")
+  const file = path.join(folder, (await readdir(folder))[0]!)
+  const stored = await readFile(file, "utf8")
+  await writeFile(file, stored.replace("Original", "Changed!"))
+  const later = new Date(Date.now() + 60_000)
+  await utimes(file, later, later)
+  const second = await readPrivateReadings("agentic-architect", "12")
+  assert.notEqual(second, first)
+  assert.equal(second[0]?.text, "Changed! synthetic text.")
+})
+
+test("a changed record is read again", async () => {
+  await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "32", title: "Synthetic", text: "Original synthetic text." })
   assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Original synthetic text.")
-  await savePrivateReading("agentic-architect", "12", { pageId: "31", title: "Synthetic", text: "Changed synthetic text, longer." })
+  await savePrivateReading("agentic-architect", "12", { pageId: "32", title: "Synthetic", text: "Changed synthetic text, longer." })
   assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Changed synthetic text, longer.")
-  assert.ok(root)
+})
+
+test("deleting a course folder drops its text from memory too", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "41", title: "Synthetic", text: "Text that must not outlive its folder." })
+  assert.equal((await readPrivateReadings("agentic-architect", "12")).length, 1)
+  await rm(path.join(root, "agentic-architect", "12"), { recursive: true })
+  assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), [])
+  // A new course folder is read fresh, not merged with what was there before.
+  await savePrivateReading("agentic-architect", "12", { pageId: "42", title: "Synthetic", text: "Fresh synthetic text." })
+  assert.deepEqual((await readPrivateReadings("agentic-architect", "12")).map((record) => record.pageId), ["42"])
+})
+
+test("a damaged record that is plain text makes the course unreadable and its error never quotes the file", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "51", title: "Synthetic good", text: "Good synthetic text." })
+  // Starts with a letter, the shape whose JSON parser message quotes the start of the input.
+  await writeFile(path.join(root, "agentic-architect", "12", "damaged.json"), "Synthetic secret plain text that is not JSON at all")
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  const loaded = await privateReadingProvider.load(course)
+  assert.equal(loaded.ok, false)
+  if (!loaded.ok) {
+    assert.equal(loaded.error.includes("Synthetic secret"), false)
+    assert.match(loaded.error, /damaged\.json is not valid JSON/)
+  }
+})
+
+test("text and title limits are exact: the largest is accepted and one more is refused", () => {
+  const input = (text: string, title = "Synthetic") => ({ pageId: "1", title, text })
+  assert.equal(isPrivateReadingInput(input("a".repeat(1_000_000))), true)
+  assert.equal(isPrivateReadingInput(input("a".repeat(1_000_001))), false)
+  assert.equal(isPrivateReadingInput(input("Synthetic", "t".repeat(500))), true)
+  assert.equal(isPrivateReadingInput(input("Synthetic", "t".repeat(501))), false)
+  // Control characters take six bytes each in JSON, so this fits the character limit but not the record size limit.
+  assert.equal(isPrivateReadingInput(input("\u0001".repeat(1_000_000))), false)
+})
+
+test("a course at its byte limit refuses a new page but still replaces an existing one", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "61", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "12")
+  const file = path.join(folder, (await readdir(folder))[0]!)
+  // A sparse file takes no real disk but counts at its full size, which is what the limit adds up.
+  await truncate(file, MAX_COURSE_BYTES)
+  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: "62", title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
+  const replaced = await savePrivateReading("agentic-architect", "12", { pageId: "61", title: "Synthetic", text: "Replacement text." })
+  assert.equal(replaced.text, "Replacement text.")
 })

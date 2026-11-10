@@ -163,7 +163,11 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
   try {
     entries = await readdir(directory, { withFileTypes: true })
   } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") return []
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      // The course folder is gone, so its text must not stay in memory either.
+      recordCache.delete(directory)
+      return []
+    }
     throw error
   }
   const [physicalDirectory, physicalRoot] = await Promise.all([realpath(directory), physicalPath(root)])
@@ -183,7 +187,14 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
   if (kept?.stamp === stamp) return kept.records
   const records = await Promise.all(files.map(async (name) => {
     const file = path.join(directory, name)
-    return parseRecord(JSON.parse(await readFile(file, "utf8")), file)
+    let value: unknown
+    try {
+      value = JSON.parse(await readFile(file, "utf8"))
+    } catch {
+      // The parser's own message can quote the start of the file, which is the reading's text, so it is never passed on.
+      throw new Error(`Private reading record ${name} is not valid JSON.`)
+    }
+    return parseRecord(value, file)
   }))
   const sorted = sortRecords(records)
   recordCache.set(directory, { stamp, records: sorted })
