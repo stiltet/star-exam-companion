@@ -23,10 +23,16 @@ function fileContainsText(file: string, target: string): boolean {
   return containsText(JSON.parse(content), target)
 }
 
+// Only the local files that never reach a build are skipped, by their exact names: a tracked source file whose
+// name merely starts with "scores" or ".env" is still checked.
+const LOCAL_ONLY = [/^node_modules$/, /^\.next[\w.-]*$/, /^scores(?:-[a-z0-9-]+)?\.jsonl$/, /^scores-backups$/, /^\.env(?:\.(?:local|development|production|test))*$/, /^active-exam\.json$/]
+// A capture shorter than this is not compared: a few words such as "Continue" would match ordinary interface text and
+// block the build, and nothing of value can be recognised in them.
+export const MIN_CHECKED_CHARS = 80
+
 function filesUnder(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === "node_modules" || entry.name.startsWith(".next") || entry.name.startsWith("scores") ||
-      entry.name.startsWith(".env") || entry.name === "active-exam.json") return []
+    if (LOCAL_ONLY.some((pattern) => pattern.test(entry.name))) return []
     const file = path.join(directory, entry.name)
     if (entry.isSymbolicLink()) throw new Error("Static build sources must not contain linked files.")
     return entry.isDirectory() ? filesUnder(file) : [file]
@@ -45,7 +51,7 @@ async function checkStaticPacks(root: string): Promise<void> {
       throw new Error("Static build sources contain the private reading store path.")
     }
     for (const record of records) {
-      if (fileContainsText(file, record.text)) {
+      if (normalizeText(record.text).length >= MIN_CHECKED_CHARS && fileContainsText(file, record.text)) {
         throw new Error("Static build sources contain text from the private reading store.")
       }
     }

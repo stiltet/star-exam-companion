@@ -41,9 +41,15 @@ function privateBundle(records: Awaited<ReturnType<typeof readPrivateReadings>>)
 
 export const privateReadingProvider: ReadingProvider = {
   async load(course) {
-    const records = await readPrivateReadings(course.packId, course.id)
-    const bundle = privateBundle(records)
-    return { ok: true, bundle, pages: pageList(bundle), ids: records.map((record) => record.pageId) }
+    try {
+      const records = await readPrivateReadings(course.packId, course.id)
+      const bundle = privateBundle(records)
+      // No ids: a private page's id is made by the bookmarklet, not by Google, so a link built from it would not exist.
+      return { ok: true, bundle, pages: pageList(bundle), ids: [] }
+    } catch (error) {
+      // One damaged file must not take down the Read Aloud overview or the offline worker; the message names no text.
+      return { ok: false, error: error instanceof Error ? error.message : "The private copies could not be read." }
+    }
   },
 }
 

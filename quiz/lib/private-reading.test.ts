@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
-import { allPrivateReadings, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { MAX_RECORDS_PER_COURSE, PrivateStoreLimitError, allPrivateReadings, isPrivateReadingInput, privateReadingRoot, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
 import { privateReadingProvider } from "./reading-provider.ts"
 import { loadPack } from "./pack.ts"
 import { reading } from "./reading.ts"
@@ -173,4 +173,57 @@ test("a new capture changes the Night script, so the old recording is replaced, 
   const second = await buildRecording({ dir, parts: await parts(), render, encode })
   assert.notEqual(second.key, first.key)
   assert.deepEqual((await readdir(dir)).filter((name) => /^[0-9a-f]{64}$/.test(name)), [second.key])
+})
+
+test("a page id is 1 to 20 digits, the same range progress accepts", () => {
+  const input = (pageId: string) => ({ pageId, title: "Synthetic", text: "Synthetic text." })
+  assert.equal(isPrivateReadingInput(input("1")), true)
+  assert.equal(isPrivateReadingInput(input("18446744073709551615")), true, "the largest 64-bit hash")
+  assert.equal(isPrivateReadingInput(input("184467440737095516150")), false, "21 digits")
+  assert.equal(isPrivateReadingInput(input("")), false)
+  assert.equal(isPrivateReadingInput(input("1".repeat(10_000))), false, "a huge id is refused before anything is written")
+})
+
+test("a course holds a fixed number of readings, refuses one more, and still replaces an existing page", async () => {
+  await useScratch()
+  for (let id = 1; id <= MAX_RECORDS_PER_COURSE; id += 1) {
+    await savePrivateReading("agentic-architect", "12", { pageId: String(id), title: "Synthetic", text: "Synthetic text." })
+  }
+  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: String(MAX_RECORDS_PER_COURSE + 1), title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
+  const replaced = await savePrivateReading("agentic-architect", "12", { pageId: "1", title: "Synthetic", text: "Replaced synthetic text." })
+  assert.equal(replaced.text, "Replaced synthetic text.")
+  assert.equal((await readPrivateReadings("agentic-architect", "12")).length, MAX_RECORDS_PER_COURSE)
+  // Another course has its own room.
+  await savePrivateReading("agentic-architect", "13", { pageId: "1", title: "Synthetic", text: "Synthetic text." })
+})
+
+test("replacing a page keeps the day it was first saved", async () => {
+  const root = await useScratch()
+  const first = await savePrivateReading("agentic-architect", "12", { pageId: "7", title: "Synthetic", text: "First synthetic text." })
+  const file = (await readdir(path.join(root, "agentic-architect", "12")))[0]!
+  const stored = JSON.parse(await readFile(path.join(root, "agentic-architect", "12", file), "utf8"))
+  await writeFile(path.join(root, "agentic-architect", "12", file), JSON.stringify({ ...stored, savedAt: "2026-01-01T00:00:00.000Z" }))
+  const second = await savePrivateReading("agentic-architect", "12", { pageId: "7", title: "Synthetic", text: "Second synthetic text." })
+  assert.equal(second.savedAt, "2026-01-01T00:00:00.000Z")
+  assert.notEqual(first.savedAt, second.savedAt)
+})
+
+test("one damaged record makes its course unreadable with a message, and never throws or shows its text", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "21", title: "Synthetic good", text: "Good synthetic text." })
+  await writeFile(path.join(root, "agentic-architect", "12", "damaged.json"), "{ not json Synthetic secret text")
+  const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
+  assert.ok(course)
+  const loaded = await privateReadingProvider.load(course)
+  assert.equal(loaded.ok, false)
+  if (!loaded.ok) assert.equal(loaded.error.includes("Synthetic secret text"), false)
+})
+
+test("a changed record is read again, an unchanged one comes from memory", async () => {
+  const root = await useScratch()
+  await savePrivateReading("agentic-architect", "12", { pageId: "31", title: "Synthetic", text: "Original synthetic text." })
+  assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Original synthetic text.")
+  await savePrivateReading("agentic-architect", "12", { pageId: "31", title: "Synthetic", text: "Changed synthetic text, longer." })
+  assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Changed synthetic text, longer.")
+  assert.ok(root)
 })

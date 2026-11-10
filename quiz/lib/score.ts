@@ -1,3 +1,4 @@
+import { MAX_PAGE_ID_DIGITS } from "./page-id.ts"
 import { assignSessions, type ScoreLine } from "./learn.ts"
 
 export const MODES = ["round", "practice", "exam", "flashcard", "reading"] as const
@@ -26,7 +27,7 @@ function readingPattern(ids: readonly string[]): RegExp {
   const key = ids.join("|")
   let pattern = patterns.get(key)
   if (!pattern) {
-    pattern = new RegExp(`^(${key})/(?:[0-9a-f]{24}|[0-9]{1,20})$`)
+    pattern = new RegExp(`^(${key})/(?:[0-9a-f]{24}|[0-9]{1,${MAX_PAGE_ID_DIGITS}})$`)
     patterns.set(key, pattern)
   }
   return pattern
