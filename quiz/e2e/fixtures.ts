@@ -1,17 +1,16 @@
 import { test as base, expect, type Page } from "@playwright/test"
+import { isRefusedClipFetch } from "./expected-errors"
 
 // A page load that interrupts the page it replaces, as switching the exam does, makes WebKit report the requests and
 // storage calls it cut off as uncaught errors.
 const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
 
-export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean; backgroundVoiceDownloads: boolean }>({
+export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean; voiceClipRefusal: boolean }>({
   offlineNetwork: [false, { option: true }],
   navigationCutOff: [false, { option: true }],
   expectedWrongExam: [false, { option: true }],
-  // The offline worker fetches voice clips on its own, outside the page's mocked routes, and the test server cannot
-  // make a clip (speech never runs in tests), so such a fetch may answer 500. Only that exact URL is allowed.
-  backgroundVoiceDownloads: [false, { option: true }],
-  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff, expectedWrongExam, backgroundVoiceDownloads }, use) => {
+  voiceClipRefusal: [false, { option: true }],
+  browserChecks: [async ({ context, page, baseURL, offlineNetwork, navigationCutOff, expectedWrongExam, voiceClipRefusal }, use) => {
     const errors: string[] = []
     page.on("pageerror", (error) => {
       // WebKit reports refused offline prefetches and background voice downloads as pageerrors.
@@ -29,7 +28,7 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
       if (navigationCutOff && CUT_OFF.test(message.text())) return
       if (expectedWrongExam && /status of 409\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === "/api/snapshot") return
-      if (backgroundVoiceDownloads && /status of 500\b/.test(message.text()) && /^\/api\/speak\/[0-9a-f]{64}$/.test(new URL(message.location().url || baseURL!).pathname)) return
+      if (voiceClipRefusal && isRefusedClipFetch(message.text(), new URL(message.location().url || baseURL!).pathname)) return
       errors.push(message.text() + " @ " + message.location().url)
     })
     await context.addInitScript(() => {
