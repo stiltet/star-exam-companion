@@ -36,18 +36,26 @@ export function checkedParts(text: string): string[] {
   return [...new Set(parts.filter((part) => part.length >= MIN_CHECKED_CHARS))]
 }
 
-// The captured parts by their first MIN_CHECKED_CHARS characters (every part is at least that long), so a source file is
-// scanned once whatever the number of captured lines: each position is looked up, and only a match on the start is confirmed.
-export function indexParts(parts: string[]): Map<string, string[]> {
+// The captured parts, with an index by their first MIN_CHECKED_CHARS characters (every part is at least that long) for a store
+// with many of them: a source file is then scanned once whatever the number of captured lines, each position looked up and only
+// a match on the start confirmed. For a few parts the native search is faster, so the index is used only above INDEX_FROM.
+export const INDEX_FROM = 50
+
+export type Captured = { parts: string[]; index: Map<string, string[]> | null }
+
+export function indexParts(parts: string[]): Captured {
+  if (parts.length < INDEX_FROM) return { parts, index: null }
   const index = new Map<string, string[]>()
   for (const part of parts) {
     const start = part.slice(0, MIN_CHECKED_CHARS)
     index.set(start, [...(index.get(start) ?? []), part])
   }
-  return index
+  return { parts, index }
 }
 
-function findsAny(variant: string, index: Map<string, string[]>): boolean {
+function findsAny(variant: string, captured: Captured): boolean {
+  const { parts, index } = captured
+  if (index === null) return parts.some((part) => variant.includes(part))
   for (let at = 0; at + MIN_CHECKED_CHARS <= variant.length; at += 1) {
     const candidates = index.get(variant.slice(at, at + MIN_CHECKED_CHARS))
     if (candidates?.some((part) => variant.startsWith(part, at))) return true
@@ -56,10 +64,10 @@ function findsAny(variant: string, index: Map<string, string[]>): boolean {
 }
 
 // What a source file leaks, if anything: the store's own path or captured text. The file is read, normalised and parsed once.
-export function leakIn(file: string, storePath: string, captured: Map<string, string[]>): "path" | "text" | null {
+export function leakIn(file: string, storePath: string, captured: Captured): "path" | "text" | null {
   const variants = variantsOf(file)
   if (variants.some((variant) => variant.includes(storePath))) return "path"
-  if (captured.size > 0 && variants.some((variant) => findsAny(variant, captured))) return "text"
+  if (captured.parts.length > 0 && variants.some((variant) => findsAny(variant, captured))) return "text"
   return null
 }
 

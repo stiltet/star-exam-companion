@@ -25,7 +25,7 @@ export default async function ReadingPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-          <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} local={course.provider === "private"} />
+          <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
         </main>
         <SiteFooter />
       </div>

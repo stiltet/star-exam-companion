@@ -113,6 +113,7 @@ test("each refusal says what kind it was", async () => {
     template: await (await postPrivateReading(request({ ...body, template: "1596" }))).json(),
     longId: await (await postPrivateReading(request({ ...body, pageId: "1".repeat(21) }))).json(),
     size: await (await postPrivateReading(request({ ...body, text: "\u0001".repeat(1_000_000) }))).json(),
+    title: await (await postPrivateReading(request({ ...body, title: "t".repeat(501) }))).json(),
   }))
   assert.deepEqual(reasons, {
     origin: { ok: false, reason: "origin" },
@@ -120,5 +121,6 @@ test("each refusal says what kind it was", async () => {
     template: { ok: false, reason: "template" },
     longId: { ok: false, reason: "id" },
     size: { ok: false, reason: "size" },
+    title: { ok: false, reason: "title" },
   })
 })

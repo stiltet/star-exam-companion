@@ -56,7 +56,7 @@ export default async function CourseReadingsPage({ params }: Props) {
               : undefined}
           />
         ) : (
-          <CourseTextError detail={loaded.error} again={`/read/${course.id}`} local={course.provider === "private"} />
+          <CourseTextError detail={loaded.error} again={`/read/${course.id}`} problem={loaded.problem} />
         )}
         {course.provider === "private" && (
           <ActionLink variant="filled" placement="mt-6" href={`https://www.skills.google/course_templates/${course.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>

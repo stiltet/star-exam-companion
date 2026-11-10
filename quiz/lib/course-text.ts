@@ -16,7 +16,8 @@ export const FAILED_MS = 30 * 1000
 
 type Entry = { at: number; bundle: Bundle; pages: PageSummary[]; ids: string[]; idsAt: number }
 
-export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[] } | { ok: false; error: string }
+// problem: only a private course says what kind of failure it was, a saved file ("record") or the folder itself ("folder").
+export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[] } | { ok: false; error: string; problem?: "record" | "folder" }
 
 const cache = new Map<string, Entry>()
 const failed = new Map<string, { at: number; error: string }>()
