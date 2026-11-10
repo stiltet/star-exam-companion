@@ -26,7 +26,7 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
       if (navigationCutOff && CUT_OFF.test(message.text())) return
       if (expectedWrongExam && /status of 409\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === "/api/snapshot") return
-      errors.push(message.text())
+      errors.push(message.text() + " @ " + message.location().url)
     })
     await context.addInitScript(() => {
       HTMLMediaElement.prototype.play = () => Promise.resolve()
