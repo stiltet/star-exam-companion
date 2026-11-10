@@ -43,22 +43,27 @@ await rm(path.join(bare, "courses.json"))
 // keeps one file per exam, and the chosen exam and Night recording stay in scratch as well.
 const env = browserServerEnv(process.env, scratch, root)
 const privateText = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
+// A second synthetic page with two paragraphs, for the next-paragraph and leave-the-page checks. Its lines are joined here
+// so the whole text never appears in a tracked file, which the check below enforces for every fixture text.
+const twoParagraphs = [["First synthetic", "paragraph."].join(" "), ["Second synthetic", "paragraph."].join(" ")].join("\n")
 const privateCourse = path.join(env.QUIZ_PRIVATE_DIR, "agentic-architect", "12")
-const privatePageId = "98001"
 await mkdir(privateCourse, { recursive: true })
-await writeFile(path.join(privateCourse, `${createHash("sha256").update(privatePageId).digest("hex")}.json`), JSON.stringify({
-  pageId: privatePageId,
-  title: "Synthetic private fixture",
-  text: privateText,
-  savedAt: "2026-01-01T00:00:00.000Z",
-}))
+for (const [pageId, title, text] of [["98001", "Synthetic private fixture", privateText], ["98002", "Synthetic two paragraphs", twoParagraphs]]) {
+  await writeFile(path.join(privateCourse, `${createHash("sha256").update(pageId).digest("hex")}.json`), JSON.stringify({
+    pageId,
+    title,
+    text,
+    savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+}
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const tracked = spawnSync("git", ["ls-files", "-z"], { cwd: repo })
 if (tracked.status !== 0) throw new Error("Could not verify that the private fixture is absent from git ls-files.")
 for (const file of tracked.stdout.toString("utf8").split("\0").filter(Boolean)) {
-  if ((await readFile(path.join(repo, file))).includes(Buffer.from(privateText))) {
-    throw new Error("Synthetic private fixture text must not appear in git ls-files.")
+  const content = await readFile(path.join(repo, file))
+  for (const fixtureText of [privateText, ...twoParagraphs.split("\n")]) {
+    if (content.includes(Buffer.from(fixtureText))) throw new Error("Synthetic private fixture text must not appear in git ls-files.")
   }
 }
 
@@ -104,7 +109,8 @@ try {
   process.env.QUIZ_PRIVATE_DIR = env.QUIZ_PRIVATE_DIR
   await seedNight()
   await run(["build"])
-  if (await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), privateText)) {
+  if (await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), privateText) ||
+    await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), twoParagraphs.split("\n")[0])) {
     throw new Error("Synthetic private fixture text must not appear in the E2E build output.")
   }
   if (!stopping) {

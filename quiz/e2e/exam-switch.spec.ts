@@ -17,7 +17,7 @@ async function settleWorker(page: Page) {
 }
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
-// The E2E server has no captured private pages; its eight public courses are readable from the synthetic bundles.
+// The E2E server seeds synthetic private pages for course 12, so nine of the thirteen courses are readable: its eight public courses from the synthetic bundles, and course 12.
 const UNFINISHED = /^Unfinished: Read Aloud can read 9 of 13 courses on this server; 4 courses need reading text\.$/
 
 test.use({ navigationCutOff: true })
