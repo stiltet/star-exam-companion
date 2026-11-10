@@ -2,7 +2,8 @@ import { createServer, request } from "node:http"
 import type { Page } from "@playwright/test"
 import { test, expect, readyOffline } from "./fixtures"
 
-test.use({ navigationCutOff: true, expectedWrongExam: true })
+// A voice clip a page still fetches here answers 500, because browser tests never run `say`; this file is not about voice.
+test.use({ navigationCutOff: true, expectedWrongExam: true, voiceClipRefusal: true })
 
 const LEGACY_WORKER = `
 self.addEventListener("install", (event) => {
