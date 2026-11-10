@@ -109,8 +109,10 @@ try {
   process.env.QUIZ_PRIVATE_DIR = env.QUIZ_PRIVATE_DIR
   await seedNight()
   await run(["build"])
-  if (await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), privateText) ||
-    await containsText(path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e"), twoParagraphs.split("\n")[0])) {
+  const built = path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e")
+  let leaked = false
+  for (const fixtureText of [privateText, ...twoParagraphs.split("\n")]) leaked = leaked || await containsText(built, fixtureText)
+  if (leaked) {
     throw new Error("Synthetic private fixture text must not appear in the E2E build output.")
   }
   if (!stopping) {

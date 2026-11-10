@@ -11,9 +11,9 @@ type NightReady = {
 }
 
 // A silent device voice. It records what it is asked to say in window.__spoken, counts cancels in window.__cancelled, and ends
-// each sentence itself after 300 ms (or options.ms). With voices: false the browser lists no voice and never says it loaded one. It must
+// each sentence itself after 300 ms (or options.ms). With hold: true no sentence ends by itself: it stays being said until the test calls window.__release(), so a test can pause or leave at an exact moment. With voices: false the browser lists no voice and never says it loaded one. It must
 // stay self-contained: Playwright sends its source into the page.
-function voiceStub(options: { voices: boolean; ms?: number }) {
+function voiceStub(options: { voices: boolean; ms?: number; hold?: boolean }) {
   const w = window as unknown as Record<string, unknown>
   w.__spoken = []
   w.__cancelled = 0
@@ -40,11 +40,19 @@ function voiceStub(options: { voices: boolean; ms?: number }) {
       cancel: () => {
         ;(w.__cancelled as number)++
         window.clearTimeout(timer)
+        w.__release = undefined
       },
       speak: (utterance: Utterance) => {
         ;(w.__spoken as string[]).push(utterance.text)
         if ((utterance.voice as { localService?: boolean } | null)?.localService !== true) throw new Error("A non-local voice was chosen")
         utterance.onboundary?.({ name: "word", charIndex: 0 })
+        if (options.hold) {
+          w.__release = () => {
+            w.__release = undefined
+            utterance.onend?.()
+          }
+          return
+        }
         timer = window.setTimeout(() => utterance.onend?.(), options.ms ?? 300)
       },
     },
@@ -52,6 +60,9 @@ function voiceStub(options: { voices: boolean; ms?: number }) {
 }
 
 const spokenNow = (page: Page) => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)
+const cancelledNow = (page: Page) => page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)
+const releaseNow = (page: Page) => page.evaluate(() => (window as unknown as { __release?: () => void }).__release?.())
+const holding = (page: Page) => page.evaluate(() => typeof (window as unknown as { __release?: () => void }).__release === "function")
 
 async function readyNight(page: Page, exam: string): Promise<NightReady> {
   const headers = { "x-quiz-exam": exam }
@@ -316,8 +327,8 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
     // The fixture clears only the first exam's scratch scores, so clear this exam's too.
     expect((await page.request.post("/api/scores/reset", { headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true } })).ok()).toBe(true)
-    // Each sentence takes 1.5 s, so the reading is still playing when the test pauses it, even on a slow browser.
-    await context.addInitScript(voiceStub, { voices: true, ms: 1500 })
+    // No sentence ends by itself: the test decides when each one does, so it pauses at an exact moment on any browser.
+    await context.addInitScript(voiceStub, { voices: true, hold: true })
     await page.goto("/progress")
     await readyOffline(page)
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
@@ -339,16 +350,26 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await page.route(/\/api\/speak(?:\/|$|\?)/, (route) => route.abort())
     await page.getByRole("button", { name: "Play", exact: true }).click()
     await expect(page.getByText("The Mac is unreachable. Reading with this device's local voice; the text stays on this device.")).toBeVisible()
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)).toContain(privateText)
-    const spoken = await page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)
+    // Let sentences end one by one until the fixture's own sentence is being said; it is then held.
+    await expect.poll(async () => {
+      const said = (await spokenNow(page)).includes(privateText)
+      if (!said) await releaseNow(page)
+      return said
+    }, { timeout: 20_000 }).toBe(true)
+    const spoken = await spokenNow(page)
     expect(spoken.every((text) => typeof text === "string" && text.length > 0)).toBe(true)
-    // Pause stops the stub's voice; Play carries on and speaks the same sentence again, word for word.
+    // Pause stops the voice; Play carries on and says the same sentence again, word for word.
     const count = spoken.length
     const paused = spoken[count - 1]
+    expect(paused).toBe(privateText)
+    const cancelledBefore = await cancelledNow(page)
     await page.getByRole("button", { name: "Pause", exact: true }).click({ timeout: 10_000 })
-    expect(await page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)).toBeGreaterThan(0)
+    expect(await cancelledNow(page), "Pause cancelled the device voice").toBeGreaterThan(cancelledBefore)
     await page.getByRole("button", { name: "Play", exact: true }).click()
     await expect.poll(async () => (await spokenNow(page))[count]).toBe(paused)
+    // Let it finish.
+    await expect.poll(() => holding(page)).toBe(true)
+    await releaseNow(page)
     // The reading finishes on the device and is queued as read, with no request to the Mac.
     await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
     for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/read/capture", "/about"]) {
@@ -411,6 +432,8 @@ test.describe("reading aloud when the Mac cannot answer", () => {
     await page.getByRole("button", { name: "Play", exact: true }).click()
     await expect(page.getByText("The Mac could not make this voice (the Mac answered 500). Reading with this device's local voice; the text stays on this device.")).toBeVisible()
     await expect.poll(() => spokenNow(page)).toContain(first)
+    // After the first failure the next paragraph goes straight to the device voice.
+    await expect.poll(() => spokenNow(page), { timeout: 15_000 }).toContain(second)
   })
 
   test("with no device voice and no Mac the page says so and stays silent", async ({ context, page }) => {
@@ -435,18 +458,21 @@ test.describe("reading aloud when the Mac cannot answer", () => {
   })
 
   test("leaving the page stops the device voice at once", async ({ context, page }) => {
-    // Each sentence takes three seconds here, so the voice is still mid-sentence when the person leaves.
-    await context.addInitScript(voiceStub, { voices: true, ms: 3000 })
+    // The sentence is held while being said, so the voice is mid-sentence at the moment the person leaves.
+    await context.addInitScript(voiceStub, { voices: true, hold: true })
     await page.route(/\/api\/speak\/reading$/, (route) => route.abort())
     await openReading(page)
     await page.getByRole("button", { name: "Play", exact: true }).click()
     await expect.poll(() => spokenNow(page)).toContain(first)
+    await expect.poll(() => holding(page)).toBe(true)
+    const cancelledBefore = await cancelledNow(page)
     // The app's own link keeps the page's window, so the stub's record shows what happens after leaving.
     await page.getByRole("link", { name: "COURSE 12" }).click()
     await expect(page).toHaveURL(/\/read\/12$/)
+    expect(await cancelledNow(page), "leaving cancelled the device voice").toBeGreaterThan(cancelledBefore)
+    expect(await holding(page), "nothing is left being said").toBe(false)
     const spokenAtLeave = (await spokenNow(page)).length
-    expect(await page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)).toBeGreaterThan(0)
-    await page.waitForTimeout(4500)
+    await page.waitForTimeout(1500)
     expect((await spokenNow(page)).length).toBe(spokenAtLeave)
   })
 })
