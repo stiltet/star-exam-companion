@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
-import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
@@ -24,15 +23,11 @@ async function checkPort() {
 }
 await checkPort()
 
-// With QUIZ_E2E_SCRATCH set (the Playwright config does), the scratch folder is the fixed one the tests also know.
-let scratch
-if (process.env.QUIZ_E2E_SCRATCH === "1") {
-  scratch = e2eScratch(port)
-  await rm(scratch, { recursive: true, force: true })
-  await mkdir(scratch, { recursive: true, mode: 0o700 })
-} else {
-  scratch = await mkdtemp(path.join(tmpdir(), "quiz-e2e-"))
-}
+// A fixed scratch folder per port (the port check above stops two servers sharing one), so the tests also know where
+// the server keeps its private readings.
+const scratch = e2eScratch(port)
+await rm(scratch, { recursive: true, force: true })
+await mkdir(scratch, { recursive: true, mode: 0o700 })
 await mkdir(path.join(scratch, "scores"))
 // A scratch copy of the packs, with one more that has no course to read, so the tests can serve a pack the repo
 // does not ship. It is the second pack with its Read Aloud courses taken out.
