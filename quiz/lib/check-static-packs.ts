@@ -55,6 +55,6 @@ async function checkStaticPacks(root: string): Promise<void> {
 const root = path.resolve(process.argv[2] ?? "..")
 checkStaticPacks(root).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : "unknown error"
-  console.error(`Static pack check failed: ${message}`)
+  process.stderr.write(`Static pack check failed: ${message}\n`)
   process.exitCode = 1
 })

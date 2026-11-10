@@ -20,6 +20,7 @@ export function SendToStarSetup() {
       await navigator.clipboard.writeText(bookmarklet)
       setStatus("Copied. Add the bookmarklet as a browser bookmark.")
     } catch {
+      // The browser may refuse clipboard access; dropping the error is safe because the status below tells the person to copy by hand.
       setStatus("Copy failed. Select and copy the bookmarklet in the text box below.")
     }
   }
