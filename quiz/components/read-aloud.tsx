@@ -135,7 +135,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   const frame = useRef<number | null>(null)
   const gap = useRef<number | null>(null)
   // Once the Mac has failed, later sentences go straight to the device voice until the next Play.
-  const mac = useRef(macGate())
+  const [mac] = useState(macGate)
   const browserVoice = useRef<SpeechSynthesisUtterance | null>(null)
   // The clip paused part-way, so Play carries on from the same word.
   const paused = useRef<{ index: number; sentence: number; mine: number } | null>(null)
@@ -226,8 +226,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
 
   async function run(index: number, mine: number, sentence = 0) {
     at.current = { index, sentence }
-    if (!navigator.onLine || mac.current.skipped()) {
-      void runOnDevice(index, sentence, mine, mac.current.skipped() ?? undefined)
+    if (!navigator.onLine || mac.skipped()) {
+      void runOnDevice(index, sentence, mine, mac.skipped() ?? undefined)
       return
     }
     let blob: Blob
@@ -236,14 +236,15 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     } catch (error) {
       // A stale run's failure is safe to drop: a newer run owns the voice and reports its own.
       if (generation.current !== mine) return
-      mac.current.failed(error)
+      mac.failed(error)
       void runOnDevice(index, sentence, mine, error)
       return
     }
     if (generation.current !== mine) return
     // The next sentence's clip is made while this one plays, so the only gap is the pause.
     const then = following(index, sentence)
-    if (then) void clip(then.index, then.sentence).catch(() => undefined)
+    // A look-ahead that fails counts like any other failure, so the next sentence does not wait for the Mac again.
+    if (then) void clip(then.index, then.sentence).catch((error: unknown) => mac.failedIf(generation.current === mine, error))
     const audio = sharedAudio()
     releaseClip()
     clipUrl.current = URL.createObjectURL(blob)
@@ -347,7 +348,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   function playFrom(index: number, sentence = 0) {
     const mine = ++generation.current
     // A new Play tries the Mac again.
-    mac.current.reset()
+    mac.reset()
     stopBrowserVoice()
     const audio = sharedAudio()
     clearGap()

@@ -119,3 +119,14 @@ test("one long line of a capture of many short lines is enough to block the buil
   writeFileSync(path.join(root, "quiz", "one-line.json"), JSON.stringify({ quote: long }))
   assert.equal(run().status, 1)
 })
+
+test("a capture of hundreds of long lines is found by one of them in a large source, and a source with none passes", (t) => {
+  const { root, store, run } = fixture(t)
+  const lines = Array.from({ length: 300 }, (_, number) => `Synthetic captured line number ${number} that is long enough to be compared.`)
+  addCapture(store, "107", lines.join("\n"))
+  const ordinary = Array.from({ length: 2000 }, (_, number) => `Ordinary interface sentence ${number}, nothing to do with any capture.`).join("\n")
+  writeFileSync(path.join(root, "quiz", "large.txt"), ordinary)
+  assert.equal(run().status, 0, "a large source with none of the lines passes")
+  writeFileSync(path.join(root, "quiz", "large.txt"), `${ordinary}\n${lines[150]}`)
+  assert.equal(run().status, 1, "one captured line in a large source blocks the build")
+})

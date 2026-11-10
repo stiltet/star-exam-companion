@@ -56,6 +56,8 @@ export function PrivateReadingCapture({ packId, templates }: { packId: string; t
         const reason = result && typeof result === "object" && "reason" in result ? result.reason : undefined
         if (response.status === 409) setStatus("The quiz is set to another exam. Switch to Agentic Architect (bottom of the Progress page), then send the reading again.")
         else if (response.status === 413) setStatus("This course already holds as many private readings as it can. To make room, remove a saved reading's file from the private-reading folder (the README says where), then send this one again.")
+        else if (reason === "id") setStatus("This page's id is not one this server can save. Open the reading again and try once more.")
+        else if (reason === "size") setStatus("This page is too large to save as one reading. Select just the passage you want and try again.")
         else if (reason === "reading") setStatus("This page was not saved: it is empty or longer than 1,000,000 characters. Select just the passage you want and try again.")
         else setStatus(`The server could not save this reading (HTTP ${response.status}).`)
       }).catch(() => {

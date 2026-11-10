@@ -28,6 +28,11 @@ export class PrivateStoreLimitError extends Error {
 // read and parse every saved reading again.
 const recordCache = new Map<string, { stamp: string; records: PrivateReadingRecord[] }>()
 
+// How many courses' texts are held in memory now: for tests and diagnostics.
+export function cachedCourseCount(): number {
+  return recordCache.size
+}
+
 export type PrivateReadingRecord = {
   pageId: string
   title: string
@@ -37,26 +42,38 @@ export type PrivateReadingRecord = {
 
 export type PrivateReadingInput = Pick<PrivateReadingRecord, "pageId" | "title" | "text">
 
-export function isPrivateReadingInput(value: unknown): value is PrivateReadingInput {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+// Why a reading is refused, so the capture tab can say it: its page id is not 1 to 20 digits ("id"), it is empty or its text or
+// title is over the limit ("reading", counted in UTF-16 units, so an emoji counts as two), or the record would be larger than
+// the store reads back ("size").
+export type ReadingProblem = "id" | "reading" | "size"
+
+export function privateReadingProblem(value: unknown): ReadingProblem | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "reading"
   const input = value as Partial<PrivateReadingInput>
+  if (typeof input.pageId !== "string" || !PAGE_ID.test(input.pageId)) return "id"
   if (
-    typeof input.pageId !== "string" ||
-    !PAGE_ID.test(input.pageId) ||
     typeof input.title !== "string" ||
     input.title.trim().length === 0 ||
     input.title.length > MAX_TITLE_CHARS ||
     typeof input.text !== "string" ||
     input.text.trim().length === 0 ||
     input.text.length > MAX_TEXT_CHARS
-  ) return false
-  const record = JSON.stringify({
+  ) return "reading"
+  return recordBytes({ pageId: input.pageId, title: input.title, text: input.text }) > MAX_RECORD_BYTES ? "size" : null
+}
+
+export function isPrivateReadingInput(value: unknown): value is PrivateReadingInput {
+  return privateReadingProblem(value) === null
+}
+
+// The size of the file a reading is saved as: its JSON, in which a quote or a control character takes up to six bytes.
+function recordBytes(input: PrivateReadingInput): number {
+  return new TextEncoder().encode(JSON.stringify({
     pageId: input.pageId,
     title: input.title.trim(),
     text: input.text.trim(),
     savedAt: "2000-01-01T00:00:00.000Z",
-  })
-  return new TextEncoder().encode(record).byteLength <= MAX_RECORD_BYTES
+  })).byteLength
 }
 
 function isWithin(parent: string, candidate: string): boolean {
@@ -250,7 +267,8 @@ export async function savePrivateReading(
   const sizes = await Promise.all(listed.map(async (entry) => ({ name: entry.name, size: (await stat(path.join(directory, entry.name))).size })))
   const replacing = sizes.find((entry) => entry.name === path.basename(file))
   const others = sizes.filter((entry) => entry !== replacing)
-  const newBytes = new TextEncoder().encode(input.text.trim()).byteLength + new TextEncoder().encode(input.title.trim()).byteLength
+  // Counted as it will be written (its JSON), the same measure the sizes of the files already there are.
+  const newBytes = recordBytes(input)
   if (others.length + 1 > MAX_RECORDS_PER_COURSE || others.reduce((sum, entry) => sum + entry.size, 0) + newBytes > MAX_COURSE_BYTES) {
     throw new PrivateStoreLimitError()
   }

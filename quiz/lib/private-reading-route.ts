@@ -1,5 +1,5 @@
 import { activePack } from "./pack.ts"
-import { PrivateStoreLimitError, isPrivateReadingInput, savePrivateReading } from "./private-reading.ts"
+import { PrivateStoreLimitError, privateReadingProblem, savePrivateReading, type PrivateReadingInput } from "./private-reading.ts"
 import { readJsonBody } from "./body.ts"
 import { sameOrigin } from "./origin.ts"
 import { wrongExam } from "./exam-guard.ts"
@@ -8,8 +8,9 @@ const MAX_PRIVATE_BODY_BYTES = 8 * 1024 * 1024
 const REQUEST_KEYS = ["pageId", "template", "text", "title"]
 
 // A refusal says which kind it was, so the capture tab can tell the person what to do: origin (not this page or not
-// JSON), body (not a reading request), reading (empty or too big), template (a course this pack does not save).
-function refuse(reason: "origin" | "body" | "reading" | "template"): Response {
+// JSON), body (not a reading request), reading (empty or too long), id (a page id that is not 1 to 20 digits), size (too
+// large once saved), template (a course this pack does not save).
+function refuse(reason: "origin" | "body" | "reading" | "id" | "size" | "template"): Response {
   return Response.json({ ok: false, reason }, { status: 400 })
 }
 
@@ -29,11 +30,12 @@ export async function postPrivateReading(request: Request): Promise<Response> {
     typeof template !== "string" ||
     !/^\d+$/.test(template)
   ) return refuse("body")
-  if (!isPrivateReadingInput(data)) return refuse("reading")
+  const problem = privateReadingProblem(data)
+  if (problem) return refuse(problem)
   const course = pack.courses.find((entry) => entry.provider === "private" && entry.template === template)
   if (!course) return refuse("template")
   try {
-    const saved = await savePrivateReading(pack.meta.id, course.id, data)
+    const saved = await savePrivateReading(pack.meta.id, course.id, data as PrivateReadingInput)
     return Response.json({ ok: true, pageId: saved.pageId })
   } catch (error) {
     if (error instanceof PrivateStoreLimitError) return Response.json({ ok: false, reason: "limit" }, { status: 413 })
