@@ -26,7 +26,7 @@ function readingPattern(ids: readonly string[]): RegExp {
   const key = ids.join("|")
   let pattern = patterns.get(key)
   if (!pattern) {
-    pattern = new RegExp(`^(${key})/(?:[0-9a-f]{24}|[0-9]{1,18})$`)
+    pattern = new RegExp(`^(${key})/(?:[0-9a-f]{24}|[0-9]{1,20})$`)
     patterns.set(key, pattern)
   }
   return pattern
