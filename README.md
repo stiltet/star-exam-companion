@@ -162,15 +162,16 @@ Good to know about private readings:
   nothing else. If the page has no main area and nothing is selected, it says so and sends nothing.
   Sending the same page again replaces its copy. A selected passage is saved as its own copy, so it never
   replaces a whole saved page.
-- **Deleting it.** Delete a page's file, or the folder, to remove the server copies. Clear this site's
+- **Deleting it.** Delete a page's file, or the folder, to remove the server copies. Each file is named by a
+  hash of its page id, so open a file to see its `title` and `savedAt` and find the page it holds. Clear this site's
   data on each device to remove its offline copies. Night reading's recording is built from the text and
   lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
   the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
   copy does not remove the ticks you earned for it, which stay in your saved scores.
-- **Demo build check.** Building the online demo stops if any source file holds a captured page's text, either
-  all of it or any one line of it that is at least 40 characters long. Lines shorter than that are not
-  compared, so a capture made only of short lines, or a word such as "Continue", is not checked and cannot
-  block the build.
+- **Demo build check.** Building the online demo stops if any source file holds a captured page's text. A
+  capture is compared when its whole text is at least 40 characters long, and each of its lines that is at
+  least 40 characters long is compared too. A capture whose whole text and every line are shorter than that,
+  such as the single word "Continue", is not compared and cannot block the build.
 - **If a copy is lost.** The store is not in the repository or its backups. Recover by capturing the page
   again from Google Skills while signed in.
 - **Offline voice.** When the Mac cannot be reached, Read Aloud uses an English voice installed on the
