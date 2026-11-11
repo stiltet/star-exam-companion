@@ -43,7 +43,7 @@ cp -R "$ROOT/exams" "$work/exams"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.
 cp -R "$ROOT/pages-static/." "$work/quiz/"
-rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/capture" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
+rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
 
 pnpm --dir "$work/quiz" install --frozen-lockfile --silent
 

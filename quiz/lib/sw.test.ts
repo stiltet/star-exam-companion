@@ -170,13 +170,13 @@ test("a new build drops the old build's caches and keeps the voice and the night
   assert.deepEqual([...sw.stores.keys()].sort(), ["quiz-night", "quiz-pages-b2", "quiz-voice"])
 })
 
-test("Read Aloud's pages are stored too: the overview, the capture helper, each course and every reading Google sent", () => {
+test("Read Aloud's pages are stored too: the overview, each course and every reading Google sent", () => {
   const pages = readingPages([
     { id: "1", pages: [{ id: "aaa" }, { id: "bbb" }] },
     { id: "2", pages: null },
   ])
-  assert.deepEqual(pages, ["/read", "/read/capture", "/read/1", "/read/1/aaa", "/read/1/bbb", "/read/2"])
-  assert.deepEqual(readingPages([{ id: "1", pages: [{ id: "a b/c" }] }]), ["/read", "/read/capture", "/read/1", "/read/1/a%20b%2Fc"])
+  assert.deepEqual(pages, ["/read", "/read/1", "/read/1/aaa", "/read/1/bbb", "/read/2"])
+  assert.deepEqual(readingPages([{ id: "1", pages: [{ id: "a b/c" }] }]), ["/read", "/read/1", "/read/1/a%20b%2Fc"])
 })
 
 test("a course late to answer reuses the readings it last sent, so the worker stays the same", async () => {
