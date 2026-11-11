@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
 import { PageNav } from "@/components/atoms/page-nav"
+import { ActionLink } from "@/components/atoms/button"
 import { courseBundle } from "@/lib/course-text"
 import { activePack } from "@/lib/pack"
 import { courseById, nextReading, previousLesson, reading, reviewUrl } from "@/lib/reading"
@@ -70,7 +71,9 @@ export default async function ReadingPage({ params }: Props) {
           video={page.videoAt.length > 0 ? google : null}
           videoAt={page.videoAt}
         />
-        <PageNav kind="lesson" previous={previous} next={following} placement="mt-8" />
+        {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
+        <ActionLink variant="outlined" placement="mt-8 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
+        <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
       </main>
       <SiteFooter />
     </div>
