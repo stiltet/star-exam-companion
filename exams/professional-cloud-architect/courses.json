@@ -103,42 +103,44 @@
       "template": "864",
       "title": "Observability in Google Cloud",
       "provider": "private"
-    },
+    }
+  ],
+  "noReading": [
     {
       "id": "18",
       "template": "648",
       "title": "Implementing Cloud Load Balancing for Compute Engine",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     },
     {
       "id": "19",
       "template": "783",
       "title": "Manage Kubernetes in Google Cloud",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     },
     {
       "id": "20",
       "template": "654",
       "title": "Build a Secure Google Cloud Network",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     },
     {
       "id": "21",
       "template": "741",
       "title": "Develop Serverless Applications on Cloud Run",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     },
     {
       "id": "22",
       "template": "645",
       "title": "Implement Cloud Security Fundamentals on Google Cloud",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     },
     {
       "id": "23",
       "template": "636",
       "title": "Build Infrastructure with Terraform on Google Cloud",
-      "provider": "private"
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
     }
   ]
 }
