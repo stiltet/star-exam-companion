@@ -6,7 +6,7 @@ import test from "node:test"
 import { loadPack } from "./pack.ts"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
 import { reviewStop } from "./reading-view.ts"
-import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewUrl, riseUrl, splitLong, type Bundle } from "./reading.ts"
+import { bundleUrl, courseNeighbours, htmlBlocks, htmlParagraphs, nextReading, previousLesson, pageList, readingIds, reading, reviewUrl, riseUrl, splitLong, type Bundle } from "./reading.ts"
 import { testPack, testRoot } from "./test-pack.ts"
 
 const COURSES = testPack.courses
@@ -224,6 +224,19 @@ test("after a course's last reading, NEXT leads to the next course", () => {
 test("after the last course, and from an unknown page, there is no NEXT", () => {
   assert.equal(nextReading(COURSES[COURSES.length - 1]!, twoPages, "y", COURSES), null)
   assert.equal(nextReading(COURSES[1]!, twoPages, "nope", COURSES), null)
+})
+
+test("PREVIOUS leads to the course's previous lesson, and from the first lesson to the course's lesson list", () => {
+  assert.deepEqual(previousLesson(COURSES[1]!, twoPages, "y"), { href: "/read/2/x", title: "First" })
+  assert.deepEqual(previousLesson(COURSES[1]!, twoPages, "x"), { href: "/read/2", title: `Course 2, ${COURSES[1]!.title}` })
+  assert.equal(previousLesson(COURSES[1]!, twoPages, "nope"), null)
+})
+
+test("course neighbours follow the given order, ends have none, an unknown course has none", () => {
+  const ordered = [COURSES[0]!, COURSES[1]!, { id: "9", title: "No text course" }]
+  assert.deepEqual(courseNeighbours(ordered, COURSES[0]!.id), { previous: null, next: { href: `/read/${COURSES[1]!.id}`, title: `Course ${COURSES[1]!.id}, ${COURSES[1]!.title}` } })
+  assert.deepEqual(courseNeighbours(ordered, "9"), { previous: { href: `/read/${COURSES[1]!.id}`, title: `Course ${COURSES[1]!.id}, ${COURSES[1]!.title}` }, next: null })
+  assert.deepEqual(courseNeighbours(ordered, "nope"), { previous: null, next: null })
 })
 
 test("an unknown or switched-off page has no reading", () => {
