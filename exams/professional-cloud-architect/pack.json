@@ -1,0 +1,24 @@
+{
+  "id": "professional-cloud-architect",
+  "title": "Professional Cloud Architect",
+  "certification": "Google Cloud Professional Cloud Architect",
+  "description": "Google Cloud's certification for architects who design, develop and manage robust, secure, scalable, efficient, cost-effective and highly available solutions that drive business objectives. 50 to 60 multiple-choice and multiple-select questions in 2 hours.",
+  "unnumberedLabel": "Tools in scope",
+  "notice": "Unfinished: the glossary, the voice scenes, the study topics and the practice questions are not written yet, so only the course readings are available for this exam.",
+  "homeNotice": "Unfinished: the glossary, the voice scenes, the study topics and the practice questions are not written yet, so only the course readings are available for this exam.",
+  "examPage": "https://cloud.google.com/learn/certification/cloud-architect",
+  "examGuide": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf",
+  "exam": {
+    "questions": 60,
+    "minutes": 120
+  },
+  "learningPath": "https://www.skills.google/paths/12",
+  "reading": true,
+  "links": [
+    {
+      "label": "LEARNING PATH",
+      "href": "https://www.skills.google/paths/12"
+    }
+  ],
+  "sectionOf": {}
+}

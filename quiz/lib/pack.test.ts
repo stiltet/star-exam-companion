@@ -39,7 +39,8 @@ for (const id of ids) {
     assert.equal(parsed.ok, true, `${id}/glossary.md does not parse`)
     if (!parsed.ok) return
     const glossary = parsed.glossary
-    assert.ok(glossary.terms.length > 0, "the glossary has no rows")
+    // A pack that says it is unfinished (a `notice`) may have no glossary rows yet; a finished one may not.
+    if (!pack.meta.notice) assert.ok(glossary.terms.length > 0, "the glossary has no rows")
     for (const term of glossary.terms) assert.ok(term.source.trim() !== "", `${id}/glossary.md: "${term.term}" names no source`)
 
     const sections = parseSections(pack.sectionsText)

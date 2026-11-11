@@ -1,0 +1,2 @@
+# Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
+# Every term here is the answer to at least one scene.

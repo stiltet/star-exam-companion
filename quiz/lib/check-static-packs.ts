@@ -89,7 +89,9 @@ async function checkStaticPacks(root: string): Promise<void> {
   // as a line, which is no leak, since the title is written in the pack.
   const publicText = normalizeText(listPacks(root).flatMap(({ id }) => {
     const pack = loadPack(root, id)
-    return [...pack.courses.map((course) => course.title), ...pack.noReading.flatMap((course) => [course.title, course.why])]
+    // The exam's own official addresses are public too: a captured lesson can repeat a link to the exam guide on its own line.
+    const addresses = [pack.meta.examPage, pack.meta.examGuide, pack.meta.learningPath, ...(pack.meta.links ?? []).map((link) => link.href)]
+    return [...addresses.filter((address): address is string => typeof address === "string"), ...pack.courses.map((course) => course.title), ...pack.noReading.flatMap((course) => [course.title, course.why])]
   }).join("\n"))
   const records = await allPrivateReadings()
   const files = ["exams", "quiz", "pages-static"].flatMap((folder) => filesUnder(path.join(root, folder)))
