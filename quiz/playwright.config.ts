@@ -5,6 +5,8 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535 || port === 3000) {
   throw new Error("QUIZ_E2E_PORT must be an unprivileged port other than the normal quiz port 3000")
 }
 
+const WEBKIT_SPECS = ["**/offline.spec.ts", "**/back-*.spec.ts"]
+
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "**/*.spec.ts",
@@ -20,15 +22,12 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: (["chromium", "webkit"] as const).flatMap((browserName) =>
-    [390].map((width) => ({
-      name: `${browserName}-${width}`,
-      use: {
-        browserName,
-        viewport: { width, height: 844 },
-      },
-    })),
-  ),
+  // Two projects: Chromium for the pages, WebKit (iPhone Safari's engine) only for what differs there,
+  // the offline worker and the installed app's Back button. 390 px is the phone width.
+  projects: [
+    { name: "chromium-390", testIgnore: WEBKIT_SPECS, use: { browserName: "chromium", viewport: { width: 390, height: 844 } } },
+    { name: "webkit-390", testMatch: WEBKIT_SPECS, use: { browserName: "webkit", viewport: { width: 390, height: 844 } } },
+  ],
   webServer: {
     command: "node e2e/server.mjs",
     wait: { stdout: /Ready in/ },

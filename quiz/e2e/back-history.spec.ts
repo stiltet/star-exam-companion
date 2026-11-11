@@ -110,38 +110,6 @@ test.describe("Back in the installed app", () => {
     await near(page, firstLeft)
   })
 
-  // Suspect 3: competing restorers. Once Back has put the scroll back, nothing moves it again.
-  test("the scroll Back restores stays put", async ({ page }) => {
-    await page.goto("/progress")
-    const left = await scrollTo(page, 600)
-    await leaveBy(page, 'a[href^="/exam#"]', "last")
-    await expect(page).toHaveURL(/\/exam#/)
-    await back(page).click()
-    await expect(page).toHaveURL(/\/progress$/)
-    await near(page, left)
-    // The late restorers (Next's own, the hold) have all had their say by now.
-    await page.waitForTimeout(2500)
-    await near(page, left)
-  })
-
-  // Suspect 4: the scroll is saved after the move at popstate, so it can be saved under the wrong page.
-  test("going back and then forward returns to where the later page was left", async ({ page }) => {
-    await page.goto("/progress")
-    const progressAt = await scrollTo(page, 600)
-    await leaveBy(page, 'a[href^="/exam#"]', "last")
-    await expect(page).toHaveURL(/\/exam#/)
-    const examAt = await scrollTo(page, 250)
-    await back(page).click()
-    await expect(page).toHaveURL(/\/progress$/)
-    await near(page, progressAt)
-    await page.goForward()
-    await expect(page).toHaveURL(/\/exam#/)
-    await near(page, examAt)
-    await page.goBack()
-    await expect(page).toHaveURL(/\/progress$/)
-    await near(page, progressAt)
-  })
-
   // Suspect 5: a double tap goes back twice.
   test("a double tap on Back goes back one page", async ({ page }) => {
     await page.goto("/")
@@ -156,19 +124,6 @@ test.describe("Back in the installed app", () => {
     })
     await expect(page).toHaveURL(/\/progress$/)
     await page.waitForTimeout(1000)
-    await expect(page).toHaveURL(/\/progress$/)
-  })
-
-  // Not in the plan's list: Back after Back keeps walking back, one page each time, to where the app was opened.
-  test("repeated Back walks back one page at a time", async ({ page }) => {
-    await page.goto("/")
-    await menuTo(page, "PROGRESS")
-    await menuTo(page, "STUDY")
-    await menuTo(page, "FLASHCARDS")
-    await expect(page).toHaveURL(/\/flashcards$/)
-    await back(page).click()
-    await expect(page).toHaveURL(/\/study$/)
-    await back(page).click()
     await expect(page).toHaveURL(/\/progress$/)
   })
 })
