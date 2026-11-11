@@ -44,7 +44,7 @@ export const privateReadingProvider: ReadingProvider = {
     try {
       const records = await readPrivateReadings(course.packId, course.id)
       const bundle = privateBundle(records)
-      // No ids: a private page's id is made by the bookmarklet, not by Google, so a link built from it would not exist.
+      // No ids: a private page's id is made by the capture, not by Google, so a link built from it would not exist.
       return { ok: true, bundle, pages: pageList(bundle), ids: [] }
     } catch (error) {
       // One damaged file must not take down the Read Aloud overview or the offline worker; the message names no text.
