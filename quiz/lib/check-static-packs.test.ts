@@ -61,6 +61,19 @@ test("a captured page that repeats its course's public title is no leak, while i
   assert.equal(run().status, 1, "the private line still fails")
 })
 
+test("a captured page that repeats the exam's official address on its own line is no leak", (t) => {
+  const { root, store, run } = fixture(t)
+  const meta = JSON.parse(readFileSync(path.join(root, "exams/agentic-architect/pack.json"), "utf8")) as { examGuide: string }
+  assert.ok(meta.examGuide.length >= 40, "the fixture's exam guide address is long enough to be compared")
+  const course = path.join(store, "agentic-architect", "1")
+  mkdirSync(course, { recursive: true })
+  writeFileSync(path.join(course, `${createHash("sha256").update("303").digest("hex")}.json`), JSON.stringify({
+    pageId: "303", title: "Synthetic title", text: `${meta.examGuide}\nAnother synthetic line that is private and long enough.`, savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+  writeFileSync(path.join(root, "quiz", "public-address.txt"), meta.examGuide)
+  assert.equal(run().status, 0, "a source file that holds only the public address passes")
+})
+
 test("the static privacy guard rejects a configured store path without printing it", (t) => {
   const { root, store, run } = fixture(t)
   writeFileSync(path.join(root, "quiz/synthetic.json"), JSON.stringify({ location: store }))
