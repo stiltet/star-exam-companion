@@ -3,6 +3,9 @@ import path from "node:path"
 export function browserServerEnv(parent, scratch, root) {
   return {
     ...parent,
+    TMPDIR: scratch,
+    TMP: scratch,
+    TEMP: scratch,
     NEXT_TELEMETRY_DISABLED: "1",
     QUIZ_DIST_DIR: ".next-e2e",
     QUIZ_SCORES_FILE: "",
