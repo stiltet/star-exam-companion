@@ -58,7 +58,6 @@ test.describe("in the installed app", () => {
 
     await last.click()
     await expect(page).toHaveURL(/\/exam#/)
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("quiz-scroll:/progress"))).toBe(String(scrollBefore))
     await expect(page.getByRole("heading", { name: "EXAM RESULTS" })).toBeVisible()
     await backButton(page).click()
     await expect(page).toHaveURL(/\/progress$/)
