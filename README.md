@@ -163,6 +163,10 @@ has the steps, including the exact Chrome start command, for a person or for any
 it is opened, and the crawl opens every lesson on every run, so the signed-in account's progress on the courses and the whole
 learning path shows as complete (for example 66% of a certification path) although nothing was studied. The crawl prints
 `Signed in as <address>` so you can see which account it uses.
+Every run of `reading:crawl` and `reading:path` writes a log file, one line per event, to a `logs` folder beside the private store
+(outside the repository); the command prints `Log: <path>`. It names the browser started, the sign-in route taken, each course and lesson with its
+outcome, length and time, and every retry or failure with its error. It holds no lesson text, and addresses carry no ids. Add `--debug` (or set
+`READING_DEBUG=1`) for the addresses visited, the frame found and the reads while a page settles. Send that file when a run goes wrong.
 
 To add a new exam, use the `/add-exam <exam name>` skill ([`skills/add-exam/SKILL.md`](skills/add-exam/SKILL.md)). It lists the
 exam's Google Skills learning path in Google's order with `pnpm --dir quiz reading:path <address>` (which prints the courses, or with

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { spawn } from "node:child_process"
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -47,9 +47,9 @@ async function scratch(): Promise<string> {
 type Run = { code: number | null; out: string; port: number }
 
 // extra replaces or adds environment settings; a value of undefined removes one.
-async function runCrawl(base: string, site: FakeSite, extra: Record<string, string | undefined> = {}): Promise<Run> {
+async function runCrawl(base: string, site: FakeSite, extra: Record<string, string | undefined> = {}, flags: string[] = []): Promise<Run> {
   const port = await freePort()
-  const env: Record<string, string | undefined> = {
+  const env: NodeJS.ProcessEnv = {
     ...process.env,
     NO_COLOR: "1",
     QUIZ_ROOT: path.join(base, "root"),
@@ -69,7 +69,7 @@ async function runCrawl(base: string, site: FakeSite, extra: Record<string, stri
     if (value === undefined) delete env[key]
     else env[key] = value
   }
-  const child = spawn(process.execPath, ["scripts/reading-crawl.mts", "crawl-test"], { cwd: quiz, env })
+  const child = spawn(process.execPath, ["scripts/reading-crawl.mts", "crawl-test", ...flags], { cwd: quiz, env })
   let out = ""
   child.stdout.on("data", (chunk) => { out += String(chunk) })
   child.stderr.on("data", (chunk) => { out += String(chunk) })
@@ -131,7 +131,7 @@ test("the crawl saves every lesson, reports plainly, and a second run finds noth
   const site = await startFakeSite(courses)
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const texts = [INTRO, REPEAT_ONE, REPEAT_TWO, SETTLED, DOCUMENT, PDF]
 
@@ -140,7 +140,7 @@ test("the crawl saves every lesson, reports plainly, and a second run finds noth
     assert.equal(run.code, 0, run.out)
     assert.match(run.out, /Exams on this server/)
     assert.match(run.out, /Crawl Test Exam: 2 courses to capture from Google Skills/)
-    assert.match(run.out, /Generative AI Leader: nothing to capture/)
+    assert.match(run.out, /Generative AI Leader: skipped \(another exam was named\)/)
     assert.match(run.out, /Crawling Crawl Test Exam/)
     assert.match(run.out, /Signed in as synthetic\.user@example\.test/, "the log says which user is signed in")
     assert.match(run.out, /Reading a lesson marks it as completed on this Google account\. Use a secondary account/, "the log warns about progress")
@@ -149,6 +149,23 @@ test("the crawl saves every lesson, reports plainly, and a second run finds noth
     assert.match(run.out, /✔ 2\. Second Course\n {6}2 lessons: 2 new, 0 updated, 0 unchanged/)
     noLessonText(run, texts)
     assert.equal(await browserClosed(run.port), true, "the browser the crawl started is closed at the end")
+    const named = run.out.match(/Log: (\S+reading-crawl-\d{8}-\d{6}\.log)/)
+    assert.ok(named, "the output names the log file")
+    assert.equal(path.dirname(named[1]), path.join(base, "logs"), "the log sits beside the private store")
+  })
+
+  await t.test("the log holds the run's events, no lesson text and, without --debug, no detail lines", async () => {
+    const files = (await readdir(path.join(base, "logs"))).filter((name) => name.startsWith("reading-crawl-"))
+    assert.equal(files.length, 1)
+    const log = await readFile(path.join(base, "logs", files[0] as string), "utf8")
+    assert.match(log, /run\.start {2}target=crawl-test/)
+    assert.match(log, /signin\.route {2}route=skipped/)
+    assert.match(log, /run\.listed {2}courses=2 {2}lessons=6/)
+    assert.equal(log.split("\n").filter((line) => line.includes(" lesson.done ")).length, 6)
+    assert.match(log, /lesson\.done {2}course=1 {2}n=1 {2}of=6 {2}title="Intro bundle" {2}outcome=saved {2}chars=\d+/)
+    assert.match(log, /run\.end {2}exit=0/)
+    assert.equal(log.includes("lesson.goto"), false, "detail lines are kept only with --debug")
+    for (const text of texts) assert.equal(log.includes(text), false, "the log never holds lesson text")
   })
 
   await t.test("every lesson is saved with its own text: repeated titles, the settled text, the document and the PDF", async () => {
@@ -182,6 +199,19 @@ test("the crawl saves every lesson, reports plainly, and a second run finds noth
     assert.match(run.out, /2 lessons: 0 new, 0 updated, 2 unchanged/)
   })
 
+  await t.test("a run with --debug also logs the addresses visited and the reads, still with no lesson text and no ids", async () => {
+    const run = await runCrawl(base, site, {}, ["--debug"])
+    assert.equal(run.code, 0, run.out)
+    const files = (await readdir(path.join(base, "logs"))).filter((name) => name.startsWith("reading-crawl-")).sort()
+    const log = await readFile(path.join(base, "logs", files[files.length - 1] as string), "utf8")
+    assert.match(log, /run\.start .*debug=true/)
+    assert.match(log, /lesson\.goto {2}address=\S+\/course_templates\/N\/html_bundles\/N/)
+    assert.match(log, /lesson\.settled /)
+    assert.match(log, /lesson\.done .*outcome=same/)
+    for (const text of texts) assert.equal(log.includes(text), false)
+    assert.equal(/course_templates\/\d/.test(log), false, "addresses are written without their numbers")
+  })
+
   await t.test("a lesson that Google changed is read again and saved over the old copy", async () => {
     const changed = "Synthetic changed intro text that is long enough to be a reading."
     site.setText("Intro bundle", changed)
@@ -208,7 +238,7 @@ test("a lesson with no text and a request that fails once are both reported, and
   })
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const run = await runCrawl(base, site)
   assert.equal(run.code, 1, run.out)
@@ -231,7 +261,7 @@ test("a signed-out visitor stops the crawl with a clear message and nothing is s
   site.signedOut = true
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const run = await runCrawl(base, site)
   assert.equal(run.code, 1, run.out)
@@ -247,7 +277,7 @@ test("a site that lists no lessons stops the crawl and says so, instead of endin
   const site = await startFakeSite({ "9001": [{ title: "Only a quiz", quiz: true }], "9002": [{ title: "Only a quiz", quiz: true }] })
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const run = await runCrawl(base, site)
   assert.equal(run.code, 1, run.out)
@@ -266,7 +296,7 @@ test("when the browser's account prompt does not appear, the crawl presses Sign 
   site.signedOut = true
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const run = await runCrawl(base, site, { READING_SKIP_SIGNIN: undefined, READING_PROMPT_WAIT_MS: "500" })
   assert.equal(run.code, 0, run.out)
@@ -288,7 +318,7 @@ test("a course that holds only labs, videos and quizzes is named as having nothi
   })
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const run = await runCrawl(base, site)
   assert.equal(run.code, 0, run.out)

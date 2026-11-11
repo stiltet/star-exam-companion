@@ -57,6 +57,10 @@ is always visible.
    A lesson delivered as a PDF has no page text, so the command fetches the PDF in memory and reads its text with the
    project's PDF module (`quiz/lib/pdf-text.ts`); nothing is saved to disk.
 
+   Every run also writes a log file (the last line of the output is `Log: <path>`), with one line per event and no lesson text.
+   When a run fails or looks wrong, run it again with `--debug` (`pnpm --dir quiz reading:crawl <exam> --debug`) and read the log
+   before guessing: it shows the sign-in route, each lesson's outcome, every retry with its error and, with `--debug`, the addresses visited.
+
 3. **Read the report.** It ends with one headline and then each course, as its number and title, with its lesson counts
    (new, updated, unchanged) and any problem on its own line:
    - `FINISHED`: every lesson of every course is accounted for.
