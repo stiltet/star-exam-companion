@@ -6,6 +6,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
 import { seedNight } from "./night-fixture.mjs"
+import { seedVoice } from "./voice-fixture.mjs"
 import { browserServerEnv } from "./server-env.mjs"
 
 const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
@@ -64,6 +65,7 @@ function run(args) {
 try {
   process.env.QUIZ_ROOT = root
   process.env.NIGHT_DIR = env.NIGHT_DIR
+  await seedVoice(root, path.join(scratch, "star-exam-voice"))
   await seedNight()
   await run(["build"])
   if (!stopping) {

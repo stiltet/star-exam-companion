@@ -426,7 +426,7 @@ pnpm --dir quiz e2e
 ```
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
-`http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
+`http://localhost:47822`, and uses temporary scores, speech caches and night-reading storage. It never reuses
 a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
 `quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
 unused port:
@@ -438,7 +438,9 @@ QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
 Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, voice answers,
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
-scripts run; speech requests return silent test audio. Reading pages use original synthetic
+scripts run; speech requests return silent test audio. Every pack's voice clips are pre-seeded in
+the scratch cache, so service-worker downloads use the real speech API without generating speech
+or reading the user's cached recordings. Reading pages use original synthetic
 course text, not Google's live content. Night tests use the real status and audio routes with
 pre-seeded, silent recordings, not generated speech. They check separate recordings and places
 for both exams, including an older default-exam recording. Cross-device switching tests also check
