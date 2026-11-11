@@ -62,11 +62,12 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | Feature | What it does | Requires |
 |---|---|---|
 | **Voice Quiz** | Reads each exam-style scene and its four options aloud, explains a wrong answer and its binding constraint, and keeps asking until each term is learned. | The local server, on macOS |
-| **Read Aloud** | Reads public Google learning-path text and private copies saved on this server, sentence by sentence, with a night-reading mode. Private copies stay outside the repository and build. | The local server, on macOS |
+| **Read Aloud** | Reads public Google learning-path text and private copies saved on this server, sentence by sentence, with a night-reading mode. Previous and Next lesson, and Previous and Next course, sit at the top and bottom of each page. Private copies stay outside the repository and build. | The local server, on macOS |
 | **Practice** | Exam-style questions by section or topic, with explanations and an "unanswered only" filter. | The local server, to save answers |
 | **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
+| **Saving** | Tap the laptop icon in the header: answers waiting to send (Send now), where the questions came from (Update now), and whether the connection is secure and offline is ready. A dropdown on a phone, a dialog on a wide screen. The online demo shows fixed values. | The local server |
 | **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#full-local-setup)) |
 | **Install tip** | On a phone or tablet, a small card offers to add the quiz to the home screen: an Install button on Android (or the browser-menu steps when the browser offers no prompt), the Share steps on iOS Safari. Desktop, in-app browsers and the installed app see nothing; non-Safari iOS browsers are told to open the page in Safari. The exam and Voice Quiz also suppress it. *Not now* hides it for 30 days. The online demo shows it too. | Nothing extra |
 
@@ -418,7 +419,7 @@ for **iOS, Android, macOS, Windows and Linux** are in
 [`docs/https.md`](docs/https.md#5-trust-the-certificate-on-each-device).
 
 **7. Check it.** Open `https://ADDRESS/` on your phone. It loads with no warning. Add it to the home
-screen, open **Progress**, and check that **Secure** says *Yes* and **Offline** says *Ready*. The
+screen, tap the laptop icon in the header, and check that **Secure** says *Yes* and **Offline** says *Ready*. The
 same address works over plain HTTP at `http://ADDRESS/`, without offline mode.
 
 **Update, restart, stop and remove.** The running server keeps serving the build it started with,
@@ -499,7 +500,7 @@ pnpm --dir quiz e2e
 ```
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
-`http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
+`http://localhost:47822`, and uses temporary scores, speech caches and night-reading storage. It never reuses
 a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
 `quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
 unused port:
@@ -508,10 +509,12 @@ unused port:
 QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
 ```
 
-Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, voice answers,
+Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 390 px, a phone width. The tests cover page rendering, voice answers,
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
-scripts run; speech requests return silent test audio. Reading pages use original synthetic
+scripts run; speech requests return silent test audio. Every pack's voice clips are pre-seeded in
+the scratch cache, so service-worker downloads use the real speech API without generating speech
+or reading the user's cached recordings. Reading pages use original synthetic
 course text, not Google's live content. Night tests use the real status and audio routes with
 pre-seeded, silent recordings, not generated speech. They check separate recordings and places
 for both exams, including an older default-exam recording. Cross-device switching tests also check

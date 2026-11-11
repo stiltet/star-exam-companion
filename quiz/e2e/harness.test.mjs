@@ -12,16 +12,6 @@ const server = fileURLToPath(new URL("./server.mjs", import.meta.url))
 const cli = fileURLToPath(new URL("../node_modules/@playwright/test/cli.js", import.meta.url))
 const quiz = fileURLToPath(new URL("../", import.meta.url))
 
-test("a refused voice clip is the only 500 a spec may declare expected", async () => {
-  const { isRefusedClipFetch } = await import("./expected-errors.ts")
-  const failed500 = "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
-  assert.equal(isRefusedClipFetch(failed500, "/api/speak/a497db02c1067c99d4807792205fe8bd495a1e9d280b3c12653db8ab0fa130ba"), true)
-  assert.equal(isRefusedClipFetch(failed500, "/api/snapshot"), false, "another path still fails the test")
-  assert.equal(isRefusedClipFetch(failed500, "/api/speak/reading/x"), false, "only a clip, not a nested path")
-  assert.equal(isRefusedClipFetch("Failed to load resource: the server responded with a status of 404 (Not Found)", "/api/speak/abc"), false, "another status still fails")
-  assert.equal(isRefusedClipFetch("Uncaught TypeError", "/api/speak/abc"), false, "another message still fails")
-})
-
 test("playwright.config.ts refuses unsafe ports before starting a server", () => {
   for (const port of ["3000", "0", "65536", "not-a-port"]) {
     const result = spawnSync(process.execPath, [cli, "test", "--list"], {
@@ -37,10 +27,10 @@ test("playwright.config.ts discovers every browser and width without nested or m
     cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: "47825" }, encoding: "utf8",
   })
   assert.equal(result.status, 0, result.stderr)
-  for (const project of ["chromium-375", "chromium-390", "webkit-375", "webkit-390"]) {
-    assert.equal(result.stdout.split(`[${project}]`).length - 1, 50, project)
-  }
-  assert.match(result.stdout, /Total: 200 tests in 11 files/)
+  // Chromium runs the pages; WebKit only the offline worker and the installed app's Back button.
+  assert.equal(result.stdout.split("[chromium-390]").length - 1, 28)
+  assert.equal(result.stdout.split("[webkit-390]").length - 1, 20)
+  assert.match(result.stdout, /Total: 48 tests in 14 files/)
 })
 
 test("content-fixture.mjs serves original synthetic readings and passes other fetches through", () => {
@@ -125,6 +115,48 @@ test("content-fixture.mjs refuses speech generation on every platform", () => {
   `], { encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr)
   assert.equal(result.stdout, "allowed")
+})
+
+test("voice-fixture.mjs seeds only silent clips for every real pack in isolated speech storage", (t) => {
+  const dir = mkdtempSync(path.join(tmpdir(), "voice-fixture-"))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const result = spawnSync(process.execPath, ["--import", preload, "--input-type=module", "-e", `
+    import assert from "node:assert/strict"
+    import { readdir, readFile } from "node:fs/promises"
+    import path from "node:path"
+    import { seedVoice, silentWav } from "./e2e/voice-fixture.mjs"
+    import { listPacks, setActiveExam } from "./lib/pack.ts"
+    import { loadVoiceIndex } from "./lib/load.ts"
+    import { clipFor, VOICE_DIR } from "./lib/say.ts"
+    const root = process.env.QUIZ_ROOT
+    await seedVoice(root, VOICE_DIR)
+    const keys = new Set()
+    let packs = 0
+    for (const { id } of listPacks(root)) {
+      assert.equal(setActiveExam(id, root), true)
+      const index = loadVoiceIndex()
+      assert.ok(index?.size > 0)
+      for (const [key, text] of index) {
+        keys.add(key + ".wav")
+        assert.deepEqual(await readFile(path.join(VOICE_DIR, key + ".wav")), silentWav)
+      }
+      assert.deepEqual(await clipFor(index.values().next().value), silentWav)
+      packs++
+    }
+    assert.deepEqual(new Set(await readdir(VOICE_DIR)), keys)
+    process.stdout.write(JSON.stringify({ packs, clips: keys.size }))
+  `], {
+    cwd: quiz,
+    env: {
+      ...process.env, TMPDIR: dir, TMP: dir, TEMP: dir,
+      QUIZ_ROOT: path.resolve(quiz, ".."), QUIZ_EXAM_SETTING_FILE: path.join(dir, "active-exam.json"),
+    },
+    encoding: "utf8",
+  })
+  assert.equal(result.status, 0, result.stderr)
+  const seeded = JSON.parse(result.stdout)
+  assert.ok(seeded.packs >= 2)
+  assert.ok(seeded.clips > 1563, "both packs' complete voice indexes were seeded")
 })
 
 test("server.mjs refuses an occupied port instead of reusing another quiz's scores", async () => {

@@ -5,9 +5,10 @@ import { SiteFooter } from "@/components/site-footer"
 import { Text } from "@/components/atoms/text"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
+import { PageNav } from "@/components/atoms/page-nav"
 import { courseBundle } from "@/lib/reading-provider"
 import { activePack } from "@/lib/pack"
-import { courseById, nextReading, reading, reviewUrl } from "@/lib/reading"
+import { courseById, nextReading, previousLesson, reading, reviewUrl } from "@/lib/reading"
 
 export const dynamic = "force-dynamic"
 
@@ -15,7 +16,10 @@ type Props = { params: Promise<{ course: string; page: string }> }
 
 export default async function ReadingPage({ params }: Props) {
   const { course: courseId, page: pageId } = await params
-  const courses = activePack().courses
+  const pack = activePack()
+  const courses = pack.courses
+  // The order /read lists: courses with text, then the ones without.
+  const ordered = [...courses, ...pack.noReading]
   const course = courseById(courses, courseId)
   if (!course) notFound()
   const loaded = await courseBundle(course)
@@ -38,6 +42,8 @@ export default async function ReadingPage({ params }: Props) {
   const at = list.findIndex((entry) => entry.id === pageId)
   // The reading on Google, where its review is done and its videos play.
   const google = reviewUrl(course, loaded.ids, list.length, at)
+  const previous = previousLesson(course, list, pageId)
+  const following = nextReading(course, list, pageId, ordered)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -53,6 +59,7 @@ export default async function ReadingPage({ params }: Props) {
         </nav>
       </div>
       <main className="flex-1 max-w-4xl mx-auto px-4 pb-8 w-full">
+        <PageNav kind="lesson" previous={previous} next={following} placement="mb-4" />
         {course.provider === "private" && (
           <Text variant="note" placement="mb-4">This reading is from a private copy on this server.</Text>
         )}
@@ -61,12 +68,13 @@ export default async function ReadingPage({ params }: Props) {
           place={`${course.id}/${pageId}`}
           title={page.title}
           paragraphs={page.paragraphs}
-          next={nextReading(course, list, pageId, courses)}
+          next={following}
           review={page.review ? google : null}
           reviewAt={page.reviewAt}
           video={page.videoAt.length > 0 ? google : null}
           videoAt={page.videoAt}
         />
+        <PageNav kind="lesson" previous={previous} next={following} placement="mt-8" />
       </main>
       <SiteFooter />
     </div>

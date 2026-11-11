@@ -2,16 +2,17 @@ import { test, expect, openVoice } from "./fixtures"
 
 const pages = ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/progress", "/read", "/read/night", "/about"]
 
-for (const path of pages) {
-  test(`${path} renders without browser errors or horizontal overflow`, async ({ page }) => {
+// One test for every page: a crashed page, a browser error or a sideways overflow on any of them fails it.
+test("every page renders without browser errors or horizontal overflow", async ({ page }) => {
+  for (const path of pages) {
     const response = await page.goto(path)
-    expect(response?.status()).toBe(200)
-    await expect(page.locator("main")).toBeVisible()
-    await expect(page.locator("h1")).toHaveCount(1)
-    await expect(page.locator("h1")).not.toBeEmpty()
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  })
-}
+    expect(response?.status(), path).toBe(200)
+    await expect(page.locator("main"), path).toBeVisible()
+    await expect(page.locator("h1"), path).toHaveCount(1)
+    await expect(page.locator("h1"), path).not.toBeEmpty()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), { message: path }).toBe(true)
+  }
+})
 
 test("Voice quiz renders through header navigation", async ({ page }) => {
   await openVoice(page)

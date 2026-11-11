@@ -1,0 +1,129 @@
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures"
+
+// The installed app's Back button must behave like a normal back button on every page: return to the page
+// just before, at the scroll it was left at. One test per suspected cause of it jumping around.
+const standalone = () => {
+  Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+}
+
+async function saveExams(page: Page, origin: string) {
+  const snapshot = (await (await page.request.get("/api/snapshot")).json()) as { snapshot: { items: { id: string }[] } }
+  const [first, second] = snapshot.snapshot.items.map((item) => item.id)
+  const exams = Array.from({ length: 12 }, (_, index) => ({
+    id: crypto.randomUUID(),
+    at: new Date(Date.UTC(2026, 0, 1 + index)).toISOString(),
+    mode: "exam",
+    asked: [first, second],
+    missed: [first],
+    seconds: 60,
+  }))
+  const saved = await page.request.post("/api/scores", { headers: { origin }, data: { answers: exams } })
+  expect(await saved.json()).toMatchObject({ ok: true, rejected: [] })
+}
+
+const back = (page: Page) => page.getByLabel("Back", { exact: true })
+const scrollY = (page: Page) => page.evaluate(() => window.scrollY)
+const near = async (page: Page, expected: number) => expect.poll(async () => Math.abs((await scrollY(page)) - expected), { timeout: 5000 }).toBeLessThanOrEqual(5)
+
+async function settle(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    let last = window.scrollY
+    let since = performance.now()
+    const check = () => {
+      if (window.scrollY !== last) {
+        last = window.scrollY
+        since = performance.now()
+      }
+      if (performance.now() - since >= 250) resolve()
+      else requestAnimationFrame(check)
+    }
+    requestAnimationFrame(check)
+  }))
+}
+
+// Scrolls to a position, as a person does, and waits until it is still.
+async function scrollTo(page: Page, y: number) {
+  await page.evaluate((top) => window.scrollTo(0, top), y)
+  await settle(page)
+  return scrollY(page)
+}
+
+// Leaves the page by a link, at the scroll the page is at, as a tap on a link further down the page does.
+async function leaveBy(page: Page, selector: string, which: "first" | "last") {
+  await page.evaluate(({ selector, which }) => {
+    const links = document.querySelectorAll<HTMLAnchorElement>(selector)
+    links[which === "first" ? 0 : links.length - 1]!.click()
+  }, { selector, which })
+}
+
+// A move through the header menu, as a person makes it: the page is at the top, so the menu is in reach.
+async function menuTo(page: Page, label: string) {
+  await scrollTo(page, 0)
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.locator("#site-menu").getByRole("link", { name: label, exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/${label.toLowerCase()}$`))
+}
+
+test.describe("Back in the installed app", () => {
+  test.beforeEach(async ({ page, baseURL }) => {
+    await page.context().addInitScript(standalone)
+    await saveExams(page, baseURL!)
+  })
+
+  // Suspect 1: a reload forgets that the app was moved around, so Back goes up a level instead of back.
+  test("after a reload, Back still goes to the page just before", async ({ page }) => {
+    await page.goto("/")
+    await menuTo(page, "PROGRESS")
+    await expect(page).toHaveURL(/\/progress$/)
+    await menuTo(page, "STUDY")
+    await expect(page).toHaveURL(/\/study$/)
+    // Let the pages' prefetches finish first, or WebKit logs them as cancelled.
+    await page.waitForLoadState("networkidle")
+    await page.reload()
+    await expect(back(page)).toBeVisible()
+    await back(page).click()
+    // The page before is Progress. Going up a level would have been Home.
+    await expect(page).toHaveURL(/\/progress$/)
+  })
+
+  // Suspect 2: the scroll is kept per path, so a path visited twice at different scrolls remembers only one.
+  test("a page visited twice returns to the scroll of each visit", async ({ page }) => {
+    await page.goto("/progress")
+    const firstLeft = await scrollTo(page, 600)
+    expect(firstLeft).toBeGreaterThan(300)
+    await leaveBy(page, 'a[href^="/exam#"]', "last")
+    await expect(page).toHaveURL(/\/exam#/)
+    await menuTo(page, "PROGRESS")
+    await expect(page).toHaveURL(/\/progress$/)
+    const secondLeft = await scrollTo(page, 300)
+    expect(Math.abs(secondLeft - firstLeft)).toBeGreaterThan(50)
+    await leaveBy(page, 'a[href^="/exam#"]', "first")
+    await expect(page).toHaveURL(/\/exam#/)
+    await back(page).click()
+    await expect(page).toHaveURL(/\/progress$/)
+    await near(page, secondLeft)
+    await back(page).click()
+    await expect(page).toHaveURL(/\/exam#/)
+    await back(page).click()
+    await expect(page).toHaveURL(/\/progress$/)
+    await near(page, firstLeft)
+  })
+
+  // Suspect 5: a double tap goes back twice.
+  test("a double tap on Back goes back one page", async ({ page }) => {
+    await page.goto("/")
+    await menuTo(page, "PROGRESS")
+    await expect(page).toHaveURL(/\/progress$/)
+    await menuTo(page, "STUDY")
+    await expect(page).toHaveURL(/\/study$/)
+    await page.evaluate(() => {
+      const button = document.querySelector<HTMLButtonElement>('button[aria-label="Back"]')!
+      button.click()
+      button.click()
+    })
+    await expect(page).toHaveURL(/\/progress$/)
+    await page.waitForTimeout(1000)
+    await expect(page).toHaveURL(/\/progress$/)
+  })
+})
