@@ -17,8 +17,8 @@ async function settleWorker(page: Page) {
 }
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
-// The E2E server seeds synthetic private pages for course 12, so nine of the thirteen courses are readable: its eight public courses from the synthetic bundles, and course 12.
-const UNFINISHED = /^Unfinished: Read Aloud can read 9 of 13 courses on this server; 4 courses need reading text\.$/
+// The E2E server seeds synthetic private pages for course 8, so one of the eight courses is readable: course 8. The other seven are saved by the capture command.
+const UNFINISHED = /^Unfinished: Read Aloud can read 1 of 8 courses on this server; 7 courses need reading text\.$/
 
 test.use({ navigationCutOff: true })
 
@@ -71,18 +71,20 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
 
     // Read Aloud lists this exam's own courses and none of the other exam's. The list needs no course text.
     await page.goto("/read")
-    await expect(page.getByText("Manage Agent Memory and State")).toBeVisible()
-    await expect(page.getByText("Add Agent Capabilities with Tools")).toBeVisible()
-    await expect(page.getByText("Build Your First Agent with Agent Development Kit (ADK)")).toBeVisible()
-    // The two courses Google publishes in its newer format are listed too.
-    await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
-    await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
+    for (const title of [
+      "Understand Google Cloud Agents",
+      "Agentic Strategy: Discover, Design, and Prototype",
+      "Optimize Agent Behavior",
+      "Build Agent Skills with Google",
+      "Engineer AI Agents with Agent Development Kit (ADK)",
+      "Build AI Agents with Enterprise Databases",
+      "AgentOps: Operationalize AI Agents on Google Cloud",
+      "Model Armor: Securing AI Deployments",
+    ]) await expect(page.getByText(title)).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
-    // The public courses are read aloud. The path's three courses with no reading text stay in the same list.
-    await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
-    await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
-    await expect(page.getByText("No text to read aloud")).toHaveCount(3)
-    await expect(page.getByRole("heading", { name: "Not read aloud", exact: true })).toBeVisible()
+    // Every course on the path is captured from Google, so none is marked as having no text.
+    await expect(page.getByText("No text to read aloud")).toHaveCount(0)
+    await expect(page.getByRole("heading", { name: "Not read aloud" })).toHaveCount(0)
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
     // The course page's components/atoms/breadcrumb.tsx links back to the Read Aloud list.
@@ -93,7 +95,7 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
     await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goBack()
-    // The list says the pack is unfinished, so eight courses are not read as the whole learning path.
+    // The list says the pack is unfinished, so the unread courses are not taken as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored

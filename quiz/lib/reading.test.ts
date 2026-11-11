@@ -249,13 +249,14 @@ test("each reading links to its own page on Google Skills, or to the course when
 test("reading navigation and source URLs follow the selected exam pack", () => {
   const courses = loadPack(testRoot, "agentic-architect").courses
   const first = courses[0]
-  const rise = courses.find((course) => course.format === "rise")
   assert.ok(first)
-  assert.ok(rise)
-  assert.deepEqual(nextReading(first, twoPages, "y", courses), { href: "/read/2", title: "Course 2, Optimize Agent Behavior" })
-  assert.deepEqual(reviewUrl(first, ["123"], 1, 0), { url: "https://www.skills.google/paths/4525/course_templates/1584/html_bundles/123", direct: true })
-  assert.equal(bundleUrl(first, "components"), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-DEVAGENTMEM-B/2.0/course/en/components.json")
-  assert.equal(riseUrl(rise), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-AGTOPS-I/v1.0.0/EN/runtime-data.js")
+  assert.deepEqual(nextReading(first, twoPages, "y", courses), { href: "/read/2", title: "Course 2, Agentic Strategy: Discover, Design, and Prototype" })
+  assert.deepEqual(reviewUrl(first, ["123"], 1, 0), { url: "https://www.skills.google/paths/4525/course_templates/1504/html_bundles/123", direct: true })
+  // Every Agentic Architect course is captured now, so no shipped pack has a public or Rise course: their addresses are checked on synthetic courses.
+  const rise = { ...first, provider: "google" as const, folder: "T-X/v1/EN", format: "rise" as const }
+  assert.equal(riseUrl(rise), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-X/v1/EN/runtime-data.js")
+  const bundle = { ...first, provider: "google" as const, folder: "T-X/2.0" }
+  assert.equal(bundleUrl(bundle, "components"), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-X/2.0/course/en/components.json")
 })
 
 test("a short paragraph that is all bold, or an HTML heading, is a heading; bold inside text is not", () => {

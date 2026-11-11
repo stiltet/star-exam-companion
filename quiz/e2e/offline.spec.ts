@@ -215,7 +215,7 @@ test.describe("exam changes", () => {
       await settleOfflineWorker(page)
       const second = await readyNight(page, "agentic-architect")
       expect(second.key).not.toBe(first.key)
-      expect(second.chapters[0]?.courseTitle).toBe("Manage Agent Memory and State")
+      expect(second.chapters[0]?.courseTitle).toBe("Understand Google Cloud Agents")
       expect(second.chapters.some((chapter) => chapter.title === "Test Rise reading one")).toBe(true)
       const oldStatus = await page.request.get("/api/night")
       expect(oldStatus.status()).toBe(409)
@@ -238,7 +238,7 @@ test.describe("exam changes", () => {
       await page.reload()
       await page.getByRole("button", { name: "Play", exact: true }).click()
       await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeVisible()
-      await expect(page.getByRole("status").filter({ hasText: "Manage Agent Memory and State" })).toBeVisible()
+      await expect(page.getByRole("status").filter({ hasText: "Understand Google Cloud Agents" })).toBeVisible()
 
       await context.setOffline(false)
       await page.goto("/progress")
@@ -301,16 +301,16 @@ test.describe("exam changes", () => {
     }
   })
 
-  test("an Agentic Rise reading opens, saves progress and reopens offline", async ({ context, page, baseURL }) => {
+  test("a Rise reading opens, saves progress and reopens offline", async ({ context, page, baseURL }) => {
     const origin = { origin: baseURL! }
     try {
-      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
+      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "rise-test" } })).ok()).toBe(true)
       expect((await page.request.post("/api/scores/reset", {
-        headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true },
+        headers: { ...origin, "x-quiz-exam": "rise-test" }, data: { confirm: true },
       })).ok()).toBe(true)
       await page.goto("/progress")
       await readyOffline(page)
-      await page.goto("/read/5")
+      await page.goto("/read/1")
       await page.getByRole("link", { name: /Test Rise reading one/ }).click()
       await expect(page.locator("main")).toContainText("Rise introduction")
       await expect(page.locator("main")).toContainText("Rise item")
@@ -324,14 +324,14 @@ test.describe("exam changes", () => {
       expect(savedResponse.ok()).toBe(true)
       expect((await savedResponse.json()).stored).toHaveLength(1)
       await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
-      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "agentic-architect" } })
+      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "rise-test" } })
       expect(await snapshot.json()).toMatchObject({
-        ok: true, snapshot: { lines: expect.arrayContaining([expect.objectContaining({ mode: "reading", asked: ["5/000000000000000000000001"] })]) },
+        ok: true, snapshot: { lines: expect.arrayContaining([expect.objectContaining({ mode: "reading", asked: ["1/000000000000000000000001"] })]) },
       })
       await page.getByRole("link", { name: /Test Rise reading two/ }).click()
       await expect(page.locator("main")).toContainText("This is the second synthetic Rise reading.")
       await context.setOffline(true)
-      const reopened = await page.goto("/read/5/000000000000000000000001")
+      const reopened = await page.goto("/read/1/000000000000000000000001")
       expect(reopened?.status()).toBe(200)
       await expect(page.locator("main")).toContainText("Rise ending tail")
       await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
@@ -356,12 +356,12 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
     await expect.poll(() => page.evaluate(async () => (await caches.keys()).length > 0)).toBe(true)
     await expect.poll(() => page.evaluate(async () => {
-      const pageUrl = new URL("/read/12/98001", location.origin)
+      const pageUrl = new URL("/read/8/98001", location.origin)
       return Boolean(await caches.match(pageUrl))
     })).toBe(true)
     await page.waitForLoadState("networkidle")
     await context.setOffline(true)
-    const privateReading = await page.goto("/read/12/98001")
+    const privateReading = await page.goto("/read/8/98001")
     expect(privateReading?.status()).toBe(200)
     const privateText = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
     await expect(page.locator("main")).toContainText(privateText)
@@ -393,14 +393,11 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await releaseNow(page)
     // The reading finishes on the device and is queued as read, with no request to the Mac.
     await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
-    for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/read/capture", "/about"]) {
+    for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/about"]) {
       const response = await page.goto(path)
       expect(response?.status(), path).toBe(200)
       await expect(page.locator("h1")).not.toBeEmpty()
     }
-    // The capture helper opens offline and says it needs the server, instead of failing silently.
-    await page.goto("/read/capture")
-    await expect(page.getByRole("status")).toHaveText("Saving a private copy needs this server. Your previously stored readings remain available offline.")
     await page.goto("/practice")
     await page.getByRole("button", { name: /^A\./ }).click()
     const queue = () => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]").length)
@@ -429,7 +426,7 @@ test.describe("reading aloud when the Mac cannot answer", () => {
 
   // Let the offline worker finish installing before anything else: switching the exam back under an install stalls it.
   async function openReading(page: Page) {
-    await page.goto("/read/12/98002")
+    await page.goto("/read/8/98002")
     await readyOffline(page)
     await page.waitForLoadState("networkidle")
   }

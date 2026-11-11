@@ -36,6 +36,19 @@ await mkdir(path.join(root, "quiz"), { recursive: true })
 await cp(fileURLToPath(new URL("../../exams", import.meta.url)), path.join(root, "exams"), { recursive: true })
 const bare = path.join(root, "exams", "no-course-test")
 await cp(path.join(root, "exams", "agentic-architect"), bare, { recursive: true })
+
+// A pack with one public course in the Rise format, so the browser tests can open a Rise reading. No shipped pack has one:
+// every Agentic Architect course is captured from Google Skills, and the other exam's courses are not Rise.
+const riseOnly = path.join(root, "exams", "rise-test")
+await cp(path.join(root, "exams", "agentic-architect"), riseOnly, { recursive: true })
+const riseMeta = JSON.parse(await readFile(path.join(riseOnly, "pack.json"), "utf8"))
+await writeFile(path.join(riseOnly, "pack.json"), JSON.stringify({ ...riseMeta, id: "rise-test", title: "Exam With A Rise Course" }, null, 2))
+const riseCourses = JSON.parse(await readFile(path.join(riseOnly, "courses.json"), "utf8"))
+await writeFile(path.join(riseOnly, "courses.json"), JSON.stringify({
+  path: riseCourses.path,
+  bundleBase: riseCourses.bundleBase,
+  courses: [{ id: "1", template: "9001", title: "Synthetic Rise course", folder: "T-X/v1/EN", format: "rise" }],
+}, null, 2))
 const meta = JSON.parse(await readFile(path.join(bare, "pack.json"), "utf8"))
 await writeFile(path.join(bare, "pack.json"), JSON.stringify({ ...meta, id: "no-course-test", title: "Exam With No Course", reading: false }, null, 2))
 await rm(path.join(bare, "courses.json"))
@@ -46,7 +59,7 @@ const privateText = ["Synthetic private fixture", "used only by the offline brow
 // A second synthetic page with two paragraphs, for the next-paragraph and leave-the-page checks. Its lines are joined here
 // so the whole text never appears in a tracked file, which the check below enforces for every fixture text.
 const twoParagraphs = [["First synthetic", "paragraph."].join(" "), ["Second synthetic", "paragraph."].join(" ")].join("\n")
-const privateCourse = path.join(env.QUIZ_PRIVATE_DIR, "agentic-architect", "12")
+const privateCourse = path.join(env.QUIZ_PRIVATE_DIR, "agentic-architect", "8")
 await mkdir(privateCourse, { recursive: true })
 for (const [pageId, title, text] of [["98001", "Synthetic private fixture", privateText], ["98002", "Synthetic two paragraphs", twoParagraphs]]) {
   await writeFile(path.join(privateCourse, `${createHash("sha256").update(pageId).digest("hex")}.json`), JSON.stringify({

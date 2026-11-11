@@ -4,87 +4,51 @@
   "courses": [
     {
       "id": "1",
-      "template": "1584",
-      "title": "Manage Agent Memory and State",
-      "folder": "T-DEVAGENTMEM-B/2.0"
+      "template": "1504",
+      "title": "Understand Google Cloud Agents",
+      "provider": "private"
     },
     {
       "id": "2",
-      "template": "1564",
-      "title": "Optimize Agent Behavior",
-      "folder": "T-DEVAGENTOPT-I/2.0"
+      "template": "1672",
+      "title": "Agentic Strategy: Discover, Design, and Prototype",
+      "provider": "private"
     },
     {
       "id": "3",
-      "template": "1593",
-      "title": "Add Agent Capabilities with Tools",
-      "folder": "T-DEVAGENTTOOL-B/2.0"
+      "template": "1564",
+      "title": "Optimize Agent Behavior",
+      "provider": "private"
     },
     {
       "id": "4",
-      "template": "1563",
-      "title": "Build Your First Agent with Agent Development Kit (ADK)",
-      "folder": "T-DEVAGENT-I/2.0"
-    },
-    {
-      "id": "5",
-      "template": "1782",
-      "title": "AgentOps: Operationalize AI Agents on Google Cloud",
-      "folder": "T-AGTOPS-I/v1.0.0/EN",
-      "format": "rise"
-    },
-    {
-      "id": "6",
-      "template": "1504",
-      "title": "Understand Google Cloud Agents",
-      "folder": "T-GCAGNT-B/v1.2.0/EN",
-      "format": "rise"
-    },
-    {
-      "id": "7",
-      "template": "1436",
-      "title": "Build AI Agents with Enterprise Databases",
-      "folder": "T-AIATDB-A/1.0.0/T-AIATDB-A",
-      "format": "rise"
-    },
-    {
-      "id": "8",
-      "template": "1685",
-      "title": "Liftoff with Google Antigravity: Build a Video Game with AI",
-      "folder": "T-LWGA-B/v2.0/T-LWGA-B",
-      "format": "rise"
-    },
-    {
-      "id": "12",
-      "template": "1786",
-      "title": "Orchestrate Workflows with the Data Agent Kit",
-      "provider": "private"
-    },
-    {
-      "id": "13",
       "template": "1832",
       "title": "Build Agent Skills with Google",
       "provider": "private"
-    }
-  ],
-  "noReading": [
+    },
     {
-      "id": "9",
+      "id": "5",
       "template": "1596",
       "title": "Engineer AI Agents with Agent Development Kit (ADK)",
-      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+      "provider": "private"
     },
     {
-      "id": "10",
-      "template": "1672",
-      "title": "Agentic Strategy: Discover, Design, and Prototype",
-      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+      "id": "6",
+      "template": "1436",
+      "title": "Build AI Agents with Enterprise Databases",
+      "provider": "private"
     },
     {
-      "id": "11",
-      "template": "1275",
-      "title": "Deploy Multi-Agent Systems with Gemini Enterprise Agent Platform",
-      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+      "id": "7",
+      "template": "1782",
+      "title": "AgentOps: Operationalize AI Agents on Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "8",
+      "template": "1385",
+      "title": "Model Armor: Securing AI Deployments",
+      "provider": "private"
     }
   ]
 }

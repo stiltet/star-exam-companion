@@ -124,7 +124,7 @@ describe('the GitHub Pages build', () => {
       }
       // The demo cannot read private copies, so its Read page for the second exam says Unfinished, rendered, not just pack metadata.
       const staticRead = readFileSync(path.join(out, 'agentic-architect', 'read', 'index.html'), 'utf8');
-      assert.match(staticRead, /role="status"[^>]*>Unfinished: Read Aloud has public text for eight courses/);
+      assert.match(staticRead, /role="status"[^>]*>Unfinished: Read Aloud reads the eight courses of the learning path from private copies/);
       assert.match(staticRead, /runs on your computer/);
       // The demo's Practice page announces its messages to a screen reader, as the real page does.
       assert.match(readFileSync(path.join(out, 'practice', 'index.html'), 'utf8'), /role="status"[^>]*>Loading questions/);
@@ -132,7 +132,7 @@ describe('the GitHub Pages build', () => {
       for (const page of ['practice', 'exam', 'flashcards', 'glossary', 'about', 'study/fundamentals']) {
         assert.ok(existsSync(path.join(out, page, 'index.html')), page);
       }
-      for (const gone of ['api', 'sw.js', 'read/capture', 'read/night']) {
+      for (const gone of ['api', 'sw.js', 'read/night']) {
         assert.equal(existsSync(path.join(out, gone)), false, gone);
       }
       // Read Aloud is only its panel: no course or reading page may leak into the export.
