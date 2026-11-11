@@ -49,6 +49,9 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* A pack that is unfinished says so above its description (owner, 11 Nov). */}
+        {meta.homeNotice && <Text variant="warning" role="status" placement="mb-8" testId="pack-notice">{meta.homeNotice}</Text>}
+
         {/* The exam in a sentence or two, from its pack. */}
         <section className="mb-8">
           <Heading variant="rule" placement="mb-4">DESCRIPTION</Heading>

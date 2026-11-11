@@ -36,6 +36,8 @@ export type PackMeta = {
   description: string
   // Static Pages-demo notice. The local Read Aloud page computes its notice from available reading sources.
   notice?: string
+  // A yellow warning box on the home page above the description, such as an exam that is unfinished. Only a pack that sets it shows one.
+  homeNotice?: string
   // Extra search keywords for the page's metadata, beside Google Cloud, Certification, Exam Prep and the title.
   keywords?: string[]
   // The Glossary and Flashcards group for a term the exam guide does not number, such as "Study guide".
@@ -189,6 +191,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     isText(meta.description) &&
     isText(meta.unnumberedLabel) &&
     (meta.notice === undefined || isText(meta.notice)) &&
+    (meta.homeNotice === undefined || isText(meta.homeNotice)) &&
     (meta.keywords === undefined || (Array.isArray(meta.keywords) && meta.keywords.every(isText))) &&
     isHttps(meta.examPage) &&
     isHttps(meta.examGuide) &&
