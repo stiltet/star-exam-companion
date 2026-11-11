@@ -35,7 +35,7 @@ test("a wider screen opens Saving as a dialog", async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 700 })
   await page.goto("/")
   await icon(page).click()
-  const dialog = page.getByRole("dialog", { name: "Status" })
+  const dialog = page.getByRole("dialog", { name: "Offline / connection status" })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText("Waiting to send")).toBeVisible()
   await page.keyboard.press("Escape")
@@ -45,5 +45,5 @@ test("a wider screen opens Saving as a dialog", async ({ page }) => {
 test("Progress no longer shows Saving", async ({ page }) => {
   await page.goto("/progress")
   await expect(page.getByRole("heading", { name: "VOICE QUIZ" })).toBeVisible()
-  await expect(page.getByRole("heading", { name: "STATUS" })).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: "OFFLINE / CONNECTION STATUS" })).toHaveCount(0)
 })
