@@ -27,10 +27,10 @@ test("playwright.config.ts discovers every browser and width without nested or m
     cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: "47825" }, encoding: "utf8",
   })
   assert.equal(result.status, 0, result.stderr)
-  for (const project of ["chromium-390", "webkit-390"]) {
-    assert.equal(result.stdout.split(`[${project}]`).length - 1, 52, project)
-  }
-  assert.match(result.stdout, /Total: 104 tests in 13 files/)
+  // Chromium runs the pages; WebKit only the offline worker and the installed app's Back button.
+  assert.equal(result.stdout.split("[chromium-390]").length - 1, 25)
+  assert.equal(result.stdout.split("[webkit-390]").length - 1, 14)
+  assert.match(result.stdout, /Total: 39 tests in 13 files/)
 })
 
 test("content-fixture.mjs serves original synthetic readings and passes other fetches through", () => {
