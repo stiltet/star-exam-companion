@@ -8,6 +8,10 @@ import { applyNames, label, plainNames } from "@/lib/sources"
 import { connection } from "next/server"
 import { STATIC_DEMO } from "@/lib/static-demo"
 
+// A category's anchor: letters and digits with single dashes, so "Section 1 (~13%)" is #section-1-13, not
+// a link with spaces and a stray percent sign that a phone may fail to follow.
+const anchorId = (category: string): string => category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "category"
+
 // Rendered per request, so an edit to glossary.md shows without a rebuild. The online demo is
 // built once, as plain files, so it does not wait for a request.
 export default async function GlossaryPage() {
@@ -50,7 +54,7 @@ export default async function GlossaryPage() {
             {categories.map((cat) => (
               <a
                 key={cat}
-                href={`#${cat.toLowerCase()}`}
+                href={`#${anchorId(cat)}`}
                 className="text-sm border border-foreground px-2 py-1 hover:bg-muted"
               >
                 {cat.toUpperCase()} ({grouped[cat].length})
@@ -61,7 +65,7 @@ export default async function GlossaryPage() {
 
         {/* Terms by Category */}
         {categories.map((category) => (
-          <section key={category} id={category.toLowerCase()} className="mb-8">
+          <section key={category} id={anchorId(category)} className="mb-8">
             <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
             <div className="border-2 border-foreground divide-y divide-foreground">
               {grouped[category]

@@ -75,6 +75,10 @@ export function BackButton() {
       rememberLast(known)
       return known
     }
+    // An entry Next.js did not write (a plain #anchor link, which the browser handles itself) has no
+    // __NA marker. Stamping it would leave a state Next.js answers with a full page reload on the next
+    // Back or Forward over it, so it is left alone: Back from it goes up a level.
+    if ((window.history.state as { __NA?: boolean } | null)?.__NA !== true) return null
     const id = newId()
     // After a page load in full there is no entry in memory, but the page it came from was the last one named.
     let before = current.current
