@@ -9,7 +9,8 @@ import type { ComponentProps, ReactNode } from "react"
 // danger: an action that ends something, such as END EXAM.
 // toggle: a small on/off control, such as a review filter; on (aria-pressed) is inverted.
 // flag: the exam's FLAG control; on is the flag colour.
-export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag"
+// compact: a small action inside a table row (Send now, Update now), low enough that every row keeps one height.
+export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag" | "compact"
 
 // One line, unless wrap is set: a long label ends in an ellipsis rather than wrapping.
 const BASE = "inline-flex max-w-full min-w-0 items-center justify-center gap-6 border-2 border-foreground px-4 py-3 text-base font-bold uppercase no-underline"
@@ -19,6 +20,9 @@ const CONTROL = "inline-flex max-w-full min-w-0 items-center gap-2 border-2 bord
 
 // Small on/off controls, the size of the Voice Quiz controls. aria-pressed marks them on.
 const TOGGLE = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground px-3 py-2 text-sm font-bold uppercase whitespace-nowrap no-underline disabled:opacity-40"
+
+// Row actions: smaller than a toggle, so a row holding one is no taller than a row holding only text.
+const COMPACT = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground bg-background px-2 py-0.5 text-xs font-bold uppercase whitespace-nowrap no-underline text-foreground hover:bg-muted disabled:opacity-40"
 
 const TOGGLES: Record<"toggle" | "flag", string> = {
   toggle: "bg-background text-foreground hover:bg-muted aria-pressed:bg-foreground aria-pressed:text-background aria-pressed:hover:bg-foreground",
@@ -33,6 +37,7 @@ const VARIANTS: Record<"filled" | "outlined" | "danger", string> = {
 }
 
 export function buttonClass(variant: ButtonVariant, placement = "", wrap = false): string {
+  if (variant === "compact") return [COMPACT, placement].filter(Boolean).join(" ")
   if (variant === "control") return [CONTROL, placement].filter(Boolean).join(" ")
   if (variant === "toggle" || variant === "flag") return [TOGGLE, TOGGLES[variant], placement].filter(Boolean).join(" ")
   return [BASE, wrap ? "whitespace-normal" : "whitespace-nowrap", VARIANTS[variant], placement].filter(Boolean).join(" ")
