@@ -8,6 +8,7 @@
 import { type Frame, type Page } from "@playwright/test"
 import { listPacks, loadPack, repoRoot, type Pack } from "../lib/pack.ts"
 import { describeError, maskAddress } from "../lib/debug-log.ts"
+import { cleanLessonText } from "../lib/lesson-text.ts"
 import { looksLikePdf, pdfText } from "../lib/pdf-text.ts"
 import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "../lib/private-reading.ts"
 import {
@@ -171,7 +172,7 @@ async function readLesson(page: Page, href: string): Promise<{ status: "ok"; tex
   let last = ""
   let sameSince = Date.now()
   while (Date.now() - started < MAX_WATCH_MS) {
-    const text = (await frame.evaluate(() => (document.body ? document.body.innerText : "")).catch(() => "")).trim()
+    const text = cleanLessonText((await frame.evaluate(() => (document.body ? document.body.innerText : "")).catch(() => "")).trim())
     if (text !== last) {
       debug("lesson.read", { chars: text.length, sinceStartMs: Date.now() - started })
       last = text

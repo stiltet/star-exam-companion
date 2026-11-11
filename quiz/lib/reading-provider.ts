@@ -1,3 +1,4 @@
+import { cleanLessonText } from "./lesson-text.ts"
 import { courseBundle as loadGoogleCourse } from "./course-text.ts"
 import type { Loaded } from "./course-text.ts"
 import type { Course } from "./reading-view.ts"
@@ -33,7 +34,7 @@ function privateBundle(records: Awaited<ReturnType<typeof readPrivateReadings>>)
       _parentId: block,
       _sortOrder: 0,
       _component: "text",
-      body: record.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join(""),
+      body: cleanLessonText(record.text).split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join(""),
     })
   })
   return bundle
