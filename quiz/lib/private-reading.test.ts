@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, truncate, utimes, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, truncate, utimes, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { afterEach } from "node:test"
@@ -30,12 +30,12 @@ async function useScratch(): Promise<string> {
 
 test("private readings are isolated by pack and course and kept outside the repository", async () => {
   const root = await useScratch()
-  const stored = await savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic title", text: "Synthetic fixture text." })
+  const stored = await savePrivateReading("agentic-architect", "1", { pageId: "101", title: "Synthetic title", text: "Synthetic fixture text." })
   assert.equal(privateReadingRoot(), root)
-  assert.equal((await readPrivateReadings("agentic-architect", "12")).length, 1)
-  assert.deepEqual(await readPrivateReadings("agentic-architect", "13"), [])
-  assert.deepEqual(await readPrivateReadings("generative-ai-leader", "12"), [])
-  assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Synthetic fixture text.")
+  assert.equal((await readPrivateReadings("agentic-architect", "1")).length, 1)
+  assert.deepEqual(await readPrivateReadings("agentic-architect", "3"), [])
+  assert.deepEqual(await readPrivateReadings("generative-ai-leader", "1"), [])
+  assert.equal((await readPrivateReadings("agentic-architect", "1"))[0]?.text, "Synthetic fixture text.")
   assert.equal(path.relative(testRoot, root).startsWith(".."), true)
   assert.match(stored.savedAt, /^\d{4}-\d\d-\d\dT/)
 })
@@ -61,8 +61,8 @@ test("the private provider turns a saved page into a Read Aloud page", async () 
 
 test("private records are stored in restricted JSON files", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic title", text: "Synthetic fixture text." })
-  const directory = path.join(root, "agentic-architect", "12")
+  await savePrivateReading("agentic-architect", "1", { pageId: "101", title: "Synthetic title", text: "Synthetic fixture text." })
+  const directory = path.join(root, "agentic-architect", "1")
   const names = await readdir(directory)
   assert.equal(names.length, 1)
   assert.match(names[0] ?? "", /^[a-f0-9]{64}\.json$/)
@@ -80,7 +80,7 @@ test("the store refuses another checkout, including the shared main checkout", a
   const checkout = path.join(scratch, "synthetic-checkout")
   await mkdir(path.join(checkout, ".git"), { recursive: true })
   process.env.QUIZ_PRIVATE_DIR = path.join(checkout, "store")
-  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /outside the repository/)
+  await assert.rejects(readPrivateReadings("agentic-architect", "1"), /outside the repository/)
 })
 
 test("privacy guards include records whose pack is no longer installed", async () => {
@@ -95,43 +95,43 @@ test("a linked course is refused before any directory is created or permissions 
   await mkdir(elsewhere, { mode: 0o755 })
   await mkdir(root, { recursive: true })
   await symlink(elsewhere, path.join(root, "agentic-architect"))
-  await assert.rejects(savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /points outside/)
+  await assert.rejects(savePrivateReading("agentic-architect", "1", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /points outside/)
   assert.equal((await stat(elsewhere)).mode & 0o777, 0o755)
   assert.deepEqual(await readdir(elsewhere), [])
 })
 
 test("linked records fail explicitly instead of hiding a saved page", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "101", title: "Synthetic", text: "Synthetic." })
+  await savePrivateReading("agentic-architect", "1", { pageId: "101", title: "Synthetic", text: "Synthetic." })
   const target = path.join(scratch, "synthetic.json")
   await writeFile(target, "{}")
-  await symlink(target, path.join(root, "agentic-architect", "12", "linked.json"))
-  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /linked records/)
+  await symlink(target, path.join(root, "agentic-architect", "1", "linked.json"))
+  await assert.rejects(readPrivateReadings("agentic-architect", "1"), /linked records/)
 })
 
 test("private store paths and captured values are validated", async () => {
   await useScratch()
-  await assert.rejects(savePrivateReading("../other-pack", "12", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /pack id is invalid/)
+  await assert.rejects(savePrivateReading("../other-pack", "1", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /pack id is invalid/)
   await assert.rejects(savePrivateReading("agentic-architect", "../12", { pageId: "101", title: "Synthetic", text: "Synthetic." }), /course id is invalid/)
-  await assert.rejects(savePrivateReading("agentic-architect", "12", { pageId: "../101", title: "Synthetic", text: "Synthetic." }), /page id is invalid/)
-  await assert.rejects(savePrivateReading("agentic-architect", "12", { pageId: "101", title: "", text: "Synthetic." }), /needs a title and text/)
+  await assert.rejects(savePrivateReading("agentic-architect", "1", { pageId: "../101", title: "Synthetic", text: "Synthetic." }), /page id is invalid/)
+  await assert.rejects(savePrivateReading("agentic-architect", "1", { pageId: "101", title: "", text: "Synthetic." }), /needs a title and text/)
 })
 
 test("a private directory inside the repository is refused, including through a symlink", async () => {
   await useScratch()
   process.env.QUIZ_PRIVATE_DIR = path.join(testRoot, "private-readings-test")
-  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /outside the repository/)
+  await assert.rejects(readPrivateReadings("agentic-architect", "1"), /outside the repository/)
 
   const link = path.join(scratch, "repo-link")
   await symlink(testRoot, link)
   process.env.QUIZ_PRIVATE_DIR = path.join(link, "private-readings-test")
-  await assert.rejects(readPrivateReadings("agentic-architect", "12"), /outside the repository/)
+  await assert.rejects(readPrivateReadings("agentic-architect", "1"), /outside the repository/)
 })
 
 test("private text reaches Read Aloud as captured, and instructional phrases are not filtered out", async () => {
   await useScratch()
   const lines = ["Click Next to continue.", "Skip to main content", "Mark as complete", "Copyright Synthetic Example", "Review the diagram, then answer below."]
-  await savePrivateReading("agentic-architect", "12", { pageId: "201", title: "Synthetic phrases", text: lines.join("\n") })
+  await savePrivateReading("agentic-architect", "1", { pageId: "201", title: "Synthetic phrases", text: lines.join("\n") })
   const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
   assert.ok(course)
   const loaded = await privateReadingProvider.load(course)
@@ -167,9 +167,9 @@ test("a new capture changes the Night script, so the old recording is replaced, 
   const encode = async (_wav: string, m4a: string) => {
     await writeFile(m4a, "audio")
   }
-  await savePrivateReading("agentic-architect", "12", { pageId: "301", title: "Synthetic first", text: "First synthetic sentence." })
+  await savePrivateReading("agentic-architect", "1", { pageId: "301", title: "Synthetic first", text: "First synthetic sentence." })
   const first = await buildRecording({ dir, parts: await parts(), render, encode })
-  await savePrivateReading("agentic-architect", "12", { pageId: "302", title: "Synthetic second", text: "Second synthetic sentence." })
+  await savePrivateReading("agentic-architect", "1", { pageId: "302", title: "Synthetic second", text: "Second synthetic sentence." })
   const second = await buildRecording({ dir, parts: await parts(), render, encode })
   assert.notEqual(second.key, first.key)
   assert.deepEqual((await readdir(dir)).filter((name) => /^[0-9a-f]{64}$/.test(name)), [second.key])
@@ -187,31 +187,31 @@ test("a page id is 1 to 20 digits, the same range progress accepts", () => {
 test("a course holds a fixed number of readings, refuses one more, and still replaces an existing page", async () => {
   await useScratch()
   for (let id = 1; id <= MAX_RECORDS_PER_COURSE; id += 1) {
-    await savePrivateReading("agentic-architect", "12", { pageId: String(id), title: "Synthetic", text: "Synthetic text." })
+    await savePrivateReading("agentic-architect", "1", { pageId: String(id), title: "Synthetic", text: "Synthetic text." })
   }
-  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: String(MAX_RECORDS_PER_COURSE + 1), title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
-  const replaced = await savePrivateReading("agentic-architect", "12", { pageId: "1", title: "Synthetic", text: "Replaced synthetic text." })
+  await assert.rejects(() => savePrivateReading("agentic-architect", "1", { pageId: String(MAX_RECORDS_PER_COURSE + 1), title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
+  const replaced = await savePrivateReading("agentic-architect", "1", { pageId: "1", title: "Synthetic", text: "Replaced synthetic text." })
   assert.equal(replaced.text, "Replaced synthetic text.")
-  assert.equal((await readPrivateReadings("agentic-architect", "12")).length, MAX_RECORDS_PER_COURSE)
+  assert.equal((await readPrivateReadings("agentic-architect", "1")).length, MAX_RECORDS_PER_COURSE)
   // Another course has its own room.
-  await savePrivateReading("agentic-architect", "13", { pageId: "1", title: "Synthetic", text: "Synthetic text." })
+  await savePrivateReading("agentic-architect", "3", { pageId: "1", title: "Synthetic", text: "Synthetic text." })
 })
 
 test("replacing a page keeps the day it was first saved", async () => {
   const root = await useScratch()
-  const first = await savePrivateReading("agentic-architect", "12", { pageId: "7", title: "Synthetic", text: "First synthetic text." })
-  const file = (await readdir(path.join(root, "agentic-architect", "12")))[0]!
-  const stored = JSON.parse(await readFile(path.join(root, "agentic-architect", "12", file), "utf8"))
-  await writeFile(path.join(root, "agentic-architect", "12", file), JSON.stringify({ ...stored, savedAt: "2026-01-01T00:00:00.000Z" }))
-  const second = await savePrivateReading("agentic-architect", "12", { pageId: "7", title: "Synthetic", text: "Second synthetic text." })
+  const first = await savePrivateReading("agentic-architect", "1", { pageId: "7", title: "Synthetic", text: "First synthetic text." })
+  const file = (await readdir(path.join(root, "agentic-architect", "1")))[0]!
+  const stored = JSON.parse(await readFile(path.join(root, "agentic-architect", "1", file), "utf8"))
+  await writeFile(path.join(root, "agentic-architect", "1", file), JSON.stringify({ ...stored, savedAt: "2026-01-01T00:00:00.000Z" }))
+  const second = await savePrivateReading("agentic-architect", "1", { pageId: "7", title: "Synthetic", text: "Second synthetic text." })
   assert.equal(second.savedAt, "2026-01-01T00:00:00.000Z")
   assert.notEqual(first.savedAt, second.savedAt)
 })
 
 test("one damaged record makes its course unreadable with a message, and never throws or shows its text", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "21", title: "Synthetic good", text: "Good synthetic text." })
-  await writeFile(path.join(root, "agentic-architect", "12", "damaged.json"), "{ not json Synthetic secret text")
+  await savePrivateReading("agentic-architect", "1", { pageId: "21", title: "Synthetic good", text: "Good synthetic text." })
+  await writeFile(path.join(root, "agentic-architect", "1", "damaged.json"), "{ not json Synthetic secret text")
   const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
   assert.ok(course)
   const loaded = await privateReadingProvider.load(course)
@@ -221,49 +221,51 @@ test("one damaged record makes its course unreadable with a message, and never t
 
 test("an unchanged course comes from memory, and a rewrite of the same size is still noticed by its modified time", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "31", title: "Synthetic", text: "Original synthetic text." })
-  const first = await readPrivateReadings("agentic-architect", "12")
-  assert.equal(await readPrivateReadings("agentic-architect", "12"), first, "the second read returns the very same parsed records, read from nothing")
+  await savePrivateReading("agentic-architect", "1", { pageId: "31", title: "Synthetic", text: "Original synthetic text." })
+  const first = await readPrivateReadings("agentic-architect", "1")
+  assert.equal(await readPrivateReadings("agentic-architect", "1"), first, "the second read returns the very same parsed records, read from nothing")
   // A same-length change, with the file's modified time moved on, so only the time can tell it apart.
-  const folder = path.join(root, "agentic-architect", "12")
+  const folder = path.join(root, "agentic-architect", "1")
   const file = path.join(folder, (await readdir(folder))[0]!)
   const stored = await readFile(file, "utf8")
   await writeFile(file, stored.replace("Original", "Changed!"))
   const later = new Date(Date.now() + 60_000)
   await utimes(file, later, later)
-  const second = await readPrivateReadings("agentic-architect", "12")
+  const second = await readPrivateReadings("agentic-architect", "1")
   assert.notEqual(second, first)
   assert.equal(second[0]?.text, "Changed! synthetic text.")
 })
 
 test("a changed record is read again", async () => {
   await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "32", title: "Synthetic", text: "Original synthetic text." })
-  assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Original synthetic text.")
-  await savePrivateReading("agentic-architect", "12", { pageId: "32", title: "Synthetic", text: "Changed synthetic text, longer." })
-  assert.equal((await readPrivateReadings("agentic-architect", "12"))[0]?.text, "Changed synthetic text, longer.")
+  await savePrivateReading("agentic-architect", "1", { pageId: "32", title: "Synthetic", text: "Original synthetic text." })
+  assert.equal((await readPrivateReadings("agentic-architect", "1"))[0]?.text, "Original synthetic text.")
+  await savePrivateReading("agentic-architect", "1", { pageId: "32", title: "Synthetic", text: "Changed synthetic text, longer." })
+  assert.equal((await readPrivateReadings("agentic-architect", "1"))[0]?.text, "Changed synthetic text, longer.")
 })
 
-test("deleting a course folder drops its text from memory too", async () => {
+test("deleting a course folder drops its text from memory at the next read of any course", async () => {
   const root = await useScratch()
-  // Other tests leave their own courses in memory, so the count is compared with what it was before this course was read.
-  const baseline = cachedCourseCount()
-  await savePrivateReading("agentic-architect", "12", { pageId: "41", title: "Synthetic", text: "Text that must not outlive its folder." })
-  assert.equal((await readPrivateReadings("agentic-architect", "12")).length, 1)
-  await rm(path.join(root, "agentic-architect", "12"), { recursive: true })
-  assert.equal(cachedCourseCount(), baseline + 1, "the course's text is still held in memory until the next read notices the folder is gone")
-  assert.deepEqual(await readPrivateReadings("agentic-architect", "12"), [])
-  assert.equal(cachedCourseCount(), baseline, "and dropped from memory once the folder is gone")
+  await savePrivateReading("agentic-architect", "1", { pageId: "41", title: "Synthetic", text: "Text that must not outlive its folder." })
+  assert.equal((await readPrivateReadings("agentic-architect", "1")).length, 1)
+  // Every read drops courses whose folders other tests deleted, so the count is taken after this course was read.
+  const baseline = cachedCourseCount() - 1
+  await rm(path.join(root, "agentic-architect", "1"), { recursive: true })
+  assert.equal(cachedCourseCount(), baseline + 1)
+  // Reading another course is enough: the deleted course's text does not wait for its own next read.
+  await readPrivateReadings("agentic-architect", "3")
+  assert.equal(cachedCourseCount(), baseline, "dropped from memory at the next read of any course")
+  assert.deepEqual(await readPrivateReadings("agentic-architect", "1"), [])
   // A new course folder is read fresh, not merged with what was there before.
-  await savePrivateReading("agentic-architect", "12", { pageId: "42", title: "Synthetic", text: "Fresh synthetic text." })
-  assert.deepEqual((await readPrivateReadings("agentic-architect", "12")).map((record) => record.pageId), ["42"])
+  await savePrivateReading("agentic-architect", "1", { pageId: "42", title: "Synthetic", text: "Fresh synthetic text." })
+  assert.deepEqual((await readPrivateReadings("agentic-architect", "1")).map((record) => record.pageId), ["42"])
 })
 
 test("a damaged record that is plain text makes the course unreadable and its error never quotes the file", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "51", title: "Synthetic good", text: "Good synthetic text." })
+  await savePrivateReading("agentic-architect", "1", { pageId: "51", title: "Synthetic good", text: "Good synthetic text." })
   // Starts with a letter, the shape whose JSON parser message quotes the start of the input.
-  await writeFile(path.join(root, "agentic-architect", "12", "damaged.json"), "Synthetic secret plain text that is not JSON at all")
+  await writeFile(path.join(root, "agentic-architect", "1", "damaged.json"), "Synthetic secret plain text that is not JSON at all")
   const course = loadPack(testRoot, "agentic-architect").courses.find((entry) => entry.provider === "private")
   assert.ok(course)
   const loaded = await privateReadingProvider.load(course)
@@ -287,27 +289,27 @@ test("text and title limits are exact: the largest is accepted and one more is r
 
 test("a course at its byte limit refuses a new page but still replaces an existing one", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "61", title: "Synthetic", text: "Synthetic text." })
-  const folder = path.join(root, "agentic-architect", "12")
+  await savePrivateReading("agentic-architect", "1", { pageId: "61", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "1")
   const file = path.join(folder, (await readdir(folder))[0]!)
   // A sparse file takes no real disk but counts at its full size, which is what the limit adds up.
   await truncate(file, MAX_COURSE_BYTES)
-  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: "62", title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
-  const replaced = await savePrivateReading("agentic-architect", "12", { pageId: "61", title: "Synthetic", text: "Replacement text." })
+  await assert.rejects(() => savePrivateReading("agentic-architect", "1", { pageId: "62", title: "Synthetic", text: "Synthetic text." }), PrivateStoreLimitError)
+  const replaced = await savePrivateReading("agentic-architect", "1", { pageId: "61", title: "Synthetic", text: "Replacement text." })
   assert.equal(replaced.text, "Replacement text.")
 })
 
 test("the course byte limit counts a new reading as it will be written, escapes included", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "71", title: "Synthetic", text: "Synthetic text." })
-  const folder = path.join(root, "agentic-architect", "12")
+  await savePrivateReading("agentic-architect", "1", { pageId: "71", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "1")
   const file = path.join(folder, (await readdir(folder))[0]!)
   // One million bytes of room are left. 400,000 control characters are 400,000 bytes raw but about 2.4 MB as JSON.
   await truncate(file, MAX_COURSE_BYTES - 1_000_000)
   const text = "\u0001".repeat(400_000)
   assert.equal(new TextEncoder().encode(text).byteLength < 1_000_000, true, "the raw text would fit")
-  await assert.rejects(() => savePrivateReading("agentic-architect", "12", { pageId: "72", title: "Synthetic", text }), PrivateStoreLimitError)
-  const small = await savePrivateReading("agentic-architect", "12", { pageId: "73", title: "Synthetic", text: "Synthetic text." })
+  await assert.rejects(() => savePrivateReading("agentic-architect", "1", { pageId: "72", title: "Synthetic", text }), PrivateStoreLimitError)
+  const small = await savePrivateReading("agentic-architect", "1", { pageId: "73", title: "Synthetic", text: "Synthetic text." })
   assert.equal(small.pageId, "73", "a reading that does fit is still saved")
 })
 
@@ -324,7 +326,9 @@ test("each refusal has its own problem: id, reading or size", () => {
   assert.equal(privateReadingProblem(input("abc", "Synthetic text.")), "id")
   assert.equal(privateReadingProblem(input("1", "  ")), "reading")
   assert.equal(privateReadingProblem({ pageId: "1", title: "t".repeat(501), text: "Synthetic text." }), "title", "a title over 500 characters")
-  assert.equal(privateReadingProblem({ pageId: "1", title: "  ", text: "Synthetic text." }), "title", "an empty title")
+  assert.equal(privateReadingProblem({ pageId: "1", title: "  ", text: "Synthetic text." }), "untitled", "an empty title")
+  assert.equal(privateReadingProblem({ pageId: "1", title: "t".repeat(500), text: "Synthetic text." }), null, "a title of exactly 500 characters")
+  assert.equal(privateReadingProblem(input("1", "a".repeat(1_000_000))), null, "a text of exactly 1,000,000 characters")
   assert.equal(privateReadingProblem(input("1", "a".repeat(1_000_001))), "reading")
   assert.equal(privateReadingProblem(input("1", "\u0001".repeat(1_000_000))), "size", "within the character limit but too large once written")
   assert.equal(privateReadingProblem(null), "reading")
@@ -332,11 +336,11 @@ test("each refusal has its own problem: id, reading or size", () => {
 
 test("a record larger than the store reads back is refused on reading, with a record problem and without its text", async () => {
   const root = await useScratch()
-  await savePrivateReading("agentic-architect", "12", { pageId: "81", title: "Synthetic", text: "Synthetic text." })
-  const folder = path.join(root, "agentic-architect", "12")
+  await savePrivateReading("agentic-architect", "1", { pageId: "81", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "1")
   const file = path.join(folder, (await readdir(folder))[0]!)
   await truncate(file, 4_000_001)
-  await assert.rejects(() => readPrivateReadings("agentic-architect", "12"), (error: unknown) => {
+  await assert.rejects(() => readPrivateReadings("agentic-architect", "1"), (error: unknown) => {
     assert.ok(error instanceof PrivateRecordError, "it is a record problem")
     assert.match((error as Error).message, /^Private reading record .+\.json is too large\.$/)
     return true
@@ -352,8 +356,8 @@ test("each kind of failure the page shows is typed by the store itself, not gues
     assert.equal(loaded.ok, false)
     return loaded.ok ? undefined : loaded.problem
   }
-  await savePrivateReading("agentic-architect", "12", { pageId: "91", title: "Synthetic", text: "Synthetic text." })
-  const folder = path.join(root, "agentic-architect", "12")
+  await savePrivateReading("agentic-architect", "1", { pageId: "91", title: "Synthetic", text: "Synthetic text." })
+  const folder = path.join(root, "agentic-architect", "1")
   // A link inside the course folder: the way on is to remove the link, which is a record problem.
   await symlink(path.join(root, "elsewhere.json"), path.join(folder, "link.json"))
   assert.equal(await problemOf(), "record", "a linked record")
@@ -362,6 +366,22 @@ test("each kind of failure the page shows is typed by the store itself, not gues
   await writeFile(path.join(folder, "damaged.json"), "plain text that is not JSON")
   assert.equal(await problemOf(), "record", "a damaged file")
   await rm(path.join(folder, "damaged.json"))
+  // A link as the course folder is a record problem, like a linked record.
+  const real = path.join(root, "agentic-architect", "12-real")
+  await rename(folder, real)
+  await symlink(real, folder)
+  assert.equal(await problemOf(), "record", "a linked course folder")
+  await rm(folder)
+  await rename(real, folder)
+  // A file that cannot be read is not damaged: it is not a record problem.
+  await writeFile(path.join(folder, "locked.json"), "{}", { mode: 0o000 })
+  if (process.getuid?.() !== 0) assert.equal(await problemOf(), "folder", "an unreadable file")
+  await rm(path.join(folder, "locked.json"))
+  // A file over the size the store reads back is a record problem through the loader too.
+  await writeFile(path.join(folder, "huge.json"), "{}")
+  await truncate(path.join(folder, "huge.json"), 4_000_001)
+  assert.equal(await problemOf(), "record", "an oversized file")
+  await rm(path.join(folder, "huge.json"))
   // A setting that is not allowed is the folder's problem, and removing a reading would not help.
   const before = process.env.QUIZ_PRIVATE_DIR
   process.env.QUIZ_PRIVATE_DIR = "relative/path"

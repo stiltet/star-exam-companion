@@ -13,7 +13,7 @@ afterEach(() => {
   clearCourseCache()
 })
 
-test("the Google provider preserves the same synthetic reading output for both packs", async () => {
+test("the Google provider keeps the synthetic reading output of the public pack", async () => {
   const data = {
     contentObjects: [{ _id: "p", _type: "page", _sortOrder: 0, title: "Synthetic page" }],
     articles: [{ _id: "a", _parentId: "p", _sortOrder: 0 }],
@@ -28,7 +28,8 @@ test("the Google provider preserves the same synthetic reading output for both p
   }) as typeof fetch
 
   const results = []
-  for (const id of ["generative-ai-leader", "agentic-architect"]) {
+  // The Agentic Architect pack has no public course any more: all its courses are captured from Google Skills by the crawl.
+  for (const id of ["generative-ai-leader"]) {
     const course = loadPack(testRoot, id).courses.find((entry) => entry.format !== "rise")
     assert.ok(course, `${id} has a bundle-backed course`)
     clearCourseCache()
@@ -39,16 +40,6 @@ test("the Google provider preserves the same synthetic reading output for both p
   }
 
   assert.deepEqual(results, [
-    {
-      pages: [{ id: "p", title: "Synthetic heading" }],
-      reading: {
-        title: "Synthetic heading",
-        paragraphs: [{ text: "Synthetic heading", heading: true }, { text: "Synthetic sentence.", heading: false }],
-        review: false,
-        reviewAt: [],
-        videoAt: [],
-      },
-    },
     {
       pages: [{ id: "p", title: "Synthetic heading" }],
       reading: {

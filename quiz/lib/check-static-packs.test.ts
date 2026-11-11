@@ -1,10 +1,11 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { spawnSync } from "node:child_process"
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { type TestContext } from "node:test"
+import { INDEX_FROM, indexParts, leakIn } from "./check-static-packs.ts"
 import { testRoot } from "./test-pack.ts"
 
 function fixture(t: TestContext) {
@@ -43,6 +44,22 @@ for (const folder of ["quiz", "pages-static", "exams/agentic-architect"]) {
     assert.equal(result.stderr.includes(text), false)
   })
 }
+
+test("a captured page that repeats its course's public title is no leak, while its other lines still are", (t) => {
+  const { root, store, run } = fixture(t)
+  const pack = JSON.parse(readFileSync(path.join(root, "exams/agentic-architect/courses.json"), "utf8")) as { courses: { title: string }[]; noReading?: { title: string; why: string }[] }
+  const title = [...pack.courses.map((course) => course.title), ...(pack.noReading ?? []).flatMap((course) => [course.title, course.why])].find((text) => text.length >= 40)!
+  assert.ok(title, "the fixture's pack says something public long enough to be compared")
+  const course = path.join(store, "agentic-architect", "1")
+  mkdirSync(course, { recursive: true })
+  writeFileSync(path.join(course, `${createHash("sha256").update("202").digest("hex")}.json`), JSON.stringify({
+    pageId: "202", title: "Synthetic title", text: `${title}\nThis synthetic line is private and at least forty characters long.`, savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+  writeFileSync(path.join(root, "quiz", "public-title.txt"), title)
+  assert.equal(run().status, 0, "a source file that holds only the public title passes")
+  writeFileSync(path.join(root, "quiz", "private-line.txt"), "This synthetic line is private and at least forty characters long.")
+  assert.equal(run().status, 1, "the private line still fails")
+})
 
 test("the static privacy guard rejects a configured store path without printing it", (t) => {
   const { root, store, run } = fixture(t)
@@ -129,4 +146,20 @@ test("a capture of hundreds of long lines is found by one of them in a large sou
   assert.equal(run().status, 0, "a large source with none of the lines passes")
   writeFileSync(path.join(root, "quiz", "large.txt"), `${ordinary}\n${lines[150]}`)
   assert.equal(run().status, 1, "one captured line in a large source blocks the build")
+})
+
+test("the index is used from 50 captured parts up, and finds a leak the same way either side", (t) => {
+  const scratch = mkdtempSync(path.join(tmpdir(), "index-boundary-"))
+  t.after(() => rmSync(scratch, { recursive: true, force: true }))
+  const part = (n: number) => `Synthetic captured line number ${String(n).padStart(3, "0")} for the boundary.`
+  const leaking = path.join(scratch, "leaking.txt")
+  const clean = path.join(scratch, "clean.txt")
+  writeFileSync(leaking, `before ${part(7)} after`)
+  writeFileSync(clean, "nothing captured here at all, only ordinary words")
+  for (const count of [49, 50]) {
+    const captured = indexParts(Array.from({ length: count }, (_, n) => part(n)))
+    assert.equal(captured.index === null, count < INDEX_FROM, `${count} parts`)
+    assert.equal(leakIn(leaking, "/nowhere", captured), "text", `${count} parts, leaking file`)
+    assert.equal(leakIn(clean, "/nowhere", captured), null, `${count} parts, clean file`)
+  }
 })

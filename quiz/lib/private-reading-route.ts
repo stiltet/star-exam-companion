@@ -8,9 +8,9 @@ const MAX_PRIVATE_BODY_BYTES = 8 * 1024 * 1024
 const REQUEST_KEYS = ["pageId", "template", "text", "title"]
 
 // A refusal says which kind it was, so the capture tab can tell the person what to do: origin (not this page or not
-// JSON), body (not a reading request), reading (text empty or too long), title (empty or over 500 characters), id (a page id that is not 1 to 20 digits), size (too
+// JSON), body (not a reading request), reading (text empty or too long), title (over 500 characters), untitled (empty), id (a page id that is not 1 to 20 digits), size (too
 // large once saved), template (a course this pack does not save).
-function refuse(reason: "origin" | "body" | "reading" | "title" | "id" | "size" | "template"): Response {
+function refuse(reason: "origin" | "body" | "reading" | "title" | "untitled" | "id" | "size" | "template"): Response {
   return Response.json({ ok: false, reason }, { status: 400 })
 }
 

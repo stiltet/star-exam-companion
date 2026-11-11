@@ -8,12 +8,14 @@ export type ReadingCompletion = {
   notice?: string
 }
 
-export function readingCompletion(pack: Pick<Pack, "courses" | "noReading">, loaded: readonly Loaded[]): ReadingCompletion {
+export function readingCompletion(pack: Pick<Pack, "courses">, loaded: readonly Loaded[]): ReadingCompletion {
   const readable = pack.courses.reduce((count, _course, index) => {
     const result = loaded[index]
     return count + Number(result?.ok === true && result.pages.length > 0)
   }, 0)
-  const total = pack.courses.length + pack.noReading.length
+  // Courses with no reading text on Google Skills are listed apart and can never be read, so they do not keep this notice up:
+  // it clears once every course that can have text is readable here.
+  const total = pack.courses.length
   const unreadable = total - readable
   return {
     readable,

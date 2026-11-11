@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { allPrivateReadings, assertPrivateReadingOutsideRepo, privateReadingRoot } from "./private-reading.ts"
 import { listPacks, loadPack } from "./pack.ts"
 
@@ -38,7 +39,7 @@ export function checkedParts(text: string): string[] {
 
 // The captured parts, with an index by their first MIN_CHECKED_CHARS characters (every part is at least that long) for a store
 // with many of them: a source file is then scanned once whatever the number of captured lines, each position looked up and only
-// a match on the start confirmed. For a few parts the native search is faster, so the index is used only above INDEX_FROM.
+// a match on the start confirmed. For a few parts the native search is faster, so the index is used only from INDEX_FROM parts up.
 export const INDEX_FROM = 50
 
 export type Captured = { parts: string[]; index: Map<string, string[]> | null }
@@ -84,11 +85,16 @@ async function checkStaticPacks(root: string): Promise<void> {
   process.env.QUIZ_ROOT = root
   await assertPrivateReadingOutsideRepo(root)
 
-  for (const { id } of listPacks(root)) loadPack(root, id)
+  // What the packs themselves say in public (a course's title, why one has no text): a captured page repeats its course's title
+  // as a line, which is no leak, since the title is written in the pack.
+  const publicText = normalizeText(listPacks(root).flatMap(({ id }) => {
+    const pack = loadPack(root, id)
+    return [...pack.courses.map((course) => course.title), ...pack.noReading.flatMap((course) => [course.title, course.why])]
+  }).join("\n"))
   const records = await allPrivateReadings()
   const files = ["exams", "quiz", "pages-static"].flatMap((folder) => filesUnder(path.join(root, folder)))
   const storePath = normalizeText(privateReadingRoot())
-  const captured = indexParts([...new Set(records.flatMap((record) => checkedParts(record.text)))])
+  const captured = indexParts([...new Set(records.flatMap((record) => checkedParts(record.text)))].filter((part) => !publicText.includes(part)))
   for (const file of files) {
     const leak = leakIn(file, storePath, captured)
     if (leak === "path") throw new Error("Static build sources contain the private reading store path.")
@@ -96,9 +102,12 @@ async function checkStaticPacks(root: string): Promise<void> {
   }
 }
 
-const root = path.resolve(process.argv[2] ?? "..")
-checkStaticPacks(root).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : "unknown error"
-  process.stderr.write(`Static pack check failed: ${message}\n`)
-  process.exitCode = 1
-})
+// Run as a script it checks the tree; imported (by a test) it only offers its functions.
+if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = path.resolve(process.argv[2] ?? "..")
+  checkStaticPacks(root).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : "unknown error"
+    process.stderr.write(`Static pack check failed: ${message}\n`)
+    process.exitCode = 1
+  })
+}

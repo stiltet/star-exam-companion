@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto"
 import type { Dirent } from "node:fs"
-import { chmod, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
+import { chmod, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import path from "node:path"
 import { repoRoot } from "./pack.ts"
@@ -52,15 +52,17 @@ export type PrivateReadingRecord = {
 export type PrivateReadingInput = Pick<PrivateReadingRecord, "pageId" | "title" | "text">
 
 // Why a reading is refused, so the capture tab can say it: its page id is not 1 to 20 digits ("id"), its title is empty or over
-// 500 characters ("title"), its text is empty or over 1,000,000 characters ("reading", counted in UTF-16 units, so an emoji
+// 500 characters ("title"; empty is "untitled"), its text is empty or over 1,000,000 characters ("reading", counted in UTF-16 units, so an emoji
 // counts as two), or the record would be larger than the store reads back ("size").
-export type ReadingProblem = "id" | "title" | "reading" | "size"
+// An empty title is its own reason ("untitled"), so the sentence for a long one is never shown for it.
+export type ReadingProblem = "id" | "title" | "untitled" | "reading" | "size"
 
 export function privateReadingProblem(value: unknown): ReadingProblem | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "reading"
   const input = value as Partial<PrivateReadingInput>
   if (typeof input.pageId !== "string" || !PAGE_ID.test(input.pageId)) return "id"
-  if (typeof input.title !== "string" || input.title.trim().length === 0 || input.title.length > MAX_TITLE_CHARS) return "title"
+  if (typeof input.title !== "string" || input.title.trim().length === 0) return "untitled"
+  if (input.title.length > MAX_TITLE_CHARS) return "title"
   if (typeof input.text !== "string" || input.text.trim().length === 0 || input.text.length > MAX_TEXT_CHARS) return "reading"
   return recordBytes({ pageId: input.pageId, title: input.title, text: input.text }) > MAX_RECORD_BYTES ? "size" : null
 }
@@ -176,7 +178,19 @@ function parseRecord(value: unknown, file: string): PrivateReadingRecord {
   return record as PrivateReadingRecord
 }
 
+// A course folder that was deleted takes its text out of memory at the next read of any course, not only of itself.
+async function forgetDeletedCourses(): Promise<void> {
+  for (const directory of [...recordCache.keys()]) {
+    try {
+      await stat(directory)
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") recordCache.delete(directory)
+    }
+  }
+}
+
 export async function readPrivateReadings(packId: string, courseId: string): Promise<PrivateReadingRecord[]> {
+  await forgetDeletedCourses()
   const root = await checkedRoot()
   const directory = courseDirectory(root, packId, courseId)
   let entries: Dirent[]
@@ -190,6 +204,8 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
     }
     throw error
   }
+  // A link as the course folder itself is removed like a linked record, so it is a record problem too.
+  if ((await lstat(directory)).isSymbolicLink()) throw new PrivateRecordError("The private reading course folder must not be a link.")
   const [physicalDirectory, physicalRoot] = await Promise.all([realpath(directory), physicalPath(root)])
   if (!isWithin(physicalRoot, physicalDirectory)) {
     throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
@@ -207,9 +223,11 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
   if (kept?.stamp === stamp) return kept.records
   const records = await Promise.all(files.map(async (name) => {
     const file = path.join(directory, name)
+    // A file that cannot be read (permissions, say) is not damaged, so it is no record problem: removing it may lose a good reading.
+    const raw = await readFile(file, "utf8")
     let value: unknown
     try {
-      value = JSON.parse(await readFile(file, "utf8"))
+      value = JSON.parse(raw)
     } catch {
       // The parser's own message can quote the start of the file, which is the reading's text, so it is never passed on.
       throw new PrivateRecordError(`Private reading record ${name} is not valid JSON.`)
