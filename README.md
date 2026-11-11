@@ -436,7 +436,7 @@ unused port:
 QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
 ```
 
-Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 390 px, a phone width. The tests cover page rendering, voice answers,
+Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 375 px, the lowest phone width. The tests cover page rendering, voice answers,
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
 scripts run; speech requests return silent test audio. Every pack's voice clips are pre-seeded in
