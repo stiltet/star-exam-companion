@@ -38,9 +38,9 @@ test("playwright.config.ts discovers every browser and width without nested or m
   })
   assert.equal(result.status, 0, result.stderr)
   for (const project of ["chromium-375", "chromium-390", "webkit-375", "webkit-390"]) {
-    assert.equal(result.stdout.split(`[${project}]`).length - 1, 57, project)
+    assert.equal(result.stdout.split(`[${project}]`).length - 1, 50, project)
   }
-  assert.match(result.stdout, /Total: 228 tests in 11 files/)
+  assert.match(result.stdout, /Total: 200 tests in 11 files/)
 })
 
 test("content-fixture.mjs serves original synthetic readings and passes other fetches through", () => {
@@ -76,8 +76,11 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
   const result = spawnSync(process.execPath, ["--import", preload, "--input-type=module", "-e", `
     import { seedNight } from "./e2e/night-fixture.mjs"
     import { nightDirFor } from "./lib/night-build.ts"
+    import { savePrivateReading } from "./lib/private-reading.ts"
     import { readFile, readdir } from "node:fs/promises"
     import path from "node:path"
+    // Every Agentic Architect course is captured from Google Skills, so the test saves one synthetic captured page into its own private store.
+    await savePrivateReading("agentic-architect", "1", { pageId: "98001", title: "Synthetic private fixture", text: "Synthetic private fixture text for the test." })
     await seedNight()
     const result = {}
     for (const exam of ["generative-ai-leader", "agentic-architect"]) {
@@ -90,7 +93,7 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
       result[exam] = { key: keys[0], manifest, bytes: audio.length, format: audio.subarray(4, 8).toString() }
     }
     process.stdout.write(JSON.stringify(result))
-  `], { cwd: quiz, env: { ...process.env, QUIZ_ROOT: path.resolve(quiz, ".."), NIGHT_DIR: dir }, encoding: "utf8" })
+  `], { cwd: quiz, env: { ...process.env, QUIZ_ROOT: path.resolve(quiz, ".."), NIGHT_DIR: dir, QUIZ_PRIVATE_DIR: path.join(dir, "private-readings") }, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr)
   const records = JSON.parse(result.stdout)
   const first = records["generative-ai-leader"]
@@ -99,8 +102,8 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
   assert.equal(first.manifest.hash, first.key)
   assert.equal(second.manifest.hash, second.key)
   assert.equal(first.manifest.chapters[0].courseTitle, "Gen AI: Beyond the Chatbot")
-  assert.equal(second.manifest.chapters[0].courseTitle, "Manage Agent Memory and State")
-  assert.ok(second.manifest.chapters.some((chapter) => chapter.title === "Test Rise reading one"))
+  assert.equal(second.manifest.chapters[0].courseTitle, "Understand Google Cloud Agents")
+  assert.ok(second.manifest.chapters.some((chapter) => chapter.title === "Synthetic private fixture"))
   assert.ok(first.bytes > 0 && second.bytes > 0)
   assert.equal(first.format, "ftyp")
   assert.equal(second.format, "ftyp")
