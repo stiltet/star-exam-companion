@@ -11,6 +11,12 @@ already served adds none. If the log cannot be written, the server reports the e
 Adding an exam means adding a folder. No code changes. The steps for a pull request are at the
 [end of this page](#add-an-exam-with-a-pull-request).
 
+The `/add-exam <exam name>` skill ([`../skills/add-exam/SKILL.md`](../skills/add-exam/SKILL.md)) does the folder and the lesson
+capture for you: it reads the exam's Google Skills learning path with `pnpm --dir quiz reading:path <address>`, writes `courses.json`
+in Google's order, captures every lesson and checks the result. It then writes the quiz content (terms, glossary, scenes, study
+topics and practice questions) from the exam guide and Google's pages, in stages that each end with `node --test`. Nothing is
+invented: content with no official source is left out and named in the pack's `notice`.
+
 ## The folder
 
 | File | What it holds |
@@ -32,12 +38,13 @@ the private provider, its folder there. `provider` is omitted for public Google 
 courses do not have a public `folder` or `format`; their captured text is outside the repository and
 build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
 app-data directory is used.
-The Read Aloud page provides the Send to Star bookmarklet. It opens a local capture tab, which
-accepts messages from Google Skills and saves the page through the same-origin
-`POST /api/reading/private`; the endpoint accepts only a configured private course. See
-[`../skills/send-to-star/SKILL.md`](../skills/send-to-star/SKILL.md) for the capture steps.
+A private course is captured by `pnpm --dir quiz reading:crawl [<exam>]`, which saves each lesson through the private
+store (the same store `POST /api/reading/private` writes to) and keeps a per-course manifest of titles, addresses and
+hashes beside it, never text. The README's "Private course readings" section describes it, and
+[`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
+either: the courses come from its `courses.json` entries with `"provider": "private"`.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read
-(a lab or video course, say). Read Aloud lists them apart from the readable courses, in a "Not read aloud" section below them, each marked "No text to read aloud" with its `why`;
+(a lab or video course, say). Read Aloud lists them in the one course list, in course order with the readable courses, each marked "No text to read aloud" with its `why`;
 opening one shows `why` and a link to the course on Google Skills. Say in `why` only what its Skills page shows: a lab or video course lists no readings, and a course whose readings sit behind a login says so. Their ids continue after the readable courses' ids.
 `format` is absent for a course stored as four JSON files, and `"rise"` for one Google stores as a single
 `runtime-data.js` (its `folder` then ends where that file is, such as `T-XXXX/v1.0.0/EN`). A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.

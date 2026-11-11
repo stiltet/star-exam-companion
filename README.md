@@ -135,21 +135,46 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 | Pack (`QUIZ_EXAM`) | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
-| `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 13 courses this server can read from public bundles and its private store; it says **Unfinished** while any are unreadable. Courses with no reading text stay in the list with their reason and a link to Google Skills. |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 8 courses of Google's learning path (`skills.google/paths/4525`, in Google's order) this server can read from its private store; it says **Unfinished** while any are unreadable. Every course is captured from Google Skills as you see it. |
 
 ### Private course readings
 
-For Agentic Architect courses 1786 and 1832, open Read Aloud on the same server where the quiz runs,
-copy the Send to Star bookmarklet and add it as a browser bookmark. Sign in to Google Skills in that
-browser, open a reading page, optionally select just the passage to save, then use the bookmark.
-The local capture tab saves it to the server's private store. See
-[`skills/send-to-star/SKILL.md`](skills/send-to-star/SKILL.md) for the steps.
+For all eight Agentic Architect courses (and any private course of any exam pack), one command saves every
+lesson with no AI and no cost:
+
+```bash
+pnpm --dir quiz reading:crawl
+```
+
+With no argument it covers every exam on the server; `pnpm --dir quiz reading:crawl <exam>` limits it to one.
+It starts a separate headless Chrome for Testing of its own (the one the browser tests already use, on its own
+profile folder, apart from your everyday Chrome), signs in by pressing the browser's **Continue as** button for your saved Google
+account when Google Skills offers it, or else the site's **Sign in** and **Sign in with Google** buttons, and closes it when it ends. A lesson delivered as a PDF is read too: the command fetches it in memory and extracts its text. The first time only, sign in to Google Skills once in a
+visible window of that browser; [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md) has the command.
+It lists each course's lessons, reads every one on
+every run, saves the missing ones and any whose text changed to the private store, pauses a random 2 to 15 seconds between pages, shows live
+progress, and ends with one verdict per course: complete and current, complete but Google changed (what), or
+incomplete (what). It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
+the saved readings, so the next run reports lessons added, removed or reordered and any address or text that
+changed. `pnpm --dir quiz reading:list <exam>` prints which lessons are saved against that manifest. Read Aloud's
+**Unfinished** note says how to finish, and [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md)
+has the steps, including the exact Chrome start command, for a person or for any AI tool that can run commands.
+**Use a secondary Google account for the capture, not the one you study with.** Google Skills counts a lesson as completed when
+it is opened, and the crawl opens every lesson on every run, so the signed-in account's progress on the courses and the whole
+learning path shows as complete (for example 66% of a certification path) although nothing was studied. The crawl prints
+`Signed in as <address>` so you can see which account it uses.
+
+To add a new exam, use the `/add-exam <exam name>` skill ([`skills/add-exam/SKILL.md`](skills/add-exam/SKILL.md)). It lists the
+exam's Google Skills learning path in Google's order with `pnpm --dir quiz reading:path <address>` (which prints the courses, or with
+`--json` the whole `courses.json`), creates the exam pack, runs the crawl for it, and then writes the glossary, voice scenes, study
+topics and practice questions from official Google sources, one stage at a time, each ending with `node --test`. Anything with no
+official source is left out and named as unfinished, never invented.
 
 Good to know about private readings:
 
-- **Unfinished.** Read Aloud still says **Unfinished** while any course cannot be read here. Without
-  your own captures the Agentic Architect pack reads 8 of its 13 courses. Courses 1596, 1672 and 1275
-  have no reading text on Google Skills, so they sit under **Not read aloud** with their reason.
+- **Unfinished.** Read Aloud still says **Unfinished** while any of the 8 courses cannot be read here.
+  Without your own captures the Agentic Architect pack reads 0 of 8, because every course is captured from
+  Google Skills as you see it; capturing them all makes it 8 of 8 and the notice goes away.
 - **Where the text lives.** Each capture is one file per page in a folder outside this repository:
   `QUIZ_PRIVATE_DIR` if you set it, otherwise `star-exam-companion/private-reading` in your operating
   system's application-data folder. A page may hold up to 1,000,000 characters and no more than 4 MB once saved
@@ -159,10 +184,8 @@ Good to know about private readings:
 - **Also on your devices.** The offline worker on each device that has the quiz installed keeps every
   captured page, opened or not, so it can be read offline. Private text is therefore on this server and
   on those devices.
-- **What is sent.** The bookmarklet sends the passage you selected, or the page's main reading area, and
-  nothing else. If the page has no main area and nothing is selected, it says so and sends nothing.
-  Sending the same page again replaces its copy. A selected passage is saved as its own copy, so it never
-  replaces a whole saved page.
+- **What is saved.** The crawl saves each lesson's reading text, exactly as Google Skills shows it to the signed-in user, and
+  nothing else. A lesson with no reading text saves nothing and is named in the report. Reading a lesson again replaces its copy.
 - **Deleting it.** Delete a page's file, or the folder, to remove the server copies. Each file is named by a
   hash of its page id, so open a file to see its `title` and `savedAt` and find the page it holds. Clear this site's
   data on each device to remove its offline copies. Night reading's recording is built from the text and
