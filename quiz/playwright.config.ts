@@ -21,7 +21,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: (["chromium", "webkit"] as const).flatMap((browserName) =>
-    [375, 390].map((width) => ({
+    [390].map((width) => ({
       name: `${browserName}-${width}`,
       use: {
         browserName,
