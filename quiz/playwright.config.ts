@@ -23,10 +23,10 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   // Two projects: Chromium for the pages, WebKit (iPhone Safari's engine) only for what differs there,
-  // the offline worker and the installed app's Back button. 390 px is the phone width.
+  // the offline worker and the installed app's Back button. 375 px is the lowest phone width, and the only one tested.
   projects: [
-    { name: "chromium-390", testIgnore: WEBKIT_SPECS, use: { browserName: "chromium", viewport: { width: 390, height: 844 } } },
-    { name: "webkit-390", testMatch: WEBKIT_SPECS, use: { browserName: "webkit", viewport: { width: 390, height: 844 } } },
+    { name: "chromium-375", testIgnore: WEBKIT_SPECS, use: { browserName: "chromium", viewport: { width: 375, height: 844 } } },
+    { name: "webkit-375", testMatch: WEBKIT_SPECS, use: { browserName: "webkit", viewport: { width: 375, height: 844 } } },
   ],
   webServer: {
     command: "node e2e/server.mjs",
