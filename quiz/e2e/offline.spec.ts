@@ -252,7 +252,7 @@ test.describe("exam changes", () => {
       expect(await snapshot.json()).toMatchObject({
         ok: true, snapshot: { lines: expect.arrayContaining([expect.objectContaining({ mode: "reading", asked: ["5/000000000000000000000001"] })]) },
       })
-      await page.getByRole("link", { name: /Test Rise reading two/ }).click()
+      await page.getByRole("link", { name: /Test Rise reading two/ }).first().click()
       await expect(page.locator("main")).toContainText("This is the second synthetic Rise reading.")
       await context.setOffline(true)
       const reopened = await page.goto("/read/5/000000000000000000000001")

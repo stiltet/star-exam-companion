@@ -32,7 +32,7 @@ test("Read Aloud opens a course and turns to its next reading", async ({ page })
   await page.locator('main a[href^="/read/"]').filter({ hasNotText: /night/i }).first().click()
   await page.getByRole("link", { name: /Test reading one/ }).click()
   await expect(page.locator("main")).toContainText("This is original test text")
-  await page.locator('main a[href$="/e2e-second"]').click()
+  await page.locator('main a[href$="/e2e-second"]').first().click()
   await expect(page.locator("main")).toContainText("This is the second original test paragraph")
 })
 

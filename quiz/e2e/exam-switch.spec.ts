@@ -35,7 +35,12 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(pick).toHaveValue("generative-ai-leader")
     // Let the device finish storing the voice clips first: a clip still downloading when the exam switches
     // asks for a line the new exam does not have, and the fixture counts that 404 as a browser error.
-    await expect(page.getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 840_000 })
+    // The count is in the Saving panel, opened from the header's status icon.
+    const savingIcon = page.locator("header button[aria-controls='saving-panel']")
+    await savingIcon.click()
+    await expect(page.locator("#saving-panel").getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 840_000 })
+    await savingIcon.click()
+    await expect(page.locator("#saving-panel")).toHaveCount(0)
     // And for the page to go quiet: WebKit reports a prefetch or a storage call cut off by the switch's page load as an
     // uncaught error, so the switch must not land while the page is still fetching.
     await page.waitForLoadState("networkidle")
