@@ -30,7 +30,7 @@ export function SavingPanel({ connection }: { connection: ConnectionState }) {
 function DemoSaving() {
   return (
     <div className="overflow-x-auto">
-      <SectionBar variant="muted">STATUS</SectionBar>
+      <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
@@ -90,7 +90,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
 
   return (
     <div className="overflow-x-auto">
-      <SectionBar variant="muted">STATUS</SectionBar>
+      <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
