@@ -65,7 +65,7 @@ export default async function GlossaryPage() {
 
         {/* Terms by Category */}
         {categories.map((category) => (
-          <section key={category} id={anchorId(category)} className="mb-8">
+          <section key={category} id={anchorId(category)} className="mb-8 scroll-mt-[50px]">
             <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
             <div className="border-2 border-foreground divide-y divide-foreground">
               {grouped[category]
