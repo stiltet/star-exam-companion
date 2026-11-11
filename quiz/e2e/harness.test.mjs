@@ -28,8 +28,8 @@ test("playwright.config.ts discovers every browser and width without nested or m
   })
   assert.equal(result.status, 0, result.stderr)
   // Chromium runs the pages; WebKit only the offline worker and the installed app's Back button.
-  assert.equal(result.stdout.split("[chromium-390]").length - 1, 25)
-  assert.equal(result.stdout.split("[webkit-390]").length - 1, 14)
+  assert.equal(result.stdout.split("[chromium-375]").length - 1, 25)
+  assert.equal(result.stdout.split("[webkit-375]").length - 1, 14)
   assert.match(result.stdout, /Total: 39 tests in 13 files/)
 })
 
