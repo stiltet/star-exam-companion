@@ -9,6 +9,9 @@
   "scripts": {
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "e2e": "playwright test",
+    "reading:crawl": "node scripts/reading-crawl.mts",
+    "reading:list": "node scripts/reading-list.mts",
+    "reading:path": "node scripts/reading-path.mts",
     "gate": "cd .. && node --test && pnpm --dir quiz e2e",
     "dev": "NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
     "lint": "eslint .",
@@ -54,6 +57,7 @@
     "next": "16.4.3",
     "next-themes": "^0.4.6",
     "parse5": "^8.1.0",
+    "pdfjs-dist": "~6.4.299",
     "react": "19.3.1",
     "react-day-picker": "9.8.0",
     "react-dom": "19.3.1",
