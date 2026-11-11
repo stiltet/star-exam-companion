@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type Ref } from "react"
 import { fetchedAt, fetchSnapshot, REFRESHED, useSnapshot } from "@/components/snapshot"
 import { connectionText, forceUpdate, type Connection } from "@/lib/connection"
 import { STATIC_DEMO } from "@/lib/static-demo"
@@ -76,17 +76,27 @@ export function useConnection(): ConnectionState {
   return { from, long: connectionText(from, at), busy, update: () => void update() }
 }
 
-// In the bar, left of the menu button: a status icon only, the size of the menu button. Green
-// only when the questions came fresh from the Mac; red otherwise, including while it checks, so
-// an old copy never looks current. Update now is on the Progress page.
-export function ConnectionIcon({ state }: { state: ConnectionState }) {
-  // The online demo has no local server, so a red "cannot reach it" icon would only mislead.
-  if (STATIC_DEMO) return null
+// In the bar, left of the menu button: a status icon the size of the menu button. Green only when
+// the questions came fresh from the Mac; red otherwise, including while it checks, so an old copy
+// never looks current. It is a button: it opens the Saving panel (Send now, Update now), which the
+// header draws. The online demo has no Mac, so its icon is neutral rather than a misleading red.
+export function ConnectionIcon({ state, open, onToggle, buttonRef }: { state: ConnectionState; open: boolean; onToggle: () => void; buttonRef?: Ref<HTMLButtonElement> }) {
   const { from, long } = state
   const live = from === "mac"
+  const text = STATIC_DEMO ? "Saving status (online demo)" : long
+  const colour = STATIC_DEMO ? "" : live ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"
   return (
-    <span role="img" aria-label={long} title={long} className={`flex size-11 shrink-0 items-center justify-center ${live ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-      <LaptopStatus live={live} />
-    </span>
+    <button
+      ref={buttonRef}
+      type="button"
+      aria-label={text}
+      title={text}
+      aria-expanded={open}
+      aria-controls="saving-panel"
+      onClick={onToggle}
+      className={`flex size-11 shrink-0 items-center justify-center ${colour}`}
+    >
+      <LaptopStatus live={STATIC_DEMO || live} />
+    </button>
   )
 }
