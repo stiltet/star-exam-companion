@@ -6,6 +6,8 @@ import { spawn, type ChildProcess } from "node:child_process"
 import { homedir } from "node:os"
 import path from "node:path"
 import { chromium, type Browser, type BrowserContext, type Page } from "@playwright/test"
+import { maskAddress } from "../lib/debug-log.ts"
+import { debug, log } from "./reading-log.mts"
 
 export const SITE = process.env.READING_SITE || "https://www.skills.google"
 export const ENDPOINT = process.env.READING_CDP_URL || "http://127.0.0.1:9222"
@@ -72,9 +74,17 @@ async function chooseAccount(page: Page): Promise<void> {
 // session, so this lands back on the site signed in, with no password typed. False when there is no "Sign in" link (already signed
 // in) or the buttons do not lead back to the site.
 async function signInWithButtons(page: Page): Promise<boolean> {
-  if (!(await clickByText(page, /^sign in$/))) return false
+  if (!(await clickByText(page, /^sign in$/))) {
+    debug("signin.step", { step: "no Sign in link", note: "already signed in" })
+    return false
+  }
+  debug("signin.step", { step: "pressed Sign in" })
   await page.waitForURL(/\/users\/sign_in/, { timeout: 20_000 }).catch(() => {})
-  if (!(await clickByText(page, /^sign in with google$/))) return false
+  if (!(await clickByText(page, /^sign in with google$/))) {
+    debug("signin.step", { step: "no Sign in with Google button", url: maskAddress(page.url()) })
+    return false
+  }
+  debug("signin.step", { step: "pressed Sign in with Google" })
   const site = new URL(SITE)
   for (let attempt = 0; attempt < 60; attempt += 1) {
     await sleep(500)
@@ -85,7 +95,10 @@ async function signInWithButtons(page: Page): Promise<boolean> {
       continue
     }
     if (url.host === site.host && !url.pathname.startsWith("/users/sign_in")) return true
-    if (url.host === "accounts.google.com") await chooseAccount(page)
+    if (url.host === "accounts.google.com") {
+      debug("signin.step", { step: "Google account chooser" })
+      await chooseAccount(page)
+    }
   }
   return false
 }
@@ -95,7 +108,11 @@ async function signInWithButtons(page: Page): Promise<boolean> {
 // pressed instead. No password is ever typed. READING_SKIP_SIGNIN=1 skips signing in (tests); READING_PROMPT_WAIT_MS shortens the wait
 // for the prompt (tests).
 export async function acceptOfferedSignIn(page: Page, context: BrowserContext): Promise<boolean> {
-  if (process.env.READING_SKIP_SIGNIN === "1") return false
+  if (process.env.READING_SKIP_SIGNIN === "1") {
+    log("signin.route", { route: "skipped" })
+    return false
+  }
+  const began = Date.now()
   const cdp = await context.newCDPSession(page)
   const seen: { dialog?: { dialogId: string } } = {}
   cdp.on("FedCm.dialogShown" as never, ((dialog: { dialogId: string }) => {
@@ -114,7 +131,13 @@ export async function acceptOfferedSignIn(page: Page, context: BrowserContext): 
       const end = Date.now() + promptWait
       while (!seen.dialog && Date.now() < end) await sleep(250)
     }
-    if (!seen.dialog) return await signInWithButtons(page)
+    if (!seen.dialog) {
+      debug("signin.prompt", { appeared: false, waitedMs: Date.now() - began })
+      const signedIn = await signInWithButtons(page)
+      log("signin.route", { route: "buttons", ok: signedIn, ms: Date.now() - began })
+      return signedIn
+    }
+    log("signin.route", { route: "prompt", ms: Date.now() - began })
     await cdp.send("FedCm.selectAccount" as never, { dialogId: seen.dialog.dialogId, accountIndex: 0 } as never)
     await sleep(5_000)
     return true
@@ -147,9 +170,13 @@ export async function signedInAs(page: Page): Promise<string | null> {
       walk(document)
       return result
     }).catch(() => null)
-    if (found) return found
+    if (found) {
+      log("signin.user", { address: found })
+      return found
+    }
     await sleep(500)
   }
+  log("signin.user", { address: "unknown" })
   return null
 }
 
@@ -164,10 +191,13 @@ export type OpenBrowser = {
 
 // Attaches to a Chrome for Testing already on the port, or starts the headless one. Returns null when neither works.
 export async function openBrowser(): Promise<OpenBrowser | null> {
+  const began = Date.now()
   let started: ChildProcess | undefined
   let browser: Browser | undefined = await chromium.connectOverCDP(ENDPOINT).catch(() => undefined)
+  if (browser) log("browser.attach", { endpoint: ENDPOINT })
   if (!browser) {
     started = startHeadlessChrome()
+    log("browser.start", { endpoint: ENDPOINT, headless: true })
     for (let attempt = 0; attempt < 40 && !browser; attempt += 1) {
       browser = await chromium.connectOverCDP(ENDPOINT).catch(() => undefined)
       if (!browser) await sleep(500)
@@ -175,8 +205,10 @@ export async function openBrowser(): Promise<OpenBrowser | null> {
   }
   if (!browser) {
     started?.kill()
+    log("browser.unreachable", { endpoint: ENDPOINT, waitedMs: Date.now() - began })
     return null
   }
+  log("browser.ready", { started: Boolean(started), ms: Date.now() - began })
   // One tab of its own, opened in the background so it never takes the window or the focus from what the user is doing.
   const context = browser.contexts()[0]
   const opened = context.waitForEvent("page")
@@ -194,6 +226,7 @@ export async function openBrowser(): Promise<OpenBrowser | null> {
       // A Chrome this run started is closed with Chrome's own close command, so it saves its profile.
       if (started) await connected.newBrowserCDPSession().then((closer) => closer.send("Browser.close")).catch(() => {})
       await connected.close().catch(() => {})
+      log("browser.close", { closedByCommand: Boolean(started) })
     },
   }
 }

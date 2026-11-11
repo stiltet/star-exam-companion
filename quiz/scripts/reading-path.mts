@@ -4,11 +4,15 @@
 // hand. With --json it prints the whole courses.json as JSON and nothing else. It uses the same separate Chrome for Testing as the
 // crawl and never changes anything: it only reads the page.
 import { coursesFile, pathAddress, pathCourses, type PathCard } from "../lib/reading-path.ts"
-import { NO_BROWSER_MESSAGE, SITE, acceptOfferedSignIn, openBrowser } from "./reading-browser.mts"
+import { NO_BROWSER_MESSAGE, SITE, acceptOfferedSignIn, openBrowser, signedInAs } from "./reading-browser.mts"
+import { log, logPath, startLog } from "./reading-log.mts"
 
 const args = process.argv.slice(2)
 const json = args.includes("--json")
 const input = args.find((arg) => !arg.startsWith("--"))
+const verbose = args.includes("--debug") || process.env.READING_DEBUG === "1"
+startLog("reading-path", verbose)
+log("run.start", { input: input ?? "", json, debug: verbose })
 const address = input ? pathAddress(input, SITE) : null
 if (!address) {
   console.error("Usage: pnpm --dir quiz reading:path <learning-path address or number> [--json]")
@@ -19,10 +23,13 @@ if (!address) {
 const opened = await openBrowser()
 if (!opened) {
   console.error(NO_BROWSER_MESSAGE)
+  log("run.end", { exit: 1, reason: "no browser" })
+  if (logPath()) console.error(`Log: ${logPath()}`)
   process.exit(1)
 }
 try {
   await acceptOfferedSignIn(opened.page, opened.context)
+  await signedInAs(opened.page)
   await opened.page.goto(address, { waitUntil: "domcontentloaded", timeout: 60_000 })
   // READING_PATH_WAIT_MS shortens the wait for the cards (tests); the real wait is 30 s.
   await opened.page.waitForSelector("ql-activity-card", { timeout: Number(process.env.READING_PATH_WAIT_MS ?? 30_000) }).catch(() => {})
@@ -35,6 +42,7 @@ try {
     })),
   })) as { title: string; cards: PathCard[] }
   const courses = pathCourses(found.cards)
+  log("path.read", { cards: found.cards.length, courses: courses.length, title: found.title })
   if (courses.length === 0) {
     console.error(`✖ No courses were found at ${address}.`)
     console.error("  Check the address, and that Chrome for Testing is signed in to Google Skills (skills/capture-reading/SKILL.md).")
@@ -53,4 +61,7 @@ try {
   }
 } finally {
   await opened.close()
+  log("run.end", { exit: process.exitCode ?? 0 })
+  // The log path goes to the error stream, so the JSON on the output stays the only thing there.
+  if (logPath()) console.error(`Log: ${logPath()}`)
 }

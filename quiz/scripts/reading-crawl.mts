@@ -7,6 +7,7 @@
 // Every run reads every lesson and saves the missing ones and any whose text changed.
 import { type Frame, type Page } from "@playwright/test"
 import { listPacks, loadPack, repoRoot, type Pack } from "../lib/pack.ts"
+import { describeError, maskAddress } from "../lib/debug-log.ts"
 import { looksLikePdf, pdfText } from "../lib/pdf-text.ts"
 import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "../lib/private-reading.ts"
 import {
@@ -28,6 +29,7 @@ import {
   type ManifestLesson,
   type ProgressState,
 } from "../lib/reading-crawl.ts"
+import { debug, log, logPath, startLog } from "./reading-log.mts"
 import { NO_BROWSER_MESSAGE, SITE, acceptOfferedSignIn, isLessonHost, openBrowser, signedInAs, sleep } from "./reading-browser.mts"
 
 const MIN_TEXT_CHARS = 40
@@ -41,6 +43,8 @@ const MAX_WATCH_MS = 25_000
 
 const args = process.argv.slice(2)
 const target = args.find((arg) => !arg.startsWith("--")) ?? "all"
+// --debug (or READING_DEBUG=1) adds the detail to the log file; the log itself is written on every run.
+const verbose = args.includes("--debug") || process.env.READING_DEBUG === "1"
 
 const tty = Boolean(process.stdout.isTTY)
 const colour = tty && !process.env.NO_COLOR
@@ -53,6 +57,7 @@ let lessonsStarted = false
 let closeBrowser: (() => Promise<void>) | undefined
 function stopRequested(signal: string): void {
   stopping = true
+  log("signal", { signal, lessonsStarted })
   stoppedBecause ??= signal === "SIGTERM" ? "stopped" : "stopped with Ctrl-C"
   if (!lessonsStarted) void (closeBrowser ? closeBrowser() : Promise.resolve()).finally(() => process.exit(130))
 }
@@ -142,12 +147,15 @@ async function readPdf(page: Page): Promise<string | null> {
 
 async function noPageText(page: Page): Promise<{ status: "ok"; text: string } | { status: "empty" }> {
   const text = await readPdf(page)
+  debug("lesson.pdf", { found: Boolean(text), chars: text ? text.length : 0 })
   return text ? { status: "ok", text } : { status: "empty" }
 }
 
 async function readLesson(page: Page, href: string): Promise<{ status: "ok"; text: string } | { status: "signin" } | { status: "empty" }> {
+  const began = Date.now()
   // Not "networkidle": the site keeps loading trackers, so that wait can run out on a page that is already readable.
   await page.goto(`${SITE}${href}`, { waitUntil: "domcontentloaded", timeout: 60_000 })
+  debug("lesson.goto", { address: maskAddress(`${SITE}${href}`), landed: maskAddress(page.url()), ms: Date.now() - began })
   if (page.url().includes("/users/sign_in")) return { status: "signin" }
   const deadline = Date.now() + 30_000
   let frame = lessonFrame(page)
@@ -155,6 +163,7 @@ async function readLesson(page: Page, href: string): Promise<{ status: "ok"; tex
     await sleep(500)
     frame = lessonFrame(page)
   }
+  debug("lesson.frame", { found: Boolean(frame), host: frame ? new URL(frame.url() || "about:blank").hostname : "", waitedMs: Date.now() - began })
   if (!frame) return noPageText(page)
   // Read the text again and again until two reads in a row, at least SETTLE_MS apart, are the same. A page with almost no text
   // (a quiz) has none to wait for, so it is called empty after a few seconds.
@@ -164,9 +173,11 @@ async function readLesson(page: Page, href: string): Promise<{ status: "ok"; tex
   while (Date.now() - started < MAX_WATCH_MS) {
     const text = (await frame.evaluate(() => (document.body ? document.body.innerText : "")).catch(() => "")).trim()
     if (text !== last) {
+      debug("lesson.read", { chars: text.length, sinceStartMs: Date.now() - started })
       last = text
       sameSince = Date.now()
     } else if (text.length >= MIN_TEXT_CHARS && Date.now() - sameSince >= SETTLE_MS && Date.now() - started >= MIN_WATCH_MS) {
+      debug("lesson.settled", { chars: text.length, watchedMs: Date.now() - started })
       return { status: "ok", text }
     }
     if (text.length < MIN_TEXT_CHARS && Date.now() - started >= EMPTY_AFTER_MS) return noPageText(page)
@@ -209,6 +220,8 @@ async function pause(): Promise<void> {
 async function main(): Promise<void> {
   // A blank line first, so the output stands apart from the package manager's own lines above it.
   console.log("")
+  startLog("reading-crawl", verbose)
+  log("run.start", { target, debug: verbose, node: process.version, platform: process.platform })
   const exams = privateCourses()
   const work = exams.filter((exam) => exam.selected).flatMap((exam) => exam.courses.map((course) => ({ examId: exam.examId, course })))
   // Every exam on the server is listed first, so it is plain what is captured and what is not.
@@ -231,6 +244,8 @@ async function main(): Promise<void> {
   if (!opened) {
     const [first, ...rest] = NO_BROWSER_MESSAGE.split("\n")
     console.error([say("red", `✖ ${first}`), ...rest].join("\n"))
+    log("run.end", { exit: 1, reason: "no browser" })
+    if (logPath()) console.error(`Log: ${logPath()}`)
     process.exit(1)
   }
   const { page, context } = opened
@@ -247,6 +262,8 @@ async function main(): Promise<void> {
     const listed: { examId: string; course: PrivateCourse; lessons: Lesson[]; other: string }[] = []
     for (const entry of work) listed.push({ ...entry, ...(await listLessons(page, entry.course.template)) })
     state.total = listed.reduce((sum, entry) => sum + entry.lessons.length, 0)
+    for (const entry of listed) log("list.course", { course: entry.course.id, title: entry.course.title, lessons: entry.lessons.length, other: entry.other })
+    log("run.listed", { courses: listed.length, lessons: state.total })
     if (state.total === 0) {
       // No course lists a lesson: most likely the browser is not signed in, so each course is named as an error.
       for (const entry of listed) logLine(say("red", `✖ ${entry.course.id}. ${entry.course.title}: the site lists no lessons for it.`))
@@ -285,6 +302,9 @@ async function main(): Promise<void> {
         const pageId = existing?.pageId ?? ownId
         show()
         let hash: string | null = existing ? textHash(existing.text) : null
+        const lessonStarted = Date.now()
+        let outcomeName = "failed"
+        let chars = 0
         try {
           // A slow or failing page is tried up to five times, waiting 5, 10, 20 and 40 s between tries, before the lesson counts
           // as failed; a closed Chrome is never retried.
@@ -295,6 +315,7 @@ async function main(): Promise<void> {
             } catch (error) {
               if (attempt >= MAX_ATTEMPTS || !opened.isConnected()) throw error
               logLine(say("yellow", `  retry ${attempt + 1} of ${MAX_ATTEMPTS}: ${lesson.title}`))
+              log("lesson.retry", { n: state.page, title: lesson.title, attempt: attempt + 1, error: describeError(error) })
               await sleep(Number(process.env.READING_RETRY_BASE_MS ?? 5_000) * 2 ** (attempt - 1))
             }
           }
@@ -309,23 +330,29 @@ async function main(): Promise<void> {
               // No reading text on the page now (a quiz, say): the saved copy stays.
               outcome.already += 1
               state.same += 1
+              outcomeName = "kept"
             } else {
               outcome.empty.push(lesson.title)
               state.empty += 1
+              outcomeName = "empty"
             }
           } else {
             const newHash = textHash(read.text)
+            chars = read.text.length
             if (existing && newHash === textHash(existing.text)) {
               outcome.already += 1
               state.same += 1
+              outcomeName = "same"
             } else {
               await savePrivateReading(examId, course.id, { pageId, title: lesson.title, text: read.text })
               outcome.saved += 1
               if (existing) {
                 outcome.textChanged.push(lesson.title)
                 state.updated += 1
+                outcomeName = "updated"
               } else {
                 state.saved += 1
+                outcomeName = "saved"
               }
               hash = newHash
             }
@@ -340,9 +367,11 @@ async function main(): Promise<void> {
           }
           outcome.failed.push(lesson.title)
           state.failed += 1
+          log("lesson.fail", { n: state.page, title: lesson.title, error: describeError(error) })
           // The message never carries lesson text; it is only the reason the step failed.
           logLine(say("red", `  ✖ ${lesson.title}: ${error instanceof Error ? error.message.split("\n")[0].slice(0, 120) : "unknown error"}`))
         }
+        log("lesson.done", { course: course.id, n: state.page, of: state.total, title: lesson.title, outcome: outcomeName, chars, ms: Date.now() - lessonStarted })
         entries.push({ ...lesson, pageId, hash })
         const manifest: Manifest = { checkedAt: new Date().toISOString(), lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
         await writeManifest(file, manifest)
@@ -364,6 +393,16 @@ async function main(): Promise<void> {
   console.log(report)
   if (tty) process.stdout.write("\x07")
   if (stoppedBecause || summaries.some((entry) => entry.result.failed.length + entry.result.empty.length > 0 || entry.result.unaccounted.length > 0)) process.exitCode = 1
+  if (stoppedBecause) log("stop", { reason: stoppedBecause, page: state.page, of: state.total })
+  log("run.end", { exit: process.exitCode ?? 0, elapsedMs: Date.now() - startedAt, saved: state.saved, updated: state.updated, same: state.same, empty: state.empty, failed: state.failed })
+  if (logPath()) console.log(`\n${say("dim", "Log:")} ${logPath()}`)
 }
 
-await main()
+try {
+  await main()
+} catch (error) {
+  log("run.error", { error: describeError(error), where: (error instanceof Error ? (error.stack ?? "").split("\n").slice(1, 4).map((line) => line.trim()).join(" | ") : "") })
+  console.error(say("red", `✖ The command stopped with an error: ${describeError(error)}`))
+  if (logPath()) console.error(`Log: ${logPath()}`)
+  process.exitCode = 1
+}
