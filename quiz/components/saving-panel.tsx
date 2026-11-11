@@ -30,7 +30,7 @@ export function SavingPanel({ connection }: { connection: ConnectionState }) {
 function DemoSaving() {
   return (
     <div className="overflow-x-auto">
-      <SectionBar>SAVING</SectionBar>
+      <SectionBar variant="muted">STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
@@ -90,7 +90,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
 
   return (
     <div className="overflow-x-auto">
-      <SectionBar>SAVING</SectionBar>
+      <SectionBar variant="muted">STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
@@ -128,12 +128,10 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
             </td>
           </tr>
           <tr className="border-b border-foreground">
-            <td className={label}>Secure</td>
-            <td className={`${cell} text-right font-bold`} colSpan={2}>{offline === null ? "…" : offline.secure ? "Yes" : "No: offline mode needs https://"}</td>
-          </tr>
-          <tr className="border-b border-foreground">
             <td className={label}>Offline</td>
-            <td className={`${cell} text-right font-bold`} colSpan={2}>{offline === null ? "…" : offline.ready ? "Ready" : offline.error ? <span title={offline.error}>Not ready: the offline worker did not load</span> : "Not ready"}</td>
+            <td className={`${cell} text-right font-bold`} colSpan={2}>
+              {offline === null ? "…" : !offline.secure ? "No: needs https://" : offline.ready ? "Ready" : offline.error ? <span title={offline.error}>Not ready: the offline worker did not load</span> : "Not ready"}
+            </td>
           </tr>
           <tr>
             <td className={label}>Voice for offline</td>
