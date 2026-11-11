@@ -195,7 +195,7 @@ Import**, and tick **Trust this CA to identify websites**.
 1. Open `https://127.0.0.1/` (your address) on the device. It loads with no certificate warning.
 2. Add it to the home screen: **Share › Add to Home Screen** in Safari, **⋮ › Add to Home
    screen** in Chrome.
-3. Tap the laptop icon in the header: **Offline** says *Ready*.
+3. Tap the laptop icon in the header: **Secure / Offline** says *Yes / Ready*.
 
 Offline, answers wait on the device and reach the quiz machine the next time the app is open on
 the home network with that machine awake. iOS has no background sync, so nothing is sent while
