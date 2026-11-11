@@ -129,7 +129,7 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
       )}
       <Dialog open={saving && wide} onOpenChange={(next) => { if (!next) { setPanel(null); savingButtonRef.current?.focus() } }}>
         <DialogContent id="saving-panel" aria-describedby={undefined} showCloseButton={false} className="gap-0 rounded-none border-2 border-foreground p-0 sm:max-w-2xl">
-          <DialogTitle className="sr-only">Status</DialogTitle>
+          <DialogTitle className="sr-only">Offline / connection status</DialogTitle>
           <SavingPanel connection={connection} />
         </DialogContent>
       </Dialog>

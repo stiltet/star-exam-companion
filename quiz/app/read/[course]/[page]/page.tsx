@@ -60,7 +60,7 @@ export default async function ReadingPage({ params }: Props) {
         </nav>
       </div>
       <main className="flex-1 max-w-4xl mx-auto px-4 pb-8 w-full">
-        <PageNav kind="lesson" previous={previous} next={following} placement="mb-4" />
+        <PageNav kind="lesson" previous={previous} next={following} at="top" />
         {course.provider === "private" && (
           <Text variant="note" placement="mb-4">This reading is from a private copy on this server.</Text>
         )}
@@ -77,7 +77,7 @@ export default async function ReadingPage({ params }: Props) {
         />
         {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
         <ActionLink variant="outlined" placement="mt-8 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
-        <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
+        <PageNav kind="lesson" previous={previous} next={following} at="bottom" />
       </main>
       <SiteFooter />
     </div>

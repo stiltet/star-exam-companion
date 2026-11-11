@@ -67,7 +67,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
-| **Status** | Tap the laptop icon in the header: answers waiting to send (Send now), where the questions came from (Update now), and whether offline mode is ready (it needs https://). A dropdown on a phone, a dialog on a wide screen. The online demo shows fixed values. | The local server |
+| **Offline / connection status** | Tap the laptop icon in the header: answers waiting to send (Send now), where the questions came from (Update now), and whether offline mode is ready (it needs https://). A dropdown on a phone, a dialog on a wide screen. The online demo shows fixed values. | The local server |
 | **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#full-local-setup)) |
 | **Install tip** | On a phone or tablet, a small card offers to add the quiz to the home screen: an Install button on Android (or the browser-menu steps when the browser offers no prompt), the Share steps on iOS Safari. Desktop, in-app browsers and the installed app see nothing; non-Safari iOS browsers are told to open the page in Safari. The exam and Voice Quiz also suppress it. *Not now* hides it for 30 days. The online demo shows it too. | Nothing extra |
 

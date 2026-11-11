@@ -10,13 +10,14 @@ import { useVoiceStored } from "@/components/voice-cache"
 import type { ConnectionState } from "@/components/connection-status"
 import { STATIC_DEMO } from "@/lib/static-demo"
 
-const cell = "px-2 py-3 sm:p-3"
+// One fixed height for every row, whether it holds a button or only text.
+const cell = "h-11 px-2 sm:px-3"
 // A Saving value and its button in one cell, held at the right edge. On desktop, where there is
 // room, every button and value has one width, so the buttons line up ("This device" is the
 // longest value).
 const valueRow = "flex items-center justify-end gap-3 text-right"
 const value = "font-bold sm:min-w-[11ch]"
-const buttonFirst = "shrink-0 sm:order-first sm:w-36"
+const buttonFirst = "shrink-0 sm:order-first sm:w-28"
 const label = `${cell} text-muted-foreground sm:w-full`
 
 // Where the answers are saved and where the questions came from, with Send now and Update now.
@@ -30,7 +31,7 @@ export function SavingPanel({ connection }: { connection: ConnectionState }) {
 function DemoSaving() {
   return (
     <div className="overflow-x-auto">
-      <SectionBar variant="muted">STATUS</SectionBar>
+      <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
@@ -38,7 +39,7 @@ function DemoSaving() {
             <td className={cell} colSpan={2}>
               <div className={valueRow}>
                 <span className={`${value} whitespace-nowrap`}>0</span>
-                <ActionButton variant="toggle" placement={buttonFirst} disabled>Send now</ActionButton>
+                <ActionButton variant="compact" placement={buttonFirst} disabled>Send now</ActionButton>
               </div>
             </td>
           </tr>
@@ -47,7 +48,7 @@ function DemoSaving() {
             <td className={cell} colSpan={2}>
               <div className={valueRow}>
                 <span className={value}>Demo</span>
-                <ActionButton variant="toggle" placement={buttonFirst} disabled>Update now</ActionButton>
+                <ActionButton variant="compact" placement={buttonFirst} disabled>Update now</ActionButton>
               </div>
             </td>
           </tr>
@@ -90,7 +91,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
 
   return (
     <div className="overflow-x-auto">
-      <SectionBar variant="muted">STATUS</SectionBar>
+      <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
       <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
         <tbody>
           <tr className="border-b border-foreground">
@@ -99,7 +100,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
             <td className={cell} colSpan={2}>
               <div className={valueRow}>
                 <span className={`${value} whitespace-nowrap`} aria-live="polite">{waiting}</span>
-                <ActionButton variant="toggle" placement={buttonFirst} disabled={sending} onClick={() => void send()}>Send now</ActionButton>
+                <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send()}>Send now</ActionButton>
               </div>
             </td>
           </tr>
@@ -109,7 +110,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
               <td className={cell} colSpan={2}>
                 <div className={valueRow}>
                   <span className={`${value} whitespace-nowrap`}>{rejected}</span>
-                  <ActionButton variant="toggle" placement={buttonFirst} disabled={sending} onClick={() => void send(true)}>Retry refused</ActionButton>
+                  <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send(true)}>Retry refused</ActionButton>
                 </div>
               </td>
             </tr>
@@ -121,7 +122,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
                 <span className={value} aria-live="polite">
                   {from === "mac" ? "Your Mac" : from === "device" ? "This device" : from === "loading" ? "Loading…" : "Nothing yet"}
                 </span>
-                <ActionButton variant="toggle" placement={buttonFirst} disabled={connection.busy} onClick={connection.update}>
+                <ActionButton variant="compact" placement={buttonFirst} disabled={connection.busy} onClick={connection.update}>
                   {connection.busy ? "Updating…" : "Update now"}
                 </ActionButton>
               </div>
