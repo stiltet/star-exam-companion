@@ -9,7 +9,7 @@ const EVIL = "https://opener.example"
 
 // Loading a new page over the old one makes WebKit report the cut-off requests as errors; see fixtures.ts.
 // The offline worker may start a voice download of its own, which the test server refuses; see expected-errors.ts.
-test.use({ navigationCutOff: true, voiceClipRefusal: true })
+test.use({ navigationCutOff: true })
 
 test.describe("Private readings in Read Aloud", () => {
   test.beforeEach(async ({ page, baseURL }) => {

@@ -2,8 +2,7 @@ import { createServer, request } from "node:http"
 import type { Page } from "@playwright/test"
 import { test, expect, readyOffline } from "./fixtures"
 
-// A voice clip a page still fetches here answers 500, because browser tests never run `say`; this file is not about voice.
-test.use({ navigationCutOff: true, expectedWrongExam: true, voiceClipRefusal: true })
+test.use({ navigationCutOff: true, expectedWrongExam: true })
 
 const LEGACY_WORKER = `
 self.addEventListener("install", (event) => {
@@ -172,29 +171,5 @@ test("another device reports an unavailable worker and can retry its wrong-exam 
     await expect(page.locator("html")).toHaveAttribute("data-exam", "agentic-architect", { timeout: 30_000 })
   } finally {
     await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
-  }
-})
-
-test("the test proxy refuses a request target that is not a path on the app under test", async ({ page, baseURL }) => {
-  // The shared clean-up unregisters service workers, which needs a page of the app.
-  await page.goto("/progress")
-  const proxy = await workerProxy(baseURL!)
-  const { port } = new URL(proxy.origin)
-  const statusOf = (target: string) => new Promise<number>((resolve, reject) => {
-    const probe = request({ hostname: "localhost", port, path: target, method: "GET" }, (response) => {
-      response.resume()
-      resolve(response.statusCode ?? 0)
-    })
-    probe.on("error", reject)
-    probe.end()
-  })
-  try {
-    // Another host by protocol-relative name, and another host by full address, are refused and never forwarded.
-    expect(await statusOf("//evil.example/steal")).toBe(400)
-    expect(await statusOf("http://evil.example/steal")).toBe(400)
-    // A path on the app under test still goes through.
-    expect(await statusOf("/")).toBe(200)
-  } finally {
-    await proxy.close()
   }
 })

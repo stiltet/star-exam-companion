@@ -10,14 +10,9 @@ import { reviewHash } from "@/lib/exam-review"
 import { ExamSwitcher } from "@/components/exam-switcher"
 import { ResetProgress } from "@/components/reset-progress"
 import { SectionBar } from "@/components/atoms/section-bar"
-import { ActionButton } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
 import { RowLink } from "@/components/atoms/row-link"
-import { sendNow, useWaiting } from "@/components/outbox"
 import { useSnapshot } from "@/components/snapshot"
-import { useConnection } from "@/components/connection-status"
-import { useOfflineStatus } from "@/components/offline"
-import { useVoiceStored } from "@/components/voice-cache"
 
 type SectionStat = {
   id: string
@@ -42,13 +37,7 @@ type Props = {
 }
 
 const cell = "px-2 py-3 sm:p-3"
-// A Saving value and its button in one cell, held at the right edge. On desktop, where there is
-// room, every button and value has one width, so the buttons line up ("This device" is the
-// longest value).
-const valueRow = "flex items-center justify-end gap-3 text-right"
-const value = "font-bold sm:min-w-[11ch]"
-const buttonFirst = "shrink-0 sm:order-first sm:w-36"
-const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0)
+const pct =(part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0)
 // One row of a two-column table: a short label, and its value kept on one line.
 function Row({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
   return (
@@ -62,13 +51,7 @@ function Row({ label, value, last = false }: { label: string; value: string; las
 const minutes = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
 
 export function ProgressClient({ stats }: Props) {
-  const { snapshot, from, broken, lines } = useSnapshot()
-  const { waiting, rejected, reasons } = useWaiting()
-  const connection = useConnection()
-  const offline = useOfflineStatus()
-  const voiceStored = useVoiceStored(snapshot?.voice)
-  const [sendNote, setSendNote] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
+  const { snapshot, broken, lines } = useSnapshot()
   const items = snapshot?.items ?? []
   const sections = snapshot?.sections ?? []
   // A copy saved before questions carried a course still groups by the exam-guide section.
@@ -90,28 +73,6 @@ export function ProgressClient({ stats }: Props) {
   const accuracy = voiceFigures.correctOfAll
   const canReset = broken === null
 
-  async function send(retryRejected = false) {
-    setSending(true)
-    setSendNote("Sending…")
-    try {
-      const result = await sendNow(retryRejected)
-      setSendNote(result.storageError
-        ? "This device could not update its saving records. Keep its website data and retry."
-        : !result.reached
-          ? "The Mac could not be reached. Unsent answers stay on this device."
-          : result.rejected > 0
-            ? `${result.sent} sent. ${result.rejected} still refused; kept on this device. ${result.waiting} waiting to send.`
-            : result.waiting > 0
-              ? `${result.waiting} still waiting.`
-              : "Everything is on the Mac.")
-    } catch {
-      // Report the failure in the saving status; local answers must not be discarded.
-      setSendNote("Saving could not finish. Keep this device's website data and retry.")
-    } finally {
-      setSending(false)
-    }
-  }
-
   return (
     <div>
       <h1 className="sr-only text-2xl font-bold mb-2">PROGRESS</h1>
@@ -127,69 +88,6 @@ export function ProgressClient({ stats }: Props) {
           {snapshot.skippedLines} saved {snapshot.skippedLines === 1 ? "answer" : "answers"} could not be read and {snapshot.skippedLines === 1 ? "is" : "are"} left out of these figures.
         </p>
       )}
-
-      <div className="border-2 border-foreground mb-6 overflow-x-auto">
-        <SectionBar>SAVING</SectionBar>
-        <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
-          <tbody>
-            <tr className="border-b border-foreground">
-              <td className={`${cell} text-muted-foreground sm:w-full`}>Waiting to send</td>
-              {/* Phone: value, then button. Desktop: the button left of the value, which keeps the right edge. */}
-              <td className={cell} colSpan={2}>
-                <div className={valueRow}>
-                  <span className={`${value} whitespace-nowrap`} aria-live="polite">{waiting}</span>
-                  <ActionButton variant="toggle" placement={buttonFirst} disabled={sending} onClick={() => void send()}>Send now</ActionButton>
-                </div>
-              </td>
-            </tr>
-            {rejected > 0 && (
-              <tr className="border-b border-foreground">
-                <td className={`${cell} text-muted-foreground sm:w-full`}>Refused by the Mac</td>
-                <td className={cell} colSpan={2}>
-                  <div className={valueRow}>
-                    <span className={`${value} whitespace-nowrap`}>{rejected}</span>
-                    <ActionButton variant="toggle" placement={buttonFirst} disabled={sending} onClick={() => void send(true)}>Retry refused</ActionButton>
-                  </div>
-                </td>
-              </tr>
-            )}
-            <tr className="border-b border-foreground">
-              <td className={`${cell} text-muted-foreground sm:w-full`}>Progress from</td>
-              <td className={cell} colSpan={2}>
-                <div className={valueRow}>
-                  <span className={value} aria-live="polite">
-                    {from === "mac" ? "Your Mac" : from === "device" ? "This device" : from === "loading" ? "Loading…" : "Nothing yet"}
-                  </span>
-                  <ActionButton variant="toggle" placement={buttonFirst} disabled={connection.busy} onClick={connection.update}>
-                    {connection.busy ? "Updating…" : "Update now"}
-                  </ActionButton>
-                </div>
-              </td>
-            </tr>
-            <tr className="border-b border-foreground">
-              <td className={`${cell} text-muted-foreground sm:w-full`}>Secure</td>
-              <td className={`${cell} text-right font-bold`} colSpan={2}>{offline === null ? "…" : offline.secure ? "Yes" : "No: offline mode needs https://"}</td>
-            </tr>
-            <tr className="border-b border-foreground">
-              <td className={`${cell} text-muted-foreground sm:w-full`}>Offline</td>
-              <td className={`${cell} text-right font-bold`} colSpan={2}>{offline === null ? "…" : offline.ready ? "Ready" : offline.error ? <span title={offline.error}>Not ready: the offline worker did not load</span> : "Not ready"}</td>
-            </tr>
-            <tr>
-              <td className={`${cell} text-muted-foreground sm:w-full`}>Voice for offline</td>
-              <td className={`${cell} text-right font-bold`} colSpan={2}>{voiceStored ? `${voiceStored.stored} of ${voiceStored.total} lines` : "Needs https://"}</td>
-            </tr>
-          </tbody>
-        </table>
-        {rejected > 0 && (
-          <div className="p-3 border-t border-foreground text-sm">
-            <p>Refused answers are kept on this device. Retry to send them again without losing or duplicating answers.</p>
-            <ul className="mt-2 list-disc pl-5">
-              {[...new Set(Object.values(reasons))].map((reason) => <li key={reason}>{reason}</li>)}
-            </ul>
-          </div>
-        )}
-        {sendNote && <p role="status" className="p-3 border-t border-foreground text-sm">{sendNote}</p>}
-      </div>
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
         <SectionBar>VOICE QUIZ</SectionBar>
