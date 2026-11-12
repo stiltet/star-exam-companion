@@ -6,6 +6,9 @@ import { e2eScratch } from "./server-env.mjs"
 // Read Aloud's private readings as the browser meets them: the course list, a damaged saved copy, and what the save route refuses.
 // No real course text is used anywhere.
 const EVIL = "https://opener.example"
+// The save route needs the install's token. The test server reads it from its scratch store, so the test puts a known one there.
+const TOKEN = "e".repeat(64)
+const tokenFile = () => path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", ".write-token")
 
 // Loading a new page over the old one makes WebKit report the cut-off requests as errors; see fixtures.ts.
 // The offline worker may start a voice download of its own, which the test server refuses; see expected-errors.ts.
@@ -13,7 +16,9 @@ test.use({ navigationCutOff: true })
 
 test.describe("Private readings in Read Aloud", () => {
   test.beforeEach(async ({ page, baseURL }) => {
-    expect((await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "agentic-architect" } })).ok()).toBe(true)
+    await mkdir(path.dirname(tokenFile()), { recursive: true })
+    await writeFile(tokenFile(), `${TOKEN}\n`, { mode: 0o600 })
+    expect((await page.request.post("/api/exam", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL! }, data: { exam: "agentic-architect" } })).ok()).toBe(true)
   })
   test.afterEach(async ({ page, context, baseURL }) => {
     // Remove what the test captured, keeping the server's own synthetic fixture: a stray page would change the
@@ -28,7 +33,7 @@ test.describe("Private readings in Read Aloud", () => {
     // Close the synthetic tabs first: the fixture's worker clean-up stalls in a page that is not in front.
     await Promise.all(context.pages().filter((other) => other !== page).map((other) => other.close()))
     await page.bringToFront()
-    await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
+    await page.request.post("/api/exam", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL! }, data: { exam: "generative-ai-leader" } })
     // The shared fixture unregisters the worker from the quiz page, so the page must be back on the quiz.
     await page.goto("/progress")
     // The fixture unregisters the worker, which stalls while it is still installing. Only "ready" is waited for here: a page that
@@ -59,22 +64,25 @@ test.describe("Private readings in Read Aloud", () => {
 
   test("the server rejects a save for the wrong exam or from another origin", async ({ page, baseURL }) => {
     const body = { template: "1385", pageId: "11", title: "Synthetic", text: "Synthetic text" }
-    const wrongExam = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "generative-ai-leader" }, data: body })
+    const noToken = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: body })
+    expect(noToken.status()).toBe(400)
+    expect(await noToken.json()).toMatchObject({ reason: "token" })
+    const wrongExam = await page.request.post("/api/reading/private", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL!, "x-quiz-exam": "generative-ai-leader" }, data: body })
     expect(wrongExam.status()).toBe(409)
     expect(await wrongExam.json()).toMatchObject({ wrongExam: "agentic-architect" })
-    const foreign = await page.request.post("/api/reading/private", { headers: { origin: EVIL, "x-quiz-exam": "agentic-architect" }, data: body })
+    const foreign = await page.request.post("/api/reading/private", { headers: { "x-quiz-private-token": TOKEN, origin: EVIL, "x-quiz-exam": "agentic-architect" }, data: body })
     expect(foreign.status()).toBe(400)
-    const wrongTemplate = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, template: "999" } })
+    const wrongTemplate = await page.request.post("/api/reading/private", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, template: "999" } })
     expect(wrongTemplate.status()).toBe(400)
     expect(await wrongTemplate.json()).toMatchObject({ reason: "template" })
     // A page id longer than 20 digits is refused before anything is saved, as is an id that is not digits.
     for (const pageId of ["1".repeat(21), "abc", ""]) {
-      const refused = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId } })
+      const refused = await page.request.post("/api/reading/private", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId } })
       expect(refused.status(), `page id "${pageId}"`).toBe(400)
       expect(await refused.json()).toMatchObject({ reason: "id" })
     }
     // The largest 64-bit id is accepted.
-    const largest = await page.request.post("/api/reading/private", { headers: { origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId: "18446744073709551615" } })
+    const largest = await page.request.post("/api/reading/private", { headers: { "x-quiz-private-token": TOKEN, origin: baseURL!, "x-quiz-exam": "agentic-architect" }, data: { ...body, pageId: "18446744073709551615" } })
     expect(largest.status()).toBe(200)
   })
 

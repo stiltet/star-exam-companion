@@ -22,6 +22,12 @@ export function maskAddress(address: string): string {
   }
 }
 
+// An e-mail address without its name: the first letter and the domain, enough to tell two accounts apart in a log that may be shared.
+export function maskEmail(address: string): string {
+  const at = address.lastIndexOf("@")
+  return at < 1 ? "***" : `${address.slice(0, 1)}***${address.slice(at)}`
+}
+
 // The first line of an error's message, cut short: what failed, without a stack or a page's text.
 export function describeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)

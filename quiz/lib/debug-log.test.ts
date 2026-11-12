@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test from "node:test"
-import { MAX_VALUE_CHARS, createDebugLog, describeError, formatLine, logFileFor, maskAddress } from "./debug-log.ts"
+import { MAX_VALUE_CHARS, createDebugLog, describeError, formatLine, logFileFor, maskAddress, maskEmail } from "./debug-log.ts"
 
 // Every address, name and value below is made up.
 
@@ -59,4 +59,10 @@ test("a log with no file does nothing, and a file that cannot be written never b
   await writeFile(path.join(base, "not-a-folder"), "x")
   const blocked = createDebugLog({ file: path.join(base, "not-a-folder", "x.log"), verbose: false })
   assert.doesNotThrow(() => blocked.log("event", { a: 1 }))
+})
+
+test("an e-mail address is logged as its first letter and its domain", () => {
+  assert.equal(maskEmail("someone.made.up@example.test"), "s***@example.test")
+  assert.equal(maskEmail("not an address"), "***")
+  assert.equal(maskEmail("@example.test"), "***")
 })

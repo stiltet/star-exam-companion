@@ -6,7 +6,7 @@ import { spawn, type ChildProcess } from "node:child_process"
 import { homedir } from "node:os"
 import path from "node:path"
 import { chromium, type Browser, type BrowserContext, type Page } from "@playwright/test"
-import { maskAddress } from "../lib/debug-log.ts"
+import { maskAddress, maskEmail } from "../lib/debug-log.ts"
 import { debug, log } from "./reading-log.mts"
 
 export const SITE = process.env.READING_SITE || "https://www.skills.google"
@@ -181,7 +181,7 @@ export async function signedInAs(page: Page): Promise<string | null> {
       return result
     }).catch(() => null)
     if (found) {
-      log("signin.user", { address: found })
+      log("signin.user", { address: maskEmail(found) })
       return found
     }
     await sleep(500)
