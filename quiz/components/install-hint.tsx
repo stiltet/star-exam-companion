@@ -45,10 +45,12 @@ export function InstallHint() {
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
   const [closed, setClosed] = useState(false)
+  const [now] = useState(() => Date.now())
 
   useEffect(() => {
     const ua = navigator.userAgent
     const found = detectPlatform(ua, navigator.maxTouchPoints)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
     setPlatform(found)
     setIpad(/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1))
     if (found === "other") return
@@ -92,7 +94,7 @@ export function InstallHint() {
     standalone,
     installed: read(INSTALLED) === "1",
     dismissedAt,
-    now: Date.now(),
+    now,
   })
   if (!offer) return null
 

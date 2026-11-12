@@ -32,6 +32,7 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
   const correctCount = questions.filter((q) => picked[q.id] === q.correctIndex).length
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
     setKept(practicePlace(questions.map((q) => q.id), loadState(window.localStorage, practiceKey(filter))).picked)
     loaded.current = true
   }, [filter, questions])

@@ -1,0 +1,19 @@
+{
+  "name": "star-exam-companion-root",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "pnpm --dir quiz build",
+    "dev": "pnpm --dir quiz dev",
+    "dev:local": "pnpm --dir quiz dev:local",
+    "e2e": "pnpm --dir quiz e2e",
+    "e2e:install": "pnpm --dir quiz e2e:install",
+    "gate": "node --test && pnpm e2e",
+    "lint": "pnpm --dir quiz lint",
+    "start": "pnpm --dir quiz start",
+    "start:local": "pnpm --dir quiz start:local"
+  }
+}
