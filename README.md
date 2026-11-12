@@ -168,7 +168,11 @@ learning path shows as complete (for example 66% of a certification path) althou
 Every run of `reading:crawl` and `reading:path` writes a log file, one line per event, to a `logs` folder beside the private store
 (outside the repository); the command prints `Log: <path>`. It names the browser started, the sign-in route taken, each course and lesson with its
 outcome, length and time, and every retry or failure with its error. It holds no lesson text, and addresses carry no ids. Add `--debug` (or set
-`READING_DEBUG=1`) for the addresses visited, the frame found and the reads while a page settles. Send that file when a run goes wrong.
+`READING_DEBUG=1`) for the addresses visited, the frame found and the reads while a page settles. Send that file when a run goes wrong: it names the
+signed-in account only by its first letter and domain. `READING_GOOGLE_ACCOUNT` names the one Google account the crawl may use, and it stops before
+opening a lesson when another account is signed in. The other `READING_*` settings (`READING_SITE`, `READING_CDP_URL`, `READING_FRAME_HOSTS`,
+`READING_PROFILE_DIR`, `READING_SKIP_SIGNIN` and the `READING_*_MS` timings) exist so the tests can point the command at a fake lesson site. Leave them
+unset: `READING_SITE` and `READING_FRAME_HOSTS` decide which hosts the signed-in session is sent to.
 
 To add a new exam, use the `/add-exam <exam name>` skill ([`skills/add-exam/SKILL.md`](skills/add-exam/SKILL.md)). It lists the
 exam's Google Skills learning path in Google's order with `pnpm --dir quiz reading:path <address>` (which prints the courses, or with

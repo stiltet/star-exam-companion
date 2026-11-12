@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
-import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import test, { after } from "node:test"
-import { MAX_RECORDS_PER_COURSE, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
-import { postPrivateReading } from "./private-reading-route.ts"
+import test, { after, before as beforeAll } from "node:test"
+import { MAX_RECORDS_PER_COURSE, privateWriteToken, readPrivateReadings, savePrivateReading } from "./private-reading.ts"
+import { PRIVATE_TOKEN_HEADER, postPrivateReading } from "./private-reading-route.ts"
 import { whileServing } from "./test-pack.ts"
 
 const scratch = mkdtempSync(path.join(tmpdir(), "quiz-private-reading-route-"))
@@ -30,6 +30,11 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true })
 })
 
+let TOKEN = ""
+beforeAll(async () => {
+  TOKEN = await privateWriteToken()
+})
+
 const body = {
   template: "1385",
   pageId: "9001",
@@ -38,7 +43,7 @@ const body = {
 }
 const request = (value: unknown = body, origin = "http://localhost", extra: Record<string, string> = {}) => new Request("http://localhost/api/reading/private", {
   method: "POST",
-  headers: { host: "localhost", origin, "content-type": "application/json", "x-quiz-exam": "agentic-architect", ...extra },
+  headers: { host: "localhost", origin, "content-type": "application/json", "x-quiz-exam": "agentic-architect", [PRIVATE_TOKEN_HEADER]: TOKEN, ...extra },
   body: JSON.stringify(value),
 })
 
@@ -127,27 +132,27 @@ test("each refusal says what kind it was", async () => {
   })
 })
 
-test("a request that came from the network is refused, and nothing is saved, whatever the client wrote first", async () => {
+test("a save without the install's token is refused, and nothing is saved, whatever the forwarding headers say", async () => {
   const before = await readPrivateReadings("agentic-architect", "8")
   const refused = await whileServing("agentic-architect", async () => {
-    const forwarded = await postPrivateReading(request({ ...body, pageId: "9100" }, "http://localhost", { "x-forwarded-for": "192.0.2.10" }))
-    const real = await postPrivateReading(request({ ...body, pageId: "9101" }, "http://localhost", { "x-real-ip": "192.0.2.10" }))
-    const standard = await postPrivateReading(request({ ...body, pageId: "9102" }, "http://localhost", { forwarded: "for=192.0.2.10" }))
-    // A client that writes a loopback address first still shows up, because nginx appends the address it really came from.
-    const forged = await postPrivateReading(request({ ...body, pageId: "9103" }, "http://localhost", { "x-forwarded-for": "127.0.0.1, 192.0.2.10" }))
-    const withPort = await postPrivateReading(request({ ...body, pageId: "9104" }, "http://localhost", { "x-forwarded-for": "192.0.2.10:5555" }))
-    return [forwarded, real, standard, forged, withPort]
+    const none = await postPrivateReading(request({ ...body, pageId: "9100" }, "http://localhost", { [PRIVATE_TOKEN_HEADER]: "" }))
+    const wrong = await postPrivateReading(request({ ...body, pageId: "9101" }, "http://localhost", { [PRIVATE_TOKEN_HEADER]: "0".repeat(64) }))
+    const short = await postPrivateReading(request({ ...body, pageId: "9102" }, "http://localhost", { [PRIVATE_TOKEN_HEADER]: TOKEN.slice(1) }))
+    // A client on the network that writes loopback addresses and the right host still has no token.
+    const spoofed = await postPrivateReading(request({ ...body, pageId: "9103" }, "http://localhost", { [PRIVATE_TOKEN_HEADER]: "", "x-forwarded-for": "127.0.0.1", "x-real-ip": "127.0.0.1", forwarded: "for=127.0.0.1" }))
+    return [none, wrong, short, spoofed]
   })
   for (const response of refused) {
     assert.equal(response.status, 400)
-    assert.deepEqual(await response.json(), { ok: false, reason: "origin" })
+    assert.deepEqual(await response.json(), { ok: false, reason: "token" })
   }
-  assert.equal((await readPrivateReadings("agentic-architect", "8")).length, before.length, "nothing from the network was saved")
+  assert.equal((await readPrivateReadings("agentic-architect", "8")).length, before.length, "nothing without the token was saved")
 })
 
-test("a request from this machine, which Next marks with loopback addresses, is still saved", async () => {
-  for (const [index, header] of ([{ "x-forwarded-for": "::1" }, { "x-forwarded-for": "127.0.0.1" }, { "x-forwarded-for": "::ffff:127.0.0.1, 127.0.0.1" }, { forwarded: 'for="[::1]:4000"' }] as Record<string, string>[]).entries()) {
-    const response = await whileServing("agentic-architect", () => postPrivateReading(request({ ...body, pageId: String(9200 + index) }, "http://localhost", header)))
-    assert.equal(response.status, 200, JSON.stringify(header))
-  }
+test("the install's token is made once, is 64 hex digits, and is kept in a private file in the store", async () => {
+  assert.match(TOKEN, /^[a-f0-9]{64}$/)
+  assert.equal(await privateWriteToken(), TOKEN, "a second call reads the same token")
+  const file = path.join(process.env.QUIZ_PRIVATE_DIR!, ".write-token")
+  assert.equal(readFileSync(file, "utf8").trim(), TOKEN)
+  assert.equal(statSync(file).mode & 0o777, 0o600)
 })

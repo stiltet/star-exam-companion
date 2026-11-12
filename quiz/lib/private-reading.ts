@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto"
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto"
 import type { Dirent } from "node:fs"
 import { chmod, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
@@ -243,6 +243,40 @@ export async function readPrivateReadings(packId: string, courseId: string): Pro
 
 function sortRecords(records: PrivateReadingRecord[]): PrivateReadingRecord[] {
   return records.sort((a, b) => Date.parse(a.savedAt) - Date.parse(b.savedAt) || a.pageId.localeCompare(b.pageId, undefined, { numeric: true }))
+}
+
+// The secret a caller of the save route must send, so only a program that can read this file can save: a device on the network
+// cannot, and no header it writes can stand in for it. One per install, made on first use, in the store's own folder, mode 0600.
+const WRITE_TOKEN_FILE = ".write-token"
+const WRITE_TOKEN = /^[a-f0-9]{64}$/
+
+export async function privateWriteToken(): Promise<string> {
+  const root = await checkedRoot()
+  const file = path.join(root, WRITE_TOKEN_FILE)
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const existing = (await readFile(file, "utf8")).trim()
+      if (WRITE_TOKEN.test(existing)) return existing
+      throw new Error("The private write token file is damaged: delete it and a new one is made.")
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
+    }
+    await mkdir(root, { recursive: true, mode: 0o700 })
+    try {
+      await writeFile(file, `${randomBytes(32).toString("hex")}\n`, { flag: "wx", mode: 0o600 })
+    } catch (error) {
+      // Another process made it first: the next pass reads theirs. Any other error is real.
+      if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error
+    }
+  }
+  throw new Error("The private write token could not be made.")
+}
+
+export async function isPrivateWriteToken(candidate: string | null): Promise<boolean> {
+  if (!candidate || !WRITE_TOKEN.test(candidate)) return false
+  const expected = Buffer.from(await privateWriteToken())
+  const given = Buffer.from(candidate)
+  return given.length === expected.length && timingSafeEqual(given, expected)
 }
 
 export async function allPrivateReadings(): Promise<PrivateReadingRecord[]> {
