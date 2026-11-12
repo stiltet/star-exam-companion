@@ -208,9 +208,18 @@ test("the served frame page of a settling lesson cannot be broken out of by its 
   assert.ok(html.includes("\\u003c/script\\u003e"), "the text is there, as escapes")
 })
 
-test("a path name that is an object property name is not a path, and a path page escapes what it writes into links", async (t) => {
+test("a path name that is an object property name is not a path", async (t) => {
   const site = await startFakeSite({}, { "4525": { title: "A made-up path", cards: [{ type: "course", title: "A made-up course", template: "9001" }] } })
   t.after(() => site.close())
   assert.equal((await fetch(`${site.url}/paths/constructor`)).status, 404)
+  assert.equal((await fetch(`${site.url}/paths/__proto__`)).status, 404)
   assert.equal((await fetch(`${site.url}/paths/4525`)).status, 200)
+})
+
+test("a path page escapes a course's template where it writes it into a link", async (t) => {
+  const site = await startFakeSite({}, { "4525": { title: "A made-up path", cards: [{ type: "course", title: "A made-up course", template: '9"001&x' }] } })
+  t.after(() => site.close())
+  const html = await (await fetch(`${site.url}/paths/4525`)).text()
+  assert.ok(html.includes("course_templates/9&quot;001&amp;x"), "the quote and the ampersand are written as entities")
+  assert.equal(html.includes('9"001&x'), false, "and not as they are")
 })
