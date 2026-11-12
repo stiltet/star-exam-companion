@@ -188,6 +188,8 @@ test.describe("Back in the installed app", () => {
       window.scrollTo(0, 320)
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     }))
+    // The save is still waiting: the exam entry does not hold the new scroll yet.
+    expect(await page.evaluate(() => Object.values(sessionStorage).some((value) => value.includes('"scroll":320')))).toBe(false)
     await page.goBack()
     await expect(page).toHaveURL(/\/progress$/)
     // The waiting save still lands on the exam entry, not the page Back opened.
@@ -199,6 +201,7 @@ test.describe("Back in the installed app", () => {
   })
 
   // Going up a level leaves nothing behind: a link followed afterwards is a normal move, and Back returns to it.
+  // (The push here completes at once; a push held open is covered by the flag naming its target path.)
   test("after going up a level, a later forward link still has Back return to its page", async ({ page }) => {
     await page.goto("/study/fundamentals")
     await back(page).click()
