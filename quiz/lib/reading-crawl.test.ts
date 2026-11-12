@@ -6,6 +6,7 @@ import test from "node:test"
 import {
   PAUSE_MAX_MS,
   PAUSE_MIN_MS,
+  LISTING_VERSION,
   compareLessons,
   estimateLeftMs,
   finalReport,
@@ -31,6 +32,7 @@ const lessons = [
 ]
 const manifest: Manifest = {
   checkedAt: "2026-01-01T00:00:00.000Z",
+  listing: LISTING_VERSION,
   lessons: lessons.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: textHash(lesson.title) })),
 }
 
@@ -85,7 +87,7 @@ test("lessons with the same title are matched by their place, so a repeated titl
     { title: "Module", href: "/c/html_bundles/3" },
     { title: "Knowledge check", href: "/c/html_bundles/4" },
   ]
-  const saved: Manifest = { checkedAt: "2026-01-01T00:00:00.000Z", lessons: repeated.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: null })) }
+  const saved: Manifest = { checkedAt: "2026-01-01T00:00:00.000Z", listing: LISTING_VERSION, lessons: repeated.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: null })) }
   assert.deepEqual(compareLessons(saved, repeated), { first: false, added: [], removed: [], reordered: false, addressChanged: [] })
   const moved = compareLessons(saved, [repeated[0], repeated[1], repeated[2], { title: "Knowledge check", href: "/c/html_bundles/9" }])
   assert.deepEqual(moved.addressChanged, ["Knowledge check"])
@@ -178,4 +180,12 @@ test("the manifest is written outside the saved readings and holds no text", asy
   } finally {
     await rm(root, { recursive: true, force: true })
   }
+})
+
+test("a manifest made under an older listing rule is not compared, so lessons the new rule lists are not blamed on Google", () => {
+  const { listing: _listing, ...older } = manifest
+  const now = [...lessons, { title: "A made-up video", href: "/course_templates/9001/video/444", kind: "video" as const }]
+  assert.deepEqual(compareLessons(older, now), { first: true, added: [], removed: [], reordered: false, addressChanged: [] })
+  assert.deepEqual(compareLessons({ ...older, listing: 1 }, now).added, [], "another listing version is not compared either")
+  assert.deepEqual(compareLessons(manifest, now).added, ["A made-up video"], "under the same rule a new lesson is still reported")
 })

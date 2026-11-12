@@ -12,6 +12,7 @@ import { cleanLessonText } from "../lib/lesson-text.ts"
 import { looksLikePdf, pdfText } from "../lib/pdf-text.ts"
 import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "../lib/private-reading.ts"
 import {
+  LISTING_VERSION,
   compareLessons,
   finalReport,
   lessonPageId,
@@ -389,14 +390,14 @@ async function main(): Promise<void> {
         }
         log("lesson.done", { course: course.id, n: state.page, of: state.total, title: lesson.title, outcome: outcomeName, chars, ms: Date.now() - lessonStarted })
         entries.push({ ...lesson, pageId, hash })
-        const manifest: Manifest = { checkedAt: new Date().toISOString(), lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
+        const manifest: Manifest = { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
         await writeManifest(file, manifest)
         show(true)
         if (!stopping && state.page < state.total && lesson.kind !== "video") await pause()
       }
 
       if (stopping) break
-      await writeManifest(file, { checkedAt: new Date().toISOString(), lessons: entries })
+      await writeManifest(file, { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, lessons: entries })
       summaries.push({ id: course.id, title: course.title, result: outcome, noLessons: lessons.length === 0 ? other || "nothing to read" : undefined })
     }
   } finally {

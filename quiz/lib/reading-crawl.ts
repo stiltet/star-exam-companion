@@ -24,8 +24,13 @@ export type ManifestLesson = {
   hash: string | null
 }
 
+// Which rule decided what counts as a lesson when a manifest was written. Bump it when that rule changes (2: video lessons are listed),
+// because a manifest made under another rule cannot say what Google changed: lessons the new rule lists would all look added.
+export const LISTING_VERSION = 2
+
 export type Manifest = {
   checkedAt: string
+  listing?: number
   lessons: ManifestLesson[]
 }
 
@@ -73,7 +78,8 @@ function keyed<T extends { title: string }>(items: T[]): { key: string; item: T 
 // Compares the lessons the site lists now with the last manifest, matching by title and, for a repeated title, by its place
 // among the lessons of that title.
 export function compareLessons(previous: Manifest | null, now: Lesson[]): ManifestComparison {
-  if (!previous) return { first: true, added: [], removed: [], reordered: false, addressChanged: [] }
+  // No earlier manifest, or one made under an older listing rule: there is nothing fair to compare, so Google is not blamed for it.
+  if (!previous || previous.listing !== LISTING_VERSION) return { first: true, added: [], removed: [], reordered: false, addressChanged: [] }
   const before = keyed(previous.lessons)
   const after = keyed(now)
   const beforeByKey = new Map(before.map((entry) => [entry.key, entry.item]))
