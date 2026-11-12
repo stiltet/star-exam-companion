@@ -12,7 +12,7 @@ export const SETUP_URL = "https://github.com/stiltet/star-exam-companion#full-lo
 export const BASE_PATH = process.env.QUIZ_BASE_PATH ?? ""
 
 // The exams the demo was built for, so a reader can move between them: the site is plain files, so each
-// pack is its own build, the default one at the root and every other at <root>/<pack id>/.
+// exam is its own build, the default one at the root and every other at <root>/<exam id>/.
 // scripts/build-pages.sh sets these; elsewhere they are empty.
 export type DemoPack = { id: string; title: string; href: string; current: boolean }
 

@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 // muted: a quiet line of page text, such as the Practice Exam intro. note: a small quiet line
 // under a table. notice: a boxed message that fills the place of content, such as "loading" or
 // "nothing left"; give it role="status", or "alert" for an error, so a screen reader announces
-// it. warning: a yellow box that warns, such as an exam pack that is unfinished; role="status". label: a small bold caption at the start of a row, such as EXAM before the demo's exam links.
+// it. warning: a yellow box that warns, such as an exam that is unfinished; role="status". label: a small bold caption at the start of a row, such as EXAM before the demo's exam links.
 // strong: a bold line at body size, such as the sentence that says what went wrong.
 // Its look lives here; the parent places it.
 export type TextVariant = "tagline" | "muted" | "note" | "notice" | "warning" | "label" | "strong"

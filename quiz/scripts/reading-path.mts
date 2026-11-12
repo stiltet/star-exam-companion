@@ -1,6 +1,6 @@
 // pnpm --dir quiz reading:path <learning-path address or number> [--json]
 //
-// Reads a Google Skills learning path and lists its courses in Google's order, so an exam pack's courses.json is never typed by
+// Reads a Google Skills learning path and lists its courses in Google's order, so an exam's courses.json is never typed by
 // hand. With --json it prints the whole courses.json as JSON and nothing else. It uses the same separate Chrome for Testing as the
 // crawl and never changes anything: it only reads the page.
 import { coursesFile, pathAddress, pathCourses, type PathCard } from "../lib/reading-path.ts"

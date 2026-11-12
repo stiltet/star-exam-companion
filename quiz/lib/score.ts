@@ -11,7 +11,7 @@ export type Mode = (typeof MODES)[number]
 export type Answer = { id: string; at: string; mode: Mode; asked: string[]; missed: string[]; seconds?: number; answers?: Record<string, number>; flagged?: string[]; retake?: true }
 
 export const MAX_BATCH = 500
-// The Practice exam's length comes from the exam pack (pack.json "exam"), as the real exam's does.
+// The Practice exam's length comes from the exam (pack.json "exam"), as the real exam's does.
 export type ExamLength = { questions: number; minutes: number }
 export const examSeconds = (length: ExamLength): number => length.minutes * 60
 // An answer is at most this far ahead of the Mac's clock, or this far behind it.
@@ -35,7 +35,7 @@ function readingPattern(ids: readonly string[]): RegExp {
 
 // One answer from a batch, or null. Round and practice ask a question, flashcard a glossary term,
 // one per line; an exam lists its questions and the seconds it took.
-// examLength and courseIds come from the exam pack, so no exam is the default.
+// examLength and courseIds come from the exam, so no exam is the default.
 type KnownAnswers = { bankIds: ReadonlySet<string>; roundIds?: ReadonlySet<string>; termNames: ReadonlySet<string>; examLength: ExamLength; courseIds: readonly string[] }
 
 function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer | string {
@@ -56,7 +56,7 @@ function inspectAnswer(value: unknown, known: KnownAnswers, now: number): Answer
   // never missed. The page itself is not checked against Google's bundle, which may be offline.
   if (mode === "reading") {
     if (asked.length !== 1 || missed.length !== 0) return "A reading is saved one at a time and is never missed."
-    // A pack with no course has nothing to read: an empty list would otherwise make a pattern that matches any course.
+    // An exam with no course has nothing to read: an empty list would otherwise make a pattern that matches any course.
     if (known.courseIds.length === 0) return "The reading is not a known course's page."
     const reading = readingPattern(known.courseIds)
     if (!asked.every((item) => typeof item === "string" && reading.test(item))) return "The reading is not a known course's page."

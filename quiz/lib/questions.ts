@@ -3,7 +3,7 @@ import type { RoundItem } from "./learn.ts"
 import { applyNames, type Glossary } from "./sources.ts"
 
 // The written questions and the map from a study section id to its exam-guide section number,
-// both from the exam pack (study.json, pack.json).
+// both from the exam (study.json, pack.json).
 export type Bank = { questions: Question[]; sectionOf: Record<string, string> }
 
 // The written questions, once each: the upstream list repeats q59–q80, and the first copy of each

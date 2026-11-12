@@ -23,13 +23,13 @@ type SectionStat = {
 
 type Props = {
   stats: {
-    // The exam pack this install studies, so every figure below says whose it is.
+    // The exam this install studies, so every figure below says whose it is.
     exam: { id: string; title: string }
-    // The exam's learning-path courses, for the Voice Quiz and Read Aloud tables. None for a pack without any.
+    // The exam's learning-path courses, for the Voice Quiz and Read Aloud tables. None for an exam without any.
     courses: { id: string; title: string }[]
-    // Every exam pack on this Mac, for the switch under Reset progress.
+    // Every exam on this Mac, for the switch under Reset progress.
     exams: { id: string; title: string }[]
-    // The written questions and the study-section map, from the exam pack.
+    // The written questions and the study-section map, from the exam.
     written: { id: string; section: number }[]
     sectionOf: Record<string, string>
     sections: SectionStat[]

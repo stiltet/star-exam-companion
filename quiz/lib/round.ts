@@ -33,7 +33,7 @@ function rotate(correct: string, distractors: string[], seed: string): { options
   return { options, correctIndex: options.indexOf(correct) }
 }
 
-// One item per scene whose terms the glossary has. The scenes come from the exam pack.
+// One item per scene whose terms the glossary has. The scenes come from the exam.
 export function itemsFromGlossary(glossary: Glossary, scenes: Scene[]): RoundItem[] {
   const items: RoundItem[] = []
   for (const scene of scenes) {

@@ -26,12 +26,12 @@ const ids = readdirSync(path.join(testRoot, "exams"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
 
-test("there is at least one exam pack", () => {
+test("there is at least one exam", () => {
   assert.ok(ids.length > 0)
 })
 
 for (const id of ids) {
-  test(`exam pack ${id} meets the pack rules`, () => {
+  test(`exam ${id} meets the exam rules`, () => {
     const pack = loadPack(testRoot, id)
     assert.equal(pack.meta.id, id)
 
