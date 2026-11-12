@@ -67,6 +67,7 @@ export function CourseCard({ course, title, total, noText }: { course: string; t
   const [kept, setKept] = useState<number | undefined>(undefined)
   useEffect(() => {
     if (total !== undefined) keepTotal(course, total)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
     setKept(total ?? readingTotals()[course])
   }, [course, total])
   const read = readingProgress(lines)[course]?.read.length ?? 0

@@ -66,6 +66,10 @@ async function menuTo(page: Page, label: string) {
 }
 
 test.describe("Back in the installed app", () => {
+  // WebKit sometimes logs a page's own prefetches as cut off when a reload follows; waiting for the network
+  // to idle does not always prevent it, so those cut-off messages (and only those) are not errors here.
+  test.use({ navigationCutOff: true })
+
   test.beforeEach(async ({ page, baseURL }) => {
     await page.context().addInitScript(standalone)
     await saveExams(page, baseURL!)

@@ -62,13 +62,13 @@ sections.md".
 ## Checking a pack
 
 `node --test` runs the pack validator over every folder in `exams/`. It names the file and the
-line that fails. A pack is ready when the whole run passes and `pnpm --dir quiz build` succeeds
+line that fails. A pack is ready when the whole run passes and `pnpm build` succeeds
 with `QUIZ_EXAM=<id>`.
 
 ## Running a pack
 
 ```bash
-QUIZ_EXAM=<id> pnpm --dir quiz dev
+QUIZ_EXAM=<id> pnpm dev
 ```
 
 Each exam keeps its own scores file, `quiz/scores-<id>.jsonl`, its own backups
@@ -112,7 +112,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 4. **Check it.** Install, then run the tests. The pack test names the file and row that breaks a rule:
 
    ```bash
-   pnpm --dir quiz install
+   pnpm install
    ```
 
    ```bash
@@ -123,7 +123,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    Exam:
 
    ```bash
-   QUIZ_EXAM=<id> pnpm --dir quiz exec next dev -H 127.0.0.1
+   QUIZ_EXAM=<id> pnpm dev:local
    ```
 
    If you ever switched exams on the Progress page of this checkout, that choice wins over `QUIZ_EXAM`: delete

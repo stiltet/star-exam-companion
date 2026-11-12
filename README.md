@@ -89,7 +89,7 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | Requirement | Version | Notes |
 |---|---|---|
 | Node.js | 22.18 or newer | The first release that runs TypeScript without a flag; the tests need it. `.nvmrc` pins 24.22.2, the version CI runs, so with nvm run `nvm install` then `nvm use` in the repository. |
-| pnpm | 10.6 or newer | Applies the dependency security pins in `quiz/pnpm-workspace.yaml`. |
+| pnpm | 10.6 or newer | Applies the dependency security pins in `pnpm-workspace.yaml`. |
 | macOS | any current | Only for Voice Quiz and Read Aloud audio; everything else runs on Linux and Windows. |
 
 ## Quick start
@@ -105,15 +105,15 @@ cd star-exam-companion
 ```
 
 ```bash
-pnpm --dir quiz install
+pnpm install
 ```
 
 ```bash
-pnpm --dir quiz build
+pnpm build
 ```
 
 ```bash
-NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1
+pnpm start:local
 ```
 
 Open **http://localhost:3000/**. This production build also works offline once installed.
@@ -121,7 +121,7 @@ Open **http://localhost:3000/**. This production build also works offline once i
 For development, this server reloads as you change code but has no offline mode:
 
 ```bash
-NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1
+pnpm dev:local
 ```
 
 `-H 127.0.0.1` keeps the quiz on your machine; the package's own `dev` and `start` scripts listen
@@ -157,14 +157,14 @@ it does not quietly reopen the previous exam.
 build and for the start. Replace `PACK` with a name from the list:
 
 ```bash
-QUIZ_EXAM=PACK pnpm --dir quiz build
+QUIZ_EXAM=PACK pnpm build
 ```
 
 ```bash
-QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1
+QUIZ_EXAM=PACK pnpm start:local
 ```
 
-For development, `QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1`
+For development, `QUIZ_EXAM=PACK pnpm dev:local`
 serves the same pack. If you run the quiz as a login service ([full local setup](#full-local-setup)),
 put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
 each exam, so switching never mixes them.
@@ -237,7 +237,7 @@ cat > ~/Library/LaunchAgents/com.star-exam-companion.plist <<EOF
   <array>
     <string>/bin/zsh</string>
     <string>-lc</string>
-    <string>cd "$REPO" &amp;&amp; NEXT_TELEMETRY_DISABLED=1 exec pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830</string>
+    <string>cd "$REPO" &amp;&amp; exec pnpm start:local -p 47830</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
@@ -269,7 +269,7 @@ Description=Star Exam Companion
 WorkingDirectory=/path/to/star-exam-companion
 Environment=NEXT_TELEMETRY_DISABLED=1
 Environment=PATH=/path/to/node/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/path/to/pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830
+ExecStart=/path/to/pnpm start:local -p 47830
 Restart=on-failure
 RestartSec=5
 
@@ -288,7 +288,7 @@ loginctl enable-linger "$USER"
 The last command keeps the service running when you are logged out.
 
 **Windows** has no ready-made service here. Start the quiz by hand from Git Bash when you want it:
-`NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1 -p 47830`. The certificate
+`pnpm start:local -p 47830`. The certificate
 and nginx steps work on Windows as [`docs/https.md`](docs/https.md) describes.
 
 **5. Put nginx in front, on ports 80 and 443.** Install nginx first if you do not have it; the
@@ -403,27 +403,27 @@ node --test
 ```
 
 ```bash
-pnpm --dir quiz build
+pnpm build
 ```
 
-`node --test` runs every unit test; `pnpm --dir quiz build` also type-checks the app.
+`node --test` runs every unit test; `pnpm build` also type-checks the app.
 
 Install the browser test engines once after installing dependencies:
 
 ```bash
-pnpm --dir quiz exec playwright install chromium webkit
+pnpm e2e:install
 ```
 
 Run the complete gate (unit tests, then the browser tests, which build and type-check the production app in their own folder, `quiz/.next-e2e`, so a running quiz is never built over) from the repository root:
 
 ```bash
-pnpm --dir quiz gate
+pnpm gate
 ```
 
 Or run just the browser suite:
 
 ```bash
-pnpm --dir quiz e2e
+pnpm e2e
 ```
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
@@ -433,7 +433,7 @@ a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set 
 unused port:
 
 ```bash
-QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
+QUIZ_E2E_PORT=47824 pnpm e2e
 ```
 
 Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 375 px, the lowest phone width. The tests cover page rendering, voice answers,

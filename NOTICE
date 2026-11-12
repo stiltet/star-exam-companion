@@ -48,7 +48,7 @@ the MIT licence. The Google Cloud logo is not one of them; see below.
 
 ## Dependencies
 
-The npm packages listed in `quiz/package.json` and pinned in `quiz/pnpm-lock.yaml` are not included
+The npm packages listed in `quiz/package.json` and pinned in `pnpm-lock.yaml` are not included
 in this repository; `pnpm install` fetches each under its own licence. As of the lockfile in this
 commit they are all permissive: MIT (among them Next.js, React, Radix UI, Tailwind CSS, date-fns,
 Recharts and zod), Apache-2.0 (TypeScript, class-variance-authority) and ISC (lucide-react).

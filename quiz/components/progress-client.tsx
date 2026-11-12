@@ -69,6 +69,7 @@ export function ProgressClient({ stats }: Props) {
   const cards = flashcardProgress(snapshot?.terms ?? [], lines)
   const readings = readingProgress(lines)
   const [totals, setTotals] = useState<Record<string, number>>({})
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
   useEffect(() => setTotals(readingTotals()), [])
   const accuracy = voiceFigures.correctOfAll
   const canReset = broken === null
@@ -287,7 +288,7 @@ export function ProgressClient({ stats }: Props) {
             <ul className="space-y-2 text-sm">
               <li>→ Target accuracy is {PRACTICE_TARGET}%. Focus on understanding concepts, not memorization.</li>
               <li>→ Review topics where you consistently answer incorrectly.</li>
-              <li>→ Pay attention to "Common Traps" in each topic page.</li>
+              <li>→ Pay attention to &quot;Common Traps&quot; in each topic page.</li>
               <li>→ Take full practice exams to build time management skills.</li>
             </ul>
           ) : (

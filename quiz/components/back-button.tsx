@@ -192,7 +192,6 @@ export function BackButton() {
     tapped.current = false
     const timer = window.setTimeout(sync, 0)
     return () => window.clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, standalone])
 
   const up = parentPath(pathname)

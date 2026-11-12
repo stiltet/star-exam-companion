@@ -95,6 +95,7 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
     onSelect(api)
     api.on('reInit', onSelect)
     api.on('select', onSelect)

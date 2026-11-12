@@ -17,9 +17,9 @@ export function LocalOnlyPanel({ feature, what, voice = false }: { feature: stri
       <pre tabIndex={0} className="mb-4 overflow-x-auto border-2 border-foreground bg-muted p-4 text-sm">
         {`git clone https://github.com/stiltet/star-exam-companion.git
 cd star-exam-companion
-pnpm --dir quiz install
-pnpm --dir quiz build
-NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.0.0.1`}
+pnpm install
+pnpm build
+pnpm start:local`}
       </pre>
       <p className="mb-4">
         Then open http://localhost:3000/. You need Node.js 22.18 or newer and pnpm 10.6 or newer.
