@@ -39,7 +39,8 @@ courses do not have a public `folder` or `format`; their captured text is outsid
 build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
 app-data directory is used.
 A private course is captured by `pnpm --dir quiz reading:crawl [<exam>]`, which saves each lesson through the private
-store (the same store `POST /api/reading/private` writes to) and keeps a per-course manifest of titles, addresses and
+store (the same store `POST /api/reading/private` writes to, which answers only a direct request on this machine, never one that came
+through nginx from the network) and keeps a per-course manifest of titles, addresses and
 hashes beside it, never text. The README's "Private course readings" section describes it, and
 [`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
 either: the courses come from its `courses.json` entries with `"provider": "private"`.

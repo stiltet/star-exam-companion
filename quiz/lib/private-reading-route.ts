@@ -14,9 +14,16 @@ function refuse(reason: "origin" | "body" | "reading" | "title" | "untitled" | "
   return Response.json({ ok: false, reason }, { status: 400 })
 }
 
+// nginx adds X-Forwarded-For to every request it passes on, so a request that carries one came from the network, not from this
+// machine. The crawl saves through the store directly and nothing in the app calls this route, so it answers only a direct
+// request (the agreed rule: never from the network).
+function cameThroughProxy(request: Request): boolean {
+  return ["x-forwarded-for", "x-real-ip", "forwarded"].some((name) => request.headers.has(name))
+}
+
 export async function postPrivateReading(request: Request): Promise<Response> {
   const contentType = request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase()
-  if (!sameOrigin(request) || contentType !== "application/json") return refuse("origin")
+  if (cameThroughProxy(request) || !sameOrigin(request) || contentType !== "application/json") return refuse("origin")
   const pack = activePack()
   const wrong = wrongExam(request, pack.meta.id)
   if (wrong) return wrong

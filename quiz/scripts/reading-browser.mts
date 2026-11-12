@@ -114,8 +114,8 @@ export async function acceptOfferedSignIn(page: Page, context: BrowserContext): 
   }
   const began = Date.now()
   const cdp = await context.newCDPSession(page)
-  const seen: { dialog?: { dialogId: string } } = {}
-  cdp.on("FedCm.dialogShown" as never, ((dialog: { dialogId: string }) => {
+  const seen: { dialog?: { dialogId: string; accounts?: { email?: string }[] } } = {}
+  cdp.on("FedCm.dialogShown" as never, ((dialog: { dialogId: string; accounts?: { email?: string }[] }) => {
     seen.dialog = dialog
   }) as never)
   await cdp.send("FedCm.enable" as never, { disableRejectionDelay: true } as never)
@@ -138,7 +138,17 @@ export async function acceptOfferedSignIn(page: Page, context: BrowserContext): 
       return signedIn
     }
     log("signin.route", { route: "prompt", ms: Date.now() - began })
-    await cdp.send("FedCm.selectAccount" as never, { dialogId: seen.dialog.dialogId, accountIndex: 0 } as never)
+    // READING_GOOGLE_ACCOUNT names the account to use (the secondary one). With it set, only that account is picked; when the prompt does
+    // not offer it, none is, and the crawl then stops because the signed-in account is not the wanted one.
+    const wantedAccount = process.env.READING_GOOGLE_ACCOUNT?.trim().toLowerCase()
+    let accountIndex = 0
+    if (wantedAccount) {
+      const offered = seen.dialog.accounts ?? []
+      accountIndex = offered.findIndex((account) => account.email?.toLowerCase() === wantedAccount)
+      log("signin.account", { wanted: true, offered: offered.length, matched: accountIndex >= 0 })
+      if (accountIndex < 0) return false
+    }
+    await cdp.send("FedCm.selectAccount" as never, { dialogId: seen.dialog.dialogId, accountIndex } as never)
     await sleep(5_000)
     return true
   } finally {

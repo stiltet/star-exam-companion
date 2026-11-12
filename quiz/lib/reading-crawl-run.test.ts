@@ -359,3 +359,35 @@ test("a video lesson is saved by its title in its place among the readings, and 
   assert.equal((await saved(base, "2")).length, 1, "a course of only videos has its lessons too")
   noLessonText(run, [first, last])
 })
+
+test("when another Google account is signed in than the one asked for, the crawl stops before it opens a lesson", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const text = "Synthetic lesson text that must never be read by the wrong account, long enough."
+  const site = await startFakeSite({ "9001": [{ title: "Only lesson", kind: "bundle", text }], "9002": [{ title: "Other lesson", kind: "bundle", text }] })
+  t.after(async () => {
+    await site.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  const run = await runCrawl(base, site, { READING_GOOGLE_ACCOUNT: "someone.else@example.test" })
+  assert.equal(run.code, 1, run.out)
+  assert.match(run.out, /Signed in as synthetic\.user@example\.test/)
+  assert.match(run.out, /✖ The signed-in account is not the account you asked for/)
+  assert.match(run.out, /STOPPED/)
+  assert.equal((await saved(base, "1")).length, 0, "no lesson was opened or saved")
+  assert.equal((await saved(base, "2")).length, 0)
+  noLessonText(run, [text])
+  assert.equal(await browserClosed(run.port), true)
+})
+
+test("when the signed-in account is the one asked for, the crawl goes on, whatever the case of the address", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const text = "Synthetic lesson text that the wanted account may read, long enough to count."
+  const site = await startFakeSite({ "9001": [{ title: "Only lesson", kind: "bundle", text }], "9002": [{ title: "Other lesson", kind: "bundle", text }] })
+  t.after(async () => {
+    await site.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  const run = await runCrawl(base, site, { READING_GOOGLE_ACCOUNT: "Synthetic.User@Example.Test" })
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /✔ FINISHED: all 2 lessons checked in 2 courses/)
+})
