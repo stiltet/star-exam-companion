@@ -42,7 +42,7 @@ is always visible.
      certification page), `unnumberedLabel` (the exam guide's own label for tools in scope, or "Tools in scope"), `examPage`, `examGuide`,
      `learningPath` (the path's address), `exam` with `questions` and `minutes`, `reading` set to `true`, `links` with one entry
      `{ "label": "LEARNING PATH", "href": <the path's address> }`, and `sectionOf` as `{}`.
-   - `courses.json`: the JSON from step 3 without its `title` field.
+   - `courses.json`: the JSON from step 3 without its top-level `title` field (each course keeps its own `title`).
    - `sections.md`: the exam guide's sections, one line each, `Section N (title, ~X%)`, with the header another exam's file has.
    - `terms.txt`: only the comment lines another exam's file starts with (step 8 fills it).
    - `scenes.json`: `[]` (step 8 fills it).
@@ -118,8 +118,9 @@ is always visible.
    - `node --test` passes with the new exam in place.
    - `pnpm --dir quiz reading:list <id>` shows every course's lessons saved.
    - `QUIZ_EXAM=<id> pnpm --dir quiz build` succeeds, into its own folder (`QUIZ_DIST_DIR=.next-gate`), never over the served one.
-   If any stage was left out, set `notice` in `pack.json` to a plain statement of what is missing, as `docs/exam-packs.md` says, so
-   Read Aloud shows it.
+   If any stage was left out, set `homeNotice` and `notice` in `pack.json` to the same plain statement of what is missing, as `docs/exam-packs.md`
+   says. `homeNotice` is the yellow note on Home and on the Study, Practice, Practice exam, Glossary and Voice quiz pages whose data is missing;
+   `notice` is what the online demo shows, and it is what lets the exam pass the pack test with no glossary rows.
 
 10. **Report.** Give the exam id, the courses with number and title in Google's order, the verdict of each, the checks of steps 6, 7 and
     9, and the counts: terms, glossary rows, scenes, study sections and topics, practice questions. Say plainly what is not done and

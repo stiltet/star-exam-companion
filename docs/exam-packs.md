@@ -15,13 +15,13 @@ The `/add-exam <exam name>` skill ([`../skills/add-exam/SKILL.md`](../skills/add
 capture for you: it reads the exam's Google Skills learning path with `pnpm --dir quiz reading:path <address>`, writes `courses.json`
 in Google's order, captures every lesson and checks the result. It then writes the quiz content (terms, glossary, scenes, study
 topics and practice questions) from the exam guide and Google's pages, in stages that each end with `node --test`. Nothing is
-invented: content with no official source is left out and named in the exam's `notice`.
+invented: content with no official source is left out and named in the exam's `homeNotice` and `notice`.
 
 ## The folder
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the exam is unfinished, shown on the Read Aloud page only), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `homeNotice` (optional: a plain statement that the exam is unfinished, shown as a yellow note on Home and on each of Study, Practice, Practice exam, Glossary and Voice quiz whose data the exam does not have yet), `notice` (optional: the same statement for the online demo's Read Aloud page; an exam with a `notice` may have no glossary rows; the local Read Aloud page computes its own note from the courses it can read), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
 | `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing exam's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each has a glossary row and is the answer to a voice scene, even if it is listed in `notAsked`. |
@@ -167,8 +167,8 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 - [ ] No names, contact details, scores or other personal data in any file.
 
 An exam that is not finished is welcome as long as it passes `node --test`: list only the terms you
-have covered in `terms.txt`, set `notice` in `pack.json` to a plain statement of what is missing (the
-quiz shows it on Read Aloud only), and say the same in the pull request. Remove the
-`notice` when nothing is missing. Keep a pull request to one exam; split a large exam into one pull
+have covered in `terms.txt`, set `homeNotice` and `notice` in `pack.json` to a plain statement of what is missing (the
+quiz shows `homeNotice` on Home and on the pages whose data is missing), and say the same in the pull request. Remove both
+when nothing is missing. Keep a pull request to one exam; split a large exam into one pull
 request per file group (for example glossary and scenes first, study data after). A maintainer reviews the
 content against Google's pages, and runs the full gate before merging.

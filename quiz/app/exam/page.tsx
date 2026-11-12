@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { Text } from "@/components/atoms/text"
 import { SiteFooter } from "@/components/site-footer"
+import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { ExamClient } from "@/components/exam-client"
 import { loadPlay } from "@/lib/load"
 import { sectionLabel } from "@/lib/progress"
@@ -26,6 +27,7 @@ export default async function ExamPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+        <UnfinishedNotice need="questions" />
         <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
       </main>
       <SiteFooter />

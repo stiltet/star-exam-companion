@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import Link from "next/link"
 import { Text } from "@/components/atoms/text"
+import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { PracticeQuestionClient } from "@/components/practice-question-client"
 import { PracticeUnanswered, UnansweredCount } from "@/components/practice-unanswered"
 import { loadPlay } from "@/lib/load"
@@ -42,6 +43,7 @@ export default async function PracticePage({ searchParams }: Props) {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
+        <UnfinishedNotice need="questions" />
         <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
         {/* Filter */}
         <div className="border-2 border-foreground p-4 mb-6">

@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/site-footer"
 import Link from "next/link"
 import { loadPlay } from "@/lib/load"
 import { Names } from "@/components/names"
+import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { sectionLabel } from "@/lib/progress"
 import { applyNames, label, plainNames } from "@/lib/sources"
 import { connection } from "next/server"
@@ -43,6 +44,7 @@ export default async function GlossaryPage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">GLOSSARY</h1>
+        <UnfinishedNotice need="glossary" />
         <p className="text-muted-foreground mb-8">
           All terms for the {play.ok ? play.pack.meta.title : ""} exam, from official Google Cloud documentation. {GLOSSARY.length} entries.
         </p>

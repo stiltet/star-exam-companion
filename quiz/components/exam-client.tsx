@@ -477,7 +477,8 @@ export function ExamClient({ questions, sections, length }: Props) {
         </ul>
       </div>
 
-      <ActionButton variant="outlined" placement="w-full mb-6" onClick={() => startExam()}>
+      {/* An exam with no questions has nothing to start: the page above says so, and the button waits for questions. */}
+      <ActionButton variant="outlined" placement="w-full mb-6" disabled={bank.size === 0} onClick={() => startExam()}>
         Start exam →
       </ActionButton>
 
