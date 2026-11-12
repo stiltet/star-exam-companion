@@ -27,6 +27,8 @@ export type FakeSite = {
   port: number
   // True: every lesson page sends the visitor to the sign-in page, as a signed-out visitor is.
   signedOut: boolean
+  // The addresses the account settings page shows (one, as the real page does, unless a test says otherwise).
+  addresses: string[]
   // How many times a video page was opened.
   videoPagesOpened: number
   // Changes the text of the first lesson with this title, as Google changing a lesson would.
@@ -67,6 +69,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
     url: "",
     port: 0,
     signedOut: false,
+    addresses: ["synthetic.user@example.test"],
     videoPagesOpened: 0,
     setText(title, text) {
       for (const entry of lessons.values()) {
@@ -151,7 +154,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
     // The account settings page shows the signed-in address in a field; a signed-out visitor is sent to sign in. The address is made up.
     if (parts[0] === "users" && parts[1] === "edit") {
       if (site.signedOut) return send(response, 302, "text/plain", "", { location: "/users/sign_in" })
-      return send(response, 200, "text/html", '<html><body><input value="synthetic.user@example.test"></body></html>')
+      return send(response, 200, "text/html", `<html><body>${site.addresses.map((address) => `<input value="${escapeHtml(address)}">`).join("")}</body></html>`)
     }
     if (parts[0] === "auth" && parts[1] === "google") {
       site.signedOut = false

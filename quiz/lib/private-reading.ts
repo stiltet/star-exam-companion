@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto"
 import type { Dirent } from "node:fs"
-import { chmod, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
+import { chmod, link, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import path from "node:path"
 import { repoRoot } from "./pack.ts"
@@ -262,11 +262,17 @@ export async function privateWriteToken(): Promise<string> {
       if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
     }
     await mkdir(root, { recursive: true, mode: 0o700 })
+    // Written whole to a temporary file and linked into place, which fails when the file exists: a reader never sees it half written,
+    // and two first requests at once end with one token.
+    const temporary = `${file}.${randomUUID()}.tmp`
+    await writeFile(temporary, `${randomBytes(32).toString("hex")}\n`, { mode: 0o600 })
     try {
-      await writeFile(file, `${randomBytes(32).toString("hex")}\n`, { flag: "wx", mode: 0o600 })
+      await link(temporary, file)
     } catch (error) {
       // Another process made it first: the next pass reads theirs. Any other error is real.
       if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error
+    } finally {
+      await rm(temporary, { force: true })
     }
   }
   throw new Error("The private write token could not be made.")

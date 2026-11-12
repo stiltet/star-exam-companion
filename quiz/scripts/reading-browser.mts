@@ -158,7 +158,8 @@ export async function acceptOfferedSignIn(page: Page, context: BrowserContext): 
 }
 
 // Who is signed in: the address on the site's account settings page. Null when the page does not show one (not signed in, or the
-// page changed). It only reads; it never changes anything.
+// page changed), and null when it shows more than one, since then it cannot say which is the account's own and the crawl, which
+// refuses an account it cannot confirm, stops. It only reads; it never changes anything.
 export async function signedInAs(page: Page): Promise<string | null> {
   try {
     await page.goto(`${SITE}/users/edit`, { waitUntil: "domcontentloaded", timeout: 30_000 })
@@ -169,20 +170,24 @@ export async function signedInAs(page: Page): Promise<string | null> {
     if (page.url().includes("/users/sign_in")) return null
     const found = await page.evaluate(() => {
       const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      let result: string | null = null
+      const found = new Set<string>()
       const walk = (root: Document | ShadowRoot): void => {
         for (const element of root.querySelectorAll("*")) {
           const value = (element as HTMLInputElement).value ?? element.getAttribute("value") ?? ""
-          if (!result && typeof value === "string" && pattern.test(value.trim())) result = value.trim()
+          if (typeof value === "string" && pattern.test(value.trim())) found.add(value.trim().toLowerCase())
           if (element.shadowRoot) walk(element.shadowRoot)
         }
       }
       walk(document)
-      return result
+      return [...found]
     }).catch(() => null)
-    if (found) {
-      log("signin.user", { address: maskEmail(found) })
-      return found
+    if (found && found.length > 1) {
+      log("signin.user", { address: "several", count: found.length })
+      return null
+    }
+    if (found && found.length === 1) {
+      log("signin.user", { address: maskEmail(found[0] as string) })
+      return found[0] as string
     }
     await sleep(500)
   }

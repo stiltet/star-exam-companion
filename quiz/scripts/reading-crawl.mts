@@ -269,8 +269,8 @@ async function main(): Promise<void> {
     // since opening lessons marks them completed on it.
     const wantedAccount = process.env.READING_GOOGLE_ACCOUNT?.trim()
     if (wantedAccount && who?.toLowerCase() !== wantedAccount.toLowerCase()) {
-      logLine(say("red", `✖ The signed-in account is not the account you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened.`))
-      stoppedBecause = "the signed-in Google account is not the one in READING_GOOGLE_ACCOUNT"
+      logLine(say("red", `✖ Could not confirm that the signed-in account is the one you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened.`))
+      stoppedBecause = "the signed-in Google account is not confirmed to be the one in READING_GOOGLE_ACCOUNT"
       stopping = true
     }
     // List every course first, so the total is known before anything is saved.

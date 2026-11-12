@@ -156,3 +156,12 @@ test("the install's token is made once, is 64 hex digits, and is kept in a priva
   assert.equal(readFileSync(file, "utf8").trim(), TOKEN)
   assert.equal(statSync(file).mode & 0o777, 0o600)
 })
+
+test("two first requests at once end with one token, and a reader never sees it half written", async () => {
+  const { rm: remove } = await import("node:fs/promises")
+  await remove(path.join(process.env.QUIZ_PRIVATE_DIR!, ".write-token"), { force: true })
+  const tokens = await Promise.all(Array.from({ length: 8 }, () => privateWriteToken()))
+  assert.equal(new Set(tokens).size, 1, "every caller got the same token")
+  assert.match(tokens[0]!, /^[a-f0-9]{64}$/)
+  TOKEN = tokens[0]!
+})
