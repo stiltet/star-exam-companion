@@ -66,7 +66,7 @@ export function parseGlossary(markdown: string): ParseResult {
       sourceUrl: sourceUrl(source ?? ""),
     })
   }
-  const checked = markdown.match(/Names last checked: (\d{4}-\d{2}-\d{2})/)
+  const checked = markdown.match(/Validated against Google docs: (\d{4}-\d{2}-\d{2})/)
   const seen = new Set<string>()
   return {
     ok: true,

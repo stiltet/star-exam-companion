@@ -11,17 +11,13 @@ the meaning comes from:
 - **IAM security** — Google Cloud [Use IAM securely](https://docs.cloud.google.com/iam/docs/using-iam-securely)
 - **NLP page** — Google Cloud [What is natural language processing?](https://cloud.google.com/learn/what-is-natural-language-processing)
 - **Course** — Google Skills [Introduction to Image Generation](https://www.skills.google/course_templates/541)
-- **Product page** — Google Cloud [Agent Platform](https://cloud.google.com/vertex-ai) and [Gemini Enterprise for Customer Experience](https://cloud.google.com/solutions/customer-engagement-ai), checked 8 Oct
+- **Product page** — Google Cloud [Agent Platform](https://cloud.google.com/vertex-ai) and [Gemini Enterprise for Customer Experience](https://cloud.google.com/solutions/customer-engagement-ai)
 - **Release notes** — Agent Platform [release notes](https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes), including Google's Vertex AI naming table of 22 Apr 2026
-- **Google page** — any other official Google page, linked in its own row. All checked 8 Oct.
+- **Google page** — any other official Google page, linked in its own row.
 
-Covered on 29 Sept: the whole exam guide, intro to 4.3. Validated on 30 Sept against every
-term the exam guide names; the list is [`checks/glossary-terms.txt`](checks/glossary-terms.txt).
-Re-validated on 8 Oct against the exam guide, the whole study guide, the release notes and
-every linked page. Re-validated again on 12 Nov, row by row, against the exam guide, the
-whole study guide, the five course summaries and every linked page, fetched live in English
-(each quoted phrase found on its page); four rows fixed. A date is stamped below only after
-such a pass, never copied between repos.
+The date below is the day the whole glossary was last validated, row by row, against Google's docs.
+Only such a full validation changes it. No script and no copy from the other repo may.
+The terms the exam guide names are listed in [`checks/glossary-terms.txt`](checks/glossary-terms.txt).
 
 **Renames.** Exam guides lag behind Google's renames, so both names get a row. In the table the
 new name's row says "Formerly called …" and the old name's row says "Now called …".
@@ -32,7 +28,7 @@ only as "also called" (exam guide first, then the newest name). Sub-products fol
 "Agent Platform X": Vertex AI Studio is now Agent Studio and Vertex AI RAG Engine is now RAG
 Engine. Google's full list is the naming table in the release notes.
 
-Names last checked: 2026-11-12
+Validated against Google docs: 2026-11-12
 
 ## Section 1 — Fundamentals of gen AI
 
