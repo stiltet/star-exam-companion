@@ -48,6 +48,8 @@ export default function AboutPage() {
           <Text variant="muted">
             <a href="https://github.com/stiltet/star-exam-companion" target="_blank" rel="noopener noreferrer" className="underline">Source code</a>
             {" · "}
+            <a href="https://github.com/stiltet/star-exam-companion" target="_blank" rel="noopener noreferrer" className="underline">Star the project on GitHub</a>
+            {" · "}
             <a href="https://github.com/stiltet/star-exam-companion/issues" target="_blank" rel="noopener noreferrer" className="underline">Report an issue</a>
             {" · MIT licence. Started as a fork of "}
             <a href="https://github.com/ludovicobesana/gail-exam-preparation" target="_blank" rel="noopener noreferrer" className="underline">gail-exam-preparation</a>
