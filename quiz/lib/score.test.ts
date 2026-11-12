@@ -12,7 +12,7 @@ const origin = "http://localhost"
 const now = Date.parse("2026-10-01T12:00:00.000Z")
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`
 const answer = (n: number, extra: Record<string, unknown> = {}) => ({ id: id(n), at: "2026-10-01T11:00:00.000Z", mode: "round", asked: ["a"], missed: [], ...extra })
-// The first exam pack's length and courses, as its pack.json and courses.json give them.
+// The first exam's length and courses, as its pack.json and courses.json give them.
 const DEFAULT_EXAM_LENGTH = { questions: 60, minutes: 90 }
 const known = { bankIds: new Set(["a", "b"]), termNames: new Set(["Grounding"]), examLength: DEFAULT_EXAM_LENGTH, courseIds: ["1", "2", "3", "4", "5"] }
 const batch = (answers: unknown[]) => ({ origin, contentType: "application/json", body: { answers }, allowedOrigin: origin, ...known, now })

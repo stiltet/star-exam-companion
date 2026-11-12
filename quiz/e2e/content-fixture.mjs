@@ -2,7 +2,7 @@ import childProcess from "node:child_process"
 import { syncBuiltinESMExports } from "node:module"
 
 // Synthetic course text keeps browser tests independent of Google's availability and copyright. It answers for every
-// exam pack's course bundles, since the exam can be switched while the tests run.
+// exam's course bundles, since the exam can be switched while the tests run.
 const bundle = {
   contentObjects: [
     { _id: "e2e-first", _type: "page", _sortOrder: 1, title: "Test reading one" },

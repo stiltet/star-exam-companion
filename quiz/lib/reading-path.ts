@@ -1,15 +1,15 @@
 // The logic behind `pnpm --dir quiz reading:path`: turning what a Google Skills learning-path page lists into the courses an exam
-// pack needs. The command (scripts/reading-path.mts) holds the browser; nothing here touches one.
+// exam needs. The command (scripts/reading-path.mts) holds the browser; nothing here touches one.
 
 // A card as the learning-path page lists it.
 export type PathCard = { type: string; title: string; href: string }
 
-// A course entry of an exam pack's courses.json. Its number is its place in Google's order, and every course is captured by the
+// A course entry of an exam's courses.json. Its number is its place in Google's order, and every course is captured by the
 // crawl, so it is private.
 export type PathCourse = { id: string; template: string; title: string; provider: "private" }
 
-// The public Google Cloud Storage folder an exam pack names for its public courses. A pack that captures every course never reads
-// it, but the pack format asks for it.
+// The public Google Cloud Storage folder an exam names for its public courses. An exam that captures every course never reads
+// it, but the exam format asks for it.
 export const BUNDLE_BASE = "https://storage.googleapis.com/cloud-training/cls-html5-courses"
 
 // The address of a learning path from what the user gave: the whole address, or just its number. Null when it is neither.
@@ -43,7 +43,7 @@ export function pathCourses(cards: PathCard[]): PathCourse[] {
   return courses
 }
 
-// The content of a pack's courses.json for this path.
+// The content of an exam's courses.json for this path.
 export function coursesFile(address: string, courses: PathCourse[]): { path: string; bundleBase: string; courses: PathCourse[] } {
   return { path: address, bundleBase: BUNDLE_BASE, courses }
 }

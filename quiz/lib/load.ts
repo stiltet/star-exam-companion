@@ -96,7 +96,7 @@ export function loadVoiceIndex(): Map<string, string> | null {
     const dir = packDir(repoRoot(), id)
     const glossary = path.join(dir, "glossary.md")
     const scenes = path.join(dir, "scenes.json")
-    // A pack file missing mid-checkout is a 404 for the clip, not a crash.
+    // An exam file missing mid-checkout is a 404 for the clip, not a crash.
     if (!existsSync(glossary) || !existsSync(scenes)) return null
     const stamp = `${dir}:${statSync(glossary).mtimeMs}:${statSync(scenes).mtimeMs}`
     if (voiceCache?.stamp === stamp) return voiceCache.index
@@ -105,7 +105,7 @@ export function loadVoiceIndex(): Map<string, string> | null {
     voiceCache = { stamp, index: voiceIndex(itemsFromGlossary(parsed.glossary, loadPack(repoRoot(), id).scenes)) }
     return voiceCache.index
   } catch {
-    // A pack file that does not read is a 404 for the clip, not a crash; the pack test names what is wrong.
+    // An exam file that does not read is a 404 for the clip, not a crash; the exam test names what is wrong.
     return null
   }
 }

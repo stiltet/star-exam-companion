@@ -22,7 +22,7 @@ type ExamState = "intro" | "active"
 
 type Props = {
   questions: Question[]
-  // The real exam's length, from the exam pack.
+  // The real exam's length, from the exam.
   length: ExamLength
   sections: Array<{ id: string; title: string; weight: number }>
 }
@@ -41,7 +41,7 @@ function setHash(id: string | null) {
 
 export function ExamClient({ questions, sections, length }: Props) {
   const maxQuestions = length.questions
-  // An exam asks the real exam's number of questions, or all there are when the pack has fewer. The
+  // An exam asks the real exam's number of questions, or all there are when the exam has fewer. The
   // time scales with the questions asked, so 17 questions are not given the real exam's whole clock.
   const fullSeconds = examDuration(Math.min(maxQuestions, questions.length), length)
   const [examState, setExamState] = useState<ExamState>("intro")

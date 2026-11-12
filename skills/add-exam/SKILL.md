@@ -1,13 +1,13 @@
 ---
 name: add-exam
-description: Add a new exam to the quiz from its name. Creates the exam pack, reads its Google Skills learning path in Google's order, captures every lesson, then writes the glossary, voice scenes, study topics and practice questions from official sources, and checks the result. Use as /add-exam <exam name>.
+description: Add a new exam to the quiz from its name. Creates the exam, reads its Google Skills learning path in Google's order, captures every lesson, then writes the glossary, voice scenes, study topics and practice questions from official sources, and checks the result. Use as /add-exam <exam name>.
 ---
 
 # Add exam
 
 Given an exam name, this creates `exams/<id>/`, fills its course list from Google's own learning path, captures every lesson into the
 private store, then writes the quiz content (sections, terms, glossary, voice scenes, study topics and practice questions) from official
-Google sources, so the pack works with every feature of the app, and reports what is done and what is not. Nothing is invented: content
+Google sources, so the exam works with every feature of the app, and reports what is done and what is not. Nothing is invented: content
 with no official source is left out and named as unfinished.
 
 **Use a secondary Google account, never the one the user studies with.** Google Skills counts a lesson as completed when it is
@@ -37,17 +37,17 @@ is always visible.
 
    Keep the JSON it prints. It holds the path's title, its address and its courses, numbered in Google's order, each marked private.
 
-4. **Create the pack folder.** The format is in `docs/exam-packs.md`. Write these files in `exams/<id>/`:
+4. **Create the exam folder.** The format is in `docs/exam-packs.md`. Write these files in `exams/<id>/`:
    - `pack.json`: `id`, `title` (the exam's short name), `certification` (its full name), `description` (one or two sentences from the
      certification page), `unnumberedLabel` (the exam guide's own label for tools in scope, or "Tools in scope"), `examPage`, `examGuide`,
      `learningPath` (the path's address), `exam` with `questions` and `minutes`, `reading` set to `true`, `links` with one entry
      `{ "label": "LEARNING PATH", "href": <the path's address> }`, and `sectionOf` as `{}`.
    - `courses.json`: the JSON from step 3 without its `title` field.
-   - `sections.md`: the exam guide's sections, one line each, `Section N (title, ~X%)`, with the header another pack's file has.
-   - `terms.txt`: only the comment lines another pack's file starts with (step 8 fills it).
+   - `sections.md`: the exam guide's sections, one line each, `Section N (title, ~X%)`, with the header another exam's file has.
+   - `terms.txt`: only the comment lines another exam's file starts with (step 8 fills it).
    - `scenes.json`: `[]` (step 8 fills it).
    - `study.json`: `{ "sections": [], "questions": [] }` (step 8 fills it).
-   - `glossary.md`: the header another pack's `glossary.md` has, up to its table header, with no rows (step 8 fills it).
+   - `glossary.md`: the header another exam's `glossary.md` has, up to its table header, with no rows (step 8 fills it).
 
 5. **Capture every lesson.** Name the new exam, so only it is crawled:
 
@@ -65,7 +65,7 @@ is always visible.
    It has no reading text to read aloud. Open the course on Google Skills.` Read Aloud then lists the course in its place, marked as
    having no text, and it no longer keeps the Unfinished notice up.
 
-7. **Validate it.** This also proves the pack loads:
+7. **Validate it.** This also proves the exam loads:
 
    ```bash
    pnpm --dir quiz reading:list <id>
@@ -74,8 +74,8 @@ is always visible.
    Check that every course shows its lessons saved and none is marked MISSING. A course the report named as having a lesson with no
    reading text is reported as it is, never hidden.
 
-8. **Write the quiz content, one stage at a time, from official Google sources only.** The new pack must work with every feature of the
-   app: Study, Practice, Voice quiz, the exam, Progress and Read Aloud. The finished Generative AI Leader pack,
+8. **Write the quiz content, one stage at a time, from official Google sources only.** The new exam must work with every feature of the
+   app: Study, Practice, Voice quiz, the exam, Progress and Read Aloud. The finished Generative AI Leader exam,
    `exams/generative-ai-leader/`, is the example of every file below: open its file, copy its shape, never its words or facts. Every
    stage ends with the same command, run from the project folder, which must pass before the next stage starts. It names the file and
    row that breaks a rule:
@@ -115,7 +115,7 @@ is always visible.
    agents without asking.
 
 9. **Final checks.** All of these must pass, and each is named in the report:
-   - `node --test` passes with the new pack in place.
+   - `node --test` passes with the new exam in place.
    - `pnpm --dir quiz reading:list <id>` shows every course's lessons saved.
    - `QUIZ_EXAM=<id> pnpm --dir quiz build` succeeds, into its own folder (`QUIZ_DIST_DIR=.next-gate`), never over the served one.
    If any stage was left out, set `notice` in `pack.json` to a plain statement of what is missing, as `docs/exam-packs.md` says, so

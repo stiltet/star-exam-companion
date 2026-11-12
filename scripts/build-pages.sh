@@ -7,7 +7,7 @@
 # Environment:
 #   QUIZ_BASE_PATH  where the site is served from, default /star-exam-companion
 #
-# One demo is built for every exam pack under exams/. The default exam (generative-ai-leader) is at the
+# One demo is built for every exam under exams/. The default exam (generative-ai-leader) is at the
 # root of the site, and every other pack at <root>/<pack id>/. The demo's Progress page links them all.
 #
 # It never changes quiz/. It copies the repo's content to a temporary folder, puts the demo's own
@@ -56,7 +56,7 @@ for dir in "$ROOT"/exams/*/; do
   title="$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).title)' "$dir/pack.json")"
   packs="${packs:+$packs;}$id=$title"
 done
-[ -n "$packs" ] || { echo "build-pages: no exam pack under $ROOT/exams" >&2; exit 1; }
+[ -n "$packs" ] || { echo "build-pages: no exam under $ROOT/exams" >&2; exit 1; }
 
 rm -rf "$OUT"
 mkdir -p "$OUT"

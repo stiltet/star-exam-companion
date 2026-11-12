@@ -6,7 +6,7 @@ import type { Course } from "./reading-view.ts"
 import { DEFAULT_EXAM } from "./scope.ts"
 import { parseGlossary } from "./sources.ts"
 
-// An exam pack is the folder exams/<id>/ at the repo root: everything that makes this the quiz
+// An exam is the folder exams/<id>/ at the repo root: everything that makes this the quiz
 // for one exam. The app code holds no exam content. docs/exam-packs.md describes the format.
 
 export { DEFAULT_EXAM } from "./scope.ts"
@@ -159,7 +159,7 @@ function readJson(file: string): unknown {
 
 function requirePackFile(dir: string, name: string): string {
   const file = path.join(dir, name)
-  if (!existsSync(file)) throw new Error(`Exam pack ${path.basename(dir)} has no ${name}`)
+  if (!existsSync(file)) throw new Error(`Exam ${path.basename(dir)} has no ${name}`)
   return file
 }
 
@@ -206,7 +206,7 @@ function checkMeta(value: unknown, id: string): PackMeta {
     sectionOf !== null &&
     typeof sectionOf === "object" &&
     Object.values(sectionOf).every(isText)
-  if (!ok) throw new Error(`Exam pack ${id}: pack.json needs id "${id}", title, certification, description, unnumberedLabel, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
+  if (!ok) throw new Error(`Exam ${id}: pack.json needs id "${id}", title, certification, description, unnumberedLabel, examPage, examGuide, learningPath, exam {questions, minutes}, reading, links and sectionOf`)
   return meta as PackMeta
 }
 
@@ -217,34 +217,34 @@ function readCourses(file: string, id: string): Course[] {
   const coursePath = data?.path
   const bundleBase = data?.bundleBase
   if (!data || !isText(coursePath) || !isText(bundleBase) || !Array.isArray(list) || list.length === 0) {
-    throw new Error(`Exam pack ${id}: courses.json needs path, bundleBase and a list of courses`)
+    throw new Error(`Exam ${id}: courses.json needs path, bundleBase and a list of courses`)
   }
   // The Mac fetches the text from bundleBase: only Google's public course bucket, and a path on Google Skills.
   if (!bundleBase.startsWith("https://storage.googleapis.com/") || !coursePath.startsWith("https://www.skills.google/")) {
-    throw new Error(`Exam pack ${id}: courses.json bundleBase must be on https://storage.googleapis.com/ and path on https://www.skills.google/`)
+    throw new Error(`Exam ${id}: courses.json bundleBase must be on https://storage.googleapis.com/ and path on https://www.skills.google/`)
   }
   const seen = new Set<string>()
   return list.map((entry: Partial<Course>) => {
     const provider = entry.provider ?? "google"
     if (provider !== "google" && provider !== "private") {
-      throw new Error(`Exam pack ${id}: a course provider in courses.json can only be "google" or "private"`)
+      throw new Error(`Exam ${id}: a course provider in courses.json can only be "google" or "private"`)
     }
     if (!isText(entry.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title)) {
-      throw new Error(`Exam pack ${id}: a course in courses.json needs a numeric id and template and a title`)
+      throw new Error(`Exam ${id}: a course in courses.json needs a numeric id and template and a title`)
     }
     if (provider === "google" && !isText(entry.folder)) {
-      throw new Error(`Exam pack ${id}: a Google course in courses.json needs a folder`)
+      throw new Error(`Exam ${id}: a Google course in courses.json needs a folder`)
     }
     if (entry.folder !== undefined && !isText(entry.folder)) {
-      throw new Error(`Exam pack ${id}: a course folder in courses.json must be non-empty text`)
+      throw new Error(`Exam ${id}: a course folder in courses.json must be non-empty text`)
     }
     if (provider === "private" && entry.folder !== undefined) {
-      throw new Error(`Exam pack ${id}: a private course in courses.json cannot have a public bundle folder`)
+      throw new Error(`Exam ${id}: a private course in courses.json cannot have a public bundle folder`)
     }
-    if (entry.folder?.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam pack ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
-    if (seen.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
-    if (entry.format !== undefined && entry.format !== "rise") throw new Error(`Exam pack ${id}: a course format in courses.json can only be "rise"`)
-    if (provider === "private" && entry.format !== undefined) throw new Error(`Exam pack ${id}: a private course in courses.json cannot have a public bundle format`)
+    if (entry.folder?.split("/").some((part) => part === "" || part === "." || part === "..")) throw new Error(`Exam ${id}: a course folder in courses.json may not contain empty, . or .. parts`)
+    if (seen.has(entry.id)) throw new Error(`Exam ${id}: course id ${entry.id} repeats in courses.json`)
+    if (entry.format !== undefined && entry.format !== "rise") throw new Error(`Exam ${id}: a course format in courses.json can only be "rise"`)
+    if (provider === "private" && entry.format !== undefined) throw new Error(`Exam ${id}: a private course in courses.json cannot have a public bundle format`)
     seen.add(entry.id)
     const course: Course = {
       id: entry.id,
@@ -265,13 +265,13 @@ function readNoReading(file: string, id: string): NoReading[] {
   const data = readJson(file) as { noReading?: unknown; courses?: { id?: unknown }[] } | null
   const list = data?.noReading
   if (list === undefined) return []
-  if (!Array.isArray(list)) throw new Error(`Exam pack ${id}: noReading in courses.json must be a list`)
+  if (!Array.isArray(list)) throw new Error(`Exam ${id}: noReading in courses.json must be a list`)
   const taken = new Set(data?.courses?.map((course) => String(course.id)))
   return list.map((entry: Partial<NoReading>) => {
     if (!isText(entry?.id) || !/^\d+$/.test(entry.id) || !isText(entry.template) || !/^\d+$/.test(entry.template) || !isText(entry.title) || !isText(entry.why)) {
-      throw new Error(`Exam pack ${id}: a noReading course in courses.json needs a numeric id and template, a title and a why`)
+      throw new Error(`Exam ${id}: a noReading course in courses.json needs a numeric id and template, a title and a why`)
     }
-    if (taken.has(entry.id)) throw new Error(`Exam pack ${id}: course id ${entry.id} repeats in courses.json`)
+    if (taken.has(entry.id)) throw new Error(`Exam ${id}: course id ${entry.id} repeats in courses.json`)
     taken.add(entry.id)
     return { id: entry.id, template: entry.template, title: entry.title, why: entry.why }
   })
@@ -297,17 +297,17 @@ function assertNoPrivateReadingFiles(dir: string, id: string): void {
   if (!existsSync(dir)) return
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isSymbolicLink()) {
-      throw new Error(`Exam pack ${id} must not contain linked files.`)
+      throw new Error(`Exam ${id} must not contain linked files.`)
     }
     if (entry.isDirectory()) {
       if (/^private-readings?$/i.test(entry.name)) {
-        throw new Error(`Exam pack ${id} must not contain private reading files.`)
+        throw new Error(`Exam ${id} must not contain private reading files.`)
       }
       assertNoPrivateReadingFiles(path.join(dir, entry.name), id)
     } else if (entry.isFile() && entry.name.endsWith(".json")) {
       const file = path.join(dir, entry.name)
       if (containsPrivateReadingRecord(readJson(file))) {
-        throw new Error(`Exam pack ${id} must not contain private reading files.`)
+        throw new Error(`Exam ${id} must not contain private reading files.`)
       }
     }
   }
@@ -367,9 +367,9 @@ function readPack(dir: string, id: string): Pack {
   const scenes = readJson(requirePackFile(dir, "scenes.json"))
   const study = readJson(requirePackFile(dir, "study.json")) as Partial<Study> | null
   const meta = checkMeta(metaData, id)
-  if (!Array.isArray(scenes)) throw new Error(`Exam pack ${id}: scenes.json must be a list`)
+  if (!Array.isArray(scenes)) throw new Error(`Exam ${id}: scenes.json must be a list`)
   if (!study || !Array.isArray(study.sections) || !Array.isArray(study.questions)) {
-    throw new Error(`Exam pack ${id}: study.json needs sections and questions`)
+    throw new Error(`Exam ${id}: study.json needs sections and questions`)
   }
   const courses = meta.reading ? readCourses(requirePackFile(dir, "courses.json"), id) : []
   const noReading = meta.reading ? readNoReading(requirePackFile(dir, "courses.json"), id) : []
