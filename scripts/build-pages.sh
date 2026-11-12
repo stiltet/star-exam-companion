@@ -37,12 +37,13 @@ trap 'rm -rf "$work"' EXIT
 
 rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude 'active-exam.json' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
 cp -R "$ROOT/exams" "$work/exams"
+cp "$ROOT/package.json" "$ROOT/pnpm-lock.yaml" "$ROOT/pnpm-workspace.yaml" "$work/"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.
 cp -R "$ROOT/pages-static/." "$work/quiz/"
 rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
 
-pnpm --dir "$work/quiz" install --frozen-lockfile --silent
+pnpm --dir "$work" install --frozen-lockfile --silent
 
 # The default exam: quiz/lib/pack.ts DEFAULT_EXAM. The packs, as "id=Title" pairs for the demo's links.
 DEFAULT_EXAM="generative-ai-leader"

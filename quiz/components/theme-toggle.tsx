@@ -13,6 +13,7 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   // The stored choice is known only in the browser; until then the button says Auto.
   const [mounted, setMounted] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
   useEffect(() => setMounted(true), [])
   const current = mounted && theme && LABEL[theme] ? theme : "system"
   return (

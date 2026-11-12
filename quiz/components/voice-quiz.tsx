@@ -64,6 +64,7 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
   const jumps = sectionJump(round, index)
 
   // A copy note belongs to the question it was copied from.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- resets per-view state when the view changes
   useEffect(() => setCopyNote(null), [index])
 
   function stopSpeaking() {
@@ -94,37 +95,6 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
     releaseClip()
     stopFollowing()
   }
-
-  function start() {
-    if (!item) return
-    const audio = player()
-    audio.src = SILENCE
-    void audio.play().catch(() => undefined)
-    setNeedsStart(false)
-    speakQuestion(item)
-  }
-
-  // iOS lets a page play sound only from a user gesture (WebKit: "Safari on iOS has required a user
-  // gesture to play media"), so after a reload the first sound is refused. Then the next touch
-  // anywhere on the page starts the reading, inside that touch. A touch on a control is left to it
-  // (lib/start-gesture), so the Start button and an answer each run once.
-  useEffect(() => {
-    if (!needsStart) return
-    // WebKit counts touchend, click and key presses as the gesture that allows sound; pointerdown
-    // is not one, so it is not listened to. The first to fire wins: it removes the others.
-    const events = ["touchend", "click", "keydown"] as const
-    const touched = (event: Event) => {
-      const onControl = event.target instanceof Element && event.target.closest(CONTROLS) !== null
-      const key = event instanceof KeyboardEvent ? event.key : undefined
-      if (!startsReading({ type: event.type, key, onControl })) return
-      for (const name of events) document.removeEventListener(name, touched, { capture: true })
-      start()
-    }
-    for (const name of events) document.addEventListener(name, touched, { capture: true })
-    return () => {
-      for (const name of events) document.removeEventListener(name, touched, { capture: true })
-    }
-  })
 
   // The Mac speaks each clip with its System voice (/api/speak runs `say`), and the page plays it.
   // `follow`, when given, is each clip's text as shown, so its current word can be marked. `place`
@@ -216,6 +186,37 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
     speakParts(clips.map((clip) => clip.text), (index) => clips[index]?.pauseAfter ?? 0, undefined, shown, (index) => ({ part: clips[index]?.part ?? 0, offset: clips[index]?.offset ?? 0 }))
   }
 
+  function start() {
+    if (!item) return
+    const audio = player()
+    audio.src = SILENCE
+    void audio.play().catch(() => undefined)
+    setNeedsStart(false)
+    speakQuestion(item)
+  }
+
+  // iOS lets a page play sound only from a user gesture (WebKit: "Safari on iOS has required a user
+  // gesture to play media"), so after a reload the first sound is refused. Then the next touch
+  // anywhere on the page starts the reading, inside that touch. A touch on a control is left to it
+  // (lib/start-gesture), so the Start button and an answer each run once.
+  useEffect(() => {
+    if (!needsStart) return
+    // WebKit counts touchend, click and key presses as the gesture that allows sound; pointerdown
+    // is not one, so it is not listened to. The first to fire wins: it removes the others.
+    const events = ["touchend", "click", "keydown"] as const
+    const touched = (event: Event) => {
+      const onControl = event.target instanceof Element && event.target.closest(CONTROLS) !== null
+      const key = event instanceof KeyboardEvent ? event.key : undefined
+      if (!startsReading({ type: event.type, key, onControl })) return
+      for (const name of events) document.removeEventListener(name, touched, { capture: true })
+      start()
+    }
+    for (const name of events) document.addEventListener(name, touched, { capture: true })
+    return () => {
+      for (const name of events) document.removeEventListener(name, touched, { capture: true })
+    }
+  })
+
   useEffect(() => {
     return () => {
       speakGeneration.current += 1
@@ -225,9 +226,11 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
       }
       stopAudio()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the listed values change, not on every render of the others
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets per-view state when the view changes
     setHintOpen(false)
   }, [index])
 
@@ -261,6 +264,7 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
     if (!item || picked !== null) return
     const timer = window.setTimeout(() => speakQuestion(item), 300)
     return () => window.clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the listed values change, not on every render of the others
   }, [item, picked])
 
   // Right: says so and moves on. Wrong: says the answer, why it is right and the binding constraint, then moves on.

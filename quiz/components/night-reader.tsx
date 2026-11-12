@@ -201,6 +201,7 @@ export function NightReader() {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the listed values change, not on every render of the others
   }, [stored])
 
   function play() {

@@ -120,6 +120,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   // Height of the sticky breadcrumbs. The control bar sticks just under them. The title row scrolls away.
   const [stuck, setStuck] = useState(0)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
   useEffect(() => setCurrent(savedPlace(storeKey, paragraphs.length)), [storeKey, paragraphs.length])
 
   useLayoutEffect(() => {

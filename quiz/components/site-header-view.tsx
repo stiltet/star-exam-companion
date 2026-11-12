@@ -39,6 +39,7 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
   }, [])
 
   // A link was followed: the new page starts with both shut.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- resets per-view state when the view changes
   useEffect(() => setPanel(null), [pathname])
 
   // While a dropdown is open, a tap outside the header or Escape shuts it; so does a scroll, except for

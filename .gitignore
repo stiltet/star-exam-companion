@@ -33,3 +33,4 @@ quiz/exam-switches.log
 # The Node version, read by nvm and by the workflow. A clone's own exclude file may hide root
 # dotfiles; this one is public.
 !/.nvmrc
+node_modules

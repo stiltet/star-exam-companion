@@ -86,6 +86,7 @@ export function ExamClient({ questions, sections, length }: Props) {
       unique = unique.concat(shuffle(questions.filter((q) => !used.has(q.id))).slice(0, maxQuestions - unique.length))
     }
     return shuffle(unique).slice(0, maxQuestions)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the listed values change, not on every render of the others
   }, [questions, sections])
 
   // Ends the exam once: saves its line, with every answer and flag, through the outbox, forgets
@@ -122,6 +123,7 @@ export function ExamClient({ questions, sections, length }: Props) {
       // A kept exam that names a question no longer in the glossary cannot be marked fairly.
       if (kept !== null) {
         saveState(window.localStorage, EXAM_KEY, null)
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
         setNotResumed(true)
       }
       return

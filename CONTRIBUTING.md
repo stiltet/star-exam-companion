@@ -18,15 +18,15 @@ data-only **exam pack** under [`exams/`](exams/).
 - Install once, then run the complete gate before you open the pull request:
 
   ```bash
-  pnpm --dir quiz install
+  pnpm install
   ```
 
   ```bash
-  pnpm --dir quiz exec playwright install chromium webkit
+  pnpm e2e:install
   ```
 
   ```bash
-  pnpm --dir quiz gate
+  pnpm gate
   ```
 
 - Update the [README](README.md) when a change alters what the app does or how to run it.
