@@ -28,9 +28,9 @@ export default async function CourseReadingsPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
-          <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="mb-2" />
+          <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="pb-2" />
           <PageNav kind="course" previous={previous} next={next} at="top" />
-          <Heading variant="page" placement="mb-6">{noText.title}</Heading>
+          <Heading variant="title" placement="mb-6">{noText.title}</Heading>
           <Text variant="muted" placement="mb-6">{noText.why}</Text>
           <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
           <PageNav kind="course" previous={previous} next={next} at="bottom" />
@@ -46,9 +46,9 @@ export default async function CourseReadingsPage({ params }: Props) {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
-        <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="mb-2" />
+        <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="pb-2" />
         <PageNav kind="course" previous={previous} next={next} at="top" />
-        <Heading variant="page" placement="mb-6">{course.title}</Heading>
+        <Heading variant="title" placement="mb-6">{course.title}</Heading>
         {loaded.ok ? (
           <ReadingList course={course.id} pages={loaded.pages} />
         ) : (
