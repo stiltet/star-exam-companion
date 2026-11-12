@@ -8,7 +8,9 @@ import { PRIVATE_PAGE_ID } from "./page-id.ts"
 // No lesson text is ever kept here; the manifest holds titles, addresses and a hash of each saved text.
 
 // A lesson as the course page lists it.
-export type Lesson = { title: string; href: string }
+// kind "video": a video lesson. It is saved by its title only (no page is opened, no transcript is read), and Read Aloud gives it
+// a button that opens it on Google Skills.
+export type Lesson = { title: string; href: string; kind?: "video" }
 
 // What happened to one lesson in this run.
 export type Outcome = "saved" | "already" | "empty" | "failed"
@@ -17,6 +19,7 @@ export type ManifestLesson = {
   title: string
   href: string
   pageId: string
+  kind?: "video"
   // Hash of the saved text. Null while the lesson has no saved text (empty or failed).
   hash: string | null
 }
@@ -41,7 +44,7 @@ export function textHash(text: string): string {
 // The page id a lesson is saved under: its bundle or document number from the address, so it is the same every run. An address with no
 // number gets the first 19 digits of a hash, which fit the store's 1 to 20 digit ids.
 export function lessonPageId(href: string): string {
-  const match = /\/(?:html_bundles|documents)\/(\d{1,20})(?:[/?#]|$)/.exec(href)
+  const match = /\/(?:html_bundles|documents|video)\/(\d{1,20})(?:[/?#]|$)/.exec(href)
   if (match && PRIVATE_PAGE_ID.test(match[1])) return match[1]
   const digits = BigInt(`0x${createHash("sha256").update(href).digest("hex").slice(0, 16)}`).toString().slice(0, 19)
   return digits.replace(/^0+/, "") || "1"

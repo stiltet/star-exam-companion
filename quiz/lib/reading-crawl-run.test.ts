@@ -331,3 +331,31 @@ test("a course that holds only labs, videos and quizzes is named as having nothi
   noLessonText(run, [text])
 })
 
+
+test("a video lesson is saved by its title in its place among the readings, and its page is never opened", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = "Synthetic first reading text of a course with videos, long enough to count."
+  const last = "Synthetic last reading text of a course with videos, long enough to count."
+  const site = await startFakeSite({
+    "9001": [{ title: "First reading", kind: "bundle", text: first }, { title: "A made-up video", video: true }, { title: "Last reading", kind: "bundle", text: last }],
+    "9002": [{ title: "Only video", video: true }],
+  })
+  t.after(async () => {
+    await site.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  const run = await runCrawl(base, site)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /✔ FINISHED: all 4 lessons checked in 2 courses/)
+  assert.match(run.out, /✔ 1\. First Course\n {6}3 lessons: 3 new, 0 updated, 0 unchanged/)
+  assert.equal(site.videoPagesOpened, 0, "a video page is never opened, so it is not played or marked watched")
+  const records = await saved(base, "1")
+  assert.equal(records.length, 3)
+  assert.equal(records.find((record) => record.title === "A made-up video")?.text, "A made-up video", "a video keeps its title and no text")
+  const manifest = JSON.parse(await readFile(path.join(base, "private", "crawl-test", "1.manifest.json"), "utf8")) as { lessons: { title: string; kind?: string; href: string }[] }
+  assert.deepEqual(manifest.lessons.map((lesson) => lesson.title), ["First reading", "A made-up video", "Last reading"], "the video keeps its place")
+  assert.deepEqual(manifest.lessons.map((lesson) => lesson.kind), [undefined, "video", undefined])
+  assert.match(manifest.lessons[1]!.href, /^\/course_templates\/9001\/video\/\d+$/)
+  assert.equal((await saved(base, "2")).length, 1, "a course of only videos has its lessons too")
+  noLessonText(run, [first, last])
+})

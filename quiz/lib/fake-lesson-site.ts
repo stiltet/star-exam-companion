@@ -16,13 +16,16 @@ export type FakeLesson = {
   text: string
 }
 // A card that is not a lesson: a quiz, or another kind such as a lab or a video, named in other.
-export type FakeCard = FakeLesson | { title: string; quiz: true } | { title: string; other: string }
+// A video card links to a video page; the crawl must never open it, which the site counts in videoPagesOpened.
+export type FakeCard = FakeLesson | { title: string; quiz: true } | { title: string; other: string } | { title: string; video: true }
 
 export type FakeSite = {
   url: string
   port: number
   // True: every lesson page sends the visitor to the sign-in page, as a signed-out visitor is.
   signedOut: boolean
+  // How many times a video page was opened.
+  videoPagesOpened: number
   // Changes the text of the first lesson with this title, as Google changing a lesson would.
   setText: (title: string, text: string) => void
   close: () => Promise<void>
@@ -51,6 +54,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
       if ("quiz" in card || "other" in card) return { card, id: null }
       const id = nextId
       nextId += 1
+      if ("video" in card) return { card, id }
       lessons.set(String(id), { id, template, lesson: card, hits: 0 })
       return { card, id }
     }))
@@ -60,6 +64,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
     url: "",
     port: 0,
     signedOut: false,
+    videoPagesOpened: 0,
     setText(title, text) {
       for (const entry of lessons.values()) {
         if (entry.lesson.title === title) {
@@ -99,6 +104,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
       if (!cards) return send(response, 404, "text/plain", "No such course")
       const html = cards.map(({ card, id }) => {
         if (id === null) return `<ql-activity-card type="${"other" in card ? escapeHtml(card.other) : "quiz"}" name="${escapeHtml(card.title)}"></ql-activity-card>`
+        if ("video" in card) return `<ql-activity-card type="video" name="${escapeHtml(card.title)}"><a href="/course_sessions/7/video/${id}">${escapeHtml(card.title)}</a></ql-activity-card>`
         const lesson = card as FakeLesson
         const document = lesson.kind === "document" || lesson.kind === "pdf"
         const type = document ? "link" : "html_bundle"
@@ -106,6 +112,12 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
         return `<ql-activity-card type="${type}" name="${escapeHtml(lesson.title)}"><a href="${href}">${escapeHtml(lesson.title)}</a></ql-activity-card>`
       }).join("\n")
       return send(response, 200, "text/html", `<html><body><h1>Course</h1>\n${html}\n</body></html>`)
+    }
+
+    // A video page, which the crawl never opens: opening one plays it and marks it watched.
+    if (parts[0] === "course_templates" && parts[2] === "video") {
+      site.videoPagesOpened += 1
+      return send(response, 200, "text/html", "<html><body>video</body></html>")
     }
 
     // A lesson page: a signed-out visitor goes to sign in; otherwise the page embeds the reading in a frame.
