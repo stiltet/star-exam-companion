@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
-import { PageNav } from "@/components/atoms/page-nav"
+import { PageNav } from "@/components/page-nav"
 import { ActionLink } from "@/components/atoms/button"
 import { courseBundle } from "@/lib/course-text"
 import { activePack } from "@/lib/pack"
@@ -59,7 +59,7 @@ export default async function ReadingPage({ params }: Props) {
         </nav>
       </div>
       <main className="flex-1 max-w-4xl mx-auto px-4 pb-6 w-full">
-        <PageNav kind="lesson" previous={previous} next={following} at="top" />
+        <PageNav kind="lesson" previous={previous} next={following} placement="mt-4 mb-6" />
         <ReadAloud
           key={`${course.id}/${pageId}`}
           place={`${course.id}/${pageId}`}
@@ -73,7 +73,7 @@ export default async function ReadingPage({ params }: Props) {
         />
         {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
         <ActionLink variant="outlined" placement="mt-6 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
-        <PageNav kind="lesson" previous={previous} next={following} at="bottom" />
+        <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
       </main>
       <SiteFooter />
     </div>

@@ -9,7 +9,7 @@ import { courseBundle } from "@/lib/course-text"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadingList } from "@/components/reading-progress"
 import { activePack } from "@/lib/pack"
-import { PageNav } from "@/components/atoms/page-nav"
+import { PageNav } from "@/components/page-nav"
 import { courseById, courseNeighbours } from "@/lib/reading"
 
 export const dynamic = "force-dynamic"
@@ -29,11 +29,11 @@ export default async function CourseReadingsPage({ params }: Props) {
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
           <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="pb-2" />
-          <PageNav kind="course" previous={previous} next={next} at="top" />
+          <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
           <Heading variant="title" placement="mb-6">{noText.title}</Heading>
           <Text variant="muted" placement="mb-6">{noText.why}</Text>
           <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
-          <PageNav kind="course" previous={previous} next={next} at="bottom" />
+          <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
         </main>
         <SiteFooter />
       </div>
@@ -47,14 +47,14 @@ export default async function CourseReadingsPage({ params }: Props) {
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
         <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="pb-2" />
-        <PageNav kind="course" previous={previous} next={next} at="top" />
+        <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
         <Heading variant="title" placement="mb-6">{course.title}</Heading>
         {loaded.ok ? (
           <ReadingList course={course.id} pages={loaded.pages} />
         ) : (
           <CourseTextError detail={loaded.error} again={`/read/${course.id}`} />
         )}
-        <PageNav kind="course" previous={previous} next={next} at="bottom" />
+        <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
       </main>
       <SiteFooter />
     </div>
