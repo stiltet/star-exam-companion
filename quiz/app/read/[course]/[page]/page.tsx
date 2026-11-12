@@ -50,7 +50,7 @@ export default async function ReadingPage({ params }: Props) {
       <SiteHeader />
       {/* Only the course links stay put. The title row above scrolls away. */}
       <div data-read-sticky className="sticky top-0 z-40 w-full bg-background">
-        <nav className="max-w-4xl mx-auto px-4 pt-3 pb-2 text-sm text-muted-foreground">
+        <nav className="max-w-4xl mx-auto px-4 pt-6 pb-2 text-sm text-muted-foreground">
           <Link href="/read">READ ALOUD</Link>
           <span className="mx-2">/</span>
           <Link href={`/read/${course.id}`}>COURSE {course.id}</Link>
