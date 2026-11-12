@@ -169,7 +169,7 @@ Every run of `reading:crawl` and `reading:path` writes a log file, one line per 
 (outside the repository); the command prints `Log: <path>`. It names the browser started, the sign-in route taken, each course and lesson with its
 outcome, length and time, and every retry or failure with its error. It holds no lesson text, and addresses carry no ids. Add `--debug` (or set
 `READING_DEBUG=1`) for the addresses visited, the frame found and the reads while a page settles. Send that file when a run goes wrong: it names the
-signed-in account only by its first letter and domain (logs from runs made before that change hold the full address: delete them before sharing one).
+signed-in account only by its first letter and domain (still personal data, so treat a log with care; logs from runs made before that change hold the full address: delete them before sharing one).
 `READING_GOOGLE_ACCOUNT` names the one Google account the crawl may use, and it stops before opening a lesson, printing "Could not confirm that the signed-in
 account is the one you asked for", when another account is signed in, when the settings page shows more than one address, or when none shows. The other `READING_*` settings (`READING_SITE`, `READING_CDP_URL`, `READING_FRAME_HOSTS`,
 `READING_PROFILE_DIR`, `READING_SKIP_SIGNIN` and the `READING_*_MS` timings) exist so the tests can point the command at a fake lesson site. Leave them

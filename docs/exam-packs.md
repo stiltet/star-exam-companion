@@ -40,7 +40,7 @@ build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; ot
 app-data directory is used.
 A private course is captured by `pnpm --dir quiz reading:crawl [<exam>]`, which saves each lesson through the private
 store (the same store `POST /api/reading/private` writes to, which answers only a request that sends this install's token in `x-quiz-private-token`, a secret
-kept in the store's folder as `.write-token`, so never one from the network) and keeps a per-course manifest of titles, addresses and
+kept in the store's folder as `.write-token`, so never one from the network; the owner accepts that any program running as the same user on this Mac can read the token and so save) and keeps a per-course manifest of titles, addresses and
 hashes beside it, never text. The README's "Private course readings" section describes it, and
 [`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
 either: the courses come from its `courses.json` entries with `"provider": "private"`.

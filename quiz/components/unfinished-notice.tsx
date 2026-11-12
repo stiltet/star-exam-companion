@@ -9,7 +9,8 @@ export type Need = "questions" | "study" | "glossary" | "scenes"
 
 function missing(need: Need): boolean {
   const pack = activePack()
-  if (need === "questions") return pack.study.questions.length === 0
+  // Practice and the practice exam draw on the written questions and the voice scenes together, so questions are missing only when both are.
+  if (need === "questions") return pack.study.questions.length === 0 && pack.scenes.length === 0
   if (need === "study") return pack.study.sections.length === 0
   if (need === "scenes") return pack.scenes.length === 0
   const parsed = parseGlossary(pack.glossaryText)
