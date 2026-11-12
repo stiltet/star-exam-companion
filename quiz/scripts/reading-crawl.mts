@@ -269,7 +269,7 @@ async function main(): Promise<void> {
     // since opening lessons marks them completed on it.
     const wantedAccount = process.env.READING_GOOGLE_ACCOUNT?.trim()
     if (wantedAccount && who?.toLowerCase() !== wantedAccount.toLowerCase()) {
-      logLine(say("red", `✖ Could not confirm that the signed-in account is the one you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened. Sign in with that account in the capture browser (see the capture-reading skill), or unset READING_GOOGLE_ACCOUNT.`))
+      logLine(say("red", `✖ Could not confirm that the signed-in account is the one you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened. Either another account is signed in (sign in with the right one in the capture browser, see the capture-reading skill), or the settings page shows more than one address or none, so the crawl cannot tell which is the account's own. Or unset READING_GOOGLE_ACCOUNT.`))
       stoppedBecause = "the signed-in Google account is not confirmed to be the one in READING_GOOGLE_ACCOUNT"
       stopping = true
     }
@@ -297,6 +297,8 @@ async function main(): Promise<void> {
       const file = manifestFile(privateReadingRoot(), examId, course.id)
       const previous = await readManifest(file)
       const comparison = compareLessons(previous, lessons)
+      // An earlier manifest made under another listing rule is not compared, so this run reports no change for the course; the log says so.
+      if (previous && comparison.first) log("compare.skipped", { course: course.id, reason: "listing" })
       const saved = await readPrivateReadings(examId, course.id)
       const savedById = new Map(saved.map((record) => [record.pageId, record]))
       // Pages saved earlier, by another tool, have other ids. They count as saved when their title matches, each used once,

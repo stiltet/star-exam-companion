@@ -199,7 +199,10 @@ test.describe("an exam whose study data is not written yet", () => {
         await expect(page.getByTestId(path === "/" ? "pack-notice" : "unfinished-notice"), `${path} names what is missing`).toContainText("Unfinished")
       }
       await page.goto("/exam")
-      await expect(page.getByRole("button", { name: /Start exam/ })).toBeDisabled()
+      const start = page.getByRole("button", { name: /Start exam/ })
+      await expect(start).toBeDisabled()
+      // Dimmed, so it does not look like a button that works.
+      await expect(start).toHaveCSS("opacity", "0.6")
     } finally {
       await page.request.post("/api/exam", { headers: origin, data: { exam: "generative-ai-leader" } })
     }
