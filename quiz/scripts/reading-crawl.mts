@@ -1,4 +1,4 @@
-// pnpm --dir quiz reading:crawl [<exam>|all]
+// pnpm reading:crawl [<exam>|all]
 //
 // Saves the lessons of every private course of every exam (or of one named exam) as private readings. No AI, no tokens:
 // it uses a separate Chrome for Testing on its own profile folder (never the user's everyday Chrome), started headless by

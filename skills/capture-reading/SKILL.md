@@ -42,11 +42,11 @@ is always visible.
 2. **Run the command.** From the project folder. With no argument it covers every exam on the server; a name limits it to one:
 
    ```bash
-   pnpm --dir quiz reading:crawl
+   pnpm reading:crawl
    ```
 
    ```bash
-   pnpm --dir quiz reading:crawl <exam>
+   pnpm reading:crawl <exam>
    ```
 
    After signing in it prints `Signed in as <address>`, read from the site's account settings page, so it is plain which Google
@@ -61,7 +61,7 @@ is always visible.
    project's PDF module (`quiz/lib/pdf-text.ts`); nothing is saved to disk.
 
    Every run also writes a log file (the last line of the output is `Log: <path>`), with one line per event and no lesson text.
-   When a run fails or looks wrong, run it again with `--debug` (`pnpm --dir quiz reading:crawl <exam> --debug`) and read the log
+   When a run fails or looks wrong, run it again with `--debug` (`pnpm reading:crawl <exam> --debug`) and read the log
    before guessing: it shows the sign-in route, each lesson's outcome, every retry with its error and, with `--debug`, the addresses visited.
 
 3. **Read the report.** It ends with one headline and then each course, as its number and title, with its lesson counts
@@ -77,7 +77,7 @@ is always visible.
 4. **Validate it.** Do not trust the verdict alone. Run:
 
    ```bash
-   pnpm --dir quiz reading:list <exam>
+   pnpm reading:list <exam>
    ```
 
    Check that for each course the lessons listed equal the lessons saved plus those reported empty or failed, that every

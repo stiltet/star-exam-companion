@@ -13,6 +13,9 @@
     "e2e:install": "pnpm --dir quiz e2e:install",
     "gate": "node --test && pnpm e2e",
     "lint": "pnpm --dir quiz lint",
+    "reading:crawl": "pnpm --dir quiz reading:crawl",
+    "reading:list": "pnpm --dir quiz reading:list",
+    "reading:path": "pnpm --dir quiz reading:path",
     "start": "pnpm --dir quiz start",
     "start:local": "pnpm --dir quiz start:local"
   }

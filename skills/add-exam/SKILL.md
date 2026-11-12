@@ -32,7 +32,7 @@ is always visible.
    `capture-reading` skill describes in its step 1; follow that step first if the browser is not ready.
 
    ```bash
-   pnpm --dir quiz reading:path <learning-path address> --json
+   pnpm reading:path <learning-path address> --json
    ```
 
    Keep the JSON it prints. It holds the path's title, its address and its courses, numbered in Google's order, each marked private.
@@ -52,7 +52,7 @@ is always visible.
 5. **Capture every lesson.** Name the new exam, so only it is crawled:
 
    ```bash
-   pnpm --dir quiz reading:crawl <id>
+   pnpm reading:crawl <id>
    ```
 
    The last block is the report: a `FINISHED`, `NOT FINISHED` or `STOPPED` headline, then each course as its number and title with its
@@ -68,7 +68,7 @@ is always visible.
 7. **Validate it.** This also proves the exam loads:
 
    ```bash
-   pnpm --dir quiz reading:list <id>
+   pnpm reading:list <id>
    ```
 
    Check that every course shows its lessons saved and none is marked MISSING. A course the report named as having a lesson with no
@@ -116,7 +116,7 @@ is always visible.
 
 9. **Final checks.** All of these must pass, and each is named in the report:
    - `node --test` passes with the new exam in place.
-   - `pnpm --dir quiz reading:list <id>` shows every course's lessons saved.
+   - `pnpm reading:list <id>` shows every course's lessons saved.
    - `QUIZ_EXAM=<id> pnpm --dir quiz build` succeeds, into its own folder (`QUIZ_DIST_DIR=.next-gate`), never over the served one.
    If any stage was left out, set `homeNotice` and `notice` in `pack.json` to the same plain statement of what is missing, as `docs/exam-packs.md`
    says. `homeNotice` is the yellow note on Home and on the Study, Practice, Practice exam, Glossary, Flashcards and Voice quiz pages whose data is missing;
