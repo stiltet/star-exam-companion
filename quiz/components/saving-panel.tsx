@@ -142,7 +142,7 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
           </tr>
           <tr>
             <td className={label}>Voice for offline</td>
-            <td className={`${cell} text-right font-bold`} colSpan={2}>{voiceStored ? `${voiceStored.stored} of ${voiceStored.total} lines` : "Needs https://"}</td>
+            <td className={`${cell} text-right font-bold`} colSpan={2}>{voiceStored ? `${voiceStored.stored} of ${voiceStored.total} lines` : !("caches" in window) ? "Needs https://" : "…"}</td>
           </tr>
         </tbody>
       </table>
