@@ -1,75 +1,59 @@
-import { activePack } from "@/lib/pack"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { AboutProgress } from "@/components/about-progress"
+import { Heading } from "@/components/atoms/heading"
+import { Text } from "@/components/atoms/text"
 
+// The About page is public: it ships in the static demo. It holds no study plan and no
+// progress figures. Those live on the Progress page (owner plan 20261112-plan-about-page-public).
 export default function AboutPage() {
-  const pack = activePack()
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        <h1 className="sr-only text-2xl font-bold mb-6">ABOUT</h1>
-        <p className="mb-6">
-          Star Exam Companion is a study companion for Google Cloud certification exams, built and used by{" "}
-          <a href="https://github.com/stiltet" target="_blank" rel="noopener noreferrer" className="underline font-bold">Stellan Lindell</a>{" "}
-          to prepare for them.
-        </p>
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full flex flex-col gap-6">
+        <Heading variant="page">About</Heading>
 
-        <section className="border-2 border-foreground p-6 mb-6 bg-muted">
-          <h2 className="font-bold mb-4">MY CERTIFICATIONS</h2>
-          <ul className="space-y-3">
-            <li>
-              <strong>✓ Generative AI Leader</strong>
-              <span className="block text-sm text-muted-foreground">Passed 22 October 2026. Valid until 22 October 2029.</span>
-            </li>
-            <li>
-              <strong>Professional Agentic Architect</strong>
-              <span className="block text-sm text-muted-foreground">In preparation, with the exam planned for December 2026.</span>
-            </li>
-          </ul>
+        <section className="flex flex-col gap-2">
+          <Heading variant="rule">What it is</Heading>
+          <Text variant="muted">
+            Star Exam Companion is a free, open-source study companion for Google Cloud certification exams. It is not an
+            official Google product, so verify content against Google&apos;s own documentation.
+          </Text>
         </section>
 
-        <section className="border-2 border-foreground p-6 mb-6">
-          <h2 className="font-bold mb-2">MY EXAM PREPARATION</h2>
-          <p className="text-muted-foreground text-sm mb-4">
-            Studying now: {pack.meta.title}. These figures are read from the answers on this device and the Mac; they are never part of the project.
-          </p>
-          <AboutProgress />
+        <section className="flex flex-col gap-2">
+          <Heading variant="rule">What it does</Heading>
+          <Text variant="muted">
+            Voice Quiz, Read Aloud, practice questions, a timed practice exam and flashcards. Every answer stays on your own
+            device, and everything works offline.
+          </Text>
         </section>
 
-        <section className="border-2 border-foreground p-6 mb-6">
-          <h2 className="font-bold mb-4">WHAT IS THIS?</h2>
-          <p className="mb-4">
-            An open-source study platform for the {pack.meta.certification} certification exam, and for the other exams it carries.
-            Brutalist design: minimal, functional, distraction-free. Voice Quiz, Read Aloud, practice questions, a timed practice exam and flashcards, with every answer kept on your own machine and everything working offline.
-          </p>
-          <p className="text-muted-foreground text-sm">
-            NOT an official Google product. Verify content with official documentation.
-          </p>
+        <section className="flex flex-col gap-2">
+          <Heading variant="rule">The author</Heading>
+          <Text variant="muted">
+            Built by{" "}
+            <a href="https://github.com/stiltet" target="_blank" rel="noopener noreferrer" className="underline font-bold">Stellan Lindell</a>
+            , who uses it to prepare for Google Cloud exams.
+          </Text>
         </section>
 
-        <section className="border-2 border-foreground p-6 mb-6">
-          <h2 className="font-bold mb-4">CONTRIBUTE</h2>
-          <ul className="space-y-2 text-sm">
-            <li>
-              → <a href="https://github.com/stiltet/star-exam-companion" target="_blank" rel="noopener noreferrer" className="underline font-bold">⭐ Star the project on GitHub</a>
-            </li>
-            <li>
-              → <a href="https://github.com/stiltet/star-exam-companion/issues" target="_blank" rel="noopener noreferrer" className="underline">Report an issue</a>
-            </li>
-            <li>
-              → <a href="https://github.com/stiltet/star-exam-companion" target="_blank" rel="noopener noreferrer" className="underline">Source code on GitHub</a>
-            </li>
-          </ul>
+        <section className="flex flex-col gap-2">
+          <Heading variant="rule">Certifications</Heading>
+          <Text variant="muted">Generative AI Leader. Passed 22 October 2026, valid until 22 October 2029.</Text>
         </section>
 
-        <p className="text-muted-foreground text-sm">
-          Started as a fork of{" "}
-          <a href="https://github.com/ludovicobesana/gail-exam-preparation" target="_blank" rel="noopener noreferrer" className="underline">gail-exam-preparation</a>{" "}
-          by Ludovico Besana, under the MIT licence.
-        </p>
+        <section className="flex flex-col gap-2">
+          <Heading variant="rule">Open source</Heading>
+          <Text variant="muted">
+            <a href="https://github.com/stiltet/star-exam-companion" target="_blank" rel="noopener noreferrer" className="underline">Source code</a>
+            {" · "}
+            <a href="https://github.com/stiltet/star-exam-companion/issues" target="_blank" rel="noopener noreferrer" className="underline">Report an issue</a>
+            {" · MIT licence. Started as a fork of "}
+            <a href="https://github.com/ludovicobesana/gail-exam-preparation" target="_blank" rel="noopener noreferrer" className="underline">gail-exam-preparation</a>
+            {" by Ludovico Besana."}
+          </Text>
+        </section>
       </main>
 
       <SiteFooter />
