@@ -211,4 +211,19 @@ test.describe("Back in the installed app", () => {
     await back(page).click()
     await expect(page).toHaveURL(/\/progress$/)
   })
+
+  // A slow move up a level is still a move up: the page it opens counts as opened directly, however long the
+  // move took, so the next Back goes up again instead of bouncing back to the page just left.
+  test("a slow move up a level still has the next Back go up", async ({ page }) => {
+    await page.goto("/study/fundamentals")
+    await page.route(/\/study(\?|$)/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue()
+    })
+    await back(page).click()
+    await expect(page).toHaveURL(/\/study$/, { timeout: 10000 })
+    await page.unroute(/\/study(\?|$)/)
+    await back(page).click()
+    await expect(page).toHaveURL(/\/$/)
+  })
 })
