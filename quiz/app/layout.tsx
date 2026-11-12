@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     appleWebApp: {
       capable: true,
-      title: "Star Exam Companion",
+      title: "Star Exam",
       statusBarStyle: "default",
     },
   }
