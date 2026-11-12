@@ -52,3 +52,36 @@ test("the Google provider keeps the synthetic reading output of the public pack"
     },
   ])
 })
+
+test("a private video lesson is its title and a video stop, and no transcript", async (t) => {
+  const { mkdtemp, rm } = await import("node:fs/promises")
+  const { tmpdir } = await import("node:os")
+  const path = await import("node:path")
+  const { savePrivateReading, privateReadingRoot } = await import("./private-reading.ts")
+  const { manifestFile, writeManifest } = await import("./reading-crawl.ts")
+  const base = await mkdtemp(path.join(tmpdir(), "video-provider-"))
+  const before = process.env.QUIZ_PRIVATE_DIR
+  process.env.QUIZ_PRIVATE_DIR = path.join(base, "private")
+  t.after(async () => {
+    if (before === undefined) delete process.env.QUIZ_PRIVATE_DIR
+    else process.env.QUIZ_PRIVATE_DIR = before
+    await rm(base, { recursive: true, force: true })
+  })
+  await savePrivateReading("video-test", "1", { pageId: "11", title: "A made-up reading", text: "A made-up reading sentence that is long enough to count." })
+  await savePrivateReading("video-test", "1", { pageId: "22", title: "A made-up video", text: "A made-up video" })
+  await writeManifest(manifestFile(privateReadingRoot(), "video-test", "1"), {
+    checkedAt: "2026-01-01T00:00:00.000Z",
+    lessons: [
+      { title: "A made-up reading", href: "/course_templates/9/html_bundles/11", pageId: "11", hash: "x" },
+      { title: "A made-up video", href: "/course_templates/9/video/22", pageId: "22", kind: "video", hash: "y" },
+    ],
+  })
+  const course = { ...loadPack(testRoot, "agentic-architect").courses[0]!, id: "1", packId: "video-test", provider: "private" as const }
+  const loaded = await courseBundle(course)
+  assert.equal(loaded.ok, true)
+  if (!loaded.ok) return
+  assert.deepEqual(reading(loaded.bundle, "11")?.videoAt, [], "a reading has no video stop")
+  const video = reading(loaded.bundle, "22")
+  assert.deepEqual(video?.paragraphs.map((paragraph) => paragraph.text), ["A made-up video"], "a video reads only its title")
+  assert.deepEqual(video?.videoAt, [1], "the video stop comes after the title")
+})

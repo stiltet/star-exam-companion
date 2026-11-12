@@ -155,7 +155,8 @@ visible window of that browser; [`skills/capture-reading/SKILL.md`](skills/captu
 It lists each course's lessons, reads every one on
 every run, saves the missing ones and any whose text changed to the private store, pauses a random 2 to 15 seconds between pages, shows live
 progress, and ends with one verdict per course: complete and current, complete but Google changed (what), or
-incomplete (what). It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
+incomplete (what). A video lesson is listed in its place and saved by its title only: the command never opens a video page (that would play it and mark it
+watched) and keeps no transcript, and Read Aloud gives it a **Watch the video** button that opens it on Google Skills. It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
 the saved readings, so the next run reports lessons added, removed or reordered and any address or text that
 changed. `pnpm --dir quiz reading:list <exam>` prints which lessons are saved against that manifest. Read Aloud's
 **Unfinished** note says how to finish, and [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md)

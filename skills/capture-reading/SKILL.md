@@ -54,6 +54,8 @@ is always visible.
    It reads every lesson on every run, compares it with the saved copy, and saves any lesson whose text changed (naming it
    first). It prints one progress line per page (live and in place in a terminal) and pauses 2 to 15 seconds between pages.
    Stopping it with Ctrl-C is safe; the next run starts again from the first lesson and checks them all.
+   A video lesson is saved by its title only: the crawl never opens a video page and keeps no transcript. Read Aloud shows it with a
+   Watch the video button that opens it on Google Skills. Run the crawl again after an update to add the videos a course lists.
    A lesson delivered as a PDF has no page text, so the command fetches the PDF in memory and reads its text with the
    project's PDF module (`quiz/lib/pdf-text.ts`); nothing is saved to disk.
 

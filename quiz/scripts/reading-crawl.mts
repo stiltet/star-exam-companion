@@ -102,9 +102,14 @@ async function listLessons(page: Page, template: string): Promise<{ lessons: Les
     })),
   )
   const reading = new Set(["html_bundle", "link", "document"])
-  const lessons = cards
-    .filter((card) => reading.has(card.type))
-    .map((entry) => {
+  // A video card is listed in its place among the readings. Its page is never opened (that would play it and mark it watched):
+  // it is saved by its title, and Read Aloud gives it a button that opens it on Google Skills.
+  const videoOf = (href: string): string | null => /\/video\/(\d+)/.exec(href)?.[1] ?? null
+  const lessons: Lesson[] = cards
+    .filter((card) => reading.has(card.type) || videoOf(card.href) !== null)
+    .map((entry): Lesson => {
+      const video = videoOf(entry.href)
+      if (video !== null) return { title: entry.title.trim(), href: `/course_templates/${template}/video/${video}`, kind: "video" }
       // Some courses list their lessons as html bundles, others as documents; both open a page that embeds the reading.
       const found = /\/(html_bundles|documents)\/(\d+)/.exec(entry.href)
       return { title: entry.title.trim(), href: found ? `/course_templates/${template}/${found[1]}/${found[2]}` : "" }
@@ -112,7 +117,7 @@ async function listLessons(page: Page, template: string): Promise<{ lessons: Les
     .filter((lesson) => lesson.title !== "" && lesson.href !== "")
   const kinds = new Map<string, number>()
   for (const card of cards) {
-    if (reading.has(card.type) || card.type === "" || card.type === "credential" || card.type === "survey") continue
+    if (reading.has(card.type) || videoOf(card.href) !== null || card.type === "" || card.type === "credential" || card.type === "survey") continue
     kinds.set(card.type, (kinds.get(card.type) ?? 0) + 1)
   }
   const other = [...kinds].map(([type, count]) => `${count} ${type}${count === 1 ? "" : "s"}`).join(", ")
@@ -312,7 +317,7 @@ async function main(): Promise<void> {
           let read: Awaited<ReturnType<typeof readLesson>> | undefined
           for (let attempt = 1; !read; attempt += 1) {
             try {
-              read = await readLesson(page, lesson.href)
+              read = lesson.kind === "video" ? { status: "ok", text: lesson.title } : await readLesson(page, lesson.href)
             } catch (error) {
               if (attempt >= MAX_ATTEMPTS || !opened.isConnected()) throw error
               logLine(say("yellow", `  retry ${attempt + 1} of ${MAX_ATTEMPTS}: ${lesson.title}`))
@@ -377,7 +382,7 @@ async function main(): Promise<void> {
         const manifest: Manifest = { checkedAt: new Date().toISOString(), lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
         await writeManifest(file, manifest)
         show(true)
-        if (!stopping && state.page < state.total) await pause()
+        if (!stopping && state.page < state.total && lesson.kind !== "video") await pause()
       }
 
       if (stopping) break
