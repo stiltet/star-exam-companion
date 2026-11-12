@@ -201,7 +201,10 @@ Good to know about private readings:
   data on each device to remove its offline copies. Night reading's recording is built from the text and
   lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
   the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
-  copy does not remove the ticks you earned for it, which stay in your saved scores.
+  copy does not remove the ticks you earned for it, which stay in your saved scores. The capture also keeps two things beside the store, outside the
+  repository: its run logs (one small file per run in a `logs` folder next to `private-reading`, holding no lesson text and the signed-in
+  account only as its first letter and domain; delete them whenever you like) and the capture browser's own profile folder, `cft-profile`, which
+  holds the signed-in Google session of the capture account: delete it to sign that account out of the capture browser.
 - **Demo build check.** Building the online demo stops if any source file holds a captured page's text. A
   capture is compared when its whole text is at least 40 characters long, and each of its lines that is at
   least 40 characters long is compared too. A capture whose whole text and every line are shorter than that,
