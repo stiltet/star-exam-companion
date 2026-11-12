@@ -102,8 +102,12 @@ export function storeVoice(voice: Record<string, string>): Promise<void> {
 }
 
 // How many of the quiz's lines are on this device, and how many there are.
+// The last count, kept in memory, so the Offline / connection status panel, which is built afresh each time it
+// opens, shows the previous count at once and refreshes it quietly instead of starting empty.
+let lastCount: { stored: number; total: number } | null = null
+
 export function useVoiceStored(voice: Record<string, string> | undefined): { stored: number; total: number } | null {
-  const [count, setCount] = useState<{ stored: number; total: number } | null>(null)
+  const [count, setCount] = useState<{ stored: number; total: number } | null>(lastCount)
   useEffect(() => {
     if (!voice || !("caches" in window)) return
     const wanted = new Set(Object.values(voice).map((key) => `/api/speak/${key}`))
@@ -111,7 +115,8 @@ export function useVoiceStored(voice: Record<string, string> | undefined): { sto
     const update = async () => {
       const cache = await caches.open(VOICE_CACHE)
       const stored = (await cache.keys()).filter((request) => wanted.has(new URL(request.url).pathname)).length
-      if (live) setCount({ stored, total: wanted.size })
+      lastCount = { stored, total: wanted.size }
+      if (live) setCount(lastCount)
     }
     void update()
     window.addEventListener(STORED, update)
