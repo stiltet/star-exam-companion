@@ -74,7 +74,7 @@ test("the path command lists a learning path's courses in Google's order, as tex
   })
   t.after(async () => {
     await site.close()
-    await rm(base, { recursive: true, force: true })
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
   })
   const profile = path.join(base, "profile")
   const address = `${site.url}/paths/4525`
