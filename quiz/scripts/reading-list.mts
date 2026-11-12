@@ -1,4 +1,4 @@
-// pnpm --dir quiz reading:list <exam>
+// pnpm reading:list <exam>
 //
 // Prints each private course of the exam and which of its lessons are saved, compared with the manifest the last
 // `reading:crawl` kept. It needs no browser and reads no lesson text: only titles, counts and addresses.
@@ -10,7 +10,7 @@ const exam = process.argv.slice(2).find((arg) => !arg.startsWith("--"))
 const root = repoRoot()
 const known = listPacks(root).map((entry) => entry.id)
 if (!exam || !known.includes(exam)) {
-  console.error(`Usage: pnpm --dir quiz reading:list <exam>. Known exams: ${known.join(", ")}.`)
+  console.error(`Usage: pnpm reading:list <exam>. Known exams: ${known.join(", ")}.`)
   process.exit(2)
 }
 

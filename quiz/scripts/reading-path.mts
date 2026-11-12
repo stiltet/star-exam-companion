@@ -1,4 +1,4 @@
-// pnpm --dir quiz reading:path <learning-path address or number> [--json]
+// pnpm reading:path <learning-path address or number> [--json]
 //
 // Reads a Google Skills learning path and lists its courses in Google's order, so an exam's courses.json is never typed by
 // hand. With --json it prints the whole courses.json as JSON and nothing else. It uses the same separate Chrome for Testing as the
@@ -15,8 +15,8 @@ startLog("reading-path", verbose)
 log("run.start", { input: input ?? "", json, debug: verbose })
 const address = input ? pathAddress(input, SITE) : null
 if (!address) {
-  console.error("Usage: pnpm --dir quiz reading:path <learning-path address or number> [--json]")
-  console.error("  Example: pnpm --dir quiz reading:path https://www.skills.google/paths/4525")
+  console.error("Usage: pnpm reading:path <learning-path address or number> [--json]")
+  console.error("  Example: pnpm reading:path https://www.skills.google/paths/4525")
   process.exit(2)
 }
 

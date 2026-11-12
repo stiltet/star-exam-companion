@@ -12,7 +12,7 @@ Adding an exam means adding a folder. No code changes. The steps for a pull requ
 [end of this page](#add-an-exam-with-a-pull-request).
 
 The `/add-exam <exam name>` skill ([`../skills/add-exam/SKILL.md`](../skills/add-exam/SKILL.md)) does the folder and the lesson
-capture for you: it reads the exam's Google Skills learning path with `pnpm --dir quiz reading:path <address>`, writes `courses.json`
+capture for you: it reads the exam's Google Skills learning path with `pnpm reading:path <address>`, writes `courses.json`
 in Google's order, captures every lesson and checks the result. It then writes the quiz content (terms, glossary, scenes, study
 topics and practice questions) from the exam guide and Google's pages, in stages that each end with `node --test`. Nothing is
 invented: content with no official source is left out and named in the exam's `homeNotice` and `notice`.
@@ -38,7 +38,7 @@ the private provider, its folder there. `provider` is omitted for public Google 
 courses do not have a public `folder` or `format`; their captured text is outside the repository and
 build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
 app-data directory is used.
-A private course is captured by `pnpm --dir quiz reading:crawl [<exam>]`, which saves each lesson through the private
+A private course is captured by `pnpm reading:crawl [<exam>]`, which saves each lesson through the private
 store (the same store `POST /api/reading/private` writes to, which answers only a request that sends this install's token in `x-quiz-private-token`, a secret
 kept in the store's folder as `.write-token`, so never one from the network; a known limit is that any program running as the same user on this Mac can read the token and so save) and keeps a per-course manifest of titles, addresses and
 hashes beside it, never text. The README's "Private course readings" section describes it, and
