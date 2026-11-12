@@ -264,13 +264,23 @@ async function main(): Promise<void> {
     logLine(who ? `Signed in as ${say("bold", who)}` : say("yellow", "Could not tell who is signed in to Google Skills."))
     logLine(say("yellow", "Reading a lesson marks it as completed on this Google account. Use a secondary account, not the one you study with."))
     logLine("")
+    // READING_GOOGLE_ACCOUNT names the account the crawl may use. Any other signed-in account is refused before a lesson is opened,
+    // since opening lessons marks them completed on it.
+    const wantedAccount = process.env.READING_GOOGLE_ACCOUNT?.trim()
+    if (wantedAccount && who?.toLowerCase() !== wantedAccount.toLowerCase()) {
+      logLine(say("red", `✖ The signed-in account is not the account you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened.`))
+      stoppedBecause = "the signed-in Google account is not the one in READING_GOOGLE_ACCOUNT"
+      stopping = true
+    }
     // List every course first, so the total is known before anything is saved.
     const listed: { examId: string; course: PrivateCourse; lessons: Lesson[]; other: string }[] = []
-    for (const entry of work) listed.push({ ...entry, ...(await listLessons(page, entry.course.template)) })
+    if (!stopping) for (const entry of work) listed.push({ ...entry, ...(await listLessons(page, entry.course.template)) })
     state.total = listed.reduce((sum, entry) => sum + entry.lessons.length, 0)
     for (const entry of listed) log("list.course", { course: entry.course.id, title: entry.course.title, lessons: entry.lessons.length, other: entry.other })
     log("run.listed", { courses: listed.length, lessons: state.total })
-    if (state.total === 0) {
+    if (stopping) {
+      // Already stopped: the signed-in account is not the wanted one, so nothing is listed or opened.
+    } else if (state.total === 0) {
       // No course lists a lesson: most likely the browser is not signed in, so each course is named as an error.
       for (const entry of listed) logLine(say("red", `✖ ${entry.course.id}. ${entry.course.title}: the site lists no lessons for it.`))
       stoppedBecause = "the site lists no lessons"

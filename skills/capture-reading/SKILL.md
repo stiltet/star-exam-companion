@@ -34,7 +34,8 @@ is always visible.
    The user signs in to Google Skills there, then quits that window with the menu command (Cmd+Q), so it saves the profile. Later runs need no
    window: the command signs in itself, by pressing the browser's **Continue as** button for the saved Google account or, when
    that prompt does not appear, the site's **Sign in** and **Sign in with Google** buttons. With several Google accounts in that
-   browser, set `READING_GOOGLE_ACCOUNT` to the account's address to choose one.
+   browser, set `READING_GOOGLE_ACCOUNT` to the account's address to choose one. With it set, the command stops before it opens a
+   lesson if a different account turns out to be signed in, because opening lessons marks them completed on that account.
 
    If a Chrome for Testing is already running on port 9222, the command attaches to it and leaves it running.
 

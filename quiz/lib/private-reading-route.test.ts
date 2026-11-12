@@ -126,3 +126,18 @@ test("each refusal says what kind it was", async () => {
     untitled: { ok: false, reason: "untitled" },
   })
 })
+
+test("a request that came through the proxy from the network is refused, and nothing is saved", async () => {
+  const before = await readPrivateReadings("agentic-architect", "8")
+  const refused = await whileServing("agentic-architect", async () => {
+    const forwarded = await postPrivateReading(request({ ...body, pageId: "9100" }, "http://localhost", { "x-forwarded-for": "192.0.2.10" }))
+    const real = await postPrivateReading(request({ ...body, pageId: "9101" }, "http://localhost", { "x-real-ip": "192.0.2.10" }))
+    const standard = await postPrivateReading(request({ ...body, pageId: "9102" }, "http://localhost", { forwarded: "for=192.0.2.10" }))
+    return [forwarded, real, standard]
+  })
+  for (const response of refused) {
+    assert.equal(response.status, 400)
+    assert.deepEqual(await response.json(), { ok: false, reason: "origin" })
+  }
+  assert.equal((await readPrivateReadings("agentic-architect", "8")).length, before.length, "nothing from the network was saved")
+})
