@@ -14,7 +14,7 @@ const glossaryText = `
 | Fine-tuning | A second training pass. Changes the model. | 3.1 | SG p.9 |
 | Grounding | Connecting output to verifiable sources. | 3.1 | SG p.8 |
 | Prompt | The instruction you give a model. | 1.1 | SG p.3 |
-Names last checked: 2026-09-30
+Validated against Google docs: 2026-09-30
 `
 
 test("renders both product names from the glossary", () => {
