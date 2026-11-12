@@ -17,6 +17,20 @@ export default function AboutPage() {
           to prepare for them.
         </p>
 
+        <section className="border-2 border-foreground p-6 mb-6 bg-muted">
+          <h2 className="font-bold mb-4">MY CERTIFICATIONS</h2>
+          <ul className="space-y-3">
+            <li>
+              <strong>✓ Generative AI Leader</strong>
+              <span className="block text-sm text-muted-foreground">Passed 22 October 2026. Valid until 22 October 2029.</span>
+            </li>
+            <li>
+              <strong>Professional Agentic Architect</strong>
+              <span className="block text-sm text-muted-foreground">In preparation, with the exam planned for December 2026.</span>
+            </li>
+          </ul>
+        </section>
+
         <section className="border-2 border-foreground p-6 mb-6">
           <h2 className="font-bold mb-2">MY EXAM PREPARATION</h2>
           <p className="text-muted-foreground text-sm mb-4">
