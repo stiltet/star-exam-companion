@@ -10,6 +10,8 @@ import { homedir } from "node:os"
 import path from "node:path"
 import { Readable } from "node:stream"
 import { courseBundle } from "./reading-provider.ts"
+import { LISTING_VERSION, manifestFile, readManifest, textHash } from "./reading-crawl.ts"
+import { privateReadingRoot, readPrivateReadings } from "./private-reading.ts"
 import {
   byteRange, chapterList, manifestRecord, nightParts, parseManifest, pcmDuration, pcmOf, sayTimeoutMs, wavFromPcm,
   type NightBuildState, type NightPart, type NightSource,
@@ -23,6 +25,7 @@ import { renderSpeech } from "./say.ts"
 const ENCODE_TIMEOUT_MS = 10 * 60 * 1000
 
 export const BUILD_LOG = "build-errors.log"
+export const CLIPS_DIR = "clips"
 
 // The user's caches folder, which a restart keeps, so the hours of speech are not built again.
 export function nightDir(): string {
@@ -36,8 +39,37 @@ export function nightDirFor(exam: string = examId()): string {
   return exam === DEFAULT_EXAM ? nightDir() : path.join(nightDir(), exam)
 }
 
+// One spoken clip per reading, named by a hash of that reading's own script and kept beside the recording folders, so a
+// changed script speaks again only the readings that changed. The recording's own key (scriptKey) is unchanged.
+export function clipFile(dir: string, script: string): string {
+  return path.join(dir, CLIPS_DIR, `${createHash("sha256").update(script).digest("hex")}.wav`)
+}
+
 export function scriptKey(parts: readonly NightPart[]): string {
   return createHash("sha256").update(parts.map((part) => part.script).join("\n")).digest("hex")
+}
+
+// True only when every private course of the exam is fully and consistently captured, so a clip that no reading uses is really unused and
+// not merely missing from a crawl still running. A public course needs no crawl. Any doubt, an error included, answers false.
+export async function crawlComplete(exam: string): Promise<boolean> {
+  try {
+    for (const course of loadPack(repoRoot(), exam).courses) {
+      if (course.provider !== "private") continue
+      const manifest = await readManifest(manifestFile(privateReadingRoot(), course.packId, course.id))
+      if (!manifest || manifest.listing !== LISTING_VERSION || manifest.lessons.length === 0) return false
+      if (manifest.lessons.some((lesson) => lesson.hash === null)) return false
+      const records = await readPrivateReadings(course.packId, course.id)
+      if (records.length !== manifest.lessons.length) return false
+      for (const record of records) {
+        const lesson = manifest.lessons.find((item) => item.pageId === record.pageId)
+        if (!lesson || lesson.hash !== textHash(record.text)) return false
+      }
+    }
+    return true
+  } catch {
+    // Dropping the error is safe: false only means "not sure", which deletes nothing. The build itself reports its own failures.
+    return false
+  }
 }
 
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
@@ -123,6 +155,21 @@ export type BuildDeps = {
   render: (script: string, file: string) => Promise<boolean>
   encode: (wav: string, m4a: string) => Promise<void>
   onProgress?: (done: number, total: number) => void
+  // Asked only after a finished build. Clips no reading uses are deleted only when this answers true; no answer or an error deletes nothing.
+  canPrune?: () => Promise<boolean>
+}
+
+// Deletes the clips none of these readings uses. Called only with the readings of a build that just finished in full.
+export async function pruneClips(dir: string, parts: readonly NightPart[]): Promise<number> {
+  const folder = path.join(dir, CLIPS_DIR)
+  const used = new Set(parts.map((part) => path.basename(clipFile(dir, part.script))))
+  let removed = 0
+  for (const name of await readdir(folder).catch(() => [] as string[])) {
+    if (!/^[0-9a-f]{64}\.wav$/.test(name) || used.has(name)) continue
+    await rm(path.join(folder, name), { force: true })
+    removed += 1
+  }
+  return removed
 }
 
 export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuildState, { state: "ready" }>> {
@@ -141,16 +188,19 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
     if (manifest && info.size > 0) return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
   }
   const total = deps.parts.length
-  const files: string[] = []
+  const clipFolder = path.join(deps.dir, CLIPS_DIR)
+  await mkdir(clipFolder, { recursive: true })
+  const files = deps.parts.map((part) => clipFile(deps.dir, part.script))
+  const have = async (file: string) => (await stat(file).then((info) => info.size, () => 0)) > 0
+  // Readings already spoken count as done, so the page never shows 0 of N for a reading that will not be spoken again.
   let done = 0
+  for (const file of files) if (await have(file)) done += 1
   deps.onProgress?.(done, total)
-  for (const part of deps.parts) {
-    const file = path.join(root, `${String(done).padStart(3, "0")}.wav`)
-    files.push(file)
-    if (!existsSync(file)) {
-      const spoke = await deps.render(part.script, file)
-      if (!spoke) throw new Error(`The Mac could not speak reading ${part.number} of course ${part.courseId}.`)
-    }
+  for (const [index, part] of deps.parts.entries()) {
+    const file = files[index]
+    if (!file || (await have(file))) continue
+    const spoke = await deps.render(part.script, file)
+    if (!spoke) throw new Error(`The Mac could not speak reading ${part.number} of course ${part.courseId}.`)
     done += 1
     deps.onProgress?.(done, total)
   }
@@ -165,11 +215,16 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   await writeFile(temporary, manifestRecord(key, { duration, chapters }))
   await rename(temporary, manifestPath)
   await rm(joined, { force: true })
-  // A `say` that was stopped mid-reading leaves a .partial file behind; the finished build clears it.
-  const partials = (await readdir(root)).filter((name) => name.endsWith(".partial")).map((name) => path.join(root, name))
-  await Promise.all([...files, ...partials].map((file) => rm(file, { force: true })))
+  // A `say` that was stopped mid-reading leaves a .partial file behind; the finished build clears it. The clips stay.
+  const partials = [
+    ...(await readdir(root)).filter((name) => name.endsWith(".partial")).map((name) => path.join(root, name)),
+    ...(await readdir(clipFolder)).filter((name) => name.endsWith(".partial")).map((name) => path.join(clipFolder, name)),
+  ]
+  await Promise.all(partials.map((file) => rm(file, { force: true })))
   const old = (await readdir(deps.dir)).filter((name) => /^[0-9a-f]{64}$/.test(name) && name !== key)
   await Promise.all(old.map((name) => rm(path.join(deps.dir, name), { recursive: true, force: true })))
+  // Pruning is a tidy-up: it never fails a finished recording, and a doubt deletes nothing.
+  if (deps.canPrune && (await deps.canPrune().catch(() => false))) await pruneClips(deps.dir, deps.parts).catch(() => 0)
   return { state: "ready", key, bytes, duration, chapters }
 }
 
@@ -178,6 +233,7 @@ type Runner = {
   load: () => Promise<NightPart[]>
   render: (script: string, file: string) => Promise<boolean>
   encode: (wav: string, m4a: string) => Promise<void>
+  canPrune?: () => Promise<boolean>
 }
 
 async function noteFailure(dir: string, message: string, done: number, total: number) {
@@ -220,6 +276,7 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
           parts,
           render: deps.render,
           encode: deps.encode,
+          canPrune: deps.canPrune,
           onProgress: (done, total) => {
             reached = { done, total }
             status = { state: "building", done, total }
@@ -254,6 +311,7 @@ export function beginNightBuild(retry: boolean, preload = false, exam = examId()
       load: () => loadCourseParts(exam),
       render: (script, file) => renderSpeech(script, file, sayTimeoutMs(script)),
       encode: encodeNightAudio,
+      canPrune: () => crawlComplete(exam),
     })
     shared.set(exam, build)
   }
