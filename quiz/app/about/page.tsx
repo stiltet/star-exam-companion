@@ -4,7 +4,7 @@ import { Heading } from "@/components/atoms/heading"
 import { Text } from "@/components/atoms/text"
 
 // The About page is public: it ships in the static demo. It holds no study plan and no
-// progress figures. Those live on the Progress page (owner plan 20261112-plan-about-page-public).
+// progress figures. Those live on the Progress page.
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
