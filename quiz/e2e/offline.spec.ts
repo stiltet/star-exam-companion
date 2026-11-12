@@ -215,8 +215,8 @@ test.describe("exam changes", () => {
       await settleOfflineWorker(page)
       const second = await readyNight(page, "agentic-architect")
       expect(second.key).not.toBe(first.key)
-      expect(second.chapters[0]?.courseTitle).toBe("Understand Google Cloud Agents")
-      expect(second.chapters.some((chapter) => chapter.title === "Test Rise reading one")).toBe(true)
+      expect(second.chapters[0]?.courseTitle).toBe("Model Armor: Securing AI Deployments")
+      expect(second.chapters.some((chapter) => chapter.title === "Synthetic private fixture")).toBe(true)
       const oldStatus = await page.request.get("/api/night")
       expect(oldStatus.status()).toBe(409)
       expect(await oldStatus.json()).toMatchObject({ state: "failed", wrongExam: "agentic-architect", error: /Reload Night reading/ })
@@ -238,7 +238,7 @@ test.describe("exam changes", () => {
       await page.reload()
       await page.getByRole("button", { name: "Play", exact: true }).click()
       await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeVisible()
-      await expect(page.getByRole("status").filter({ hasText: "Understand Google Cloud Agents" })).toBeVisible()
+      await expect(page.getByRole("status").filter({ hasText: "Model Armor: Securing AI Deployments" })).toBeVisible()
 
       await context.setOffline(false)
       await page.goto("/progress")
@@ -483,8 +483,8 @@ test.describe("reading aloud when the Mac cannot answer", () => {
     await expect.poll(() => spokenNow(page)).toContain(first)
     const cancelledBefore = await cancelledNow(page)
     // The app's own link keeps the page's window, so the stub's record shows what happens after leaving.
-    await page.getByRole("link", { name: "COURSE 12" }).click()
-    await expect(page).toHaveURL(/\/read\/12$/)
+    await page.getByRole("link", { name: "COURSE 8" }).click()
+    await expect(page).toHaveURL(/\/read\/8$/)
     expect(await cancelledNow(page), "leaving cancelled the device voice").toBeGreaterThan(cancelledBefore)
     // Ending the held sentence now, as the browser would if it had not been cancelled, must lead to nothing more being said.
     const spokenAtLeave = (await spokenNow(page)).length
