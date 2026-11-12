@@ -58,7 +58,7 @@ export default async function ReadingPage({ params }: Props) {
           <span className="text-foreground">{at + 1} of {list.length}</span>
         </nav>
       </div>
-      <main className="flex-1 max-w-4xl mx-auto px-4 pb-8 w-full">
+      <main className="flex-1 max-w-4xl mx-auto px-4 pb-6 w-full">
         <PageNav kind="lesson" previous={previous} next={following} at="top" />
         <ReadAloud
           key={`${course.id}/${pageId}`}
@@ -72,7 +72,7 @@ export default async function ReadingPage({ params }: Props) {
           videoAt={page.videoAt}
         />
         {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
-        <ActionLink variant="outlined" placement="mt-8 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
+        <ActionLink variant="outlined" placement="mt-6 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
         <PageNav kind="lesson" previous={previous} next={following} at="bottom" />
       </main>
       <SiteFooter />
