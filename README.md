@@ -133,7 +133,7 @@ One install studies one exam. The exam is a folder under [`exams/`](exams/), and
 you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you get the default,
 `generative-ai-leader`.
 
-| Pack (`QUIZ_EXAM`) | Exam |
+| `QUIZ_EXAM` | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
 | `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 8 courses of Google's learning path (`skills.google/paths/4525`, in Google's order) this server can read from its private store; it says **Unfinished** while any are unreadable. Every course is captured from Google Skills as you see it. |
@@ -232,19 +232,19 @@ If a device cannot update its older offline worker after a switch, it says so an
 it does not quietly reopen the previous exam.
 
 `QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
-build and for the start. Replace `PACK` with a name from the list:
+build and for the start. Replace `EXAM` with a name from the list:
 
 ```bash
-QUIZ_EXAM=PACK pnpm build
+QUIZ_EXAM=EXAM pnpm build
 ```
 
 ```bash
-QUIZ_EXAM=PACK pnpm start:local
+QUIZ_EXAM=EXAM pnpm start:local
 ```
 
-For development, `QUIZ_EXAM=PACK pnpm dev:local`
+For development, `QUIZ_EXAM=EXAM pnpm dev:local`
 serves the same exam. If you run the quiz as a login service ([full local setup](#full-local-setup)),
-put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
+put `QUIZ_EXAM=EXAM` in `quiz/.env.local`, then build and restart. Your answers stay separate for
 each exam, so switching never mixes them.
 
 Missing your exam? An exam is a folder of data, with no code to change: see
