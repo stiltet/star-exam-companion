@@ -127,17 +127,27 @@ test("each refusal says what kind it was", async () => {
   })
 })
 
-test("a request that came through the proxy from the network is refused, and nothing is saved", async () => {
+test("a request that came from the network is refused, and nothing is saved, whatever the client wrote first", async () => {
   const before = await readPrivateReadings("agentic-architect", "8")
   const refused = await whileServing("agentic-architect", async () => {
     const forwarded = await postPrivateReading(request({ ...body, pageId: "9100" }, "http://localhost", { "x-forwarded-for": "192.0.2.10" }))
     const real = await postPrivateReading(request({ ...body, pageId: "9101" }, "http://localhost", { "x-real-ip": "192.0.2.10" }))
     const standard = await postPrivateReading(request({ ...body, pageId: "9102" }, "http://localhost", { forwarded: "for=192.0.2.10" }))
-    return [forwarded, real, standard]
+    // A client that writes a loopback address first still shows up, because nginx appends the address it really came from.
+    const forged = await postPrivateReading(request({ ...body, pageId: "9103" }, "http://localhost", { "x-forwarded-for": "127.0.0.1, 192.0.2.10" }))
+    const withPort = await postPrivateReading(request({ ...body, pageId: "9104" }, "http://localhost", { "x-forwarded-for": "192.0.2.10:5555" }))
+    return [forwarded, real, standard, forged, withPort]
   })
   for (const response of refused) {
     assert.equal(response.status, 400)
     assert.deepEqual(await response.json(), { ok: false, reason: "origin" })
   }
   assert.equal((await readPrivateReadings("agentic-architect", "8")).length, before.length, "nothing from the network was saved")
+})
+
+test("a request from this machine, which Next marks with loopback addresses, is still saved", async () => {
+  for (const [index, header] of ([{ "x-forwarded-for": "::1" }, { "x-forwarded-for": "127.0.0.1" }, { "x-forwarded-for": "::ffff:127.0.0.1, 127.0.0.1" }, { forwarded: 'for="[::1]:4000"' }] as Record<string, string>[]).entries()) {
+    const response = await whileServing("agentic-architect", () => postPrivateReading(request({ ...body, pageId: String(9200 + index) }, "http://localhost", header)))
+    assert.equal(response.status, 200, JSON.stringify(header))
+  }
 })

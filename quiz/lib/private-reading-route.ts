@@ -14,16 +14,25 @@ function refuse(reason: "origin" | "body" | "reading" | "title" | "untitled" | "
   return Response.json({ ok: false, reason }, { status: 400 })
 }
 
-// nginx adds X-Forwarded-For to every request it passes on, so a request that carries one came from the network, not from this
-// machine. The crawl saves through the store directly and nothing in the app calls this route, so it answers only a direct
-// request (the agreed rule: never from the network).
-function cameThroughProxy(request: Request): boolean {
-  return ["x-forwarded-for", "x-real-ip", "forwarded"].some((name) => request.headers.has(name))
+// Next.js adds X-Forwarded-For to every request it serves, with the address that connected, and nginx appends the real client's address
+// to the list it passes on. So a request from this machine lists only loopback addresses, and one from the network always lists a
+// non-loopback one, whatever the client wrote first. The crawl saves through the store directly and nothing in the app calls this
+// route, so it answers only requests from this machine (the agreed rule: never from the network).
+const LOOPBACK = /^(?:127(?:\.\d{1,3}){3}|::1|::ffff:127(?:\.\d{1,3}){3})$/i
+
+function addressOf(value: string): string {
+  return value.trim().replace(/^"|"$/g, "").replace(/^\[(.*)\](?::\d+)?$/, "$1").replace(/^(\d+\.\d+\.\d+\.\d+):\d+$/, "$1")
+}
+
+function cameFromNetwork(request: Request): boolean {
+  const listed = [request.headers.get("x-forwarded-for"), request.headers.get("x-real-ip")].flatMap((value) => (value ?? "").split(","))
+  const forwarded = (request.headers.get("forwarded") ?? "").split(/[;,]/).map((part) => part.trim()).filter((part) => /^for=/i.test(part)).map((part) => part.slice(4))
+  return [...listed, ...forwarded].map(addressOf).filter(Boolean).some((address) => !LOOPBACK.test(address))
 }
 
 export async function postPrivateReading(request: Request): Promise<Response> {
   const contentType = request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase()
-  if (cameThroughProxy(request) || !sameOrigin(request) || contentType !== "application/json") return refuse("origin")
+  if (cameFromNetwork(request) || !sameOrigin(request) || contentType !== "application/json") return refuse("origin")
   const pack = activePack()
   const wrong = wrongExam(request, pack.meta.id)
   if (wrong) return wrong
