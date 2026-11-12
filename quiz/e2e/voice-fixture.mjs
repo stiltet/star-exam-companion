@@ -16,6 +16,10 @@ export async function seedVoice(root, dir) {
     if (!parsed.ok) throw new Error(`Cannot seed voice clips for ${id}: its glossary does not parse`)
     const index = voiceIndex(itemsFromGlossary(parsed.glossary, pack.scenes))
     if (index.size === 0) throw new Error(`No voice clips to seed for ${id}`)
-    await Promise.all([...index.keys()].map((key) => writeFile(path.join(dir, `${key}.wav`), silentWav)))
+    // A bounded pool: one write per clip all at once could open more files than the system allows.
+    const keys = [...index.keys()]
+    for (let i = 0; i < keys.length; i += 32) {
+      await Promise.all(keys.slice(i, i + 32).map((key) => writeFile(path.join(dir, `${key}.wav`), silentWav)))
+    }
   }
 }
