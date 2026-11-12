@@ -18,7 +18,10 @@ the meaning comes from:
 Covered on 29 Sept: the whole exam guide, intro to 4.3. Validated on 30 Sept against every
 term the exam guide names; the list is [`checks/glossary-terms.txt`](checks/glossary-terms.txt).
 Re-validated on 8 Oct against the exam guide, the whole study guide, the release notes and
-every linked page.
+every linked page. Re-validated again on 12 Nov, row by row, against the exam guide, the
+whole study guide, the five course summaries and every linked page, fetched live in English
+(each quoted phrase found on its page); four rows fixed. A date is stamped below only after
+such a pass, never copied between repos.
 
 **Renames.** Exam guides lag behind Google's renames, so both names get a row. In the table the
 new name's row says "Formerly called …" and the old name's row says "Now called …".
@@ -29,7 +32,7 @@ only as "also called" (exam guide first, then the newest name). Sub-products fol
 "Agent Platform X": Vertex AI Studio is now Agent Studio and Vertex AI RAG Engine is now RAG
 Engine. Google's full list is the naming table in the release notes.
 
-Names last checked: 2026-11-10
+Names last checked: 2026-11-12
 
 ## Section 1 — Fundamentals of gen AI
 
@@ -64,8 +67,8 @@ Names last checked: 2026-11-10
 | Performance | A model-choice factor: the model's accuracy, speed and efficiency. Weigh it against cost. | 1.1 | SG p.10 |
 | Availability and reliability | A model-choice factor: the model is consistently available and performs reliably under load. Consider uptime guarantees, redundancy and disaster recovery. | 1.1 | SG p.10 |
 | Security | A model-choice factor in the exam guide: how well the model and its platform protect your data and meet your security needs. Exam-guide term; the study guide does not define it. | 1.1 | EG |
-| Customization | A model-choice factor: how specialised the AI needs to be. Fine-tuning is one way to customise a model. | 1.1 | SG p.10 |
-| Cost | A model-choice factor: trade performance against cost; a bigger context window also costs more to compute. Budget is part of a project's resources. | 1.1, 1.2 | SG p.10 |
+| Customization | A model-choice factor: how specialised the AI needs to be. Fine-tuning is one way to customise a model. | 1.1 | SG p.10, EG |
+| Cost | A model-choice factor: trade performance against cost; a bigger context window also costs more to compute. Budget is part of a project's resources. | 1.1, 1.2 | SG p.10, EG |
 | Structured data | Organised and easy to search, often stored in relational databases. | 1.2 | SG p.4 |
 | Unstructured data | Has no predefined structure and needs sophisticated analysis. | 1.2 | SG p.4 |
 | Labeled data | Data with tags such as a name, type or number. | 1.2 | SG p.3 |
@@ -112,7 +115,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Gemini for Google Cloud | AI assistant for Google Cloud. Writes and debugs code, manages and optimises cloud apps, analyses data in BigQuery, strengthens security posture. Its products include Gemini Code Assist and Gemini Cloud Assist. Google's docs overview is now titled "Google Cloud with Gemini". | — | SG p.5, [Google page](https://docs.cloud.google.com/gemini/docs/overview) |
 | Gemini Notebook | Upload your files and it acts as a research assistant: summarises key points, answers questions and generates ideas, grounded in your sources. Formerly called NotebookLM. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | 2.2 | SG p.5, p.11 |
 | NotebookLM | Now called Gemini Notebook. notebooklm.google.com now redirects to the Gemini Notebook site. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | — | [Google page](https://notebook.google.com/) |
-| Gemini Enterprise | Puts customised search and conversation agents, which understand data from your internal sources, into your organisation's internal websites or dashboards. Exam guide examples: Gemini Notebook API, multimodal search, custom agents. | 2.2 | SG p.5, EG |
+| Gemini Enterprise | Puts customised search and conversation agents, which understand data from your internal sources, into your organisation's internal websites or dashboards. Course 5 and Google's docs also call it the Gemini Enterprise app. Exam guide examples: Gemini Notebook API, multimodal search, custom agents. | 2.2 | SG p.5, EG |
 | Gemini Notebook API | Part of Gemini Enterprise: create, list, share and delete notebooks from code instead of in the app (Preview on 19 Oct). Google's page: "Create and manage notebooks (API)", under Gemini Notebook Enterprise. Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/api-notebooks) |
 | Multimodal search | Part of Gemini Enterprise: one search across the company's connected sources, such as Confluence, Jira, SharePoint and ServiceNow, that respects each employee's permissions. Google's page: "a single, multimodal search interface offering permissions-aware access to enterprise information". Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/docs) |
 | Gemini Enterprise Agent Platform | Formerly called Vertex AI. Also called Agent Platform, and Google's product pages now also call it Gemini platform. Google Cloud's unified ML platform: build, train and deploy ML apps, use and tune models such as Gemini, and build custom agents. **Renamed:** Vertex AI => Gemini Enterprise Agent Platform. **Exam guide:** Gemini Enterprise Agent Platform. | 2.4, 2.5 | SG p.5–6, EG, product page |
@@ -132,7 +135,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Gemini API | How applications call Gemini models from code. The study guide: "Use it with the Gemini API with Google AI Studio or Agent Studio". Compare the Gemini app, for chatting. | — | SG p.5, p.7 |
 | Agent Runtime | Formerly called Vertex AI Agent Engine. Google's page: "a set of services that enables developers to deploy, manage, and scale AI agents in production". Compare Agent Studio, for building and testing. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime) |
 | Agent Platform Memory Bank | Formerly called Vertex AI Agent Engine Memory Bank. Google's page: it lets you "dynamically generate long-term memories based on user conversations to personalize responses and create cross-session continuity". Compare Agent Platform Sessions, which holds one conversation's history. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank) |
-| Agent Platform Sessions | Formerly called Vertex AI Agent Engine Sessions. Google's page: "Manage agent interaction history, conversation context, and long-term memory with Agent Platform Sessions via ADK or API." It keeps each conversation's history and context; Memory Bank turns conversations into long-term memories. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions) |
+| Agent Platform Sessions | Formerly called Vertex AI Agent Engine Sessions. Google's page: "Manage agent interaction history, conversation context, and long-term memory with Agent Platform Sessions via Agent Development Kit (ADK) or API." It keeps each conversation's history and context; Memory Bank turns conversations into long-term memories. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions) |
 | Agent Platform Code Execution | Formerly called Vertex AI Agent Engine Code Execution. Google's page: "Code Execution lets your agent run code in a secure, isolated, and managed sandbox environment", for tasks such as financial calculations and data science workflows. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sandbox/code-execution-overview) |
 | RAG Engine | Formerly called Vertex AI RAG Engine. Google's page: "a data framework for building context-augmented LLM applications". It is Google Cloud's RAG APIs option: you build your own RAG. Compare Prebuilt RAG with Agent Search. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview) |
 | Vector Search | Formerly called Vertex AI Vector Search. Google's page: "Run queries to get nearest neighbors using the k-nearest neighbors algorithm." Google's Agent Retrieval page calls it "a powerful approximate nearest neighbor (ANN) index-as-a-service system". Compare Agent Retrieval. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search/overview), [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search-2/overview) |
@@ -171,7 +174,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Agent Assist | Supports your live human contact-centre agents. | 2.3 | SG p.5 |
 | Customer Experience Insights | Insights into all your communications with customers. Formerly called Conversational Insights. **Renamed:** Conversational Insights => Customer Experience Insights. **Exam guide:** Conversational Insights. | 2.3 | SG p.5, EG, product page |
 | Conversational Insights | Now called Customer Experience Insights. Exam-guide name for insights into customer communications. **Renamed:** Conversational Insights => Customer Experience Insights. **Exam guide:** Conversational Insights. | 2.3 | EG, SG p.5 |
-| MLOps | An ML engineering culture and practice that unifies ML system development (Dev) and operation (Ops). Agent Platform's MLOps tools help AI teams collaborate to monitor and improve their models. | — | SG p.6, [Google page](https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning) |
+| MLOps | An ML engineering culture and practice that aims at unifying ML system development (Dev) and operation (Ops). Agent Platform's MLOps tools help AI teams collaborate to monitor and improve their models. | — | SG p.6, [Google page](https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning) |
 | Agent | An application that tries to reach a goal by observing the world and acting on it with its tools. Parts: reasoning loop, tools, model. | 2.5 | SG p.6 |
 | Model (agent component) | The brains of an agent: algorithms that learn patterns from data and can make predictions or generate new content. One of an agent's three parts, with the reasoning loop and tools. | 2.5 | SG p.6 |
 | Tools (agent component) | The functionalities that let an agent interact with its environment, such as accessing and processing data or interacting with hardware. Extensions, functions, data stores and plugins are kinds of tool. | 2.5 | SG p.6, p.5 |
