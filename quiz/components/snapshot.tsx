@@ -106,20 +106,26 @@ export function SnapshotPrefetch() {
   return null
 }
 
+// The last answer, kept in memory. A panel or page built afresh (the Offline / connection status panel is built each time it
+// opens) starts from it instead of "Loading…", and refreshes it quietly.
+let lastState: Omit<SnapshotState, "lines"> | null = null
+let lastLines: ScoreLine[] = []
+
 export function useSnapshot(): SnapshotState {
-  const [state, setState] = useState<Omit<SnapshotState, "lines">>({ snapshot: null, from: "loading", broken: null })
-  const [lines, setLines] = useState<ScoreLine[]>([])
+  const [state, setState] = useState<Omit<SnapshotState, "lines">>(lastState ?? { snapshot: null, from: "loading", broken: null })
+  const [lines, setLines] = useState<ScoreLine[]>(lastLines)
 
   useEffect(() => {
     let live = true
     const apply = (result: Fetched) => {
       if (!live) return
       if (result && "snapshot" in result) {
-        setState({ snapshot: result.snapshot, from: "mac", broken: null })
+        lastState = { snapshot: result.snapshot, from: "mac", broken: null }
       } else {
         const kept = readSnapshot(window.localStorage)
-        setState({ snapshot: kept, from: kept ? "device" : "none", broken: result && "broken" in result ? result.broken : null })
+        lastState = { snapshot: kept, from: kept ? "device" : "none", broken: result && "broken" in result ? result.broken : null }
       }
+      setState(lastState)
     }
     const refreshed = (event: Event) => apply((event as CustomEvent<Fetched>).detail)
     window.addEventListener(REFRESHED, refreshed)
@@ -135,7 +141,8 @@ export function useSnapshot(): SnapshotState {
       // After a send, the kept copy holds the answers the Mac took; read it again.
       const kept = state.from === "loading" ? null : readSnapshot(window.localStorage)
       const base = kept ?? state.snapshot
-      setLines(base ? mergeLines(base.lines, readOutbox(window.localStorage)) : [])
+      lastLines = base ? mergeLines(base.lines, readOutbox(window.localStorage)) : []
+      setLines(lastLines)
     }
     update()
     window.addEventListener(CHANGED, update)
