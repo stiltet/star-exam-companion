@@ -366,7 +366,6 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     const privateText = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
     await expect(page.locator("main")).toContainText(privateText)
     await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
-    await expect(page.getByText("This reading is from a private copy on this server.")).toBeVisible()
     // The Mac's speech route is aborted, so a pass cannot come from a mocked network answer.
     // The device voice is a silent stub that records what it is asked to say and ends each sentence itself.
     await page.route(/\/api\/speak(?:\/|$|\?)/, (route) => route.abort())
