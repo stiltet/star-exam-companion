@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test from "node:test"
+import { jsonForScript } from "./fake-lesson-site.ts"
 import {
   PAUSE_MAX_MS,
   PAUSE_MIN_MS,
@@ -188,4 +189,11 @@ test("a manifest made under an older listing rule is not compared, so lessons th
   assert.deepEqual(compareLessons(older, now), { first: true, added: [], removed: [], reordered: false, addressChanged: [] })
   assert.deepEqual(compareLessons({ ...older, listing: 1 }, now).added, [], "another listing version is not compared either")
   assert.deepEqual(compareLessons(manifest, now).added, ["A made-up video"], "under the same rule a new lesson is still reported")
+})
+
+test("a text written into a script block cannot end the block, and reads back the same", () => {
+  const text = "a </script><img src=x onerror=alert(1)> & b\u2028c\u2029d"
+  const written = jsonForScript(text)
+  for (const character of ["<", ">", "&", "\u2028", "\u2029"]) assert.equal(written.includes(character), false, JSON.stringify(character))
+  assert.equal(JSON.parse(written), text)
 })
