@@ -45,6 +45,17 @@ function send(response: ServerResponse, status: number, type: string, body: stri
   response.end(body)
 }
 
+// JSON for a <script> block. JSON.stringify leaves < > & and the two line separators as they are, so a text with </script> in it would
+// end the block: they are written as escapes, and the page still reads the same value.
+export function jsonForScript(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+}
+
 // A learning-path page: a title and cards. A card with a template is a course and links to it.
 export type FakePath = { title: string; cards: { type: string; title: string; template?: string }[] }
 
@@ -167,7 +178,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
       if (!entry) return send(response, 404, "text/plain", "No such frame")
       if (entry.lesson.kind === "settle") {
         const placeholder = "Loading placeholder text that is long enough to look like a finished reading."
-        return send(response, 200, "text/html", `<html><body><p id="t">${placeholder}</p><script>setTimeout(function(){document.getElementById("t").textContent=${JSON.stringify(entry.lesson.text)}},800)</script></body></html>`)
+        return send(response, 200, "text/html", `<html><body><p id="t">${placeholder}</p><script>setTimeout(function(){document.getElementById("t").textContent=${jsonForScript(entry.lesson.text)}},800)</script></body></html>`)
       }
       return send(response, 200, "text/html", `<html><body><p>${escapeHtml(entry.lesson.text)}</p></body></html>`)
     }
