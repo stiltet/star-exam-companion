@@ -27,7 +27,7 @@ export default async function CourseReadingsPage({ params }: Props) {
     return (
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
-        <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+        <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-8 w-full">
           <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="mb-2" />
           <PageNav kind="course" previous={previous} next={next} at="top" />
           <Heading variant="page" placement="mb-6">{noText.title}</Heading>
@@ -45,7 +45,7 @@ export default async function CourseReadingsPage({ params }: Props) {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+      <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-8 w-full">
         <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="mb-2" />
         <PageNav kind="course" previous={previous} next={next} at="top" />
         <Heading variant="page" placement="mb-6">{course.title}</Heading>
