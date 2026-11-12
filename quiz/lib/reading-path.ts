@@ -20,6 +20,7 @@ export function pathAddress(input: string, site: string): string | null {
   try {
     url = new URL(text)
   } catch {
+    // Not an address at all: null makes the command print its usage line, so the parse error adds nothing.
     return null
   }
   const base = new URL(site)

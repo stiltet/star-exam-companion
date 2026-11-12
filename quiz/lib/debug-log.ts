@@ -17,6 +17,7 @@ export function maskAddress(address: string): string {
     const url = new URL(address)
     return `${url.host}${url.pathname.replace(/\d+/g, "N")}`
   } catch {
+    // Not an address that parses: mask the text itself, which is all the log needs. Nothing is lost by dropping the parse error.
     return address.replace(/\d+/g, "N").slice(0, MAX_VALUE_CHARS)
   }
 }
@@ -62,6 +63,7 @@ export function createDebugLog(options: { file: string | null; verbose: boolean;
     try {
       mkdirSync(path.dirname(options.file), { recursive: true, mode: 0o700 })
     } catch {
+      // A log folder that cannot be made turns the log off. A log never breaks the run it describes, so the error is dropped on purpose.
       usable = false
     }
   }
@@ -70,6 +72,7 @@ export function createDebugLog(options: { file: string | null; verbose: boolean;
     try {
       appendFileSync(options.file, formatLine(now(), event, detail), { mode: 0o600 })
     } catch {
+      // A line that cannot be written turns the log off, for the same reason: the run goes on and its own errors are what matter.
       usable = false
     }
   }
