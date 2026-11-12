@@ -411,3 +411,26 @@ test("when the settings page shows more than one address, the crawl cannot tell 
   assert.equal((await saved(base, "1")).length, 0, "no lesson was opened")
   noLessonText(run, [text])
 })
+
+test("a course whose manifest was made under an older listing rule is not compared, the run logs that, and Google is not blamed", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const text = "Synthetic lesson text of a course whose manifest is older than the listing rule, long enough."
+  const site = await startFakeSite({ "9001": [{ title: "Only lesson", kind: "bundle", text }, { title: "A made-up video", video: true }], "9002": [{ title: "Other lesson", kind: "bundle", text }] })
+  t.after(async () => {
+    await site.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  // An earlier run's manifest, from before the listing version existed: it knows one lesson and no video.
+  await mkdir(path.join(base, "private", "crawl-test"), { recursive: true })
+  await writeFile(path.join(base, "private", "crawl-test", "1.manifest.json"), JSON.stringify({
+    checkedAt: "2026-01-01T00:00:00.000Z",
+    lessons: [{ title: "Only lesson", href: "/course_templates/9001/html_bundles/1000", pageId: "1000", hash: null }],
+  }))
+  const run = await runCrawl(base, site)
+  assert.equal(run.code, 0, run.out)
+  assert.doesNotMatch(run.out, /Google changed this course/, "the video the new rule lists is not blamed on Google")
+  const files = (await readdir(path.join(base, "logs"))).filter((name) => name.startsWith("reading-crawl-"))
+  const log = await readFile(path.join(base, "logs", files[0] as string), "utf8")
+  assert.match(log, /compare\.skipped {2}course=1 {2}reason=listing/)
+  assert.equal(log.includes("compare.skipped  course=2"), false, "a course with no manifest at all is simply a first run, not a skipped comparison")
+})
