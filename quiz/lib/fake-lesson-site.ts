@@ -5,12 +5,15 @@ import { makePdf } from "./test-pdf.ts"
 // A small local site that looks, to the reading crawl, like the course pages of Google Skills: a course page that lists lesson
 // cards, lesson pages that embed the reading in a frame, and the frames. Every title and text is made up by the test.
 
+// How long a drop-first lesson refuses every request after its first one.
+const DROP_WINDOW_MS = 150
+
 export type FakeLesson = {
   title: string
   // bundle and document: a lesson page whose frame holds the text, listed as an html bundle or as a document.
   // settle: the text changes shortly after the frame loads, as the real ones do.
   // pdf: the frame is a PDF. notext: the frame holds almost no text.
-  // drop-first: the first requests for the lesson page are cut off, so the crawl has to try again.
+  // drop-first: every request for the lesson page in the first moments is cut off, so the crawl has to try again.
   kind?: "bundle" | "document" | "settle" | "pdf" | "notext" | "drop-first"
   // One line, so the text a page shows is exactly this text.
   text: string
@@ -46,7 +49,7 @@ export type FakePath = { title: string; cards: { type: string; title: string; te
 // courses: the cards of each course page, by course template number. paths: the learning-path pages, by path number.
 export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: Record<string, FakePath> = {}): Promise<FakeSite> {
   let nextId = 1000
-  type Entry = { id: number; template: string; lesson: FakeLesson; hits: number }
+  type Entry = { id: number; template: string; lesson: FakeLesson; hits: number; firstHitAt?: number }
   const lessons = new Map<string, Entry>()
   const pages = new Map<string, { card: FakeCard; id: number | null }[]>()
   for (const [template, cards] of Object.entries(courses)) {
@@ -125,11 +128,15 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
       if (site.signedOut) return send(response, 302, "text/plain", "", { location: "/users/sign_in" })
       const entry = lessons.get(parts[3])
       if (!entry) return send(response, 404, "text/plain", "No such lesson")
-      // Three requests are cut off, so a browser's own quiet second try does not hide the failure from the crawl.
-      if (entry.lesson.kind === "drop-first" && entry.hits < 3) {
-        entry.hits += 1
-        request.socket.destroy()
-        return
+      // Every request in a short window after the first is cut off, however many quiet tries the browser makes of its own, so the failure
+      // always reaches the crawl, which then tries again after its own short wait and finds the page back.
+      if (entry.lesson.kind === "drop-first") {
+        if (entry.firstHitAt === undefined) entry.firstHitAt = Date.now()
+        if (Date.now() - entry.firstHitAt < DROP_WINDOW_MS) {
+          entry.hits += 1
+          request.socket.destroy()
+          return
+        }
       }
       entry.hits += 1
       const source = entry.lesson.kind === "pdf" ? `/pdf/${entry.id}.pdf` : `/frame/${entry.id}`
