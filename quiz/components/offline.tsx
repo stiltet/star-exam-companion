@@ -59,8 +59,11 @@ export function OfflineShell() {
 export type OfflineStatus = { secure: boolean; ready: boolean; error: string | null }
 
 // Secure: the page is on HTTPS (or localhost). Ready: a service worker runs this page and has its pages stored.
+// The last answer, kept in memory, so a panel built afresh each time it opens shows it at once.
+let lastStatus: OfflineStatus | null = null
+
 export function useOfflineStatus(): OfflineStatus | null {
-  const [status, setStatus] = useState<OfflineStatus | null>(null)
+  const [status, setStatus] = useState<OfflineStatus | null>(lastStatus)
   useEffect(() => {
     let live = true
     const check = async () => {
@@ -79,7 +82,8 @@ export function useOfflineStatus(): OfflineStatus | null {
       } catch {
         // Storage blocked: no reason to show.
       }
-      if (live) setStatus({ secure, ready, error })
+      lastStatus = { secure, ready, error }
+      if (live) setStatus(lastStatus)
     }
     void check()
     // The first visit installs the worker after the page has loaded; check again when it takes over.
