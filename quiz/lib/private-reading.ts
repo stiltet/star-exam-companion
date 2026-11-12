@@ -184,6 +184,8 @@ async function forgetDeletedCourses(): Promise<void> {
     try {
       await stat(directory)
     } catch (error) {
+      // Only a folder that is gone takes its text out of memory. Any other error (a permission problem, say) leaves the cached text in place,
+      // and the next real read of that course reports it, so dropping it here is safe.
       if (error instanceof Error && "code" in error && error.code === "ENOENT") recordCache.delete(directory)
     }
   }
