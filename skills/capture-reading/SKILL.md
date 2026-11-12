@@ -21,7 +21,7 @@ is always visible.
    ([Chrome's explanation](https://developer.chrome.com/blog/remote-debugging-port)). Check that it is installed:
 
    ```bash
-   pnpm --dir quiz exec playwright install chromium
+   pnpm e2e:install
    ```
 
    The first time only, the Google account must be known to that browser's profile. If the crawl says it is not signed in

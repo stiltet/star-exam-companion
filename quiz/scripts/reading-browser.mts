@@ -248,5 +248,5 @@ export async function openBrowser(): Promise<OpenBrowser | null> {
 
 export const NO_BROWSER_MESSAGE =
   `Could not start or reach Chrome for Testing on ${ENDPOINT}.\n` +
-  `  Install it once with: pnpm --dir quiz exec playwright install chromium\n` +
+  `  Install it once with: pnpm e2e:install\n` +
   `  See skills/capture-reading/SKILL.md.`
