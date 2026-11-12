@@ -104,6 +104,8 @@ export function BackButton() {
     return id
   }
 
+  const currentScrollY = () => Math.max(0, Math.round(window.scrollY))
+
   const flushScroll = () => {
     window.clearTimeout(scrollTimer.current)
     const p = pending.current
@@ -119,7 +121,7 @@ export function BackButton() {
     const id = sync()
     if (!id || holding.current) return
     const entry = readEntry(id) ?? { prev: null, scroll: 0 }
-    writeEntry(id, { ...entry, scroll: Math.max(0, Math.round(window.scrollY)) })
+    writeEntry(id, { ...entry, scroll: currentScrollY() })
   }
 
   const restore = (target: number) => {
@@ -175,12 +177,14 @@ export function BackButton() {
       if (holding.current) return
       const id = sync()
       if (!id) return
-      pending.current = { id, y: Math.max(0, Math.round(window.scrollY)) }
+      pending.current = { id, y: currentScrollY() }
       window.clearTimeout(scrollTimer.current)
       scrollTimer.current = window.setTimeout(flushScroll, 150)
     }
     const onPop = () => {
       if (!readStandalone()) return
+      // A scroll waiting to be saved belongs to the page just left: save it before the move is read.
+      flushScroll()
       tapped.current = false
       const id = sync()
       const entry = id ? readEntry(id) : null
@@ -195,7 +199,8 @@ export function BackButton() {
     window.addEventListener("pagehide", save)
     document.addEventListener("visibilitychange", onHide)
     return () => {
-      window.clearTimeout(scrollTimer.current)
+      flushScroll()
+      window.clearTimeout(tapTimer.current)
       window.removeEventListener("scroll", onScroll)
       document.removeEventListener("click", save, true)
       window.removeEventListener("popstate", onPop)
