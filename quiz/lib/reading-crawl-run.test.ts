@@ -371,7 +371,7 @@ test("when another Google account is signed in than the one asked for, the crawl
   const run = await runCrawl(base, site, { READING_GOOGLE_ACCOUNT: "someone.else@example.test" })
   assert.equal(run.code, 1, run.out)
   assert.match(run.out, /Signed in as synthetic\.user@example\.test/)
-  assert.match(run.out, /✖ The signed-in account is not the account you asked for/)
+  assert.match(run.out, /✖ Could not confirm that the signed-in account is the one you asked for/)
   assert.match(run.out, /STOPPED/)
   assert.equal((await saved(base, "1")).length, 0, "no lesson was opened or saved")
   assert.equal((await saved(base, "2")).length, 0)
@@ -390,4 +390,21 @@ test("when the signed-in account is the one asked for, the crawl goes on, whatev
   const run = await runCrawl(base, site, { READING_GOOGLE_ACCOUNT: "Synthetic.User@Example.Test" })
   assert.equal(run.code, 0, run.out)
   assert.match(run.out, /✔ FINISHED: all 2 lessons checked in 2 courses/)
+})
+
+test("when the settings page shows more than one address, the crawl cannot tell which is the account's own and stops, if an account was asked for", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const text = "Synthetic lesson text that must never be read when the account cannot be confirmed."
+  const site = await startFakeSite({ "9001": [{ title: "Only lesson", kind: "bundle", text }], "9002": [{ title: "Other lesson", kind: "bundle", text }] })
+  site.addresses = ["recovery.made.up@example.test", "synthetic.user@example.test"]
+  t.after(async () => {
+    await site.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  const run = await runCrawl(base, site, { READING_GOOGLE_ACCOUNT: "synthetic.user@example.test" })
+  assert.equal(run.code, 1, run.out)
+  assert.match(run.out, /Could not tell who is signed in/)
+  assert.match(run.out, /✖ Could not confirm that the signed-in account is the one you asked for/)
+  assert.equal((await saved(base, "1")).length, 0, "no lesson was opened")
+  noLessonText(run, [text])
 })

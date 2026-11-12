@@ -194,7 +194,7 @@ test.describe("an exam whose study data is not written yet", () => {
     try {
       // Professional Cloud Architect is added with its courses only: no glossary, scenes, study topics or questions, and a notice that says so.
       expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "professional-cloud-architect" } })).ok()).toBe(true)
-      for (const path of ["/", "/study", "/practice", "/exam", "/glossary", "/voice"]) {
+      for (const path of ["/", "/study", "/practice", "/exam", "/glossary", "/flashcards", "/voice"]) {
         await page.goto(path)
         await expect(page.getByTestId(path === "/" ? "pack-notice" : "unfinished-notice"), `${path} names what is missing`).toContainText("Unfinished")
       }
