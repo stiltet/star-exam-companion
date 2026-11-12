@@ -175,4 +175,37 @@ test.describe("Back in the installed app", () => {
     await back(page).click()
     await expect(page).toHaveURL(/\/progress$/)
   })
+
+  // A scroll that has not been saved yet is saved on the page it happened on, not on the page a native Back opens.
+  test("a native Back right after a scroll keeps each page's own scroll", async ({ page }) => {
+    await page.goto("/progress")
+    const progressAt = await scrollTo(page, 600)
+    await leaveBy(page, 'a[href^="/exam#"]', "last")
+    await expect(page).toHaveURL(/\/exam#/)
+    await scrollTo(page, 250)
+    // Two frames, so the scroll event has fired and its save is waiting, then a native Back inside the wait.
+    await page.evaluate(() => new Promise<void>((resolve) => {
+      window.scrollTo(0, 320)
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    }))
+    await page.goBack()
+    await expect(page).toHaveURL(/\/progress$/)
+    // The waiting save still lands on the exam entry, not the page Back opened.
+    await expect.poll(() => page.evaluate(() => Object.entries(sessionStorage).some(([key, value]) => key.startsWith("quiz-entry:") && value.includes('"scroll":320')))).toBe(true)
+    await near(page, progressAt)
+    await page.goForward()
+    await expect(page).toHaveURL(/\/exam#/)
+    await near(page, 320)
+  })
+
+  // Going up a level leaves nothing behind: a link followed afterwards is a normal move, and Back returns to it.
+  test("after going up a level, a later forward link still has Back return to its page", async ({ page }) => {
+    await page.goto("/study/fundamentals")
+    await back(page).click()
+    await expect(page).toHaveURL(/\/study$/)
+    await menuTo(page, "PROGRESS")
+    await menuTo(page, "FLASHCARDS")
+    await back(page).click()
+    await expect(page).toHaveURL(/\/progress$/)
+  })
 })
