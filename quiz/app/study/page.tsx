@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { activePack } from "@/lib/pack"
 import { sectionLabel } from "@/lib/progress"
 import Link from "next/link"
@@ -11,6 +12,7 @@ export default function StudyPage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <h1 className="sr-only text-2xl font-bold mb-2">STUDY SECTIONS</h1>
+        <UnfinishedNotice need="study" />
         <p className="text-muted-foreground mb-8">
           Select a section to study. Topics mapped 1:1 to official exam outline.
         </p>
