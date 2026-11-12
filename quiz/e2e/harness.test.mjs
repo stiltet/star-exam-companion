@@ -159,7 +159,7 @@ test("voice-fixture.mjs seeds only silent clips for every real pack in isolated 
   assert.equal(result.status, 0, result.stderr)
   const seeded = JSON.parse(result.stdout)
   assert.ok(seeded.packs >= 2)
-  assert.ok(seeded.clips > 0, "both packs' complete voice indexes were seeded")
+  assert.ok(seeded.clips > 0, "both packs' complete voice indexes were seeded (the folder holds exactly their keys)")
 })
 
 test("server.mjs refuses an occupied port instead of reusing another quiz's scores", async () => {
