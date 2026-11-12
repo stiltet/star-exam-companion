@@ -72,19 +72,24 @@ test.describe("Back in the installed app", () => {
   })
 
   // Suspect 1: a reload forgets that the app was moved around, so Back goes up a level instead of back.
-  test("after a reload, Back still goes to the page just before", async ({ page }) => {
-    await page.goto("/")
-    await menuTo(page, "PROGRESS")
-    await expect(page).toHaveURL(/\/progress$/)
-    await menuTo(page, "STUDY")
-    await expect(page).toHaveURL(/\/study$/)
-    // Let the pages' prefetches finish first, or WebKit logs them as cancelled.
-    await page.waitForLoadState("networkidle")
-    await page.reload()
-    await expect(back(page)).toBeVisible()
-    await back(page).click()
-    // The page before is Progress. Going up a level would have been Home.
-    await expect(page).toHaveURL(/\/progress$/)
+  // A reload cuts off the page's prefetches, and WebKit reports those as errors even after the network went quiet, so this test
+  // allows the cut-off messages (and only those) that the fixture knows.
+  test.describe("a reload", () => {
+    test.use({ navigationCutOff: true })
+    test("after a reload, Back still goes to the page just before", async ({ page }) => {
+      await page.goto("/")
+      await menuTo(page, "PROGRESS")
+      await expect(page).toHaveURL(/\/progress$/)
+      await menuTo(page, "STUDY")
+      await expect(page).toHaveURL(/\/study$/)
+      // Let the pages' prefetches finish first, or WebKit logs them as cancelled.
+      await page.waitForLoadState("networkidle")
+      await page.reload()
+      await expect(back(page)).toBeVisible()
+      await back(page).click()
+      // The page before is Progress. Going up a level would have been Home.
+      await expect(page).toHaveURL(/\/progress$/)
+    })
   })
 
   // Suspect 2: the scroll is kept per path, so a path visited twice at different scrolls remembers only one.
