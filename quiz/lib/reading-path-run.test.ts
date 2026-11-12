@@ -35,6 +35,9 @@ async function runPath(profile: string, site: FakeSite, args: string[]): Promise
     READING_SKIP_SIGNIN: "1",
     READING_PATH_WAIT_MS: "2000",
   }
+  // A shell that is set up for the real capture must not change a test.
+  delete env.READING_GOOGLE_ACCOUNT
+  delete env.READING_DEBUG
   const child = spawn(process.execPath, ["scripts/reading-path.mts", ...args], { cwd: quiz, env })
   let out = ""
   let err = ""

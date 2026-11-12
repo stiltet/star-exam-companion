@@ -65,6 +65,9 @@ async function runCrawl(base: string, site: FakeSite, extra: Record<string, stri
     READING_MIN_WATCH_MS: "2000",
     READING_EMPTY_AFTER_MS: "2500",
   }
+  // A shell that is set up for the real capture must not change a test: the account and the debug setting are the tests' own to give.
+  delete env.READING_GOOGLE_ACCOUNT
+  delete env.READING_DEBUG
   for (const [key, value] of Object.entries(extra)) {
     if (value === undefined) delete env[key]
     else env[key] = value

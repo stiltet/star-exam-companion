@@ -119,7 +119,7 @@ is always visible.
    - `pnpm --dir quiz reading:list <id>` shows every course's lessons saved.
    - `QUIZ_EXAM=<id> pnpm --dir quiz build` succeeds, into its own folder (`QUIZ_DIST_DIR=.next-gate`), never over the served one.
    If any stage was left out, set `homeNotice` and `notice` in `pack.json` to the same plain statement of what is missing, as `docs/exam-packs.md`
-   says. `homeNotice` is the yellow note on Home and on the Study, Practice, Practice exam, Glossary and Voice quiz pages whose data is missing;
+   says. `homeNotice` is the yellow note on Home and on the Study, Practice, Practice exam, Glossary, Flashcards and Voice quiz pages whose data is missing;
    `notice` is what the online demo shows, and it is what lets the exam pass the pack test with no glossary rows.
 
 10. **Report.** Give the exam id, the courses with number and title in Google's order, the verdict of each, the checks of steps 6, 7 and

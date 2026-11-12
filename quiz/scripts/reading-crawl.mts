@@ -269,7 +269,7 @@ async function main(): Promise<void> {
     // since opening lessons marks them completed on it.
     const wantedAccount = process.env.READING_GOOGLE_ACCOUNT?.trim()
     if (wantedAccount && who?.toLowerCase() !== wantedAccount.toLowerCase()) {
-      logLine(say("red", `✖ Could not confirm that the signed-in account is the one you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened.`))
+      logLine(say("red", `✖ Could not confirm that the signed-in account is the one you asked for (READING_GOOGLE_ACCOUNT). No lesson was opened. Sign in with that account in the capture browser (see the capture-reading skill), or unset READING_GOOGLE_ACCOUNT.`))
       stoppedBecause = "the signed-in Google account is not confirmed to be the one in READING_GOOGLE_ACCOUNT"
       stopping = true
     }
