@@ -47,7 +47,7 @@ function send(response: ServerResponse, status: number, type: string, body: stri
 
 // JSON for a <script> block. JSON.stringify leaves < > & and the two line separators as they are, so a text with </script> in it would
 // end the block: they are written as escapes, and the page still reads the same value.
-export function jsonForScript(value: unknown): string {
+export function jsonForScript(value: string): string {
   return JSON.stringify(value)
     .replace(/</g, "\\u003c")
     .replace(/>/g, "\\u003e")
@@ -106,10 +106,11 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
 
     // A learning-path page lists its courses as cards, in order.
     if (parts[0] === "paths" && parts.length === 2) {
-      const path = paths[parts[1]]
+      // Own keys only, so a name such as constructor is simply not a path.
+      const path = Object.hasOwn(paths, parts[1]) ? paths[parts[1]] : undefined
       if (!path) return send(response, 404, "text/plain", "No such path")
       const cards = path.cards.map((card) => {
-        const link = card.template ? `<a href="/paths/${parts[1]}/course_templates/${card.template}">${escapeHtml(card.title)}</a>` : ""
+        const link = card.template ? `<a href="/paths/${escapeHtml(parts[1])}/course_templates/${escapeHtml(card.template)}">${escapeHtml(card.title)}</a>` : ""
         return `<ql-activity-card type="${escapeHtml(card.type)}" name="${escapeHtml(card.title)}">${link}</ql-activity-card>`
       }).join("\n")
       return send(response, 200, "text/html", `<html><body><h1>${escapeHtml(path.title)}</h1>\n${cards}\n</body></html>`)
