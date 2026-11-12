@@ -1,0 +1,146 @@
+{
+  "path": "https://www.skills.google/paths/12",
+  "bundleBase": "https://storage.googleapis.com/cloud-training/cls-html5-courses",
+  "courses": [
+    {
+      "id": "1",
+      "template": "78",
+      "title": "Build a Certification Study Guide: PCA Exam Prep",
+      "provider": "private"
+    },
+    {
+      "id": "2",
+      "template": "60",
+      "title": "Google Cloud Fundamentals: Core Infrastructure",
+      "provider": "private"
+    },
+    {
+      "id": "3",
+      "template": "49",
+      "title": "Essential Google Cloud Infrastructure: Core Services",
+      "provider": "private"
+    },
+    {
+      "id": "4",
+      "template": "178",
+      "title": "Elastic Google Cloud Infrastructure: Scaling and Automation",
+      "provider": "private"
+    },
+    {
+      "id": "5",
+      "template": "35",
+      "title": "Networking in Google Cloud: Fundamentals",
+      "provider": "private"
+    },
+    {
+      "id": "6",
+      "template": "1144",
+      "title": "Networking in Google Cloud: Network Architecture",
+      "provider": "private"
+    },
+    {
+      "id": "7",
+      "template": "1145",
+      "title": "Networking in Google Cloud: Hybrid and Multicloud",
+      "provider": "private"
+    },
+    {
+      "id": "8",
+      "template": "41",
+      "title": "Google Cloud Architecture: Design Principles",
+      "provider": "private"
+    },
+    {
+      "id": "9",
+      "template": "1501",
+      "title": "Manage Scalable Workloads in GKE",
+      "provider": "private"
+    },
+    {
+      "id": "10",
+      "template": "559",
+      "title": "Developing Applications with Cloud Run on Google Cloud: Fundamentals",
+      "provider": "private"
+    },
+    {
+      "id": "11",
+      "template": "1157",
+      "title": "Introduction to Data Engineering on Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "12",
+      "template": "593",
+      "title": "Introduction to AI and Machine Learning on Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "13",
+      "template": "1404",
+      "title": "AI Infrastructure: Introduction to AI Hypercomputer",
+      "provider": "private"
+    },
+    {
+      "id": "14",
+      "template": "21",
+      "title": "Manage Security in Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "15",
+      "template": "443",
+      "title": "Getting Started with Terraform for Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "16",
+      "template": "99",
+      "title": "Logging and Monitoring in Google Cloud",
+      "provider": "private"
+    },
+    {
+      "id": "17",
+      "template": "864",
+      "title": "Observability in Google Cloud",
+      "provider": "private"
+    }
+  ],
+  "noReading": [
+    {
+      "id": "18",
+      "template": "648",
+      "title": "Implementing Cloud Load Balancing for Compute Engine",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    },
+    {
+      "id": "19",
+      "template": "783",
+      "title": "Manage Kubernetes in Google Cloud",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    },
+    {
+      "id": "20",
+      "template": "654",
+      "title": "Build a Secure Google Cloud Network",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    },
+    {
+      "id": "21",
+      "template": "741",
+      "title": "Develop Serverless Applications on Cloud Run",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    },
+    {
+      "id": "22",
+      "template": "645",
+      "title": "Implement Cloud Security Fundamentals on Google Cloud",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    },
+    {
+      "id": "23",
+      "template": "636",
+      "title": "Build Infrastructure with Terraform on Google Cloud",
+      "why": "This course is hands-on labs, videos and quizzes on Google Skills. It has no reading text to read aloud. Open the course on Google Skills."
+    }
+  ]
+}

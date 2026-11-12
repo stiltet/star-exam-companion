@@ -27,3 +27,27 @@ test("the browser server keeps inherited and .env.local score overrides out of i
     rmSync(scratch, { recursive: true, force: true })
   }
 })
+
+test("the browser server isolates OS-temp speech pools from inherited temp settings", () => {
+  const scratch = mkdtempSync(path.join(tmpdir(), "quiz-e2e-speech-env-"))
+  try {
+    const env = browserServerEnv({ ...process.env, TMPDIR: "/unused-test-temp", TMP: "/unused-test-temp", TEMP: "/unused-test-temp" }, scratch, path.join(scratch, "root"))
+    const script = `
+      import { tmpdir } from "node:os"
+      import { VOICE_DIR, READING_DIR } from "./lib/say.ts"
+      process.stdout.write(JSON.stringify({ tmp: tmpdir(), voice: VOICE_DIR, reading: READING_DIR }))
+    `
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
+      cwd: new URL("../", import.meta.url), env, encoding: "utf8",
+    })
+    assert.equal(result.status, 0, result.stderr)
+    assert.deepEqual(JSON.parse(result.stdout), {
+      tmp: scratch,
+      voice: path.join(scratch, "star-exam-voice"),
+      reading: path.join(scratch, "star-exam-reading"),
+    })
+    for (const name of ["TMPDIR", "TMP", "TEMP"]) assert.equal(env[name], scratch)
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+  }
+})

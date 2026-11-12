@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { StatusLink } from "@/components/atoms/status-link"
+import { Text } from "@/components/atoms/text"
 import { useSnapshot } from "@/components/snapshot"
 import { readingProgress, readingState, readingStatus } from "@/lib/progress"
 import { scoped } from "@/lib/scope"
 import type { PageSummary } from "@/lib/reading-view"
 
 // Each course's number of readings, kept on this device when its list is opened. The list comes
-// from Google's bundle, which Progress cannot reach offline, so Progress shows "n of N" only
-// for courses opened here before. Counts only, no study data, so a progress reset keeps them.
+// from the server, which Progress cannot reach offline, so Progress shows "n of N" only for
+// courses opened here before. Counts only, no study data, so a progress reset keeps them.
 const TOTALS_KEY = scoped("quiz-reading-totals")
 
 export function readingTotals(): Record<string, number> {
@@ -33,10 +34,11 @@ function keepTotal(course: string, total: number) {
 }
 
 // A course's readings with a tick beside each one read, and how many are read.
-export function ReadingList({ course, pages }: { course: string; pages: PageSummary[] }) {
+export function ReadingList({ course, pages, emptyLabel }: { course: string; pages: PageSummary[]; emptyLabel?: string }) {
   const { lines } = useSnapshot()
   const read = new Set(readingProgress(lines)[course]?.read ?? [])
   useEffect(() => keepTotal(course, pages.length), [course, pages.length])
+  if (pages.length === 0) return <Text variant="muted">{emptyLabel ?? "No reading pages were found in this course."}</Text>
   return (
     <>
       <p className="mb-4 font-bold">{readingStatus(pages.filter((page) => read.has(page.id)).length, pages.length)}</p>
@@ -59,10 +61,10 @@ export function ReadingList({ course, pages }: { course: string; pages: PageSumm
   )
 }
 
-// One course on the overview, coloured by its state. The total comes from the Mac when it could
-// read Google's bundle, else from this device; either way it is kept here for Progress.
+// One course on the overview, coloured by its state. The total comes from the provider when
+// available, else from this device; either way it is kept here for Progress.
 // noText: a course of the path with nothing to read aloud; its page says why and links to Google Skills.
-export function CourseCard({ course, title, total, noText }: { course: string; title: string; total?: number; noText?: boolean }) {
+export function CourseCard({ course, title, total, noText, privateCopy, reason }: { course: string; title: string; total?: number; noText?: boolean; privateCopy?: boolean; reason?: string }) {
   const { lines } = useSnapshot()
   const [kept, setKept] = useState<number | undefined>(undefined)
   useEffect(() => {
@@ -73,7 +75,11 @@ export function CourseCard({ course, title, total, noText }: { course: string; t
   return (
     <StatusLink href={`/read/${course}`} layout="stack" state={noText ? "none" : readingState(read, kept)}>
       <span className="font-bold">Course {course}</span>: {title}
-      <span className="block text-sm font-bold mt-1">{noText ? "No text to read aloud" : readingStatus(read, kept)}</span>
+      <Text variant="label" placement="mt-1">
+        {noText ? "No text to read aloud" : readingStatus(read, kept)}
+      </Text>
+      {privateCopy && <Text variant="muted">Private copy on this server</Text>}
+      {reason && <Text variant="muted">{reason}</Text>}
     </StatusLink>
   )
 }

@@ -1,6 +1,6 @@
-# Exam packs
+# Exams
 
-An exam pack is everything that makes the quiz the quiz for one exam. It is a folder,
+An exam is everything that makes the quiz the quiz for one exam. It is a folder,
 `exams/<id>/`, and the app code holds no exam content. One install serves one exam: set
 `QUIZ_EXAM=<id>` (default `generative-ai-leader`) for the exam a fresh install starts with, or
 switch it any time at the bottom of the Progress page. The choice is kept in `quiz/active-exam.json`
@@ -11,27 +11,44 @@ already served adds none. If the log cannot be written, the server reports the e
 Adding an exam means adding a folder. No code changes. The steps for a pull request are at the
 [end of this page](#add-an-exam-with-a-pull-request).
 
+The `/add-exam <exam name>` skill ([`../skills/add-exam/SKILL.md`](../skills/add-exam/SKILL.md)) does the folder and the lesson
+capture for you: it reads the exam's Google Skills learning path with `pnpm --dir quiz reading:path <address>`, writes `courses.json`
+in Google's order, captures every lesson and checks the result. It then writes the quiz content (terms, glossary, scenes, study
+topics and practice questions) from the exam guide and Google's pages, in stages that each end with `node --test`. Nothing is
+invented: content with no official source is left out and named in the exam's `homeNotice` and `notice`.
+
 ## The folder
 
 | File | What it holds |
 |---|---|
-| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `notice` (optional: a plain statement that the pack is unfinished, shown on the Read Aloud page only), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
-| `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing pack's. |
+| `pack.json` | `id` (the folder name), `title`, `certification`, `description` (a short description, shown on the home page above Exam Structure), `keywords` (optional: extra search keywords for the page metadata), `unnumberedLabel` (the Glossary and Flashcards group for a term the guide does not number, such as "Study guide"), `homeNotice` (optional: a plain statement that the exam is unfinished, shown as a yellow note on Home and on each of Study, Practice, Practice exam, Glossary, Flashcards and Voice quiz whose data the exam does not have yet), `notice` (optional: the same statement for the online demo's Read Aloud page; an exam with a `notice` may have no glossary rows; the local Read Aloud page computes its own note from the courses it can read), `examPage`, `examGuide`, `learningPath` (Google's official learning path, the home page button), `exam` (the Practice exam's `questions` and `minutes`, as the real exam's), `reading`, `links` (extra footer links), `notAsked` (optional: glossary terms no scene asks), and `sectionOf`, which maps each study section id in `study.json` to its exam-guide section number. |
+| `glossary.md` | One term per row, each with its source: an official Google page or document. Never invent a definition. The header explains the row format; copy an existing exam's. |
 | `sections.md` | The exam sections and their weights, one line each: `Section N (title, ~X%)`. |
 | `terms.txt` | Every term the exam guide names, one per line. The validator checks each has a glossary row and is the answer to a voice scene, even if it is listed in `notAsked`. |
 | `scenes.json` | The voice quiz's questions: `id`, `correct`, `distractors` (three), `scene`, `constraint`, and optionally `guide` and `course`. |
 | `courses.json` | Only when `reading` is true: the learning path's courses for Read Aloud, below. |
 | `study.json` | `sections` (the Study pages: topics, study Q and A, official docs) and `questions` (the written practice questions). |
 
-`reading` is `true` for a pack whose exam has an official course to read aloud, and then the pack
-needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, folder, format? }] }`. `path` is
+`reading` is `true` for an exam that has an official course to read aloud, and then the exam
+needs `courses.json`: `{ path, bundleBase, courses: [{ id, template, title, provider?, folder?, format? }] }`. `path` is
 the learning path on Google Skills, `bundleBase` is the public Google Cloud Storage folder that
-holds the courses' text, and each course gives its Skills number (`template`) and its folder there.
+holds public courses' text, and each course gives its Skills number (`template`) and, unless it uses
+the private provider, its folder there. `provider` is omitted for public Google bundles or set to
+`"private"` for a course whose pages are saved by the user in a private store on this server. Private
+courses do not have a public `folder` or `format`; their captured text is outside the repository and
+build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
+app-data directory is used.
+A private course is captured by `pnpm --dir quiz reading:crawl [<exam>]`, which saves each lesson through the private
+store (the same store `POST /api/reading/private` writes to, which answers only a request that sends this install's token in `x-quiz-private-token`, a secret
+kept in the store's folder as `.write-token`, so never one from the network; a known limit is that any program running as the same user on this Mac can read the token and so save) and keeps a per-course manifest of titles, addresses and
+hashes beside it, never text. The README's "Private course readings" section describes it, and
+[`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
+either: the courses come from its `courses.json` entries with `"provider": "private"`.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read
-(a lab or video course, say). Read Aloud lists them in the same list as the others, marked "No text to read aloud";
+(a lab or video course, say). Read Aloud lists them in the one course list, in course order with the readable courses, each marked "No text to read aloud" with its `why`;
 opening one shows `why` and a link to the course on Google Skills. Say in `why` only what its Skills page shows: a lab or video course lists no readings, and a course whose readings sit behind a login says so. Their ids continue after the readable courses' ids.
 `format` is absent for a course stored as four JSON files, and `"rise"` for one Google stores as a single
-`runtime-data.js` (its `folder` then ends where that file is, such as `T-XXXX/v1.0.0/EN`). A scene's optional `course` names one of those ids. A pack with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
+`runtime-data.js` (its `folder` then ends where that file is, such as `T-XXXX/v1.0.0/EN`). A scene's optional `course` names one of those ids. An exam with no course to read sets it `false`: its Read Aloud page then says so and links to the learning path, rather than disappearing.
 
 ### Shapes of the data files
 
@@ -39,7 +56,7 @@ opening one shows `why` and a link to the course on Google Skills. Say in `why` 
 (three other glossary terms), `scene` (a short situation), `constraint` (the one fact that decides
 it) and optionally `guide` and `course`. The scene's section comes from the `Guide` column of the
 correct term's glossary row. A term whose row has "—" there needs `"guide": "3.1"` (its exam-guide
-section) on every scene that asks it, or the pack test fails with "its guide section is not in
+section) on every scene that asks it, or the exam test fails with "its guide section is not in
 sections.md".
 
 `study.json` is `{ sections, questions }`:
@@ -52,20 +69,23 @@ sections.md".
   `correctIndex, explanation, whyOthersWrong` (three, one per wrong option)`, officialDoc,
   difficulty }`. Build each from facts a topic already cites.
 
-## The rules a pack follows
+## The rules an exam follows
 
 - Every glossary row names an official source, and a changed row is checked against that page.
 - A scene never names its own answer, and each answer is a glossary term.
 - Section weights add up to 100.
 - Google's course text, PDFs and logos are not copied in.
 
-## Checking a pack
+## Checking an exam
 
-`node --test` runs the pack validator over every folder in `exams/`. It names the file and the
-line that fails. A pack is ready when the whole run passes and `pnpm --dir quiz build` succeeds
-with `QUIZ_EXAM=<id>`.
+`node --test` runs the exam validator over every folder in `exams/`. It names the file and the
+line that fails. An exam is ready when the whole run passes and `pnpm --dir quiz build` succeeds
+with `QUIZ_EXAM=<id>`. The validator rejects private-reading directories and stored-record shapes
+inside an exam. `scripts/build-pages.sh` also checks the exam, app and demo source trees against all
+private records before exporting, including records from removed exams; the demo has no
+Read Aloud routes or service worker.
 
-## Running a pack
+## Running an exam
 
 ```bash
 QUIZ_EXAM=<id> pnpm --dir quiz dev
@@ -98,7 +118,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 1. **Fork and branch.** Fork the repository on GitHub, clone your fork, and make a branch named
    `feat/exam-<id>`, where `<id>` is the exam's short name in lower case with hyphens, such as
    `data-engineer`.
-2. **Copy a pack.** Copy the folder of a finished pack and name it `<id>`:
+2. **Copy an exam.** Copy the folder of a finished exam and name it `<id>`:
 
    ```bash
    cp -R exams/generative-ai-leader exams/<id>
@@ -109,7 +129,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    the scenes and the study topics from Google's own exam guide and documentation. `id` in
    `pack.json` must be the folder name. If the exam has no official course to read aloud, set
    `reading` to `false` and delete `courses.json`.
-4. **Check it.** Install, then run the tests. The pack test names the file and row that breaks a rule:
+4. **Check it.** Install, then run the tests. The exam test names the file and row that breaks a rule:
 
    ```bash
    pnpm --dir quiz install
@@ -119,7 +139,7 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    node --test
    ```
 
-5. **Look at it.** Start the quiz on your pack and click through Study, Practice, Voice Quiz and the
+5. **Look at it.** Start the quiz on your exam and click through Study, Practice, Voice Quiz and the
    Exam:
 
    ```bash
@@ -127,9 +147,9 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
    ```
 
    If you ever switched exams on the Progress page of this checkout, that choice wins over `QUIZ_EXAM`: delete
-   `quiz/active-exam.json` first, or switch on Progress. A chosen pack with any file that stops loading, or a
+   `quiz/active-exam.json` first, or switch on Progress. A chosen exam with any file that stops loading, or a
    glossary that does not parse, is ignored, so Progress still opens and you can switch back, and the switch
-   refuses such a pack.
+   refuses such an exam.
 
 6. **Open the pull request** against `main`. Change only `exams/<id>/` and, if you want it listed, one
    row in the README's *Choose your exam* table. Say in the description which exam it is, link its
@@ -146,9 +166,9 @@ You need git and [Node 22](https://nodejs.org) with pnpm. No app code changes, o
 - [ ] `node --test` passes.
 - [ ] No names, contact details, scores or other personal data in any file.
 
-A pack that is not finished is welcome as long as it passes `node --test`: list only the terms you
-have covered in `terms.txt`, set `notice` in `pack.json` to a plain statement of what is missing (the
-quiz shows it on Read Aloud only), and say the same in the pull request. Remove the
-`notice` when nothing is missing. Keep a pull request to one exam; split a large pack into one pull
+An exam that is not finished is welcome as long as it passes `node --test`: list only the terms you
+have covered in `terms.txt`, set `homeNotice` and `notice` in `pack.json` to a plain statement of what is missing (the
+quiz shows `homeNotice` on Home and on the pages whose data is missing), and say the same in the pull request. Remove both
+when nothing is missing. Keep a pull request to one exam; split a large exam into one pull
 request per file group (for example glossary and scenes first, study data after). A maintainer reviews the
 content against Google's pages, and runs the full gate before merging.

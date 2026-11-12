@@ -29,7 +29,7 @@
 
 **[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
 Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
-are core features that need the quiz on your own computer; every exam pack has its own copy of the demo, linked from the bar under the header; the [full local setup](#full-local-setup)
+are core features that need the quiz on your own computer; every exam has its own copy of the demo, linked from the bar under the header; the [full local setup](#full-local-setup)
 below gets everything working.
 
 ## Contents
@@ -52,7 +52,7 @@ below gets everything working.
 ## Why Star Exam Companion
 
 It started as a way to pass the Google Cloud Generative AI Leader exam, and its author passed it on the first try. It now serves
-any Google Cloud exam that has a pack, starting with that one and Professional Agentic Architect. It turns an exam
+any Google Cloud exam, starting with that one and Professional Agentic Architect. It turns an exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
@@ -62,20 +62,21 @@ machine, keeps your answers there, and works on a phone without a connection onc
 | Feature | What it does | Requires |
 |---|---|---|
 | **Voice Quiz** | Reads each exam-style scene and its four options aloud, explains a wrong answer and its binding constraint, and keeps asking until each term is learned. | The local server, on macOS |
-| **Read Aloud** | Reads Google's learning-path course text aloud, sentence by sentence, with a night-reading mode. | The local server, on macOS |
+| **Read Aloud** | Reads public Google learning-path text and private copies saved on this server, sentence by sentence, with a night-reading mode. Previous and Next lesson, and Previous and Next course, sit at the top and bottom of each page. Private copies stay outside the repository and build. | The local server, on macOS |
 | **Practice** | Exam-style questions by section or topic, with explanations and an "unanswered only" filter. | The local server, to save answers |
 | **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
+| **Offline / connection status** | Tap the laptop icon in the header: answers waiting to send (Send now), where the questions came from (Update now), and whether the connection is secure and offline mode is ready (it needs https://). A dropdown on a phone, a dialog on a wide screen. The online demo shows fixed values. | The local server |
 | **Offline** | The installed app opens every page with no connection; answers wait on the device and sync later. | The production build; HTTPS on other devices ([how](#full-local-setup)) |
 | **Install tip** | On a phone or tablet, a small card offers to add the quiz to the home screen: an Install button on Android (or the browser-menu steps when the browser offers no prompt), the Share steps on iOS Safari. Desktop, in-app browsers and the installed app see nothing; non-Safari iOS browsers are told to open the page in Safari. The exam and Voice Quiz also suppress it. *Not now* hides it for 30 days. The online demo shows it too. | Nothing extra |
 
 ## How it works
 
 - A **Next.js** app in `quiz/` renders every page and serves a few local API routes.
-- Everything about one exam lives in an **exam pack**, the folder `exams/<id>/`. Questions are
-  built from the pack's glossary, scenes and section weights, read at run time. One install serves
-  one exam: set `QUIZ_EXAM` to its pack name. Adding an exam is adding a folder; see
+- Everything about one exam lives in its folder, `exams/<id>/`. Questions are
+  built from the exam's glossary, scenes and section weights, read at run time. One install serves
+  one exam: set `QUIZ_EXAM` to its exam name. Adding an exam is adding a folder; see
   [`docs/exam-packs.md`](docs/exam-packs.md).
 - Read Aloud parses official course HTML on the server and sends plain text to the device; its HTML parser is not shipped to browsers.
 - Answers are saved **on the device first** and then sent to the server, which appends them to
@@ -128,16 +129,94 @@ on every network interface.
 
 ## Choose your exam
 
-One install studies one exam. The exam is an **exam pack**, a folder under [`exams/`](exams/), and
+One install studies one exam. The exam is a folder under [`exams/`](exams/), and
 you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you get the default,
 `generative-ai-leader`.
 
 | Pack (`QUIZ_EXAM`) | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
-| `agentic-architect` | Google Cloud Professional Agentic Architect. **Unfinished:** see `notice` in its `pack.json`. Study, Practice, the Voice Quiz, the Exam and Read Aloud (eight courses: seven of the learning path's twelve, plus the related Build Your First Agent with ADK) all work. The other five are in the same Read Aloud list, marked as having no text, and open to a note and a link to the official course. |
+| `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 8 courses of Google's learning path (`skills.google/paths/4525`, in Google's order) this server can read from its private store; it says **Unfinished** while any are unreadable. Every course is captured from Google Skills as you see it. |
 
-To see which packs your copy has:
+### Private course readings
+
+For all eight Agentic Architect courses (and any private course of any exam), one command saves every
+lesson with no AI and no cost:
+
+```bash
+pnpm --dir quiz reading:crawl
+```
+
+With no argument it covers every exam on the server; `pnpm --dir quiz reading:crawl <exam>` limits it to one.
+It starts a separate headless Chrome for Testing of its own (the one the browser tests already use, on its own
+profile folder, apart from your everyday Chrome), signs in by pressing the browser's **Continue as** button for your saved Google
+account when Google Skills offers it, or else the site's **Sign in** and **Sign in with Google** buttons, and closes it when it ends. A lesson delivered as a PDF is read too: the command fetches it in memory and extracts its text. The first time only, sign in to Google Skills once in a
+visible window of that browser; [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md) has the command.
+It lists each course's lessons, reads every one on
+every run, saves the missing ones and any whose text changed to the private store, pauses a random 2 to 15 seconds between pages, shows live
+progress, and ends with one verdict per course: complete and current, complete but Google changed (what), or
+incomplete (what). A video lesson is listed in its place and saved by its title only: the command never opens a video page (that would play it and mark it
+watched) and keeps no transcript, and Read Aloud gives it a **Watch the video** button that opens it on Google Skills. It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
+the saved readings, so the next run reports lessons added, removed or reordered and any address or text that
+changed. `pnpm --dir quiz reading:list <exam>` prints which lessons are saved against that manifest. Read Aloud's
+**Unfinished** note says how to finish, and [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md)
+has the steps, including the exact Chrome start command, for a person or for any AI tool that can run commands.
+**Use a secondary Google account for the capture, not the one you study with.** Google Skills counts a lesson as completed when
+it is opened, and the crawl opens every lesson on every run, so the signed-in account's progress on the courses and the whole
+learning path shows as complete (for example 66% of a certification path) although nothing was studied. The crawl prints
+`Signed in as <address>` so you can see which account it uses.
+Every run of `reading:crawl` and `reading:path` writes a log file, one line per event, to a `logs` folder beside the private store
+(outside the repository); the command prints `Log: <path>`. It names the browser started, the sign-in route taken, each course and lesson with its
+outcome, length and time, and every retry or failure with its error. It holds no lesson text, and addresses carry no ids. Add `--debug` (or set
+`READING_DEBUG=1`) for the addresses visited, the frame found and the reads while a page settles. Send that file when a run goes wrong: it names the
+signed-in account only by its first letter and domain (still personal data, so treat a log with care; logs from runs made before that change hold the full address: delete them before sharing one).
+`READING_GOOGLE_ACCOUNT` names the one Google account the crawl may use, and it stops before opening a lesson, printing "Could not confirm that the signed-in
+account is the one you asked for", when another account is signed in, when the settings page shows more than one address, or when none shows. The other `READING_*` settings (`READING_SITE`, `READING_CDP_URL`, `READING_FRAME_HOSTS`,
+`READING_PROFILE_DIR`, `READING_SKIP_SIGNIN` and the `READING_*_MS` timings) exist so the tests can point the command at a fake lesson site. Leave them
+unset: `READING_SITE` and `READING_FRAME_HOSTS` decide which hosts the signed-in session is sent to.
+
+To add a new exam, use the `/add-exam <exam name>` skill ([`skills/add-exam/SKILL.md`](skills/add-exam/SKILL.md)). It lists the
+exam's Google Skills learning path in Google's order with `pnpm --dir quiz reading:path <address>` (which prints the courses, or with
+`--json` the whole `courses.json`), creates the exam, runs the crawl for it, and then writes the glossary, voice scenes, study
+topics and practice questions from official Google sources, one stage at a time, each ending with `node --test`. Anything with no
+official source is left out and named as unfinished, never invented.
+
+Good to know about private readings:
+
+- **Unfinished.** Read Aloud still says **Unfinished** while any of the 8 courses cannot be read here.
+  Without your own captures the Agentic Architect exam reads 0 of 8, because every course is captured from
+  Google Skills as you see it; capturing them all makes it 8 of 8 and the notice goes away.
+- **Where the text lives.** Each capture is one file per page in a folder outside this repository:
+  `QUIZ_PRIVATE_DIR` if you set it, otherwise `star-exam-companion/private-reading` in your operating
+  system's application-data folder. A page may hold up to 1,000,000 characters and no more than 4 MB once saved
+  (control characters and quotes take more room when saved, so such a page can be refused below the
+  character limit), a heading up to 500 characters, and a course up to 300 pages or 200 MB; a full course refuses a new page, and replacing an existing page still works. The
+  folder is never committed and is never part of a static build or the online demo.
+- **Also on your devices.** The offline worker on each device that has the quiz installed keeps every
+  captured page, opened or not, so it can be read offline. Private text is therefore on this server and
+  on those devices.
+- **What is saved.** The crawl saves each lesson's reading text, exactly as Google Skills shows it to the signed-in user, and
+  nothing else. A lesson with no reading text saves nothing and is named in the report. Reading a lesson again replaces its copy.
+- **Deleting it.** Delete a page's file, or the folder, to remove the server copies. Each file is named by a
+  hash of its page id, so open a file to see its `title` and `savedAt` and find the page it holds. Clear this site's
+  data on each device to remove its offline copies. Night reading's recording is built from the text and
+  lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
+  the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
+  copy does not remove the ticks you earned for it, which stay in your saved scores. The capture also keeps two things beside the store, outside the
+  repository: its run logs (one small file per run in a `logs` folder next to `private-reading`, holding no lesson text and the signed-in
+  account only as its first letter and domain; delete them whenever you like) and the capture browser's own profile folder, `cft-profile`, which
+  holds the signed-in Google session of the capture account: delete it to sign that account out of the capture browser.
+- **Demo build check.** Building the online demo stops if any source file holds a captured page's text. A
+  capture is compared when its whole text is at least 40 characters long, and each of its lines that is at
+  least 40 characters long is compared too. A capture whose whole text and every line are shorter than that,
+  such as the single word "Continue", is not compared and cannot block the build.
+- **If a copy is lost.** The store is not in the repository or its backups. Recover by capturing the page
+  again from Google Skills while signed in.
+- **Offline voice.** When the Mac cannot be reached, Read Aloud uses an English voice installed on the
+  device itself and says so. It never falls back to a remote voice. A device with no local English voice
+  shows a message instead of staying silent, and the rest of the quiz still works.
+
+To see which exams your copy has:
 
 ```bash
 ls exams
@@ -164,11 +243,11 @@ QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next start -H 127.
 ```
 
 For development, `QUIZ_EXAM=PACK NEXT_TELEMETRY_DISABLED=1 pnpm --dir quiz exec next dev -H 127.0.0.1`
-serves the same pack. If you run the quiz as a login service ([full local setup](#full-local-setup)),
+serves the same exam. If you run the quiz as a login service ([full local setup](#full-local-setup)),
 put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
 each exam, so switching never mixes them.
 
-Missing your exam? A pack is a folder of data, with no code to change: see
+Missing your exam? An exam is a folder of data, with no code to change: see
 [`docs/exam-packs.md`](docs/exam-packs.md) and [Contributing and support](#contributing-and-support).
 
 ## Configuration
@@ -179,11 +258,12 @@ in the shell that starts the quiz.
 | Variable | Default | Purpose |
 |---|---|---|
 | `QUIZ_LAN_HOST` | unset | The one address or name, without a port, that other devices open. Unset, only pages opened on this machine (`localhost`, `127.0.0.1`, `[::1]`) can save answers. |
-| `QUIZ_EXAM` | `generative-ai-leader` | The exam pack to serve: a folder name under `exams/`. Only the starting exam: once you switch on the Progress page, that choice wins. |
+| `QUIZ_EXAM` | `generative-ai-leader` | The exam to serve: a folder name under `exams/`. Only the starting exam: once you switch on the Progress page, that choice wins. |
 | `QUIZ_EXAM_SETTING_FILE` | `quiz/active-exam.json` | Where the exam chosen on the Progress page is saved. |
 | `QUIZ_SCORES_FILE` | `quiz/scores-<exam>.jsonl` | Where answers are saved. The default name carries the exam, such as `scores-generative-ai-leader.jsonl`. |
 | `QUIZ_SCORES_DIR` | unset | A folder that keeps one `scores-<exam>.jsonl` per exam, for a test instance, so its answers never reach your real scores. `QUIZ_SCORES_FILE` wins when both are set. |
-| `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the packs. |
+| `QUIZ_ROOT` | the parent of `quiz/` | Where `exams/` and the scores live, for a test instance that serves a scratch copy of the exams. |
+| `QUIZ_PRIVATE_DIR` | the OS app-data folder's `star-exam-companion/private-reading` directory | Where private reading copies are stored, outside the repository and build. Must be an absolute path. |
 | `NIGHT_DIR` | `~/Library/Caches/star-exam-night` | Where night-reading audio is cached. An absolute path starting with `/`; any other value is ignored and the default is used. |
 | `QUIZ_NIGHT_PRELOAD` | on | The night-reading recording starts building when the server starts and when the exam is switched, so it is ready before the page is opened. `0` turns that off. The browser suite enables it with pre-seeded scratch recordings. Any other test instance must set it to `0` or point `NIGHT_DIR` at a scratch folder, or its start builds a recording into the real cache. |
 | `QUIZ_DIST_DIR` | `.next` | The build folder, so a second build does not replace a running one. |
@@ -348,7 +428,7 @@ for **iOS, Android, macOS, Windows and Linux** are in
 [`docs/https.md`](docs/https.md#5-trust-the-certificate-on-each-device).
 
 **7. Check it.** Open `https://ADDRESS/` on your phone. It loads with no warning. Add it to the home
-screen, open **Progress**, and check that **Secure** says *Yes* and **Offline** says *Ready*. The
+screen, tap the laptop icon in the header, and check that **Secure / Offline** says *Yes / Ready*. The
 same address works over plain HTTP at `http://ADDRESS/`, without offline mode.
 
 **Update, restart, stop and remove.** The running server keeps serving the build it started with,
@@ -362,7 +442,7 @@ start.
 | Stop and remove | `launchctl bootout gui/$UID/com.star-exam-companion`, then delete the plist | `systemctl --user disable --now star-exam-companion`, then delete the unit file |
 
 To go back to an earlier version, check it out with git, install, build and restart. Your answers in
-`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. An install that studied before exams were named had its scores file renamed on the first run of this version, so read [Running a pack](docs/exam-packs.md#running-a-pack) before going back. The
+`quiz/scores-<exam>.jsonl` are not touched by any of this; copy that file before you re-clone. An install that studied before exams were named had its scores file renamed on the first run of this version, so read [Running an exam](docs/exam-packs.md#running-an-exam) before going back. The
 certificate lasts 825 days; see [Renewing or removing it](docs/https.md#renewing-or-removing-it) in
 the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new certificate.
 
@@ -372,6 +452,9 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
   you study on. Git ignores the scores file and its backups.
 - **No accounts, analytics or tracking.** The app's own scripts and the start and dev commands
   here switch Next.js telemetry off.
+- **Private course copies** stay under `QUIZ_PRIVATE_DIR`, outside the repository. The Pages build
+  refuses a store inside a Git checkout and checks that saved text is not present in its source trees; its
+  static export contains neither reading pages nor a service worker.
 - **Deleting your data:** **Reset progress** on the Progress page empties `quiz/scores-<exam>.jsonl`
   after copying it to `quiz/scores-backups/`. To erase everything, delete `quiz/scores-*.jsonl` and
   `quiz/scores-backups/`, then clear this site's data in each browser you studied in.
@@ -387,7 +470,7 @@ the guide. If `ADDRESS` ever changes, repeat steps 2 and 3 and trust the new cer
 .
 ├── quiz/                 The Next.js app: pages, components, API routes and tests
 ├── pages-static/         The online demo's own files, laid out like quiz/
-├── exams/                One exam pack per exam: glossary, scenes, sections, study questions
+├── exams/                One folder per exam: glossary, scenes, sections, study questions
 ├── docs/https.md         HTTPS, certificates and offline mode on every platform
 ├── scripts/              make-cert.sh (HTTPS certificate), build-pages.sh (online demo)
 ├── .github/workflows/    Builds and deploys the online demo to GitHub Pages
@@ -426,7 +509,7 @@ pnpm --dir quiz e2e
 ```
 
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
-`http://localhost:47822`, and uses temporary scores and night-reading storage. It never reuses
+`http://localhost:47822`, and uses temporary scores, speech caches and night-reading storage. It never reuses
 a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
 `quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
 unused port:
@@ -435,10 +518,12 @@ unused port:
 QUIZ_E2E_PORT=47824 pnpm --dir quiz e2e
 ```
 
-Chromium and WebKit run at both 375 and 390 px. The tests cover page rendering, voice answers,
+Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 375 px, the lowest phone width. The tests cover page rendering, voice answers,
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
 reset, and offline pages with answer persistence and reconnection. Sound is disabled before page
-scripts run; speech requests return silent test audio. Reading pages use original synthetic
+scripts run; speech requests return silent test audio. Every exam's voice clips are pre-seeded in
+the scratch cache, so service-worker downloads use the real speech API without generating speech
+or reading the user's cached recordings. Reading pages use original synthetic
 course text, not Google's live content. Night tests use the real status and audio routes with
 pre-seeded, silent recordings, not generated speech. They check separate recordings and places
 for both exams, including an older default-exam recording. Cross-device switching tests also check
@@ -449,10 +534,11 @@ Both gate stages must pass before a change is proposed. This automates the smoke
 listed above, not every possible action or device behaviour: actual iPhone installation, sound output,
 macOS voice generation, LAN certificates and Google's live course responses are not exercised.
 
-The online demo is a static export of the same app, built once for every exam pack. `bash scripts/build-pages.sh` builds it into
-`pages-out/` (the default exam at the root, every other exam under `pages-out/<pack id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
+The online demo is a static export of the same app, built once for every exam. `bash scripts/build-pages.sh` builds it into
+`pages-out/` (the default exam at the root, every other exam under `pages-out/<exam id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
 Read Aloud and Progress with a panel that says they need the local install, and filters Practice
-in the browser. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
+in the browser. Before exporting, it refuses private reading data in exams and verifies that the
+private store stays outside the repository. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.
 Once, in the repository settings, set **Pages > Source** to **GitHub Actions**.
 
 ## Contributing and support

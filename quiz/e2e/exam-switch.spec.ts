@@ -17,8 +17,8 @@ async function settleWorker(page: Page) {
 }
 
 // The switch loads a new page over the old one, which WebKit reports as cut-off requests; see fixtures.ts.
-// The start of the Agentic Architect pack's notice (exams/agentic-architect/pack.json).
-const UNFINISHED = /Unfinished: Read Aloud covers eight courses, seven of the learning path's twelve/
+// The E2E server seeds synthetic private pages for course 8, so one of the eight courses is readable: course 8. The other seven are saved by the capture command.
+const UNFINISHED = /^Unfinished: Read Aloud can read 1 of 8 courses on this server; 7 courses need reading text\.$/
 
 test.use({ navigationCutOff: true })
 
@@ -35,7 +35,12 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
     await expect(pick).toHaveValue("generative-ai-leader")
     // Let the device finish storing the voice clips first: a clip still downloading when the exam switches
     // asks for a line the new exam does not have, and the fixture counts that 404 as a browser error.
-    await expect(page.getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 840_000 })
+    // The count is in the Saving panel, opened from the header's status icon.
+    const savingIcon = page.locator("header button[aria-controls='saving-panel']")
+    await savingIcon.click()
+    await expect(page.locator("#saving-panel").getByRole("row", { name: /Voice for offline/ })).toContainText(/(\d+) of \1 lines/, { timeout: 840_000 })
+    await savingIcon.click()
+    await expect(page.locator("#saving-panel")).toHaveCount(0)
     // And for the page to go quiet: WebKit reports a prefetch or a storage call cut off by the switch's page load as an
     // uncaught error, so the switch must not land while the page is still fetching.
     await page.waitForLoadState("networkidle")
@@ -71,30 +76,31 @@ test("exam-switcher: a tap outside the confirmation cancels, and confirming swit
 
     // Read Aloud lists this exam's own courses and none of the other exam's. The list needs no course text.
     await page.goto("/read")
-    await expect(page.getByText("Manage Agent Memory and State")).toBeVisible()
-    await expect(page.getByText("Add Agent Capabilities with Tools")).toBeVisible()
-    await expect(page.getByText("Build Your First Agent with Agent Development Kit (ADK)")).toBeVisible()
-    // The two courses Google publishes in its newer format are listed too.
-    await expect(page.getByText("AgentOps: Operationalize AI Agents on Google Cloud")).toBeVisible()
-    await expect(page.getByText("Understand Google Cloud Agents")).toBeVisible()
+    for (const title of [
+      "Understand Google Cloud Agents",
+      "Agentic Strategy: Discover, Design, and Prototype",
+      "Optimize Agent Behavior",
+      "Build Agent Skills with Google",
+      "Engineer AI Agents with Agent Development Kit (ADK)",
+      "Build AI Agents with Enterprise Databases",
+      "AgentOps: Operationalize AI Agents on Google Cloud",
+      "Model Armor: Securing AI Deployments",
+    ]) await expect(page.getByText(title)).toBeVisible()
     await expect(page.getByText("Gen AI: Beyond the Chatbot")).toHaveCount(0)
-    // The two newer courses that were found are read aloud. The path's other five are in the same list, marked as
-    // having no text; opening one says why and links to the official course.
-    await expect(page.getByText("Build AI Agents with Enterprise Databases")).toBeVisible()
-    await expect(page.getByText("Liftoff with Google Antigravity: Build a Video Game with AI")).toBeVisible()
-    await expect(page.getByText("No text to read aloud")).toHaveCount(5)
-    await expect(page.getByRole("heading", { name: "NOT READ ALOUD" })).toHaveCount(0)
+    // Every course on the path is captured from Google, so none is marked as having no text.
+    await expect(page.getByText("No text to read aloud")).toHaveCount(0)
+    await expect(page.getByRole("heading", { name: "Not read aloud" })).toHaveCount(0)
     await page.getByRole("link", { name: /Build Agent Skills with Google/ }).click()
     await expect(page.getByRole("heading", { name: "Build Agent Skills with Google" })).toBeVisible()
     // The course page's components/atoms/breadcrumb.tsx links back to the Read Aloud list.
     const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb" })
     await expect(breadcrumb.getByRole("link", { name: "READ ALOUD" })).toHaveAttribute("href", "/read")
     await expect(breadcrumb).toContainText(/COURSE \d+/)
-    await expect(page.getByText(/Open the course on Google Skills/)).toBeVisible()
+    await expect(page.getByText(/No private copy is saved on this server yet/)).toBeVisible()
     await expect(page.getByRole("link", { name: "OPEN ON GOOGLE SKILLS" })).toHaveAttribute("href", "https://www.skills.google/course_templates/1832")
     await expect(page.getByText(UNFINISHED)).toHaveCount(0)
     await page.goBack()
-    // The list says the pack is unfinished, so eight courses are not read as the whole learning path.
+    // The list says the pack is unfinished, so the unread courses are not taken as the whole learning path.
     await expect(page.getByText(UNFINISHED)).toBeVisible()
 
     // A page of the other exam is refused with 409 and the exam served, so its answers are never stored
@@ -174,6 +180,29 @@ test.describe("a pack with no course to read", () => {
       // Nothing to pick or to read at night, and no course card.
       await expect(page.getByRole("link", { name: "Night reading" })).toHaveCount(0)
       await expect(page.getByText("Pick a course")).toHaveCount(0)
+    } finally {
+      await page.request.post("/api/exam", { headers: origin, data: { exam: "generative-ai-leader" } })
+    }
+  })
+})
+
+test.describe("an exam whose study data is not written yet", () => {
+  test.use({ serviceWorkers: "block" })
+
+  test("says so on each feature page, and the practice exam cannot be started with no questions", async ({ page, baseURL }) => {
+    const origin = { origin: baseURL! }
+    try {
+      // Professional Cloud Architect is added with its courses only: no glossary, scenes, study topics or questions, and a notice that says so.
+      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "professional-cloud-architect" } })).ok()).toBe(true)
+      for (const path of ["/", "/study", "/practice", "/exam", "/glossary", "/flashcards", "/voice"]) {
+        await page.goto(path)
+        await expect(page.getByTestId(path === "/" ? "pack-notice" : "unfinished-notice"), `${path} names what is missing`).toContainText("Unfinished")
+      }
+      await page.goto("/exam")
+      const start = page.getByRole("button", { name: /Start exam/ })
+      await expect(start).toBeDisabled()
+      // Dimmed, so it does not look like a button that works.
+      await expect(start).toHaveCSS("opacity", "0.6")
     } finally {
       await page.request.post("/api/exam", { headers: origin, data: { exam: "generative-ai-leader" } })
     }

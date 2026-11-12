@@ -1,15 +1,15 @@
 # Contributing
 
 Thanks for helping. Star Exam Companion studies one Google Cloud exam per install, and each exam is a
-data-only **exam pack** under [`exams/`](exams/).
+data-only **exam** under [`exams/`](exams/).
 
 ## Add a new exam
 
 1. Read [`docs/exam-packs.md`](docs/exam-packs.md): the folder, the shape of each file, the rules and
    the pull-request steps.
-2. Copy a finished pack, fill it in from Google's own exam guide and documentation, and run
+2. Copy a finished exam, fill it in from Google's own exam guide and documentation, and run
    `node --test` until it passes.
-3. Run the quiz on your pack (`QUIZ_EXAM=<id>`), click through every page, and open one pull request
+3. Run the quiz on your exam (`QUIZ_EXAM=<id>`), click through every page, and open one pull request
    for that exam only.
 
 ## Change the app

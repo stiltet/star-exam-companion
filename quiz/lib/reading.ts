@@ -32,11 +32,16 @@ export function reviewUrl(course: Course, ids: string[], pageCount: number, page
 
 // A Rise course's one file; its folder already names the language, so the path ends there.
 export function riseUrl(course: Course): string {
-  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/runtime-data.js`
+  return `${course.bundleBase}/${bundleFolder(course)}/runtime-data.js`
 }
 
 export function bundleUrl(course: Course, part: (typeof PARTS)[number]): string {
-  return `${course.bundleBase}/${course.folder.split("/").map(encodeURIComponent).join("/")}/course/en/${part}.json`
+  return `${course.bundleBase}/${bundleFolder(course)}/course/en/${part}.json`
+}
+
+function bundleFolder(course: Course): string {
+  if (!course.folder) throw new Error(`Course ${course.id} has no public bundle folder.`)
+  return course.folder.split("/").map(encodeURIComponent).join("/")
 }
 
 // The longest text one clip may carry: the speak routes' own limit.
@@ -437,13 +442,30 @@ export function reading(bundle: Bundle, pageId: string): Reading | null {
 
 // Where NEXT leads: the course's next reading, or after its last one the next course's list of
 // readings, so a course read through carries on into the next. None after the last course.
-export function nextReading(course: Course, pages: PageSummary[], pageId: string, courses: readonly Course[]): { href: string; title: string } | null {
+export function nextReading(course: Course, pages: PageSummary[], pageId: string, courses: readonly { id: string; title: string }[]): { href: string; title: string } | null {
   const at = pages.findIndex((page) => page.id === pageId)
   const page = at >= 0 ? pages[at + 1] : undefined
   if (page) return { href: `/read/${course.id}/${page.id}`, title: page.title }
   const index = courses.findIndex((entry) => entry.id === course.id)
   const following = index >= 0 ? courses[index + 1] : undefined
   return at >= 0 && following ? { href: `/read/${following.id}`, title: `Course ${following.id}, ${following.title}` } : null
+}
+
+// Where PREVIOUS leads: the course's previous lesson, or from its first lesson the course's own
+// list of lessons. Nothing for a lesson the course does not have.
+export function previousLesson(course: Course, pages: PageSummary[], pageId: string): { href: string; title: string } | null {
+  const at = pages.findIndex((page) => page.id === pageId)
+  if (at < 0) return null
+  const page = pages[at - 1]
+  return page ? { href: `/read/${course.id}/${page.id}`, title: page.title } : { href: `/read/${course.id}`, title: `Course ${course.id}, ${course.title}` }
+}
+
+// The course before and after this one, in the order /read lists them (courses with text, then
+// the ones without). The ends have none.
+export function courseNeighbours(courses: readonly { id: string; title: string }[], id: string): { previous: { href: string; title: string } | null; next: { href: string; title: string } | null } {
+  const at = courses.findIndex((course) => course.id === id)
+  const link = (course: { id: string; title: string } | undefined) => (course ? { href: `/read/${course.id}`, title: `Course ${course.id}, ${course.title}` } : null)
+  return at < 0 ? { previous: null, next: null } : { previous: link(courses[at - 1]), next: link(courses[at + 1]) }
 }
 
 export function courseById(courses: readonly Course[], id: string): Course | undefined {

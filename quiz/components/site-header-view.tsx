@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { phoneTitle } from "@/lib/pages"
 import { ConnectionIcon, useConnection } from "@/components/connection-status"
+import { SavingPanel } from "@/components/saving-panel"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 // Imported, not "/logo.png": the URL then carries the file's hash, so the phone's worker, which
 // keeps statics until asked for a new URL, shows a new logo as soon as it changes.
 import logo from "@/public/logo.png"
@@ -17,29 +19,44 @@ import { STATIC_DEMO } from "@/lib/static-demo"
 
 export function SiteHeaderView({ links: LINKS }: { links: { href: string; label: string }[] }) {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  // One dropdown at a time under the header: the menu or the Saving panel. Opening one shuts the other.
+  const [panel, setPanel] = useState<"menu" | "saving" | null>(null)
+  const open = panel === "menu"
+  const saving = panel === "saving"
+  const setOpen = (next: boolean | ((was: boolean) => boolean)) => setPanel((was) => ((typeof next === "function" ? next(was === "menu") : next) ? "menu" : was === "menu" ? null : was))
   const connection = useConnection()
   const headerRef = useRef<HTMLElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-
-  // A link was followed: the new page starts with the menu shut.
-  useEffect(() => setOpen(false), [pathname])
-
-  // While open, a tap outside the header, a scroll or Escape shuts it.
+  const savingButtonRef = useRef<HTMLButtonElement>(null)
+  // From sm up the Saving panel is a dialog, which handles its own outside tap and Escape.
+  const [wide, setWide] = useState(false)
   useEffect(() => {
-    if (!open) return
+    const query = window.matchMedia("(min-width: 640px)")
+    const read = () => setWide(query.matches)
+    read()
+    query.addEventListener("change", read)
+    return () => query.removeEventListener("change", read)
+  }, [])
+
+  // A link was followed: the new page starts with both shut.
+  useEffect(() => setPanel(null), [pathname])
+
+  // While a dropdown is open, a tap outside the header or Escape shuts it; so does a scroll, except for
+  // the Saving panel, which scrolls inside itself and stays readable.
+  useEffect(() => {
+    if (!panel || (panel === "saving" && wide)) return
     const outside = (event: PointerEvent) => {
-      if (!headerRef.current?.contains(event.target as Node)) setOpen(false)
+      if (!headerRef.current?.contains(event.target as Node)) setPanel(null)
     }
     // A few pixels of drift (iOS resizing its address bar after the tap) is not a scroll.
     const openedAt = window.scrollY
     const scrolled = () => {
-      if (Math.abs(window.scrollY - openedAt) > 12) setOpen(false)
+      if (panel === "menu" && Math.abs(window.scrollY - openedAt) > 12) setPanel(null)
     }
     const escape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
-      setOpen(false)
-      buttonRef.current?.focus()
+      setPanel(null)
+      ;(panel === "saving" ? savingButtonRef : buttonRef).current?.focus()
     }
     document.addEventListener("pointerdown", outside)
     window.addEventListener("scroll", scrolled, { passive: true })
@@ -49,7 +66,7 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
       window.removeEventListener("scroll", scrolled)
       document.removeEventListener("keydown", escape)
     }
-  }, [open])
+  }, [panel, wide])
 
   const current = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
@@ -70,7 +87,7 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
             ))}
           </div>
           <div className="flex shrink-0 items-center">
-            <ConnectionIcon state={connection} />
+            <ConnectionIcon state={connection} open={saving} onToggle={() => setPanel((was) => (was === "saving" ? null : "saving"))} buttonRef={savingButtonRef} />
             <button
               ref={buttonRef}
               type="button"
@@ -105,6 +122,17 @@ export function SiteHeaderView({ links: LINKS }: { links: { href: string; label:
           </ul>
         </div>
       )}
+      {saving && !wide && (
+        <div id="saving-panel" className="sm:hidden absolute inset-x-0 top-full max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-y-2 border-foreground bg-background shadow-lg">
+          <SavingPanel connection={connection} />
+        </div>
+      )}
+      <Dialog open={saving && wide} onOpenChange={(next) => { if (!next) { setPanel(null); savingButtonRef.current?.focus() } }}>
+        <DialogContent id="saving-panel" aria-describedby={undefined} showCloseButton={false} className="gap-0 rounded-none border-2 border-foreground p-0 sm:max-w-2xl">
+          <DialogTitle className="sr-only">Offline / connection status</DialogTitle>
+          <SavingPanel connection={connection} />
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }

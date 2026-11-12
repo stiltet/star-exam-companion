@@ -1,4 +1,5 @@
 import { bundleUrl, coursePageUrl, pageList, PARTS, readingIds, riseUrl, type Bundle } from "./reading.ts"
+import type { CourseProblem } from "./course-error.ts"
 import type { Course, PageSummary } from "./reading-view.ts"
 import { decodeRise, riseBundle } from "./rise.ts"
 
@@ -16,7 +17,8 @@ export const FAILED_MS = 30 * 1000
 
 type Entry = { at: number; bundle: Bundle; pages: PageSummary[]; ids: string[]; idsAt: number }
 
-export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[] } | { ok: false; error: string }
+// problem: only a private course says what kind of failure it was, a saved file ("record") or the folder itself ("folder").
+export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[] } | { ok: false; error: string; problem?: CourseProblem }
 
 const cache = new Map<string, Entry>()
 const failed = new Map<string, { at: number; error: string }>()
@@ -68,6 +70,7 @@ function loaded(entry: Entry): Loaded {
 
 // Two packs may list the same Skills number with different bundles, so the folder is part of the key.
 function key(course: Course): string {
+  if (!course.folder) throw new Error(`Course ${course.id} has no public bundle folder.`)
   return `${course.template}:${course.folder}`
 }
 

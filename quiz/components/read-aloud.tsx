@@ -12,6 +12,7 @@ import { useSnapshot } from "@/components/snapshot"
 import { needsSaving, readToday } from "@/lib/progress"
 import { reviewStop, type Paragraph } from "@/lib/reading-view"
 import { saidHeading, speakable } from "@/lib/score"
+import { fetchClip, macGate } from "@/lib/clip"
 import { MAX_SPEAK_CHARS } from "@/lib/speak-limit"
 import { fitClips, sentences, spokenWord, words } from "@/lib/spoken-word"
 
@@ -71,6 +72,27 @@ function fits(box: HTMLElement, under: number): boolean {
   return box.offsetHeight <= window.innerHeight - under - 32
 }
 
+// An English voice that runs on this device, never a remote one, so offline reading sends no text anywhere.
+// Browsers often list no voices until they have loaded them, so wait for that, but only briefly.
+const VOICE_WAIT_MS = 1500
+function pickLocalVoice(): SpeechSynthesisVoice | undefined {
+  return speechSynthesis.getVoices().find((entry) => entry.localService && /^en(?:-|$)/i.test(entry.lang))
+}
+function localVoice(): Promise<SpeechSynthesisVoice | undefined> {
+  if (typeof speechSynthesis === "undefined") return Promise.resolve(undefined)
+  const now = pickLocalVoice()
+  if (now) return Promise.resolve(now)
+  return new Promise((resolve) => {
+    const done = () => {
+      speechSynthesis.removeEventListener("voiceschanged", done)
+      window.clearTimeout(timer)
+      resolve(pickLocalVoice())
+    }
+    const timer = window.setTimeout(done, VOICE_WAIT_MS)
+    speechSynthesis.addEventListener("voiceschanged", done)
+  })
+}
+
 // Reads a page of the official course aloud, sentence by sentence, in the Mac's voice
 // (/api/speak runs `say`), with the word being said in bold, as in the Voice Quiz.
 export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, video, videoAt }: Props) {
@@ -112,6 +134,9 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   const clipUrl = useRef<string | null>(null)
   const frame = useRef<number | null>(null)
   const gap = useRef<number | null>(null)
+  // Once the Mac has failed, later sentences go straight to the device voice until the next Play.
+  const [mac] = useState(macGate)
+  const browserVoice = useRef<SpeechSynthesisUtterance | null>(null)
   // The clip paused part-way, so Play carries on from the same word.
   const paused = useRef<{ index: number; sentence: number; mine: number } | null>(null)
   const shown = useRef<(HTMLElement | null)[]>([])
@@ -168,8 +193,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     if (kept) return kept
     const said = speakable(parts[index]?.[sentence]?.text ?? "")
     const text = paragraphs[index]?.heading ? saidHeading(said) : said
-    const loading = fetch("/api/speak/reading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) })
-      .then((response) => (response.ok ? response.blob() : Promise.reject(new Error(`the Mac answered ${response.status}`))))
+    // A Mac that does not answer in time counts as failed, so reading moves to the device voice instead of waiting on the network.
+    const loading = fetchClip(text)
     clips.current.set(key, loading)
     loading.catch(() => clips.current.delete(key))
     return loading
@@ -201,59 +226,30 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
 
   async function run(index: number, mine: number, sentence = 0) {
     at.current = { index, sentence }
+    if (!navigator.onLine || mac.skipped()) {
+      void runOnDevice(index, sentence, mine, mac.skipped() ?? undefined)
+      return
+    }
     let blob: Blob
     try {
       blob = await clip(index, sentence)
     } catch (error) {
       // A stale run's failure is safe to drop: a newer run owns the voice and reports its own.
       if (generation.current !== mine) return
-      setPlaying(false)
-      setNote(`The voice for this paragraph could not be loaded (${error instanceof Error ? error.message : String(error)}).`)
+      mac.failed(error)
+      void runOnDevice(index, sentence, mine, error)
       return
     }
     if (generation.current !== mine) return
     // The next sentence's clip is made while this one plays, so the only gap is the pause.
     const then = following(index, sentence)
-    if (then) void clip(then.index, then.sentence).catch(() => undefined)
+    // A look-ahead that fails counts like any other failure, so the next sentence does not wait for the Mac again.
+    if (then) void clip(then.index, then.sentence).catch((error: unknown) => mac.failedIf(generation.current === mine, error))
     const audio = sharedAudio()
     releaseClip()
     clipUrl.current = URL.createObjectURL(blob)
     audio.src = clipUrl.current
-    audio.onended = () => {
-      if (generation.current !== mine) return
-      stopTracking()
-      releaseClip()
-      clips.current.delete(`${index}:${sentence}`)
-      if (then && then.index === index) {
-        void run(index, mine, then.sentence)
-        return
-      }
-      setWord(-1)
-      if (!then) {
-        setPlaying(false)
-        setFinished(true)
-        keepPlace(storeKey, 0)
-        void markRead()
-        return
-      }
-      if (stops.has(then.index)) {
-        // A review or a video comes here on Google: the voice waits while the owner does it or
-        // watches it, and Play carries on with what follows, often the key takeaway.
-        setPlaying(false)
-        setCurrent(then.index)
-        keepPlace(storeKey, then.index)
-        // The page stops following the voice once it is paused, so the stop's button is brought into view.
-        stopBlocks.current[then.index]?.scrollIntoView({ block: "center" })
-        return
-      }
-      gap.current = window.setTimeout(() => {
-        gap.current = null
-        if (generation.current !== mine) return
-        setCurrent(then.index)
-        keepPlace(storeKey, then.index)
-        void run(then.index, mine)
-      }, paragraphs[index]?.heading ? HEADING_PAUSE_MS : PAUSE_MS)
-    }
+    audio.onended = () => advance(index, sentence, mine)
     try {
       await audio.play()
       if (generation.current !== mine) return
@@ -270,9 +266,90 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     }
   }
 
+  async function runOnDevice(index: number, sentence: number, mine: number, cause?: unknown) {
+    const voice = await localVoice()
+    if (generation.current !== mine) return
+    if (!voice) {
+      setPlaying(false)
+      setNote(`${cause instanceof Error ? `The Mac could not make this voice (${cause.message}). ` : "The Mac is unreachable. "}No local English voice is available on this device either. Install a device voice to read aloud without the Mac.`)
+      return
+    }
+    const text = speakable(parts[index]?.[sentence]?.text ?? "")
+    const utterance = new SpeechSynthesisUtterance(paragraphs[index]?.heading ? saidHeading(text) : text)
+    utterance.voice = voice
+    utterance.lang = voice.lang
+    browserVoice.current = utterance
+    utterance.onboundary = (event) => {
+      if (generation.current !== mine || event.name !== "word") return
+      const before = utterance.text.slice(0, event.charIndex).trim()
+      setWord((parts[index]?.[sentence]?.first ?? 0) + (before ? before.split(/\s+/).length : 0))
+    }
+    utterance.onend = () => {
+      if (generation.current !== mine) return
+      browserVoice.current = null
+      advance(index, sentence, mine)
+    }
+    utterance.onerror = (event) => {
+      if (generation.current !== mine) return
+      browserVoice.current = null
+      setPlaying(false)
+      setNote("The device voice stopped and could not carry on. Tap Play to try again.")
+    }
+    setNote(`${cause instanceof Error ? `The Mac could not make this voice (${cause.message}). ` : "The Mac is unreachable. "}Reading with this device's local voice; the text stays on this device.`)
+    speechSynthesis.speak(utterance)
+  }
+
+  function stopBrowserVoice() {
+    if (!browserVoice.current) return
+    browserVoice.current.onend = null
+    browserVoice.current.onerror = null
+    browserVoice.current = null
+    speechSynthesis.cancel()
+  }
+
+  function advance(index: number, sentence: number, mine: number) {
+    if (generation.current !== mine) return
+    const then = following(index, sentence)
+    stopTracking()
+    releaseClip()
+    clips.current.delete(`${index}:${sentence}`)
+    if (then && then.index === index) {
+      void run(index, mine, then.sentence)
+      return
+    }
+    setWord(-1)
+    if (!then) {
+      setPlaying(false)
+      setFinished(true)
+      keepPlace(storeKey, 0)
+      void markRead()
+      return
+    }
+    if (stops.has(then.index)) {
+      // A review or a video comes here on Google: the voice waits while the owner does it or
+      // watches it, and Play carries on with what follows, often the key takeaway.
+      setPlaying(false)
+      setCurrent(then.index)
+      keepPlace(storeKey, then.index)
+      // The page stops following the voice once it is paused, so the stop's button is brought into view.
+      stopBlocks.current[then.index]?.scrollIntoView({ block: "center" })
+      return
+    }
+    gap.current = window.setTimeout(() => {
+      gap.current = null
+      if (generation.current !== mine) return
+      setCurrent(then.index)
+      keepPlace(storeKey, then.index)
+      void run(then.index, mine)
+    }, paragraphs[index]?.heading ? HEADING_PAUSE_MS : PAUSE_MS)
+  }
+
   // Inside the tap: a silent clip first, so iOS lets the voice play once its clip arrives.
   function playFrom(index: number, sentence = 0) {
     const mine = ++generation.current
+    // A new Play tries the Mac again.
+    mac.reset()
+    stopBrowserVoice()
     const audio = sharedAudio()
     clearGap()
     stopTracking()
@@ -293,10 +370,17 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     const audio = sharedAudio()
     stopTracking()
     setPlaying(false)
+    if (browserVoice.current) {
+      generation.current += 1
+      stopBrowserVoice()
+      paused.current = { ...at.current, mine: -1 }
+      return
+    }
     if (gap.current !== null) {
       // Between paragraphs: Play starts the next one from its first word.
       clearGap()
       generation.current += 1
+      stopBrowserVoice()
       paused.current = null
       const after = Math.min(current + 1, paragraphs.length - 1)
       setCurrent(after)
@@ -311,6 +395,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     }
     // The clip is still being made: it must not start once it arrives. Play starts that sentence.
     generation.current += 1
+    stopBrowserVoice()
     paused.current = { ...at.current, mine: -1 }
   }
 
@@ -345,6 +430,7 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   useEffect(() => {
     return () => {
       generation.current += 1
+      stopBrowserVoice()
       if (gap.current !== null) window.clearTimeout(gap.current)
       if (frame.current !== null) cancelAnimationFrame(frame.current)
       const audio = sharedAudio()

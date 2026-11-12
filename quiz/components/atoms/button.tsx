@@ -5,11 +5,12 @@ import type { ComponentProps, ReactNode } from "react"
 // classes (self-stretch, margins), never size, spacing or colour.
 // filled: an action that goes somewhere (the review on Google, the next reading).
 // outlined: an action done here (MARK AS READ), or a link beside a filled one, such as PRACTICE
-// EXAM beside START STUDYING on the home page. aria-disabled dims it and stops the hover.
+// EXAM beside START STUDYING on the home page. aria-disabled, or a disabled button, dims it and stops the hover.
 // danger: an action that ends something, such as END EXAM.
 // toggle: a small on/off control, such as a review filter; on (aria-pressed) is inverted.
 // flag: the exam's FLAG control; on is the flag colour.
-export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag"
+// compact: a small action inside a table row (Send now, Update now), low enough that every row keeps one height.
+export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag" | "compact"
 
 // One line, unless wrap is set: a long label ends in an ellipsis rather than wrapping.
 const BASE = "inline-flex max-w-full min-w-0 items-center justify-center gap-6 border-2 border-foreground px-4 py-3 text-base font-bold uppercase no-underline"
@@ -20,6 +21,9 @@ const CONTROL = "inline-flex max-w-full min-w-0 items-center gap-2 border-2 bord
 // Small on/off controls, the size of the Voice Quiz controls. aria-pressed marks them on.
 const TOGGLE = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground px-3 py-2 text-sm font-bold uppercase whitespace-nowrap no-underline disabled:opacity-40"
 
+// Row actions: smaller than a toggle, so a row holding one is no taller than a row holding only text.
+const COMPACT = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground bg-background px-2 py-0.5 text-xs font-bold uppercase whitespace-nowrap no-underline text-foreground hover:bg-muted disabled:opacity-40"
+
 const TOGGLES: Record<"toggle" | "flag", string> = {
   toggle: "bg-background text-foreground hover:bg-muted aria-pressed:bg-foreground aria-pressed:text-background aria-pressed:hover:bg-foreground",
   flag: "bg-background text-foreground hover:bg-muted aria-pressed:bg-flag aria-pressed:text-flag-foreground aria-pressed:hover:bg-flag",
@@ -29,10 +33,11 @@ const VARIANTS: Record<"filled" | "outlined" | "danger", string> = {
   filled: "bg-foreground text-background hover:opacity-80",
   danger: "bg-danger text-danger-foreground hover:opacity-80",
   outlined:
-    "bg-background text-foreground hover:bg-foreground hover:text-background aria-disabled:opacity-60 aria-disabled:cursor-default aria-disabled:hover:bg-background aria-disabled:hover:text-foreground",
+    "bg-background text-foreground hover:bg-foreground hover:text-background aria-disabled:opacity-60 aria-disabled:cursor-default aria-disabled:hover:bg-background aria-disabled:hover:text-foreground disabled:opacity-60 disabled:cursor-default disabled:hover:bg-background disabled:hover:text-foreground",
 }
 
 export function buttonClass(variant: ButtonVariant, placement = "", wrap = false): string {
+  if (variant === "compact") return [COMPACT, placement].filter(Boolean).join(" ")
   if (variant === "control") return [CONTROL, placement].filter(Boolean).join(" ")
   if (variant === "toggle" || variant === "flag") return [TOGGLE, TOGGLES[variant], placement].filter(Boolean).join(" ")
   return [BASE, wrap ? "whitespace-normal" : "whitespace-nowrap", VARIANTS[variant], placement].filter(Boolean).join(" ")

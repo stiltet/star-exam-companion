@@ -1,4 +1,5 @@
 import { test, expect, openVoice } from "./fixtures"
+import { silentWav } from "./voice-fixture.mjs"
 
 test.use({ navigationCutOff: true })
 
@@ -11,7 +12,15 @@ test("a new Agentic scene reaches the Voice Quiz and saves under that exam", asy
     })
     expect(cleared.ok()).toBe(true)
     const response = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "agentic-architect" } })
-    const body = await response.json() as { snapshot: { items: { id: string; section: number; stem: string }[] } }
+    const body = await response.json() as { snapshot: { items: { id: string; section: number; stem: string }[]; voice: Record<string, string> } }
+    // APIRequestContext bypasses the browser route stub, just as the worker's own clip fetches do.
+    const key = Object.values(body.snapshot.voice)[0]
+    expect(key).toMatch(/^[0-9a-f]{64}$/)
+    const clip = await page.request.get(`/api/speak/${key}`)
+    expect(clip.status()).toBe(200)
+    expect(clip.headers()["content-type"]).toBe("audio/wav")
+    expect(await clip.body()).toEqual(silentWav)
+    expect((await page.request.get(`/api/speak/${"0".repeat(64)}`)).status()).toBe(404)
     const index = body.snapshot.items.findIndex((item) => item.id === "enterprise-no-code-agent")
     const scene = body.snapshot.items[index]
     if (!scene) throw new Error("The new Agentic scene is missing from the real snapshot")

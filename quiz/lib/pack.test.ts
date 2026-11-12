@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
@@ -26,12 +26,12 @@ const ids = readdirSync(path.join(testRoot, "exams"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
 
-test("there is at least one exam pack", () => {
+test("there is at least one exam", () => {
   assert.ok(ids.length > 0)
 })
 
 for (const id of ids) {
-  test(`exam pack ${id} meets the pack rules`, () => {
+  test(`exam ${id} meets the exam rules`, () => {
     const pack = loadPack(testRoot, id)
     assert.equal(pack.meta.id, id)
 
@@ -39,7 +39,8 @@ for (const id of ids) {
     assert.equal(parsed.ok, true, `${id}/glossary.md does not parse`)
     if (!parsed.ok) return
     const glossary = parsed.glossary
-    assert.ok(glossary.terms.length > 0, "the glossary has no rows")
+    // A pack that says it is unfinished (a `notice`) may have no glossary rows yet; a finished one may not.
+    if (!pack.meta.notice) assert.ok(glossary.terms.length > 0, "the glossary has no rows")
     for (const term of glossary.terms) assert.ok(term.source.trim() !== "", `${id}/glossary.md: "${term.term}" names no source`)
 
     const sections = parseSections(pack.sectionsText)
@@ -140,10 +141,13 @@ test("only a pack in exams/ can be chosen, and every pack is listed with its tit
 
 test("courses without reading text are listed with a reason, and a malformed entry is refused", () => {
   const aa = loadPack(testRoot, "agentic-architect")
-  assert.equal(aa.noReading.length, 5)
+  assert.match(aa.meta.notice ?? "", /^Unfinished:/, "the Pages demo keeps its static Unfinished notice")
+  assert.equal(aa.noReading.length, 0)
   assert.equal(aa.courses.length, 8)
   assert.ok(aa.noReading.every((course) => /^\d+$/.test(course.id) && /^\d+$/.test(course.template) && course.title && course.why))
-  assert.equal(new Set([...aa.courses, ...aa.noReading].map((course) => course.id)).size, 13, "every course of the path has its own id")
+  assert.deepEqual(aa.noReading.map((course) => course.template), [])
+  assert.deepEqual(aa.courses.filter((course) => course.provider === "private").map((course) => course.template), ["1504", "1672", "1564", "1832", "1596", "1436", "1782", "1385"])
+  assert.equal(new Set([...aa.courses, ...aa.noReading].map((course) => course.id)).size, 8, "every course of the path has its own id")
   assert.equal(loadPack(testRoot, "generative-ai-leader").noReading.length, 0)
   const root = packWith(() => {})
   const file = path.join(root, "exams/agentic-architect/courses.json")
@@ -195,11 +199,50 @@ test("a pack's links and course bundles must be https and on Google's own hosts"
     ["a bundle base on a LAN host", (f) => { f.courses.bundleBase = "https://10.0.0.1/x" }, /bundleBase must be on/],
     ["a bundle base on another host", (f) => { f.courses.bundleBase = "https://evil.example/cls-html5-courses" }, /bundleBase must be on/],
     ["a path on another host", (f) => { f.courses.path = "https://evil.example/paths/1" }, /path on/],
-    ["a course folder that climbs out", (f) => { (f.courses.courses as { folder: string }[])[0]!.folder = "../../x" }, /may not contain/],
-    ["a course format that is not rise", (f) => { (f.courses.courses as { format?: string }[])[0]!.format = "scorm" }, /can only be "rise"/],
+    ["a course folder that climbs out", (f) => { Object.assign((f.courses.courses as object[])[0]!, { provider: "google", folder: "../../x" }) }, /may not contain/],
+    ["a course format that is not rise", (f) => { Object.assign((f.courses.courses as object[])[0]!, { provider: "google", folder: "T-X/1", format: "scorm" }) }, /can only be "rise"/],
+    ["an unknown reading provider", (f) => { (f.courses.courses as { provider?: string }[])[0]!.provider = "remote" }, /provider.*can only be/],
+    ["a private course with a public folder", (f) => { Object.assign((f.courses.courses as object[])[0]!, { provider: "private", folder: "T-X/1" }) }, /cannot have a public bundle folder/],
   ]
   for (const [name, change, message] of bad) assert.throws(() => loadPack(packWith(change), "agentic-architect"), message, name)
   assert.doesNotThrow(() => loadPack(packWith(() => undefined), "agentic-architect"), "the unchanged copy loads")
+})
+
+test("a private reading store or record inside a pack is refused", () => {
+  const root = packWith(() => undefined)
+  const directory = path.join(root, "exams/agentic-architect/private-reading/1786")
+  mkdirSync(directory, { recursive: true })
+  writeFileSync(path.join(directory, "synthetic.json"), JSON.stringify({
+    pageId: "1",
+    title: "Synthetic fixture",
+    text: "Synthetic fixture text only.",
+    savedAt: "2026-01-01T00:00:00.000Z",
+  }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a private record under an unrelated filename is refused even after a pack was cached", () => {
+  const root = packWith(() => undefined)
+  loadPack(root, "agentic-architect")
+  writeFileSync(path.join(root, "exams/agentic-architect/unrelated.json"), JSON.stringify({
+    nested: [{ pageId: "1", title: "Synthetic fixture", text: "Synthetic fixture text only.", savedAt: "2026-01-01T00:00:00.000Z" }],
+  }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a private record added in a subfolder of a cached pack is refused on the next load", () => {
+  const root = packWith(() => undefined)
+  loadPack(root, "agentic-architect")
+  const nested = path.join(root, "exams/agentic-architect/notes/deeper")
+  mkdirSync(nested, { recursive: true })
+  writeFileSync(path.join(nested, "whatever.json"), JSON.stringify({ pageId: "1", title: "Synthetic fixture", text: "Synthetic fixture text only.", savedAt: "2026-01-01T00:00:00.000Z" }))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain private reading files/)
+})
+
+test("a dangling link in a pack gets the linked-files message, not a raw file error", () => {
+  const root = packWith(() => undefined)
+  symlinkSync(path.join(root, "nowhere"), path.join(root, "exams/agentic-architect/dangling.json"))
+  assert.throws(() => loadPack(root, "agentic-architect"), /must not contain linked files/)
 })
 
 test("a chosen pack that no longer reads is ignored, so Progress still opens and the exam can be switched back", () => {

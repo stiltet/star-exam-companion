@@ -12,7 +12,9 @@ type Props = {
 
 // Every topic is known at build time, so the online demo can export its pages.
 export function generateStaticParams() {
-  return activePack().study.sections.flatMap((section) => section.topics.map((topic) => ({ sectionId: section.id, topicId: topic.id })))
+  const params = activePack().study.sections.flatMap((section) => section.topics.map((topic) => ({ sectionId: section.id, topicId: topic.id })))
+  // An unfinished exam has no topics, and a static export needs at least one route: the placeholder is answered with "not found".
+  return params.length > 0 ? params : [{ sectionId: "none", topicId: "none" }]
 }
 
 export default async function TopicPage({ params }: Props) {

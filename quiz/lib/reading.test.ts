@@ -6,7 +6,7 @@ import test from "node:test"
 import { loadPack } from "./pack.ts"
 import { MAX_SPEAK_CHARS } from "./speak-limit.ts"
 import { reviewStop } from "./reading-view.ts"
-import { bundleUrl, htmlBlocks, htmlParagraphs, nextReading, pageList, readingIds, reading, reviewUrl, riseUrl, splitLong, type Bundle } from "./reading.ts"
+import { bundleUrl, courseNeighbours, htmlBlocks, htmlParagraphs, nextReading, previousLesson, pageList, readingIds, reading, reviewUrl, riseUrl, splitLong, type Bundle } from "./reading.ts"
 import { testPack, testRoot } from "./test-pack.ts"
 
 const COURSES = testPack.courses
@@ -226,6 +226,19 @@ test("after the last course, and from an unknown page, there is no NEXT", () => 
   assert.equal(nextReading(COURSES[1]!, twoPages, "nope", COURSES), null)
 })
 
+test("PREVIOUS leads to the course's previous lesson, and from the first lesson to the course's lesson list", () => {
+  assert.deepEqual(previousLesson(COURSES[1]!, twoPages, "y"), { href: "/read/2/x", title: "First" })
+  assert.deepEqual(previousLesson(COURSES[1]!, twoPages, "x"), { href: "/read/2", title: `Course 2, ${COURSES[1]!.title}` })
+  assert.equal(previousLesson(COURSES[1]!, twoPages, "nope"), null)
+})
+
+test("course neighbours follow the given order, ends have none, an unknown course has none", () => {
+  const ordered = [COURSES[0]!, COURSES[1]!, { id: "9", title: "No text course" }]
+  assert.deepEqual(courseNeighbours(ordered, COURSES[0]!.id), { previous: null, next: { href: `/read/${COURSES[1]!.id}`, title: `Course ${COURSES[1]!.id}, ${COURSES[1]!.title}` } })
+  assert.deepEqual(courseNeighbours(ordered, "9"), { previous: { href: `/read/${COURSES[1]!.id}`, title: `Course ${COURSES[1]!.id}, ${COURSES[1]!.title}` }, next: null })
+  assert.deepEqual(courseNeighbours(ordered, "nope"), { previous: null, next: null })
+})
+
 test("an unknown or switched-off page has no reading", () => {
   assert.equal(reading(bundle(), "off"), null)
   assert.equal(reading(bundle(), "nope"), null)
@@ -246,16 +259,17 @@ test("each reading links to its own page on Google Skills, or to the course when
   assert.deepEqual(reviewUrl(course, ids, 3, 1), { url: "https://www.skills.google/paths/1951/course_templates/1265", direct: false })
 })
 
-test("reading navigation and source URLs follow the selected exam pack", () => {
+test("reading navigation and source URLs follow the selected exam", () => {
   const courses = loadPack(testRoot, "agentic-architect").courses
   const first = courses[0]
-  const rise = courses.find((course) => course.format === "rise")
   assert.ok(first)
-  assert.ok(rise)
-  assert.deepEqual(nextReading(first, twoPages, "y", courses), { href: "/read/2", title: "Course 2, Optimize Agent Behavior" })
-  assert.deepEqual(reviewUrl(first, ["123"], 1, 0), { url: "https://www.skills.google/paths/4525/course_templates/1584/html_bundles/123", direct: true })
-  assert.equal(bundleUrl(first, "components"), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-DEVAGENTMEM-B/2.0/course/en/components.json")
-  assert.equal(riseUrl(rise), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-AGTOPS-I/v1.0.0/EN/runtime-data.js")
+  assert.deepEqual(nextReading(first, twoPages, "y", courses), { href: "/read/2", title: "Course 2, Agentic Strategy: Discover, Design, and Prototype" })
+  assert.deepEqual(reviewUrl(first, ["123"], 1, 0), { url: "https://www.skills.google/paths/4525/course_templates/1504/html_bundles/123", direct: true })
+  // Every Agentic Architect course is captured now, so no shipped exam has a public or Rise course: their addresses are checked on synthetic courses.
+  const rise = { ...first, provider: "google" as const, folder: "T-X/v1/EN", format: "rise" as const }
+  assert.equal(riseUrl(rise), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-X/v1/EN/runtime-data.js")
+  const bundle = { ...first, provider: "google" as const, folder: "T-X/2.0" }
+  assert.equal(bundleUrl(bundle, "components"), "https://storage.googleapis.com/cloud-training/cls-html5-courses/T-X/2.0/course/en/components.json")
 })
 
 test("a short paragraph that is all bold, or an HTML heading, is a heading; bold inside text is not", () => {

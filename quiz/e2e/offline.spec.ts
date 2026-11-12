@@ -10,6 +10,82 @@ type NightReady = {
   chapters: { courseId: string; courseTitle: string; title: string }[]
 }
 
+// A silent device voice. It records what it is asked to say in window.__spoken, counts cancels in window.__cancelled, and ends
+// each sentence itself after 300 ms (or options.ms). With clips: "ok-then-fail" the page's first request for a Mac clip gets a good answer and every later one a 500, with audioEnds: true each clip "plays" for 50 ms and then ends, so a test can reach the second request while the first clip plays. With hold: true no sentence ends by itself: it stays being said until the test calls window.__release(), so a test can pause or leave at an exact moment. With voices: false the browser lists no voice and never says it loaded one. It must
+// stay self-contained: Playwright sends its source into the page.
+function voiceStub(options: { voices: boolean; ms?: number; hold?: boolean; clips?: "ok-then-fail"; audioEnds?: boolean }) {
+  const w = window as unknown as Record<string, unknown>
+  w.__spoken = []
+  w.__cancelled = 0
+  class Utterance {
+    text: string
+    voice: unknown = null
+    lang = ""
+    onboundary: ((event: { name: string; charIndex: number }) => void) | null = null
+    onend: (() => void) | null = null
+    onerror: ((event: { error: string }) => void) | null = null
+    constructor(text: string) {
+      this.text = text
+    }
+  }
+  // Counts the page's own requests for a clip from the Mac, however they are routed, so a test can say how many were made.
+  w.__clipRequests = 0
+  const realFetch = window.fetch.bind(window)
+  window.fetch = (input, init) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
+    if (new URL(url, location.href).pathname === "/api/speak/reading") {
+      const count = ++(w.__clipRequests as number)
+      if (options.clips === "ok-then-fail") {
+        return Promise.resolve(count === 1 ? new Response(new Blob(["audio"]), { status: 200 }) : new Response("{}", { status: 500 }))
+      }
+    }
+    return realFetch(input, init)
+  }
+  if (options.audioEnds) {
+    HTMLMediaElement.prototype.play = function play(this: HTMLMediaElement) {
+      // Only a clip from the Mac (a blob address) ends; the silent clip the page plays inside the tap must not, or each
+      // sentence would be ended twice.
+      if (this.src.startsWith("blob:")) window.setTimeout(() => this.onended?.(new Event("ended")), 50)
+      return Promise.resolve()
+    }
+  }
+  let timer: number | undefined
+  const voices = options.voices ? [{ name: "Synthetic local", lang: "en-US", localService: true }, { name: "Synthetic remote", lang: "en-GB", localService: false }] : []
+  Object.defineProperty(window, "SpeechSynthesisUtterance", { value: Utterance, configurable: true })
+  Object.defineProperty(window, "speechSynthesis", {
+    configurable: true,
+    value: {
+      getVoices: () => voices,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      cancel: () => {
+        ;(w.__cancelled as number)++
+        window.clearTimeout(timer)
+        // __release is left as it is on purpose: calling it after a cancel must change nothing, which is what a test
+        // of leaving the page relies on.
+      },
+      speak: (utterance: Utterance) => {
+        ;(w.__spoken as string[]).push(utterance.text)
+        if ((utterance.voice as { localService?: boolean } | null)?.localService !== true) throw new Error("A non-local voice was chosen")
+        utterance.onboundary?.({ name: "word", charIndex: 0 })
+        if (options.hold) {
+          w.__release = () => {
+            w.__release = undefined
+            utterance.onend?.()
+          }
+          return
+        }
+        timer = window.setTimeout(() => utterance.onend?.(), options.ms ?? 300)
+      },
+    },
+  })
+}
+
+const spokenNow = (page: Page) => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken)
+const cancelledNow = (page: Page) => page.evaluate(() => (window as unknown as { __cancelled: number }).__cancelled)
+const releaseNow = (page: Page) => page.evaluate(() => (window as unknown as { __release?: () => void }).__release?.())
+const clipRequests = (page: Page) => page.evaluate(() => (window as unknown as { __clipRequests: number }).__clipRequests)
+
 async function readyNight(page: Page, exam: string): Promise<NightReady> {
   const headers = { "x-quiz-exam": exam }
   await expect.poll(async () => {
@@ -139,8 +215,8 @@ test.describe("exam changes", () => {
       await settleOfflineWorker(page)
       const second = await readyNight(page, "agentic-architect")
       expect(second.key).not.toBe(first.key)
-      expect(second.chapters[0]?.courseTitle).toBe("Manage Agent Memory and State")
-      expect(second.chapters.some((chapter) => chapter.title === "Test Rise reading one")).toBe(true)
+      expect(second.chapters[0]?.courseTitle).toBe("Model Armor: Securing AI Deployments")
+      expect(second.chapters.some((chapter) => chapter.title === "Synthetic private fixture")).toBe(true)
       const oldStatus = await page.request.get("/api/night")
       expect(oldStatus.status()).toBe(409)
       expect(await oldStatus.json()).toMatchObject({ state: "failed", wrongExam: "agentic-architect", error: /Reload Night reading/ })
@@ -162,7 +238,7 @@ test.describe("exam changes", () => {
       await page.reload()
       await page.getByRole("button", { name: "Play", exact: true }).click()
       await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeVisible()
-      await expect(page.getByRole("status").filter({ hasText: "Manage Agent Memory and State" })).toBeVisible()
+      await expect(page.getByRole("status").filter({ hasText: "Model Armor: Securing AI Deployments" })).toBeVisible()
 
       await context.setOffline(false)
       await page.goto("/progress")
@@ -225,16 +301,16 @@ test.describe("exam changes", () => {
     }
   })
 
-  test("an Agentic Rise reading opens, saves progress and reopens offline", async ({ context, page, baseURL }) => {
+  test("a Rise reading opens, saves progress and reopens offline", async ({ context, page, baseURL }) => {
     const origin = { origin: baseURL! }
     try {
-      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
+      expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "rise-test" } })).ok()).toBe(true)
       expect((await page.request.post("/api/scores/reset", {
-        headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true },
+        headers: { ...origin, "x-quiz-exam": "rise-test" }, data: { confirm: true },
       })).ok()).toBe(true)
       await page.goto("/progress")
       await readyOffline(page)
-      await page.goto("/read/5")
+      await page.goto("/read/1")
       await page.getByRole("link", { name: /Test Rise reading one/ }).click()
       await expect(page.locator("main")).toContainText("Rise introduction")
       await expect(page.locator("main")).toContainText("Rise item")
@@ -248,14 +324,14 @@ test.describe("exam changes", () => {
       expect(savedResponse.ok()).toBe(true)
       expect((await savedResponse.json()).stored).toHaveLength(1)
       await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
-      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "agentic-architect" } })
+      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "rise-test" } })
       expect(await snapshot.json()).toMatchObject({
-        ok: true, snapshot: { lines: expect.arrayContaining([expect.objectContaining({ mode: "reading", asked: ["5/000000000000000000000001"] })]) },
+        ok: true, snapshot: { lines: expect.arrayContaining([expect.objectContaining({ mode: "reading", asked: ["1/000000000000000000000001"] })]) },
       })
-      await page.getByRole("link", { name: /Test Rise reading two/ }).click()
+      await page.getByRole("link", { name: /Test Rise reading two/ }).first().click()
       await expect(page.locator("main")).toContainText("This is the second synthetic Rise reading.")
       await context.setOffline(true)
-      const reopened = await page.goto("/read/5/000000000000000000000001")
+      const reopened = await page.goto("/read/1/000000000000000000000001")
       expect(reopened?.status()).toBe(200)
       await expect(page.locator("main")).toContainText("Rise ending tail")
       await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
@@ -273,12 +349,49 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     expect((await page.request.post("/api/exam", { headers: origin, data: { exam: "agentic-architect" } })).ok()).toBe(true)
     // The fixture clears only the first exam's scratch scores, so clear this exam's too.
     expect((await page.request.post("/api/scores/reset", { headers: { ...origin, "x-quiz-exam": "agentic-architect" }, data: { confirm: true } })).ok()).toBe(true)
+    // No sentence ends by itself: the test decides when each one does, so it pauses at an exact moment on any browser.
+    await context.addInitScript(voiceStub, { voices: true, hold: true })
     await page.goto("/progress")
     await readyOffline(page)
     // The exam's own pages are in the worker's list; wait for it to hold the study pages before going offline.
     await expect.poll(() => page.evaluate(async () => (await caches.keys()).length > 0)).toBe(true)
+    await expect.poll(() => page.evaluate(async () => {
+      const pageUrl = new URL("/read/8/98001", location.origin)
+      return Boolean(await caches.match(pageUrl))
+    })).toBe(true)
     await page.waitForLoadState("networkidle")
     await context.setOffline(true)
+    const privateReading = await page.goto("/read/8/98001")
+    expect(privateReading?.status()).toBe(200)
+    const privateText = ["Synthetic private fixture", "used only by the offline browser test."].join(" ")
+    await expect(page.locator("main")).toContainText(privateText)
+    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
+    // The Mac's speech route is aborted, so a pass cannot come from a mocked network answer.
+    // The device voice is a silent stub that records what it is asked to say and ends each sentence itself.
+    await page.route(/\/api\/speak(?:\/|$|\?)/, (route) => route.abort())
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect(page.getByText("The Mac is unreachable. Reading with this device's local voice; the text stays on this device.")).toBeVisible()
+    // Let sentences end one by one until the fixture's own sentence is being said; it is then held.
+    await expect.poll(async () => {
+      const said = (await spokenNow(page)).includes(privateText)
+      if (!said) await releaseNow(page)
+      return said
+    }, { timeout: 20_000 }).toBe(true)
+    const spoken = await spokenNow(page)
+    expect(spoken.every((text) => typeof text === "string" && text.length > 0)).toBe(true)
+    // Pause stops the voice; Play carries on and says the same sentence again.
+    const count = spoken.length
+    const paused = spoken[count - 1]
+    expect(paused).toBe(privateText)
+    const cancelledBefore = await cancelledNow(page)
+    await page.getByRole("button", { name: "Pause", exact: true }).click({ timeout: 10_000 })
+    expect(await cancelledNow(page), "Pause cancelled the device voice").toBeGreaterThan(cancelledBefore)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(async () => (await spokenNow(page))[count]).toBe(paused)
+    // Let it finish: the resumed sentence is the one being held now.
+    await releaseNow(page)
+    // The reading finishes on the device and is queued as read, with no request to the Mac.
+    await expect(page.getByRole("button", { name: "✓ MARKED AS READ TODAY" })).toBeVisible()
     for (const path of ["/", "/exam", "/practice", "/flashcards", "/glossary", "/study", "/study/low-code", "/study/low-code/1-1", "/progress", "/read", "/about"]) {
       const response = await page.goto(path)
       expect(response?.status(), path).toBe(200)
@@ -287,16 +400,124 @@ test("The second exam opens offline too, and its queued answer syncs under its o
     await page.goto("/practice")
     await page.getByRole("button", { name: /^A\./ }).click()
     const queue = () => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]").length)
-    await expect.poll(queue).toBe(1)
-    const queuedId: string = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]")[0].id)
+    // The finished private reading and the practice answer are both waiting in this exam's outbox.
+    await expect.poll(queue).toBe(2)
+    const queued: { id: string; mode: string }[] = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-agentic-architect") ?? "[]"))
+    expect(queued.map((line) => line.mode).sort()).toEqual(["practice", "reading"])
     await context.setOffline(false)
     await expect.poll(queue).toBe(0)
     const response = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "agentic-architect" } })
-    expect(await response.json()).toMatchObject({ ok: true, snapshot: { lines: [expect.objectContaining({ id: queuedId, mode: "practice" })] } })
+    expect(await response.json()).toMatchObject({ ok: true, snapshot: { lines: expect.arrayContaining(queued.map((line) => expect.objectContaining({ id: line.id, mode: line.mode }))) } })
     // The first exam's queue was never touched.
     expect(await page.evaluate(() => localStorage.getItem("quiz-outbox-generative-ai-leader"))).toBeNull()
   } finally {
     await context.setOffline(false)
     await page.request.post("/api/exam", { headers: origin, data: { exam: "generative-ai-leader" } })
   }
+})
+
+// The Mac cannot make a clip while the browser still believes it is online (the Mac is off, or answers an error). The
+// failed request is expected here, so the fixture is told to ignore failed API calls.
+test.describe("reading aloud when the Mac cannot answer", () => {
+  test.use({ offlineNetwork: true, navigationCutOff: true })
+  const first = ["First synthetic", "paragraph."].join(" ")
+  const second = ["Second synthetic", "paragraph."].join(" ")
+
+  // Let the offline worker finish installing before anything else: switching the exam back under an install stalls it.
+  async function openReading(page: Page) {
+    await page.goto("/read/8/98002")
+    await readyOffline(page)
+    await page.waitForLoadState("networkidle")
+  }
+
+  test.beforeEach(async ({ page, baseURL }) => {
+    expect((await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "agentic-architect" } })).ok()).toBe(true)
+  })
+  test.afterEach(async ({ page, baseURL }) => {
+    await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "generative-ai-leader" } })
+    await page.goto("/progress")
+    await readyOffline(page)
+    await page.waitForLoadState("networkidle")
+  })
+
+  test("an error from the Mac switches to the device voice and says what the Mac answered", async ({ context, page }) => {
+    await context.addInitScript(voiceStub, { voices: true })
+    // The note below is the proof that the Mac answered 500; WebKit does not route a request its worker handles, so the
+    // test server's own refusal (it never makes speech in tests) is the 500 there.
+    await page.route(/\/api\/speak\/reading$/, (route) => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }))
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect(page.getByText("The Mac could not make this voice (the Mac answered 500). Reading with this device's local voice; the text stays on this device.")).toBeVisible()
+    await expect.poll(() => spokenNow(page)).toContain(first)
+    // After the first failure the next paragraph goes straight to the device voice.
+    await expect.poll(() => spokenNow(page), { timeout: 15_000 }).toContain(second)
+  })
+
+  test("with no device voice and no Mac the page says so and stays silent", async ({ context, page }) => {
+    await context.addInitScript(voiceStub, { voices: false })
+    await page.route(/\/api\/speak\/reading$/, (route) => route.abort())
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect(page.locator("p[role=alert]")).toContainText("No local English voice is available on this device either. Install a device voice to read aloud without the Mac.", { timeout: 10_000 })
+    expect(await spokenNow(page)).toEqual([])
+    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible()
+  })
+
+  test("the device voice goes on to the next paragraph", async ({ context, page }) => {
+    await context.addInitScript(voiceStub, { voices: true })
+    await page.route(/\/api\/speak\/reading$/, (route) => route.abort())
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(async () => {
+      const spoken = await spokenNow(page)
+      return spoken.indexOf(first) >= 0 && spoken.indexOf(second) > spoken.indexOf(first)
+    }, { timeout: 15_000 }).toBe(true)
+  })
+
+  test("leaving the page stops the device voice at once", async ({ context, page }) => {
+    // The sentence is held while being said, so the voice is mid-sentence at the moment the person leaves.
+    await context.addInitScript(voiceStub, { voices: true, hold: true })
+    await page.route(/\/api\/speak\/reading$/, (route) => route.abort())
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(() => spokenNow(page)).toContain(first)
+    const cancelledBefore = await cancelledNow(page)
+    // The app's own link keeps the page's window, so the stub's record shows what happens after leaving.
+    await page.getByRole("link", { name: "COURSE 8" }).click()
+    await expect(page).toHaveURL(/\/read\/8$/)
+    expect(await cancelledNow(page), "leaving cancelled the device voice").toBeGreaterThan(cancelledBefore)
+    // Ending the held sentence now, as the browser would if it had not been cancelled, must lead to nothing more being said.
+    const spokenAtLeave = (await spokenNow(page)).length
+    await releaseNow(page)
+    await page.waitForTimeout(1500)
+    expect((await spokenNow(page)).length).toBe(spokenAtLeave)
+  })
+
+  test("a failed look-ahead clip also sends the rest of the reading to the device voice", async ({ context, page }) => {
+    // The first paragraph's clip from the Mac is good and plays. The clip asked for ahead of time, the second paragraph's, fails.
+    // The second paragraph must then be said by the device voice without another request to the Mac: without the rule that a
+    // failed look-ahead counts, the page would ask again (a third request) before giving up.
+    await context.addInitScript(voiceStub, { voices: true, clips: "ok-then-fail" as const, audioEnds: true })
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(() => spokenNow(page), { timeout: 20_000 }).toEqual([second])
+    expect(await clipRequests(page), "the good clip, the failed look-ahead, and none after that").toBe(2)
+  })
+
+  test("after one failure the rest of the reading skips the Mac, and a new Play asks it again", async ({ context, page }) => {
+    await context.addInitScript(voiceStub, { voices: true, hold: true })
+    await page.route(/\/api\/speak\/reading$/, (route) => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }))
+    await openReading(page)
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    // Let sentences end one by one until the first paragraph is being said, which is held.
+    await expect.poll(async () => {
+      const said = (await spokenNow(page)).includes(first)
+      if (!said) await releaseNow(page)
+      return said
+    }, { timeout: 20_000 }).toBe(true)
+    expect(await clipRequests(page), "one request failed, and the sentences after it did not ask the Mac").toBe(1)
+    await page.getByRole("button", { name: "Pause", exact: true }).click({ timeout: 10_000 })
+    await page.getByRole("button", { name: "Play", exact: true }).click()
+    await expect.poll(() => clipRequests(page), { message: "a new Play asks the Mac again" }).toBe(2)
+  })
 })

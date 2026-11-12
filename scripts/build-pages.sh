@@ -7,7 +7,7 @@
 # Environment:
 #   QUIZ_BASE_PATH  where the site is served from, default /star-exam-companion
 #
-# One demo is built for every exam pack under exams/. The default exam (generative-ai-leader) is at the
+# One demo is built for every exam under exams/. The default exam (generative-ai-leader) is at the
 # root of the site, and every other pack at <root>/<pack id>/. The demo's Progress page links them all.
 #
 # It never changes quiz/. It copies the repo's content to a temporary folder, puts the demo's own
@@ -25,6 +25,9 @@ command -v pnpm >/dev/null 2>&1 || { echo "build-pages: pnpm not found" >&2; exi
 command -v rsync >/dev/null 2>&1 || { echo "build-pages: rsync not found" >&2; exit 1; }
 [ -d "$ROOT/pages-static/app" ] || { echo "build-pages: $ROOT/pages-static/app is missing" >&2; exit 1; }
 case "$BASE" in "" | /*) ;; *) echo "build-pages: QUIZ_BASE_PATH must be empty or start with /: $BASE" >&2; exit 1 ;; esac
+
+# Check every pack and keep the private reading store outside the static build's source tree.
+QUIZ_ROOT="$ROOT" node "$ROOT/quiz/lib/check-static-packs.ts" "$ROOT"
 
 # Only an output folder this script made, or an empty one, may be replaced.
 if [ -e "$OUT" ] && [ ! -f "$OUT/.nojekyll" ] && [ -n "$(ls -A "$OUT" 2>/dev/null)" ]; then
@@ -53,7 +56,7 @@ for dir in "$ROOT"/exams/*/; do
   title="$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).title)' "$dir/pack.json")"
   packs="${packs:+$packs;}$id=$title"
 done
-[ -n "$packs" ] || { echo "build-pages: no exam pack under $ROOT/exams" >&2; exit 1; }
+[ -n "$packs" ] || { echo "build-pages: no exam under $ROOT/exams" >&2; exit 1; }
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
