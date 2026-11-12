@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test from "node:test"
-import { jsonForScript } from "./fake-lesson-site.ts"
+import { jsonForScript, startFakeSite } from "./fake-lesson-site.ts"
 import {
   PAUSE_MAX_MS,
   PAUSE_MIN_MS,
@@ -196,4 +196,21 @@ test("a text written into a script block cannot end the block, and reads back th
   const written = jsonForScript(text)
   for (const character of ["<", ">", "&", "\u2028", "\u2029"]) assert.equal(written.includes(character), false, JSON.stringify(character))
   assert.equal(JSON.parse(written), text)
+})
+
+test("the served frame page of a settling lesson cannot be broken out of by its text", async (t) => {
+  const site = await startFakeSite({ "9001": [{ title: "Settling", kind: "settle", text: "a </script><b>x</b> & b\u2028c" }] })
+  t.after(() => site.close())
+  // The first lesson of a fake site is numbered 1000.
+  const html = await (await fetch(`${site.url}/frame/1000`)).text()
+  assert.equal(html.split("</script>").length - 1, 1, "only the page's own script block ends")
+  assert.equal(html.includes("\u2028"), false)
+  assert.ok(html.includes("\\u003c/script\\u003e"), "the text is there, as escapes")
+})
+
+test("a path name that is an object property name is not a path, and a path page escapes what it writes into links", async (t) => {
+  const site = await startFakeSite({}, { "4525": { title: "A made-up path", cards: [{ type: "course", title: "A made-up course", template: "9001" }] } })
+  t.after(() => site.close())
+  assert.equal((await fetch(`${site.url}/paths/constructor`)).status, 404)
+  assert.equal((await fetch(`${site.url}/paths/4525`)).status, 200)
 })
