@@ -152,13 +152,11 @@ export function BackButton() {
         if (entry) restore(entry.scroll)
       }
     }
-    let frame = 0
+    // Saved when the scroll rests, not on every frame: a click, a page hide and a move away also save.
+    let rest = 0
     const onScroll = () => {
-      if (frame) return
-      frame = window.requestAnimationFrame(() => {
-        frame = 0
-        save()
-      })
+      window.clearTimeout(rest)
+      rest = window.setTimeout(save, 150)
     }
     const onPop = () => {
       if (!readStandalone()) return
@@ -176,7 +174,7 @@ export function BackButton() {
     window.addEventListener("pagehide", save)
     document.addEventListener("visibilitychange", onHide)
     return () => {
-      window.cancelAnimationFrame(frame)
+      window.clearTimeout(rest)
       window.removeEventListener("scroll", onScroll)
       document.removeEventListener("click", save, true)
       window.removeEventListener("popstate", onPop)
@@ -205,14 +203,16 @@ export function BackButton() {
         // A double tap is one Back, not two.
         if (tapped.current) return
         tapped.current = true
-        window.setTimeout(() => { tapped.current = false }, 800)
+        // Cleared when the page it moved to is reached (the pathname effect) or on popstate. This is only a
+        // safety net for a move that never happens, and is long enough for a slow push.
+        window.setTimeout(() => { tapped.current = false }, 5000)
         const id = sync()
         const entry = id ? readEntry(id) : null
         if (entry?.prev) return router.back()
         // Going up is not a move back through history: the page it opens counts as opened directly,
         // so the next Back goes up again instead of bouncing between the two pages.
+        // The flag is read, and cleared, by sync when the new page is reached, however long the push takes.
         goingUp.current = true
-        window.setTimeout(() => { goingUp.current = false }, 800)
         router.push(up)
       }}
       className="round-float fixed bottom-8 left-8 z-50 flex size-11 items-center justify-center bg-black text-white shadow-lg ring-1 ring-white/20 active:scale-95"
