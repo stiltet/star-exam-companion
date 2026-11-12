@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { SectionBar } from "@/components/atoms/section-bar"
 import { ActionButton } from "@/components/atoms/button"
+import { StatusCell, StatusLabel, StatusList, StatusNote, StatusRow, StatusTable, StatusValue } from "@/components/atoms/status-table"
 import { sendNow, useWaiting } from "@/components/outbox"
 import { useSnapshot } from "@/components/snapshot"
 import { useOfflineStatus } from "@/components/offline"
@@ -10,15 +11,11 @@ import { useVoiceStored } from "@/components/voice-cache"
 import type { ConnectionState } from "@/components/connection-status"
 import { STATIC_DEMO } from "@/lib/static-demo"
 
-// One fixed height for every row, whether it holds a button or only text.
-const cell = "h-11 px-2 sm:px-3"
 // A Saving value and its button in one cell, held at the right edge. On desktop, where there is
 // room, every button and value has one width, so the buttons line up ("This device" is the
-// longest value).
+// longest value). The look of the table lives in the status table atoms; this file only places.
 const valueRow = "flex items-center justify-end gap-3 text-right"
-const value = "font-bold sm:min-w-[11ch]"
 const buttonFirst = "shrink-0 sm:order-first sm:w-28"
-const label = `${cell} text-muted-foreground sm:w-full`
 
 // Where the answers are saved and where the questions came from, with Send now and Update now.
 // It opens from the status icon in the header: under it on a phone, in a dialog on a wider screen.
@@ -32,29 +29,27 @@ function DemoSaving() {
   return (
     <div className="overflow-x-auto">
       <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
-      <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
-        <tbody>
-          <tr className="border-b border-foreground">
-            <td className={label}>Waiting to send</td>
-            <td className={cell} colSpan={2}>
-              <div className={valueRow}>
-                <span className={`${value} whitespace-nowrap`}>0</span>
-                <ActionButton variant="compact" placement={buttonFirst} disabled>Send now</ActionButton>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td className={label}>Progress from</td>
-            <td className={cell} colSpan={2}>
-              <div className={valueRow}>
-                <span className={value}>Demo</span>
-                <ActionButton variant="compact" placement={buttonFirst} disabled>Update now</ActionButton>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p role="status" className="p-3 border-t border-foreground text-sm">This is the online demo: there is no Mac behind it, so nothing is saved or sent. These values are fixed. Run the quiz on your own Mac to see the real ones.</p>
+      <StatusTable>
+        <StatusRow>
+          <StatusLabel>Waiting to send</StatusLabel>
+          <StatusCell>
+            <div className={valueRow}>
+              <StatusValue nowrap>0</StatusValue>
+              <ActionButton variant="compact" placement={buttonFirst} disabled>Send now</ActionButton>
+            </div>
+          </StatusCell>
+        </StatusRow>
+        <StatusRow last>
+          <StatusLabel>Progress from</StatusLabel>
+          <StatusCell>
+            <div className={valueRow}>
+              <StatusValue>Demo</StatusValue>
+              <ActionButton variant="compact" placement={buttonFirst} disabled>Update now</ActionButton>
+            </div>
+          </StatusCell>
+        </StatusRow>
+      </StatusTable>
+      <StatusNote role="status">This is the online demo: there is no Mac behind it, so nothing is saved or sent. These values are fixed. Run the quiz on your own Mac to see the real ones.</StatusNote>
     </div>
   )
 }
@@ -92,69 +87,67 @@ function LiveSaving({ connection }: { connection: ConnectionState }) {
   return (
     <div className="overflow-x-auto">
       <SectionBar variant="muted">OFFLINE / CONNECTION STATUS</SectionBar>
-      <table className="w-full text-xs sm:text-sm sm:whitespace-nowrap">
-        <tbody>
-          <tr className="border-b border-foreground">
-            <td className={label}>Waiting to send</td>
-            {/* Phone: value, then button. Desktop: the button left of the value, which keeps the right edge. */}
-            <td className={cell} colSpan={2}>
+      <StatusTable>
+        <StatusRow>
+          <StatusLabel>Waiting to send</StatusLabel>
+          {/* Phone: value, then button. Desktop: the button left of the value, which keeps the right edge. */}
+          <StatusCell>
+            <div className={valueRow}>
+              <StatusValue nowrap live>{waiting}</StatusValue>
+              <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send()}>Send now</ActionButton>
+            </div>
+          </StatusCell>
+        </StatusRow>
+        {rejected > 0 && (
+          <StatusRow>
+            <StatusLabel>Refused by the Mac</StatusLabel>
+            <StatusCell>
               <div className={valueRow}>
-                <span className={`${value} whitespace-nowrap`} aria-live="polite">{waiting}</span>
-                <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send()}>Send now</ActionButton>
+                <StatusValue nowrap>{rejected}</StatusValue>
+                <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send(true)}>Retry refused</ActionButton>
               </div>
-            </td>
-          </tr>
-          {rejected > 0 && (
-            <tr className="border-b border-foreground">
-              <td className={label}>Refused by the Mac</td>
-              <td className={cell} colSpan={2}>
-                <div className={valueRow}>
-                  <span className={`${value} whitespace-nowrap`}>{rejected}</span>
-                  <ActionButton variant="compact" placement={buttonFirst} disabled={sending} onClick={() => void send(true)}>Retry refused</ActionButton>
-                </div>
-              </td>
-            </tr>
-          )}
-          <tr className="border-b border-foreground">
-            <td className={label}>Progress from</td>
-            <td className={cell} colSpan={2}>
-              <div className={valueRow}>
-                <span className={value} aria-live="polite">
-                  {from === "mac" ? "Your Mac" : from === "device" ? "This device" : from === "loading" ? "Loading…" : "Nothing yet"}
-                </span>
-                <ActionButton variant="compact" placement={buttonFirst} disabled={connection.busy} onClick={connection.update}>
-                  {connection.busy ? "Updating…" : "Update now"}
-                </ActionButton>
-              </div>
-            </td>
-          </tr>
-          <tr className="border-b border-foreground">
-            <td className={label}>Secure / Offline</td>
-            <td className={`${cell} text-right font-bold`} colSpan={2}>
-              {offline === null ? "…" : (
-                <span title={offline.error ?? undefined}>
-                  {offline.secure ? "Yes" : "No"} / {offline.ready ? "Ready" : "Not ready"}
-                  {!offline.secure && ": needs https://"}
-                  {offline.secure && offline.error && ": the offline worker did not load"}
-                </span>
-              )}
-            </td>
-          </tr>
-          <tr>
-            <td className={label}>Voice for offline</td>
-            <td className={`${cell} text-right font-bold`} colSpan={2}>{voiceStored ? `${voiceStored.stored} of ${voiceStored.total} lines` : !("caches" in window) ? "Needs https://" : "…"}</td>
-          </tr>
-        </tbody>
-      </table>
+            </StatusCell>
+          </StatusRow>
+        )}
+        <StatusRow>
+          <StatusLabel>Progress from</StatusLabel>
+          <StatusCell>
+            <div className={valueRow}>
+              <StatusValue live>
+                {from === "mac" ? "Your Mac" : from === "device" ? "This device" : from === "loading" ? "Loading…" : "Nothing yet"}
+              </StatusValue>
+              <ActionButton variant="compact" placement={buttonFirst} disabled={connection.busy} onClick={connection.update}>
+                {connection.busy ? "Updating…" : "Update now"}
+              </ActionButton>
+            </div>
+          </StatusCell>
+        </StatusRow>
+        <StatusRow>
+          <StatusLabel>Secure / Offline</StatusLabel>
+          <StatusCell strong>
+            {offline === null ? "…" : (
+              <span title={offline.error ?? undefined}>
+                {offline.secure ? "Yes" : "No"} / {offline.ready ? "Ready" : "Not ready"}
+                {!offline.secure && ": needs https://"}
+                {offline.secure && offline.error && ": the offline worker did not load"}
+              </span>
+            )}
+          </StatusCell>
+        </StatusRow>
+        <StatusRow last>
+          <StatusLabel>Voice for offline</StatusLabel>
+          <StatusCell strong>{voiceStored ? `${voiceStored.stored} of ${voiceStored.total} lines` : !("caches" in window) ? "Needs https://" : "…"}</StatusCell>
+        </StatusRow>
+      </StatusTable>
       {rejected > 0 && (
-        <div className="p-3 border-t border-foreground text-sm">
+        <StatusNote>
           <p>Refused answers are kept on this device. Retry to send them again without losing or duplicating answers.</p>
-          <ul className="mt-2 list-disc pl-5">
+          <StatusList>
             {[...new Set(Object.values(reasons))].map((reason) => <li key={reason}>{reason}</li>)}
-          </ul>
-        </div>
+          </StatusList>
+        </StatusNote>
       )}
-      {sendNote && <p role="status" className="p-3 border-t border-foreground text-sm">{sendNote}</p>}
+      {sendNote && <StatusNote role="status">{sendNote}</StatusNote>}
     </div>
   )
 }

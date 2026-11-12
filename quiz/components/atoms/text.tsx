@@ -14,7 +14,7 @@ const LOOK: Record<TextVariant, string> = {
   muted: "text-muted-foreground m-0",
   note: "text-sm text-muted-foreground m-0",
   notice: "border-2 border-foreground p-6 text-center text-muted-foreground m-0",
-  warning: "border-2 border-foreground bg-yellow-300 p-4 font-bold text-black m-0",
+  warning: "border-2 border-foreground bg-flag p-4 font-bold text-flag-foreground m-0",
   label: "text-sm font-bold m-0",
   strong: "font-bold m-0",
   tagline: "text-muted-foreground m-0 lg:text-2xl lg:text-right lg:lowercase",

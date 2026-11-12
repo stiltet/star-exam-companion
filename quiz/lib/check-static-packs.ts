@@ -109,7 +109,7 @@ if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLTo
   const root = path.resolve(process.argv[2] ?? "..")
   checkStaticPacks(root).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : "unknown error"
-    process.stderr.write(`Static pack check failed: ${message}\n`)
+    process.stderr.write(`Static exam check failed: ${message}\n`)
     process.exitCode = 1
   })
 }
