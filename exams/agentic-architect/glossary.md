@@ -11,7 +11,7 @@ Meanings are short summaries in this repo's own words, checked against the page 
 Google renames a product, both names get a row that points to the other, as the Generative AI Leader
 pack's glossary explains. Learn the exam guide's name for each.
 
-Names last checked: 2026-11-04
+Validated against Google docs: 2026-11-04
 
 ## Section 1 — Building agents using low-code tools
 

@@ -11,14 +11,13 @@ the meaning comes from:
 - **IAM security** — Google Cloud [Use IAM securely](https://docs.cloud.google.com/iam/docs/using-iam-securely)
 - **NLP page** — Google Cloud [What is natural language processing?](https://cloud.google.com/learn/what-is-natural-language-processing)
 - **Course** — Google Skills [Introduction to Image Generation](https://www.skills.google/course_templates/541)
-- **Product page** — Google Cloud [Agent Platform](https://cloud.google.com/vertex-ai) and [Gemini Enterprise for Customer Experience](https://cloud.google.com/solutions/customer-engagement-ai), checked 8 Oct
+- **Product page** — Google Cloud [Agent Platform](https://cloud.google.com/vertex-ai) and [Gemini Enterprise for Customer Experience](https://cloud.google.com/solutions/customer-engagement-ai)
 - **Release notes** — Agent Platform [release notes](https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes), including Google's Vertex AI naming table of 22 Apr 2026
-- **Google page** — any other official Google page, linked in its own row. All checked 8 Oct.
+- **Google page** — any other official Google page, linked in its own row.
 
-Covered on 29 Sept: the whole exam guide, intro to 4.3. Validated on 30 Sept against every
-term the exam guide names; the list is [`checks/glossary-terms.txt`](checks/glossary-terms.txt).
-Re-validated on 8 Oct against the exam guide, the whole study guide, the release notes and
-every linked page.
+The date below is the day the whole glossary was last validated, row by row, against Google's docs.
+Only such a full validation changes it. No script and no copy from the other repo may.
+The terms the exam guide names are listed in [`checks/glossary-terms.txt`](checks/glossary-terms.txt).
 
 **Renames.** Exam guides lag behind Google's renames, so both names get a row. In the table the
 new name's row says "Formerly called …" and the old name's row says "Now called …".
@@ -29,7 +28,7 @@ only as "also called" (exam guide first, then the newest name). Sub-products fol
 "Agent Platform X": Vertex AI Studio is now Agent Studio and Vertex AI RAG Engine is now RAG
 Engine. Google's full list is the naming table in the release notes.
 
-Names last checked: 2026-11-10
+Validated against Google docs: 2026-11-12
 
 ## Section 1 — Fundamentals of gen AI
 
@@ -64,8 +63,8 @@ Names last checked: 2026-11-10
 | Performance | A model-choice factor: the model's accuracy, speed and efficiency. Weigh it against cost. | 1.1 | SG p.10 |
 | Availability and reliability | A model-choice factor: the model is consistently available and performs reliably under load. Consider uptime guarantees, redundancy and disaster recovery. | 1.1 | SG p.10 |
 | Security | A model-choice factor in the exam guide: how well the model and its platform protect your data and meet your security needs. Exam-guide term; the study guide does not define it. | 1.1 | EG |
-| Customization | A model-choice factor: how specialised the AI needs to be. Fine-tuning is one way to customise a model. | 1.1 | SG p.10 |
-| Cost | A model-choice factor: trade performance against cost; a bigger context window also costs more to compute. Budget is part of a project's resources. | 1.1, 1.2 | SG p.10 |
+| Customization | A model-choice factor: how specialised the AI needs to be. Fine-tuning is one way to customise a model. | 1.1 | SG p.10, EG |
+| Cost | A model-choice factor: trade performance against cost; a bigger context window also costs more to compute. Budget is part of a project's resources. | 1.1, 1.2 | SG p.10, EG |
 | Structured data | Organised and easy to search, often stored in relational databases. | 1.2 | SG p.4 |
 | Unstructured data | Has no predefined structure and needs sophisticated analysis. | 1.2 | SG p.4 |
 | Labeled data | Data with tags such as a name, type or number. | 1.2 | SG p.3 |
@@ -112,12 +111,12 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Gemini for Google Cloud | AI assistant for Google Cloud. Writes and debugs code, manages and optimises cloud apps, analyses data in BigQuery, strengthens security posture. Its products include Gemini Code Assist and Gemini Cloud Assist. Google's docs overview is now titled "Google Cloud with Gemini". | — | SG p.5, [Google page](https://docs.cloud.google.com/gemini/docs/overview) |
 | Gemini Notebook | Upload your files and it acts as a research assistant: summarises key points, answers questions and generates ideas, grounded in your sources. Formerly called NotebookLM. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | 2.2 | SG p.5, p.11 |
 | NotebookLM | Now called Gemini Notebook. notebooklm.google.com now redirects to the Gemini Notebook site. **Renamed:** NotebookLM => Gemini Notebook. **Exam guide:** Gemini Notebook. | — | [Google page](https://notebook.google.com/) |
-| Gemini Enterprise | Puts customised search and conversation agents, which understand data from your internal sources, into your organisation's internal websites or dashboards. Exam guide examples: Gemini Notebook API, multimodal search, custom agents. | 2.2 | SG p.5, EG |
+| Gemini Enterprise | Puts customised search and conversation agents, which understand data from your internal sources, into your organisation's internal websites or dashboards. Course 5 and Google's docs also call it the Gemini Enterprise app. Exam guide examples: Gemini Notebook API, multimodal search, custom agents. | 2.2 | SG p.5, EG |
 | Gemini Notebook API | Part of Gemini Enterprise: create, list, share and delete notebooks from code instead of in the app (Preview on 19 Oct). Google's page: "Create and manage notebooks (API)", under Gemini Notebook Enterprise. Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/api-notebooks) |
 | Multimodal search | Part of Gemini Enterprise: one search across the company's connected sources, such as Confluence, Jira, SharePoint and ServiceNow, that respects each employee's permissions. Google's page: "a single, multimodal search interface offering permissions-aware access to enterprise information". Exam guide example for Gemini Enterprise. | 2.2 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/docs) |
 | Gemini Enterprise Agent Platform | Formerly called Vertex AI. Also called Agent Platform, and Google's product pages now also call it Gemini platform. Google Cloud's unified ML platform: build, train and deploy ML apps, use and tune models such as Gemini, and build custom agents. **Renamed:** Vertex AI => Gemini Enterprise Agent Platform. **Exam guide:** Gemini Enterprise Agent Platform. | 2.4, 2.5 | SG p.5–6, EG, product page |
-| Vertex AI | Now called Gemini Enterprise Agent Platform; Google's naming table dates the change 22 Apr 2026. The old vertex-ai URL redirects to the new product page. **Renamed:** Vertex AI => Gemini Enterprise Agent Platform. **Exam guide:** Gemini Enterprise Agent Platform. | — | Product page, release notes |
-| Gemini platform | The name Google's product and comparison pages use for Gemini Enterprise Agent Platform, seen 8 Oct. Google's docs, release notes and the exam guide still say Gemini Enterprise Agent Platform. Not a formal rename. | — | [Google page](https://cloud.google.com/ai/gemini) |
+| Vertex AI | Now called Gemini Enterprise Agent Platform; Google's release notes date the change 22 Apr 2026. The old vertex-ai URL redirects to the new product page. **Renamed:** Vertex AI => Gemini Enterprise Agent Platform. **Exam guide:** Gemini Enterprise Agent Platform. | — | Product page, release notes |
+| Gemini platform | The name Google's product and comparison pages use for Gemini Enterprise Agent Platform. Google's docs, release notes and the exam guide still say Gemini Enterprise Agent Platform. Not a formal rename. | — | [Google page](https://cloud.google.com/ai/gemini) |
 | Agent Search | Search and recommendation solutions for your business. Offers prebuilt RAG. Formerly called Vertex AI Search. **Renamed:** Vertex AI Search => Agent Search. **Exam guide:** Agent Search. | 2.3, 2.4, 3.3 | SG p.5, EG, [Google page](https://cloud.google.com/products/gemini-enterprise-agent-platform/agent-search) |
 | Google Search | Google's public web search. The exam guide lists it with Agent Search as one of Google Cloud's external search offerings. Agent Search searches your own data; Google Search searches the public web. Compare Grounding with Google Search, which connects a model to it. | 2.3 | EG |
 | Prebuilt RAG | Retrieval-augmented generation that comes ready-made with Agent Search: answers from your own data without building the retrieval yourself. The exam guide's "prebuilt RAG with Agent Search". Compare RAG APIs, for building your own. | 2.4, 3.3 | EG |
@@ -132,9 +131,9 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Gemini API | How applications call Gemini models from code. The study guide: "Use it with the Gemini API with Google AI Studio or Agent Studio". Compare the Gemini app, for chatting. | — | SG p.5, p.7 |
 | Agent Runtime | Formerly called Vertex AI Agent Engine. Google's page: "a set of services that enables developers to deploy, manage, and scale AI agents in production". Compare Agent Studio, for building and testing. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime) |
 | Agent Platform Memory Bank | Formerly called Vertex AI Agent Engine Memory Bank. Google's page: it lets you "dynamically generate long-term memories based on user conversations to personalize responses and create cross-session continuity". Compare Agent Platform Sessions, which holds one conversation's history. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank) |
-| Agent Platform Sessions | Formerly called Vertex AI Agent Engine Sessions. Google's page: "Manage agent interaction history, conversation context, and long-term memory with Agent Platform Sessions via ADK or API." It keeps each conversation's history and context; Memory Bank turns conversations into long-term memories. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions) |
+| Agent Platform Sessions | Formerly called Vertex AI Agent Engine Sessions. Google's page: "Manage agent interaction history, conversation context, and long-term memory with Agent Platform Sessions via Agent Development Kit (ADK) or API." It keeps each conversation's history and context; Memory Bank turns conversations into long-term memories. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sessions) |
 | Agent Platform Code Execution | Formerly called Vertex AI Agent Engine Code Execution. Google's page: "Code Execution lets your agent run code in a secure, isolated, and managed sandbox environment", for tasks such as financial calculations and data science workflows. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/sandbox/code-execution-overview) |
-| RAG Engine | Formerly called Vertex AI RAG Engine. Google's page: "a data framework for building context-augmented LLM applications". It is Google Cloud's RAG APIs option: you build your own RAG. Compare Prebuilt RAG with Agent Search. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview) |
+| RAG Engine | Formerly called Vertex AI RAG Engine. Google's page: "a data framework for building context-augmented LLM applications". It is Google Cloud's RAG APIs option: you build your own RAG. Compare Prebuilt RAG with Agent Search. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/rag-engine/rag-overview), release notes |
 | Vector Search | Formerly called Vertex AI Vector Search. Google's page: "Run queries to get nearest neighbors using the k-nearest neighbors algorithm." Google's Agent Retrieval page calls it "a powerful approximate nearest neighbor (ANN) index-as-a-service system". Compare Agent Retrieval. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search/overview), [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search-2/overview) |
 | Agent Retrieval | Formerly called Vector Search 2.0. Google's page: "a self-tuning, fully managed, AI-native search engine", a single storage and retrieval system for AI applications that removes the need for a separate data store. Compare Vector Search, an index-as-a-service. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/vector-search-2/overview) |
 | Agent Platform Managed Training | Formerly called Vertex AI Training. Google's page: "a managed training service that helps you operationalize large scale model training", running training code from any ML framework on Google Cloud infrastructure. Its jobs are also called serverless training. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/training/overview) |
@@ -171,7 +170,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Agent Assist | Supports your live human contact-centre agents. | 2.3 | SG p.5 |
 | Customer Experience Insights | Insights into all your communications with customers. Formerly called Conversational Insights. **Renamed:** Conversational Insights => Customer Experience Insights. **Exam guide:** Conversational Insights. | 2.3 | SG p.5, EG, product page |
 | Conversational Insights | Now called Customer Experience Insights. Exam-guide name for insights into customer communications. **Renamed:** Conversational Insights => Customer Experience Insights. **Exam guide:** Conversational Insights. | 2.3 | EG, SG p.5 |
-| MLOps | An ML engineering culture and practice that unifies ML system development (Dev) and operation (Ops). Agent Platform's MLOps tools help AI teams collaborate to monitor and improve their models. | — | SG p.6, [Google page](https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning) |
+| MLOps | An ML engineering culture and practice that aims at unifying ML system development (Dev) and operation (Ops). Agent Platform's MLOps tools help AI teams collaborate to monitor and improve their models. | — | SG p.6, [Google page](https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning) |
 | Agent | An application that tries to reach a goal by observing the world and acting on it with its tools. Parts: reasoning loop, tools, model. | 2.5 | SG p.6 |
 | Model (agent component) | The brains of an agent: algorithms that learn patterns from data and can make predictions or generate new content. One of an agent's three parts, with the reasoning loop and tools. | 2.5 | SG p.6 |
 | Tools (agent component) | The functionalities that let an agent interact with its environment, such as accessing and processing data or interacting with hardware. Extensions, functions, data stores and plugins are kinds of tool. | 2.5 | SG p.6, p.5 |
@@ -215,7 +214,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Edge cases | Rare, atypical scenarios that expose a model's weaknesses and cause unexpected results. | 3.1 | SG p.9 |
 | Grounding | Connecting the model's output to verifiable sources of information. | 3.1, 3.3 | SG p.8 |
 | Grounding with first-party enterprise data | Grounding on your organisation's own data, for example with RAG over your website or documents in Agent Search, or your Elasticsearch indexes. | 3.3 | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/overview) |
-| Grounding with third-party data | Grounding on data from outside providers rather than your own or the public web. Exam-guide term; no Google definition found on 30 Sept. | 3.3 | EG |
+| Grounding with third-party data | Grounding on data from outside providers rather than your own or the public web. Exam-guide term; the study guide does not define it. | 3.3 | EG |
 | Grounding with world data | Grounding on world knowledge and up-to-date public information. Google's offering is Grounding with Google Search. | 3.3 | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/grounding-with-google-search) |
 | Grounding with Google Maps | Grounds the model on Google Maps data for more accurate, location-aware answers. Another Google grounding offering; not in the exam guide. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/overview) |
 | Web Grounding for Enterprise | Grounding on a web index with extra compliance controls, for customers in highly regulated industries. Without those needs, use Grounding with Google Search. Not in the exam guide. | — | [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/web-grounding-enterprise) |
@@ -241,7 +240,7 @@ Most renames live here. Each renamed product has an old-name row and a new-name 
 | Model Registry | Now called Agent Platform Model Registry. Study-guide name for the versioning tool. **Renamed:** Model Registry => Agent Platform Model Registry. | 3.1 | SG p.9 |
 | Versioning | Keeping track of the different versions of a model, with Agent Platform Model Registry. | 3.1 | SG p.9 |
 | Automatic model upgrades | Google retires model versions on published dates and asks you to migrate to the latest stable model; plan for the model under your app to change. | 3.1 | EG, [Google page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions) |
-| Security patches and updates | Keeping models and the systems around them patched and up to date as part of continuous monitoring. Exam-guide term; no Google definition found on 30 Sept. | 3.1 | EG |
+| Security patches and updates | Keeping models and the systems around them patched and up to date as part of continuous monitoring. Exam-guide term; the study guide does not define it. | 3.1 | EG |
 | Key performance indicators (KPIs) | Clear metrics that track progress. For gen AI: model accuracy, operational efficiency, user engagement and financial impact. | 3.1, 4.1 | [Google page](https://cloud.google.com/transform/gen-ai-kpis-measuring-ai-success-deep-dive) |
 | Performance tracking | Reviewing a model's metrics to check how it performs. | 3.1 | SG p.9 |
 | Drift monitoring | Watching for changes in a model's accuracy over time, with Model Monitoring on Agent Platform. | 3.1 | SG p.9 |

@@ -40,6 +40,7 @@ export function VoiceRound() {
     if (round !== null || !snapshot || from === "loading") return
     const kept = readSnapshot(window.localStorage) ?? snapshot
     builtFrom.current = signature
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
     setRound(voiceRound(snapshot.items, mergeLines(kept.lines, readOutbox(window.localStorage))))
     setBuilt((count) => count + 1)
   }, [round, snapshot, from, signature])

@@ -27,7 +27,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          # 10.6 or newer applies the dependency pins in quiz/pnpm-workspace.yaml.
+          # 10.6 or newer applies the dependency pins in pnpm-workspace.yaml.
           version: 10
 
       - uses: actions/setup-node@v7
@@ -35,9 +35,9 @@ jobs:
           # The one place the Node version is set: .nvmrc, which `nvm use` reads locally too.
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: quiz/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm --dir quiz install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       - name: Test
         # The log shows the readable spec report. A second, TAP report goes to a file, and on failure

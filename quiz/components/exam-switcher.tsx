@@ -38,6 +38,7 @@ export function ExamSwitcher({ exams, current }: Props) {
     setLoadFailed(null)
     setMessage(`Switched to ${title(exam)}.`)
     // The home page of the new exam, as a full load, so every page, table and menu is the new exam's.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a full load, so every page, table and menu is the new exam's
     window.setTimeout(() => window.location.assign("/"), 800)
   }
 

@@ -129,10 +129,29 @@ describe('the README', () => {
     const script = /```bash\nREPO="\$\(pwd\)"\n([\s\S]*?)\n```/.exec(readme)?.[1] ?? '';
     const plist = /<<EOF\n([\s\S]*?)\nEOF/.exec(script)?.[1] ?? '';
     assert.match(plist, /<key>Label<\/key><string>com\.star-exam-companion<\/string>/);
-    assert.match(plist, /next start -H 127\.0\.0\.1 -p 47830/);
+    assert.match(plist, /pnpm start:local -p 47830/);
     const file = path.join(scratch(t), 'service.plist');
     writeFileSync(file, plist.replaceAll('$REPO', '/tmp/repo').replaceAll('$HOME', '/tmp/home'));
     const lint = spawnSync('plutil', ['-lint', file], { encoding: 'utf8' });
     assert.equal(lint.status, 0, lint.stdout + lint.stderr);
+  });
+});
+
+describe('pnpm runs from the root', () => {
+  const scripts = (file: string) => JSON.parse(read(file)).scripts as Record<string, string>;
+
+  test('every quiz script is also a root script that forwards to it, and gate runs the unit tests first', () => {
+    const quiz = scripts('quiz/package.json');
+    const top = scripts('package.json');
+    assert.deepEqual(Object.keys(top).sort(), Object.keys(quiz).sort());
+    for (const name of Object.keys(quiz).filter((n) => n !== 'gate')) {
+      assert.equal(top[name], `pnpm --dir quiz ${name}`, name);
+    }
+    assert.equal(top.gate, 'node --test && pnpm e2e');
+  });
+
+  test('the pnpm-workspace.yaml at the root installs quiz, and the README never tells the reader to pass --dir quiz', () => {
+    assert.match(read('pnpm-workspace.yaml'), /^packages:\n {2}- quiz$/m);
+    assert.doesNotMatch(readme, /--dir quiz/);
   });
 });

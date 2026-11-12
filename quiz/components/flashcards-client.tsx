@@ -37,6 +37,7 @@ export function FlashcardsClient({ glossary }: Props) {
     const byKey = new Map(glossary.map((g) => [g.key, g]))
     const saved = cardsResume(loadState(window.localStorage, CARDS_KEY), new Set(byKey.keys()))
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
       setSelectedCategory(saved.category)
       setShuffledCards(saved.order.map((key) => byKey.get(key)).filter((g): g is GlossaryItem => g !== undefined))
       setCurrentIndex(saved.index)
@@ -133,7 +134,7 @@ export function FlashcardsClient({ glossary }: Props) {
           <h2 className="font-bold mb-2">HOW IT WORKS</h2>
           <ul className="text-sm space-y-1 text-muted-foreground">
             <li>→ Cards show term first, click to reveal definition</li>
-            <li>→ Mark "KNOW" or "DON'T KNOW" to track progress</li>
+            <li>→ Mark &quot;KNOW&quot; or &quot;DON&apos;T KNOW&quot; to track progress</li>
             <li>→ Cards are shuffled each session</li>
             <li>→ No spaced repetition - simple recall practice</li>
           </ul>
@@ -199,7 +200,7 @@ export function FlashcardsClient({ glossary }: Props) {
       {showDefinition && !isComplete && (
         <div className="flex gap-4 mb-6">
           <button onClick={handleDontKnow} className="flex-1 border-2 border-foreground p-3 hover:bg-muted">
-            DON'T KNOW
+            DON&apos;T KNOW
           </button>
           <button
             onClick={handleKnow}
