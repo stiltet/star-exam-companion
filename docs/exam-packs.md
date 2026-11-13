@@ -41,8 +41,11 @@ app-data directory is used.
 A private course is captured by `pnpm reading:crawl [<exam>]`, which saves each lesson straight into the private
 store, with no web route: nothing on the network can write a lesson, and the store's folder is mode 0700, readable and writable only by the
 user who runs the quiz. Another program running as that same user could edit the folder's files, which is true of every file that user owns and is not
-something this app can prevent. A leftover `.write-token` file from an earlier version can be deleted. The crawl and keeps a per-course manifest of titles, addresses and
-hashes beside it, never text. The README's "Private course readings" section describes it, and
+something this app can prevent; the repo owner decided on 13 Nov 2026 to remove the route rather than keep a token that could not stop it. A leftover `.write-token` file in the store's folder from an earlier version can be deleted. At the end of a run that was not stopped, the crawl
+removes the saved copy of any lesson that a course walked to its end no longer lists (`pnpm reading:prune` does the same alone). This is permanent: nothing keeps
+a copy, and a later crawl cannot bring back text Google has stopped listing, so run `pnpm reading:prune <exam> --dry-run` first, or copy the private folder, when in doubt. Prune trusts only a manifest
+from a run that walked the whole course from a lesson list whose card count had settled, with no lesson-like card left unread (untitled, a card of a known reading type whose link is not a lesson page, or a lesson link on a card that is not one of the known reading types), under the current listing rule, and it never prunes a course that lists no lessons. A card of an unknown type with no lesson link is not counted: it cannot hold a saved copy, and counting it would stop courses with new kinds of lab or quiz from ever being pruned. The crawl also keeps a per-course manifest of titles, addresses and
+hashes beside the readings, never text. The README's "Private course readings" section describes it, and
 [`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
 either: the courses come from its `courses.json` entries with `"provider": "private"`.
 `courses.json` may also hold `noReading`: `[{ id, template, title, why }]`, the path's courses that have no text to read

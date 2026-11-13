@@ -55,7 +55,7 @@ is always visible.
    pnpm reading:crawl <id>
    ```
 
-   The last block is the report: a `FINISHED`, `NOT FINISHED` or `STOPPED` headline, then each course as its number and title with its
+   The last block is the report: a `FINISHED`, `! FINISHED, but no lesson could be read` (a warning), `NOT FINISHED` or `STOPPED` headline, then each course as its number and title with its
    lesson counts and any problem. If it stops because the browser is not signed in, follow the one-time sign-in in the
    `capture-reading` skill and run it again.
 

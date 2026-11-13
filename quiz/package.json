@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "reading:crawl": "node scripts/reading-crawl.mts",
     "reading:list": "node scripts/reading-list.mts",
+    "reading:prune": "node scripts/reading-prune.mts",
     "reading:path": "node scripts/reading-path.mts",
     "start": "NEXT_TELEMETRY_DISABLED=1 next start -H 0.0.0.0",
     "start:local": "NEXT_TELEMETRY_DISABLED=1 next start -H 127.0.0.1"

@@ -24,13 +24,17 @@ export type ManifestLesson = {
   hash: string | null
 }
 
-// Which rule decided what counts as a lesson when a manifest was written. Bump it when that rule changes (2: video lessons are listed),
+// Which rule decided what counts as a lesson when a manifest was written. Bump it when that rule changes (2: video lessons are listed; 3: a list counts only once its card count has settled; 4: a course is also trusted only when no lesson-like card was left unread),
 // because a manifest made under another rule cannot say what Google changed: lessons the new rule lists would all look added.
-export const LISTING_VERSION = 2
+export const LISTING_VERSION = 4
 
 export type Manifest = {
   checkedAt: string
   listing?: number
+  // True only for the manifest a run writes when it has walked the whole course from a settled listing. False for one written part-way,
+  // which holds lessons whose saved copies still carry another id, or from a listing that was still changing. Absent in a manifest made
+  // before automatic pruning existed. Only true lets a saved copy be judged gone.
+  complete?: boolean
   lessons: ManifestLesson[]
 }
 
@@ -78,8 +82,9 @@ function keyed<T extends { title: string }>(items: T[]): { key: string; item: T 
 // Compares the lessons the site lists now with the last manifest, matching by title and, for a repeated title, by its place
 // among the lessons of that title.
 export function compareLessons(previous: Manifest | null, now: Lesson[]): ManifestComparison {
-  // No earlier manifest, or one made under an older listing rule: there is nothing fair to compare, so Google is not blamed for it.
-  if (!previous || previous.listing !== LISTING_VERSION) return { first: true, added: [], removed: [], reordered: false, addressChanged: [] }
+  // No earlier manifest, one made under an older listing rule, or one from a run that did not finish with a settled list: there is nothing fair
+  // to compare, so Google is not blamed for it.
+  if (!previous || previous.listing !== LISTING_VERSION || previous.complete !== true) return { first: true, added: [], removed: [], reordered: false, addressChanged: [] }
   const before = keyed(previous.lessons)
   const after = keyed(now)
   const beforeByKey = new Map(before.map((entry) => [entry.key, entry.item]))
@@ -105,6 +110,10 @@ export type CourseResult = {
   textChanged: string[]
   // Titles listed by the site that no outcome accounts for.
   unaccounted: string[]
+  // True when the course page was still adding cards after the longest wait, so its list may be short.
+  unsettled?: boolean
+  // Titles of cards that look like lessons but were not read; the course is not pruned while there are any.
+  notRead?: string[]
   comparison: ManifestComparison
 }
 
@@ -119,6 +128,7 @@ export function verdict(result: CourseResult): Verdict {
   if (result.unaccounted.length > 0) problems.push(`${result.unaccounted.length} listed lesson(s) not accounted for`)
   const counted = result.saved + result.already + result.empty.length + result.failed.length
   if (counted !== result.listed) problems.push(`the site lists ${result.listed} lessons but ${counted} are accounted for`)
+  if (result.unsettled) problems.push("the lesson list may be short: run it again")
   if (result.empty.length > 0) problems.push(`${result.empty.length} lesson(s) had no reading text`)
   if (result.failed.length > 0) problems.push(`${result.failed.length} lesson(s) failed`)
   if (problems.length > 0) return { kind: "incomplete", what: problems }
@@ -225,13 +235,22 @@ function names(list: string[], max = 4): string {
   return unique.length <= max ? unique.join(", ") : `${unique.slice(0, max).join(", ")} and ${unique.length - max} more`
 }
 
+// Titles with how many times each appears, so two untitled cards are not shown as one.
+function counted(list: string[], max = 4): string {
+  const tally = new Map<string, number>()
+  for (const title of list) tally.set(title, (tally.get(title) ?? 0) + 1)
+  const entries = [...tally].map(([title, times]) => (times > 1 ? `${title} x${times}` : title))
+  return entries.length <= max ? entries.join(", ") : `${entries.slice(0, max).join(", ")} and ${entries.length - max} more`
+}
+
 function plural(count: number, word: string): string {
   return `${count} ${word}${count === 1 ? "" : "s"}`
 }
 
 // The report at the end of a run: one headline that says plainly whether it finished, then each course on its own short lines
 // with a blank line between courses, so a problem stands out. Nothing is wider than the terminal. The headline is FINISHED only
-// when every lesson of every course is accounted for; a stop (Ctrl-C, a closed browser) says where it stopped.
+// when every lesson the crawl listed is accounted for (a card it could not read is shown under its course, with a warning line under the headline, and is a
+// warning, not a failure); a stop (Ctrl-C, a closed browser) says where it stopped.
 export function finalReport(input: { courses: CourseSummary[]; stopped: string | null; page: number; total: number; elapsedMs: number }, colour: boolean, columns = 80): string {
   const lines: string[] = []
   const width = Math.max(20, columns)
@@ -242,11 +261,17 @@ export function finalReport(input: { courses: CourseSummary[]; stopped: string |
   if (input.stopped) {
     lines.push(paint("yellow", clip(`■ STOPPED at page ${input.page} of ${input.total}: ${input.stopped}`, width), colour))
     lines.push(paint("dim", clip("  Run it again; it checks every lesson from the start.", width), colour))
+    lines.push(paint("dim", clip("  Stale saved lessons are removed only by a full run.", width), colour))
   } else if (bad.length > 0) {
     lines.push(paint("red", clip(`✖ NOT FINISHED: ${bad.length} of ${plural(verdicts.length, "course")} incomplete`, width), colour))
+  } else if (input.total === 0) {
+    lines.push(paint("yellow", clip(`! FINISHED, but no lesson could be read in ${plural(verdicts.length, "course")}`, width), colour))
   } else {
     lines.push(paint("green", clip(`✔ FINISHED: all ${plural(input.total, "lesson")} checked in ${plural(verdicts.length, "course")}, ${clock(input.elapsedMs)}`, width), colour))
   }
+  // On its own line, so a narrow terminal cannot cut it off the headline, and shown whether or not the run finished.
+  const unread = input.courses.filter((entry) => (entry.result.notRead?.length ?? 0) > 0).length
+  if (!input.stopped && unread > 0) lines.push(paint("yellow", clip(`  ! ${plural(unread, "course")} with unread cards, shown below`, width), colour))
   for (const { entry, value } of verdicts) {
     const { result } = entry
     const updated = result.textChanged.length
@@ -268,7 +293,8 @@ export function finalReport(input: { courses: CourseSummary[]; stopped: string |
       for (const what of value.what.filter((text) => !/failed|no reading text/.test(text))) lines.push(paint("red", clip(`      ✖ ${what}`, width), colour))
     }
     const { comparison } = result
-    if (!comparison.first) {
+    // A list that may be short, or that has cards the crawl could not read, says nothing reliable about what Google removed.
+    if (!comparison.first && !result.unsettled && !(result.notRead && result.notRead.length > 0)) {
       const changes = [
         comparison.added.length ? `${plural(comparison.added.length, "lesson")} added` : "",
         comparison.removed.length ? `${comparison.removed.length} removed` : "",
@@ -276,6 +302,11 @@ export function finalReport(input: { courses: CourseSummary[]; stopped: string |
         comparison.addressChanged.length ? `${plural(comparison.addressChanged.length, "address")} changed` : "",
       ].filter(Boolean)
       if (changes.length > 0) lines.push(paint("yellow", clip(`      Google changed this course: ${changes.join(", ")}`, width), colour))
+    }
+    if (result.notRead && result.notRead.length > 0) {
+      lines.push(paint("yellow", clip("      ! not read (untitled, unknown type or no lesson link):", width), colour))
+      lines.push(paint("yellow", clip(`        ${counted(result.notRead)}`, width), colour))
+      lines.push(paint("dim", clip("        no saved lesson of this course is removed while they stay unread (every run)", width), colour))
     }
   }
   lines.push("")
