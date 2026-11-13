@@ -158,7 +158,7 @@ progress, and ends with one verdict per course: complete and current, complete b
 incomplete (what). A video lesson is listed in its place and saved by its title only: the command never opens a video page (that would play it and mark it
 watched) and keeps no transcript, and Read Aloud gives it a **Watch the video** button that opens it on Google Skills. It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
 the saved readings, so the next run reports lessons added, removed or reordered and any address or text that
-changed. `pnpm reading:list <exam>` prints which lessons are saved against that manifest. Read Aloud's
+changed. `pnpm reading:list <exam>` prints which lessons are saved against that manifest. At the end of a run that was not stopped, the crawl removes, for good, the saved copy of any lesson Google no longer lists in every course that finished with a complete list and no card left unread (`pnpm reading:prune [<exam>] --dry-run` lists them first; copy the private folder to keep them). A course with a card the crawl could not read keeps every saved lesson, and its report line says so on every run. Read Aloud's
 **Unfinished** note says how to finish, and [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md)
 has the steps, including the exact Chrome start command, for a person or for any AI tool that can run commands.
 **Use a secondary Google account for the capture, not the one you study with.** Google Skills counts a lesson as completed when

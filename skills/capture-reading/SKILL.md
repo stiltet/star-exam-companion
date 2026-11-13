@@ -66,7 +66,10 @@ is always visible.
 
 3. **Read the report.** It ends with one headline and then each course, as its number and title, with its lesson counts
    (new, updated, unchanged) and any problem on its own line:
-   - `FINISHED`: every lesson of every course is accounted for.
+   - `FINISHED`: every lesson of every course is accounted for. A `! not read` line under a course (and a `! N course(s) with unread cards, shown below` line under the headline)
+     is a warning, not a failure: the crawl could not read a card, so it removes no saved lesson of that course. Tell the user which cards.
+   - `! FINISHED, but no lesson could be read in N courses`: a warning, not a failure (exit code 0): every lesson-like card the crawl found is one it
+     cannot read, so nothing was read and nothing was removed. The unread cards are named under their courses; tell the user which.
    - `NOT FINISHED`: at least one course is incomplete. The problem lines name what is missing (not accounted for, no
      reading text, failed).
    - `STOPPED`: the run was stopped (Ctrl-C, or a closed browser) and says where.
@@ -83,7 +86,9 @@ is always visible.
    Check that for each course the lessons listed equal the lessons saved plus those reported empty or failed, that every
    title is accounted for, and that no lesson is marked MISSING without being named in the report. Say what you checked.
 
-5. **If lesson text changed**, the report names those lessons and says they were saved again. Tell the user which ones.
+5. **If the report says lessons were removed**, the crawl has deleted the saved copies of lessons Google no longer lists (it does this itself at the end of a finished run; `pnpm reading:prune <exam> --dry-run` lists them without deleting). Tell the user which ones.
+
+   **If lesson text changed**, the report names those lessons and says they were saved again. Tell the user which ones.
 
 6. **Finish with the verdicts.** Report the verdict of every course as the command printed it, and which checks of step 4 you
    ran. Never say the capture is done without a verdict for each course.

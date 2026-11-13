@@ -320,6 +320,25 @@ export async function savePrivateReading(
   return record
 }
 
+// Removes one saved page, for a lesson Google no longer lists. True when a copy was there. The same folder checks as a save apply.
+export async function deletePrivateReading(packId: string, courseId: string, pageId: string): Promise<boolean> {
+  const root = await checkedRoot()
+  const directory = courseDirectory(root, packId, courseId)
+  const file = recordFile(directory, pageId)
+  const [physicalDirectory, physicalRoot] = await Promise.all([physicalPath(directory), physicalPath(root)])
+  if (!isWithin(physicalRoot, physicalDirectory)) throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
+  let existed = true
+  try {
+    await stat(file)
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
+    existed = false
+  }
+  await rm(file, { force: true })
+  recordCache.delete(directory)
+  return existed
+}
+
 export function privateReadingRoot(): string {
   return configuredRoot()
 }

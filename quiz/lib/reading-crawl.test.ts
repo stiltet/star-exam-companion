@@ -34,6 +34,7 @@ const lessons = [
 const manifest: Manifest = {
   checkedAt: "2026-01-01T00:00:00.000Z",
   listing: LISTING_VERSION,
+  complete: true,
   lessons: lessons.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: textHash(lesson.title) })),
 }
 
@@ -88,7 +89,7 @@ test("lessons with the same title are matched by their place, so a repeated titl
     { title: "Module", href: "/c/html_bundles/3" },
     { title: "Knowledge check", href: "/c/html_bundles/4" },
   ]
-  const saved: Manifest = { checkedAt: "2026-01-01T00:00:00.000Z", listing: LISTING_VERSION, lessons: repeated.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: null })) }
+  const saved: Manifest = { checkedAt: "2026-01-01T00:00:00.000Z", listing: LISTING_VERSION, complete: true, lessons: repeated.map((lesson) => ({ ...lesson, pageId: lessonPageId(lesson.href), hash: null })) }
   assert.deepEqual(compareLessons(saved, repeated), { first: false, added: [], removed: [], reordered: false, addressChanged: [] })
   const moved = compareLessons(saved, [repeated[0], repeated[1], repeated[2], { title: "Knowledge check", href: "/c/html_bundles/9" }])
   assert.deepEqual(moved.addressChanged, ["Knowledge check"])
@@ -222,4 +223,26 @@ test("a path page escapes a course's template where it writes it into a link", a
   const html = await (await fetch(`${site.url}/paths/4525`)).text()
   assert.ok(html.includes("course_templates/9&quot;001&amp;x"), "the quote and the ampersand are written as entities")
   assert.equal(html.includes('9"001&x'), false, "and not as they are")
+})
+
+test("the report says FINISHED with a warning on its own line when cards were not read, and names them, and its warning fits 60 columns", () => {
+  const unread = { id: "9001", title: "Made-up course", result: result({ notRead: ["Odd card", "(untitled)", "(untitled)"] }) }
+  const text = finalReport({ courses: [unread], stopped: null, page: 3, total: 3, elapsedMs: 1000 }, false)
+  assert.match(text, /✔ FINISHED: all 3 lessons checked in 1 course, 1 s\n {2}! 1 course with unread cards, shown below/)
+  assert.match(text, /! not read \(untitled, unknown type or no lesson link\):\n {8}Odd card, \(untitled\) x2/)
+  assert.doesNotMatch(text, /Google changed this course/, "a list with unread cards says nothing about what Google removed")
+  // A long run on a narrow terminal: the headline may be cut, the warning line still says it in full.
+  const many = [unread, { ...unread, id: "9002" }, { ...unread, id: "9003" }]
+  const narrow = finalReport({ courses: many, stopped: null, page: 1234, total: 1234, elapsedMs: 4_320_000 }, false, 60)
+  assert.match(narrow, /! 3 courses with unread cards, shown below/)
+  for (const line of narrow.split("\n")) assert.ok(line.length <= 60, `fits 60: ${line}`)
+})
+
+test("a run in which no lesson could be read says so instead of 'all 0 lessons', and still shows the unread cards", () => {
+  const unread = { id: "9001", title: "Made-up course", result: result({ listed: 0, saved: 0, notRead: ["Odd card"] }) }
+  const text = finalReport({ courses: [unread], stopped: null, page: 0, total: 0, elapsedMs: 1000 }, false)
+  assert.match(text, /! FINISHED, but no lesson could be read in 1 course/)
+  assert.doesNotMatch(text, /all 0 lessons/)
+  assert.match(text, /! 1 course with unread cards, shown below/)
+  assert.match(text, /! not read \(untitled, unknown type or no lesson link\):\n {8}Odd card/)
 })

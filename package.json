@@ -15,6 +15,7 @@
     "lint": "pnpm --dir quiz lint",
     "reading:crawl": "pnpm --dir quiz reading:crawl",
     "reading:list": "pnpm --dir quiz reading:list",
+    "reading:prune": "pnpm --dir quiz reading:prune",
     "reading:path": "pnpm --dir quiz reading:path",
     "start": "pnpm --dir quiz start",
     "start:local": "pnpm --dir quiz start:local"
