@@ -38,9 +38,10 @@ the private provider, its folder there. `provider` is omitted for public Google 
 courses do not have a public `folder` or `format`; their captured text is outside the repository and
 build output. `QUIZ_PRIVATE_DIR` may point to a different absolute directory; otherwise the OS
 app-data directory is used.
-A private course is captured by `pnpm reading:crawl [<exam>]`, which saves each lesson through the private
-store (the same store `POST /api/reading/private` writes to, which answers only a request that sends this install's token in `x-quiz-private-token`, a secret
-kept in the store's folder as `.write-token`, so never one from the network; a known limit is that any program running as the same user on this Mac can read the token and so save) and keeps a per-course manifest of titles, addresses and
+A private course is captured by `pnpm reading:crawl [<exam>]`, which saves each lesson straight into the private
+store, with no web route: nothing on the network can write a lesson, and the store's folder is mode 0700, readable and writable only by the
+user who runs the quiz. Another program running as that same user could edit the folder's files, which is true of every file that user owns and is not
+something this app can prevent. A leftover `.write-token` file from an earlier version can be deleted. The crawl and keeps a per-course manifest of titles, addresses and
 hashes beside it, never text. The README's "Private course readings" section describes it, and
 [`../skills/capture-reading/SKILL.md`](../skills/capture-reading/SKILL.md) has the steps. A new exam needs no change to
 either: the courses come from its `courses.json` entries with `"provider": "private"`.
