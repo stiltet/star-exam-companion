@@ -50,7 +50,7 @@ export default async function CourseReadingsPage({ params }: Props) {
         <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
         <Heading variant="title" placement="mb-6">{course.title}</Heading>
         {course.provider === "private" && (
-          <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project's files or the online demo.</Text>
+          <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>
         )}
         {loaded.ok ? (
           <ReadingList
