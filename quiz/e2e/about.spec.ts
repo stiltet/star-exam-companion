@@ -1,5 +1,8 @@
 import { expect, test } from "./fixtures"
 
+// The one dated line the About page holds, as it reads in lower case. Only this exact text is allowed to carry digits.
+const PASSED_LINE = "passed october 2026"
+
 // The About page is public and ships in the online demo: it holds what the app is, who built it and where the source is, and none of
 // anyone's studying. The owner approved its contents (a plan and a mockup); these tests fail if figures or plans come back onto it.
 test("the About page shows the approved sections and none of the visitor's own study figures", async ({ page, baseURL }) => {
@@ -30,9 +33,9 @@ test("the About page shows the approved sections and none of the visitor's own s
   }
   expect(text.includes("%"), "the About page shows a percentage").toBe(false)
   expect(/\bbest\b/.test(text), "the About page says best").toBe(false)
-  // Whatever the wording, a count, a score or a date of a plan is a digit: the only one the page may hold is the year the certification
-  // was passed.
-  expect(text.replace(/2026/g, ""), "the About page holds a number other than the year").not.toMatch(/\d/)
+  // The only digits the page may hold are the ones in the line saying when the certification was passed. This checks digits of any
+  // script, not spelled-out figures: those are caught by the banned labels above, not by this line.
+  expect(text.replace(PASSED_LINE, ""), "the About page holds a number other than the year it was passed").not.toMatch(/\p{Nd}/u)
 })
 
 test("the About page's features are a list in the accessibility tree", async ({ page }) => {
