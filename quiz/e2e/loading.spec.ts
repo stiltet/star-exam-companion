@@ -45,6 +45,16 @@ test("the tapped link fills after 200 ms, other links are refused for the first 
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
 
+test("a tapped link that arrives ends its loading", async ({ page }) => {
+  await page.route(/\/flashcards(\?|$)/, slow(1500))
+  await page.goto("/")
+  const study = page.locator('main a[href="/flashcards"]').first()
+  await study.click()
+  await expect(study).toHaveAttribute("data-loading", "true")
+  await expect(page).toHaveURL(/\/flashcards$/, { timeout: 15_000 })
+  await expect(page.locator("[data-loading]")).toHaveCount(0)
+})
+
 test("the logo link never changes itself: a page-sized loading box shows instead", async ({ page }) => {
   await page.route((url) => url.pathname === "/", slow(3000))
   await page.goto("/glossary", { waitUntil: "domcontentloaded" })

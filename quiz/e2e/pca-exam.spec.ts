@@ -34,6 +34,7 @@ test.describe("the Professional Cloud Architect exam", () => {
       const rows = await page.locator("ul.space-y-2 li").evaluateAll((items) =>
         items.map((item) => ({ letter: (item.querySelector("span")?.textContent ?? "").trim().charAt(0), reason: (item.querySelectorAll("span")[1]?.textContent ?? "").trim() })),
       )
+      expect(rows.map((row) => row.letter).sort(), "one reason for each wrong option, no letter twice").toEqual(options.map((option) => option.letter).filter((letter) => letter !== right))
       for (const row of rows) {
         const own = options.find((option) => option.letter === row.letter)
         expect(own, `a reason lettered ${row.letter} has an option`).toBeTruthy()
