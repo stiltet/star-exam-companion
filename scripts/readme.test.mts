@@ -140,14 +140,17 @@ describe('the README', () => {
 describe('pnpm runs from the root', () => {
   const scripts = (file: string) => JSON.parse(read(file)).scripts as Record<string, string>;
 
-  test('every quiz script is also a root script that forwards to it, and gate runs the unit tests first', () => {
+  test('every quiz script is also a root script that forwards to it, and gate runs the unit tests, then the browser tests, as two steps', () => {
     const quiz = scripts('quiz/package.json');
     const top = scripts('package.json');
     assert.deepEqual(Object.keys(top).sort(), Object.keys(quiz).sort());
-    for (const name of Object.keys(quiz).filter((n) => n !== 'gate')) {
+    for (const name of Object.keys(quiz).filter((n) => !n.startsWith('gate'))) {
       assert.equal(top[name], `pnpm --dir quiz ${name}`, name);
     }
-    assert.equal(top.gate, 'node --test && pnpm e2e');
+    for (const name of ['gate', 'gate:unit', 'gate:browser']) assert.equal(quiz[name], `cd .. && pnpm ${name}`, name);
+    assert.equal(top['gate:unit'], 'node --test');
+    assert.equal(top['gate:browser'], 'pnpm e2e');
+    assert.equal(top.gate, 'pnpm gate:unit && pnpm gate:browser');
   });
 
   test('the pnpm-workspace.yaml at the root installs quiz, and the README never tells the reader to pass --dir quiz', () => {
