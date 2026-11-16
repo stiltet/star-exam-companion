@@ -32,3 +32,19 @@ GPUs
 # 2.5
 Gemini Enterprise
 NotebookLM
+
+# 3.1
+Identity and Access Management (IAM)
+Resource hierarchy
+Cloud Key Management Service (Cloud KMS)
+Customer-managed encryption keys (CMEK)
+VPC Service Controls
+Organization Policy Service
+Hierarchical firewall policies
+Context-aware access
+Identity-Aware Proxy (IAP)
+Service account impersonation
+Chrome Enterprise Premium
+Workload Identity Federation
+Model Armor
+Sensitive Data Protection

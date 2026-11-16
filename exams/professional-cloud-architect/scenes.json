@@ -529,5 +529,207 @@
     "scene": "A retailer wants to label product photos, read printed text from images and flag explicit content, using a ready-made API instead of training a model. Which API fits?",
     "constraint": "The input is images, and a prebuilt API is wanted rather than a custom-trained model.",
     "guide": "2.5"
+  },
+  {
+    "id": "pca-iam",
+    "correct": "Identity and Access Management (IAM)",
+    "distractors": [
+      "Organization Policy Service",
+      "Hierarchical firewall policies",
+      "Cloud Audit Logs"
+    ],
+    "scene": "A data analyst needs to read BigQuery tables in one project but must not be able to change them. The security team wants to grant exactly that and nothing more. What controls who can do what on which resource?",
+    "constraint": "The need is a grant of specific permissions to a specific person on a specific resource, not a rule that restricts the whole organisation."
+  },
+  {
+    "id": "pca-resource-hierarchy",
+    "correct": "Resource hierarchy",
+    "distractors": [
+      "Identity and Access Management (IAM)",
+      "Organization Policy Service",
+      "Shared VPC"
+    ],
+    "scene": "A company with many teams wants a structure of an organisation, departments and projects so that a role granted at the top is inherited by everything below it. What should the architects design first?",
+    "constraint": "Access and policy must be inherited down a parent-child tree, so the structure itself has to be designed."
+  },
+  {
+    "id": "pca-cloud-kms",
+    "correct": "Cloud Key Management Service (Cloud KMS)",
+    "distractors": [
+      "Secret Manager",
+      "Sensitive Data Protection",
+      "Identity and Access Management (IAM)"
+    ],
+    "scene": "A security team wants to generate and manage its own cryptographic keys, hardware-backed where needed, and use them for encryption in its own applications and in Google Cloud services. What should it use?",
+    "constraint": "The assets to manage are cryptographic keys, not passwords or other credentials stored as secrets."
+  },
+  {
+    "id": "pca-cmek",
+    "correct": "Customer-managed encryption keys (CMEK)",
+    "distractors": [
+      "Secret Manager",
+      "Cloud Key Management Service (Cloud KMS)",
+      "Sensitive Data Protection"
+    ],
+    "scene": "A regulator requires that the bank, not the cloud provider, owns and controls the keys that protect its data at rest in BigQuery and Cloud Storage. What should it use?",
+    "constraint": "The customer must own and control the keys that protect data at rest in the services that integrate with them."
+  },
+  {
+    "id": "pca-secret-manager",
+    "correct": "Secret Manager",
+    "distractors": [
+      "Cloud Key Management Service (Cloud KMS)",
+      "Sensitive Data Protection",
+      "Identity and Access Management (IAM)"
+    ],
+    "scene": "Developers keep database passwords and API keys in source files. The team wants to store them centrally and let applications fetch them at run time. What should it adopt?",
+    "constraint": "The items to protect are API keys, passwords and certificates that applications read, not encryption keys.",
+    "guide": "3.1"
+  },
+  {
+    "id": "pca-vpc-sc",
+    "correct": "VPC Service Controls",
+    "distractors": [
+      "Cloud Armor",
+      "Cloud Next Generation Firewall (Cloud NGFW)",
+      "Identity and Access Management (IAM)"
+    ],
+    "scene": "A healthcare company stores sensitive data in Cloud Storage and BigQuery. Even a user with valid IAM permissions must not be able to copy that data to a project outside the company's boundary. What should it configure?",
+    "constraint": "Access to Google-managed services must be limited by a perimeter to reduce data exfiltration, even when IAM allows the request."
+  },
+  {
+    "id": "pca-org-policy",
+    "correct": "Organization Policy Service",
+    "distractors": [
+      "Identity and Access Management (IAM)",
+      "Resource hierarchy",
+      "Hierarchical firewall policies"
+    ],
+    "scene": "A central security team wants to forbid creating VMs with external IP addresses in every project of the company, whatever roles project owners hold. What should it use?",
+    "constraint": "The restriction must be a constraint set once on the hierarchy that limits what is allowed, not a grant of permissions to a person."
+  },
+  {
+    "id": "pca-hierarchical-firewall",
+    "correct": "Hierarchical firewall policies",
+    "distractors": [
+      "Cloud Armor",
+      "Organization Policy Service",
+      "VPC Service Controls"
+    ],
+    "scene": "The security team must block a set of risky ports across every VPC network in the organisation with one rule set that project owners cannot override. What should it use?",
+    "constraint": "The firewall rules must be defined once at the organisation or folder level and apply to the networks below."
+  },
+  {
+    "id": "pca-audit-logs",
+    "correct": "Cloud Audit Logs",
+    "distractors": [
+      "Identity and Access Management (IAM)",
+      "VPC Service Controls",
+      "Secret Manager"
+    ],
+    "scene": "After a configuration change broke production, auditors ask who changed the firewall rule, on which resource and when. Which records answer that?",
+    "constraint": "The records must show who did what, where and when for administrative activity and resource access.",
+    "guide": "3.2"
+  },
+  {
+    "id": "pca-context-aware-access",
+    "correct": "Context-aware access",
+    "distractors": [
+      "Identity-Aware Proxy (IAP)",
+      "Workload Identity Federation",
+      "Service account impersonation"
+    ],
+    "scene": "Employees may open an internal application only from managed laptops located in approved countries, even when their credentials are valid. What kind of control enforces this?",
+    "constraint": "Access must depend on attributes such as device and location in addition to the user's identity."
+  },
+  {
+    "id": "pca-iap",
+    "correct": "Identity-Aware Proxy (IAP)",
+    "distractors": [
+      "Cloud VPN",
+      "Workload Identity Federation",
+      "Context-aware access"
+    ],
+    "scene": "A company wants employees to reach an internal web application over HTTPS from anywhere, checked per user and group at the application, without giving everyone a VPN. What should it put in front of the app?",
+    "constraint": "A central authorisation layer must check each request at the application, in place of network-level access through a VPN."
+  },
+  {
+    "id": "pca-sa-impersonation",
+    "correct": "Service account impersonation",
+    "distractors": [
+      "Workload Identity Federation",
+      "Identity-Aware Proxy (IAP)",
+      "Secret Manager"
+    ],
+    "scene": "An engineer needs to temporarily act with the permissions of a deployment service account to test a release, and the team does not want to create or hand out a downloadable key for it. What should the engineer use?",
+    "constraint": "A user must gain a service account's permissions without a long-lived key file."
+  },
+  {
+    "id": "pca-chrome-enterprise-premium",
+    "correct": "Chrome Enterprise Premium",
+    "distractors": [
+      "Identity-Aware Proxy (IAP)",
+      "Model Armor",
+      "Sensitive Data Protection"
+    ],
+    "scene": "A firm wants secure enterprise browsing for employees and contractors on unmanaged devices, with controls on copy, paste, download and print, and phishing protection. What should it adopt?",
+    "constraint": "The controls must operate in the browser, covering data leaks and unsafe downloads on the user's device."
+  },
+  {
+    "id": "pca-workload-identity-federation",
+    "correct": "Workload Identity Federation",
+    "distractors": [
+      "Service account impersonation",
+      "Secret Manager",
+      "Identity-Aware Proxy (IAP)"
+    ],
+    "scene": "A CI pipeline on GitHub must deploy to Google Cloud. The security team will not accept a service account key stored as a pipeline secret. What should the pipeline use?",
+    "constraint": "An external workload must be granted access through its own federated identity, with no long-lived key stored anywhere."
+  },
+  {
+    "id": "pca-binary-authorization",
+    "correct": "Binary Authorization",
+    "distractors": [
+      "Model Armor",
+      "Cloud Armor",
+      "VPC Service Controls"
+    ],
+    "scene": "Only container images built by the company's CI pipeline and signed by it may run on its production Kubernetes clusters. What should enforce this at deploy time?",
+    "constraint": "The check must stop images that do not conform to policy from being deployed, as part of software supply-chain security.",
+    "guide": "3.1"
+  },
+  {
+    "id": "pca-model-armor",
+    "correct": "Model Armor",
+    "distractors": [
+      "Cloud Armor",
+      "Sensitive Data Protection",
+      "Binary Authorization"
+    ],
+    "scene": "A company's customer chatbot must not pass malicious prompts to the LLM or return responses that expose sensitive data. What should screen prompts and responses?",
+    "constraint": "The screening must inspect both the prompt going in and the response coming out of the model."
+  },
+  {
+    "id": "pca-sensitive-data-protection",
+    "correct": "Sensitive Data Protection",
+    "distractors": [
+      "Model Armor",
+      "Secret Manager",
+      "Cloud Key Management Service (Cloud KMS)"
+    ],
+    "scene": "Before sharing a dataset with an analytics partner, a company must find the names and card numbers hidden in free-text columns and mask them. What should it use?",
+    "constraint": "The data must be discovered, classified and de-identified, which encryption alone does not do."
+  },
+  {
+    "id": "pca-assured-workloads",
+    "correct": "Assured Workloads",
+    "distractors": [
+      "VPC Service Controls",
+      "Organization Policy Service",
+      "Customer-managed encryption keys (CMEK)"
+    ],
+    "scene": "A public-sector agency must keep its data in specific regions, restrict support staff to approved personnel and apply a regulatory control package. What should it set up?",
+    "constraint": "Data residency, access and personnel controls must be configured together as one regulated boundary.",
+    "guide": "3.2"
   }
 ]
