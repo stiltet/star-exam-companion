@@ -250,6 +250,9 @@ test("a real recording's duration matches its chapter list", { timeout: 180_000,
   })
   assert.equal(ready.chapters[0]?.start, 0)
   assert.ok((ready.chapters[1]?.start ?? 0) > 0.5)
+  const voice = await voiceFingerprint()
+  assert.match(voice, /^[0-9a-f]{64}$/, "the real voice can be identified")
+  assert.equal(await voiceFingerprint(), voice, "and gives the same fingerprint every time")
   const duration = await new Promise<number>((resolve, reject) => {
     execFile("afinfo", [path.join(scratch, "real", ready.key, "night.m4a")], { timeout: 30_000 }, (error, stdout) => {
       if (error) reject(error)
@@ -429,8 +432,8 @@ test("a crawl is complete only when the manifest and the saved readings agree on
   process.env.QUIZ_PRIVATE_DIR = root
   const courses = [{ id: "1", packId: "night-test", provider: "private" as const }]
   const lesson = (pageId: string, text: string | null): ManifestLesson => ({ title: `Lesson ${pageId}`, href: `/course_templates/1/documents/${pageId}`, pageId, hash: text === null ? null : textHash(text) })
-  const manifest = (lessons: ManifestLesson[], listing: number | undefined = LISTING_VERSION) =>
-    writeManifest(manifestFile(root, "night-test", "1"), { checkedAt: "2026-11-16T00:00:00.000Z", listing, lessons })
+  const manifest = (lessons: ManifestLesson[], listing: number | undefined = LISTING_VERSION, complete: boolean | "absent" = true) =>
+    writeManifest(manifestFile(root, "night-test", "1"), { checkedAt: "2026-11-16T00:00:00.000Z", listing, ...(complete === "absent" ? {} : { complete }), lessons })
   try {
     assert.equal(await crawlCompleteFor([{ id: "1", packId: "night-test", provider: "google" }]), true, "a public course needs no crawl")
     assert.equal(await crawlCompleteFor(courses), false, "no manifest yet")
@@ -438,6 +441,10 @@ test("a crawl is complete only when the manifest and the saved readings agree on
     await savePrivateReading("night-test", "1", { pageId: "12", title: "Two", text: "Text two." })
     await manifest([lesson("11", "Text one."), lesson("12", "Text two.")])
     assert.equal(await crawlCompleteFor(courses), true, "manifest and readings agree")
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two.")], LISTING_VERSION, false)
+    assert.equal(await crawlCompleteFor(courses), false, "a crawl that has not finished writes complete false, and counts that happen to match do not make it done")
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two.")], LISTING_VERSION, "absent")
+    assert.equal(await crawlCompleteFor(courses), false, "a manifest made before the complete flag existed")
     await manifest([lesson("11", "Text one."), lesson("12", "Text two."), lesson("13", "Text three.")])
     assert.equal(await crawlCompleteFor(courses), false, "a listed lesson with no saved reading")
     await manifest([lesson("11", "Text one."), lesson("12", "Changed text.")])
@@ -469,20 +476,23 @@ test("a stopped say's leftover in the clips folder is cleared by a finished buil
   assert.equal(statSync(path.join(dir, CLIPS_DIR)).mode & 0o777, 0o700)
 })
 
+const VOICE_A = "a".repeat(64)
+const VOICE_B = "b".repeat(64)
+
 test("a changed Mac voice speaks every reading again, and the old voice's clips are pruned, never mixed in", async () => {
   const dir = path.join(scratch, "voice")
   const spoken: string[] = []
-  const first = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => "voice-a" })
+  const first = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
   assert.deepEqual(spoken, ["One.", "Two."])
-  assert.equal(exists(clipFile(dir, "One.", "voice-a")), true)
-  assert.notEqual(clipFile(dir, "One.", "voice-a"), clipFile(dir, "One.", "voice-b"))
-  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => "voice-b" })
+  assert.equal(exists(clipFile(dir, "One.", VOICE_A)), true)
+  assert.notEqual(clipFile(dir, "One.", VOICE_A), clipFile(dir, "One.", VOICE_B))
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_B })
   assert.deepEqual(spoken, ["One.", "Two."], "an existing recording is served as it is, whatever the voice")
-  const next = await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "voice-b", canPrune: async () => true })
+  const next = await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_B, canPrune: async () => true })
   assert.notEqual(next.key, first.key)
   assert.deepEqual(spoken, ["One.", "Two.", "One.", "Two, changed."], "a changed script in a new voice speaks every reading in it")
-  assert.equal(exists(clipFile(dir, "One.", "voice-a")), false, "the old voice's clips are pruned once sure")
-  assert.equal(exists(clipFile(dir, "One.", "voice-b")), true)
+  assert.equal(exists(clipFile(dir, "One.", VOICE_A)), false, "the old voice's clips are pruned once sure")
+  assert.equal(exists(clipFile(dir, "One.", VOICE_B)), true)
 })
 
 test("the voice is known by its sound, and an unrepeatable or failed voice is not told apart", async () => {
@@ -499,4 +509,22 @@ test("the voice is known by its sound, and an unrepeatable or failed voice is no
   assert.equal(await voiceFingerprint(async (_text, file) => { writeFileSync(file, tone((n += 1))); return true }), "unstable")
   assert.equal(await voiceFingerprint(async () => false), "unknown")
   assert.equal(await voiceFingerprint(async () => { throw new Error("no say") }), "unknown")
+})
+
+test("a build that could not identify the voice uses the last voice it did, and never deletes a clip", async () => {
+  const dir = path.join(scratch, "voice-unknown")
+  const spoken: string[] = []
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
+  assert.equal(readFileSync(path.join(dir, "voice"), "utf8"), VOICE_A, "an identified voice is remembered")
+  assert.deepEqual(spoken, ["One.", "Two."])
+  // The probe fails (a hung say, say, a file that cannot be read), and the script changes: only the changed reading is spoken, in the remembered voice.
+  const next = await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "unknown", canPrune: async () => true })
+  assert.deepEqual(spoken, ["One.", "Two.", "Two, changed."], "one failed probe does not speak every reading again")
+  assert.equal(next.state, "ready")
+  assert.equal(exists(clipFile(dir, "Two.", VOICE_A)), true, "a build that did not identify the voice deletes nothing, even when the crawl check is sure")
+  // With no voice ever identified, clips are named by the fixed word and still nothing is deleted.
+  const fresh = path.join(scratch, "voice-never")
+  await buildRecording({ dir: fresh, parts, render: speak(spoken), encode: encodeStub, voice: async () => "unstable" })
+  await buildRecording({ dir: fresh, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "unstable", canPrune: async () => true })
+  assert.equal(exists(clipFile(fresh, "Two.", "unstable")), true)
 })
