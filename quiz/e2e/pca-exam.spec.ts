@@ -29,6 +29,8 @@ test.describe("the Professional Cloud Architect exam", () => {
       )
       expect(options.map((option) => option.letter)).toEqual(["A", "B", "C", "D"])
       const right = (await page.locator("button.bg-foreground").first().innerText()).trim().charAt(0)
+      expect(["A", "B", "C", "D"], "the right answer is one of the options").toContain(right)
+      for (const option of options) expect(option.text, `option ${option.letter} has text`).not.toBe("")
       const rows = await page.locator("ul.space-y-2 li").evaluateAll((items) =>
         items.map((item) => ({ letter: (item.querySelector("span")?.textContent ?? "").trim().charAt(0), reason: (item.querySelectorAll("span")[1]?.textContent ?? "").trim() })),
       )

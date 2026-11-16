@@ -38,8 +38,10 @@ test("the tapped link fills after 200 ms, other links are refused for the first 
   await page.waitForTimeout(6500)
   await expect(study).toHaveAttribute("data-loading", "true")
   await expect(page).toHaveURL(/\/$/)
-  // The page arrives, and only then is the loading over.
-  await expect(page).toHaveURL(/\/flashcards$/, { timeout: 15_000 })
+  // After the failsafe another link works again.
+  await page.locator('main a[href="/exam"]').first().click()
+  await expect(page).toHaveURL(/\/exam$/, { timeout: 15_000 })
+  // The page that arrives ends the loading.
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
 

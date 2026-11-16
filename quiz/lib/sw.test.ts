@@ -12,7 +12,7 @@ type Handler = (event: unknown) => void
 type Net = (url: string) => Response | Promise<Response>
 
 // Runs sw-worker.js in its own context, with a fake Cache Storage and a fake network.
-function load(net: Net) {
+function load(net: Net, timer: typeof setTimeout = setTimeout) {
   const handlers: Record<string, Handler> = {}
   const stores = new Map<string, Map<string, Response>>()
   const key = (item: string | { url: string }) => new URL(typeof item === "string" ? item : item.url, ORIGIN).href
@@ -38,7 +38,7 @@ function load(net: Net) {
     URL,
     Response,
     AbortController,
-    setTimeout,
+    setTimeout: timer,
     clearTimeout,
   })
   vm.runInContext(workerScript(config, worker), context)
@@ -266,11 +266,48 @@ test("an unreachable Mac costs one wait: after a failed client-side move the ful
   assert.equal(await again?.text(), "the page")
 })
 
-test("the Mac answering clears a backoff, and the unreachable page offers a saved page when Home is not saved", async () => {
-  const sw = load(() => ok("fine"))
-  assert.equal((await sw.request("/a", { mode: "navigate" }))?.status, 200)
-  assert.equal((await sw.request("/b", { mode: "navigate" }))?.status, 200)
-  const page = await (await load(offline).request("/x", { mode: "navigate" }))!.text()
-  assert.match(page, /OPEN A SAVED PAGE/)
-  assert.match(page, /quiz-mac-reachable/)
+test("a page with no copy on the device waits up to 30 seconds for the Mac, and one with a copy only 2.5", async () => {
+  const delays: number[] = []
+  const timer = ((fn: () => void, ms: number) => { delays.push(ms); return setTimeout(fn, ms) }) as typeof setTimeout
+  const sw = load(() => ok("fresh"), timer)
+  sw.store("quiz-pages-b2").set(`${ORIGIN}/kept`, ok("kept"))
+  await sw.request("/not-kept", { mode: "navigate" })
+  await sw.request("/kept", { mode: "navigate" })
+  assert.deepEqual(delays, [30000, 2500])
+})
+
+test("a request that was already on its way when another failed clears the backoff when the Mac answers it", async () => {
+  let answer: () => void = () => {}
+  const late = new Promise<void>((resolve) => { answer = resolve })
+  const sw = load(async (url) => {
+    if (url.endsWith("/late")) { await late; return ok("late") }
+    return offline()
+  })
+  const pending = sw.request("/late", { mode: "navigate" })
+  assert.equal((await sw.request("/fails", { mode: "navigate" }))?.status, 503)
+  const asked = sw.calls.length
+  assert.equal((await sw.request("/skipped", { mode: "navigate" }))?.status, 503)
+  assert.equal(sw.calls.length, asked, "the backoff holds while the Mac is thought down")
+  answer()
+  assert.equal(await (await pending)?.text(), "late")
+  await sw.request("/after", { mode: "navigate" })
+  assert.equal(sw.calls.length, asked + 1, "the Mac answered, so it is asked again")
+})
+
+test("the unreachable page offers a saved page when Home is not saved, never a data request", async () => {
+  const body = (await (await load(offline).request("/x", { mode: "navigate" }))!.text())
+  const script = /<script>([\s\S]*)<\/script>/.exec(body)![1]
+  const home = { href: "/", textContent: "GO HOME" }
+  const keys = [`${ORIGIN}/x`, `${ORIGIN}/practice?_rsc=abc`, `${ORIGIN}/voice?section=2`]
+  vm.runInContext(script, vm.createContext({
+    document: { getElementById: (id: string) => (id === "home" ? home : { }) },
+    caches: { match: async () => undefined, keys: async () => ["quiz-pages-b2", "quiz-voice"], open: async () => ({ keys: async () => keys.map((url) => ({ url })) }) },
+    location: { pathname: "/x" },
+    navigator: {},
+    URL,
+    setTimeout,
+  }))
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(home.textContent, "OPEN A SAVED PAGE")
+  assert.equal(home.href, "/voice?section=2", "a different saved page, and not the data request of /practice")
 })

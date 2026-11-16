@@ -1,7 +1,10 @@
 /* The quiz's service worker. app/sw.js/route.ts serves this file with CONFIG defined above it:
  * { build, pages, statics }. Plain JavaScript, so the route serves it as it is and a test can run it. */
 /* global CONFIG */
-const PAGE_CACHE = `quiz-pages-${CONFIG.build}`
+const PAGE_PREFIX = "quiz-pages-"
+const PAGE_CACHE = `${PAGE_PREFIX}${CONFIG.build}`
+// The message the unreachable page's Try again sends, to clear the backoff before it reloads.
+const MAC_REACHABLE = "quiz-mac-reachable"
 const STATIC_CACHE = `quiz-static-${CONFIG.build}`
 // Kept across builds: the Mac's voice for every line the quiz can say, and Night reading's recording.
 const VOICE_CACHE = "quiz-voice"
@@ -64,7 +67,7 @@ async function page(request) {
 
 // Shown only when the Mac cannot be reached and the page was never opened on this device. It is
 // never a dead end: it can try again (which first clears the backoff) and go Home, which is kept on the device, or to any saved page when Home is not.
-const UNREACHABLE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not on this device yet</title><style>body{font:18px/1.5 ui-monospace,Menlo,monospace;margin:0;padding:24px;background:#fff;color:#000}@media(prefers-color-scheme:dark){body{background:#0a0a0a;color:#fff}}a,button{display:block;box-sizing:border-box;width:100%;margin-top:16px;padding:14px;border:2px solid currentColor;background:none;color:inherit;font:inherit;font-weight:700;text-align:center;text-decoration:none}</style></head><body><p>The Mac cannot be reached, and this page is not on this device yet.</p><button id="again">TRY AGAIN</button><a id="home" href="/">GO HOME</a><script>document.getElementById("again").onclick=async()=>{const c=navigator.serviceWorker&&navigator.serviceWorker.controller;if(c){const ch=new MessageChannel();c.postMessage("quiz-mac-reachable",[ch.port2]);await new Promise((done)=>{ch.port1.onmessage=()=>done();setTimeout(done,500)})}location.reload()};(async()=>{try{if(await caches.match("/"))return;for(const name of await caches.keys()){if(name.indexOf("quiz-pages-")!==0)continue;const saved=(await(await caches.open(name)).keys()).map((r)=>new URL(r.url)).find((u)=>u.pathname!==location.pathname);if(saved){const home=document.getElementById("home");home.href=saved.pathname+saved.search;home.textContent="OPEN A SAVED PAGE";return}}}catch(e){}})()</script></body></html>`
+const UNREACHABLE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not on this device yet</title><style>body{font:18px/1.5 ui-monospace,Menlo,monospace;margin:0;padding:24px;background:#fff;color:#000}@media(prefers-color-scheme:dark){body{background:#0a0a0a;color:#fff}}a,button{display:block;box-sizing:border-box;width:100%;margin-top:16px;padding:14px;border:2px solid currentColor;background:none;color:inherit;font:inherit;font-weight:700;text-align:center;text-decoration:none}</style></head><body><p>The Mac cannot be reached, and this page is not on this device yet.</p><button id="again">TRY AGAIN</button><a id="home" href="/">GO HOME</a><script>document.getElementById("again").onclick=async()=>{const c=navigator.serviceWorker&&navigator.serviceWorker.controller;if(c){const ch=new MessageChannel();c.postMessage("${MAC_REACHABLE}",[ch.port2]);await new Promise((done)=>{ch.port1.onmessage=()=>done();setTimeout(done,500)})}location.reload()};(async()=>{try{if(await caches.match("/"))return;for(const name of await caches.keys()){if(name.indexOf("${PAGE_PREFIX}")!==0)continue;const saved=(await(await caches.open(name)).keys()).map((r)=>new URL(r.url)).find((u)=>u.pathname!==location.pathname&&!u.searchParams.has("_rsc"));if(saved){const home=document.getElementById("home");home.href=saved.pathname+saved.search;home.textContent="OPEN A SAVED PAGE";return}}}catch(e){}})()</script></body></html>`
 
 // Next.js's data for a client-side navigation. Kept by its full URL: the _rsc value is a hash of
 // the request's router headers, so the same URL always asks for the same data. Offline, a kept
@@ -119,7 +122,7 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("message", (event) => {
-  if (event.data !== "quiz-mac-reachable") return
+  if (event.data !== MAC_REACHABLE) return
   downUntil = 0
   connectionGeneration += 1
   event.ports[0]?.postMessage("ready")
