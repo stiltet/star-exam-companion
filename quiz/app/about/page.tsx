@@ -30,7 +30,7 @@ export default function AboutPage() {
 
         <section className="mb-8">
           <Heading variant="rule" placement="mb-3">What it does</Heading>
-          <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 list-none p-0 m-0">
+          <ul role="list" className="grid gap-x-6 gap-y-3 sm:grid-cols-2 list-none p-0 m-0">
             {FEATURES.map((feature) => (
               <li key={feature.name}>
                 <Text variant="strong">{feature.name}</Text>

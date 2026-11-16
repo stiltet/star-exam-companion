@@ -21,7 +21,7 @@ is always visible.
    ([Chrome's explanation](https://developer.chrome.com/blog/remote-debugging-port)). Check that it is installed:
 
    ```bash
-   pnpm --dir quiz exec playwright install chromium
+   pnpm e2e:install
    ```
 
    The first time only, the Google account must be known to that browser's profile. If the crawl says it is not signed in
@@ -42,11 +42,11 @@ is always visible.
 2. **Run the command.** From the project folder. With no argument it covers every exam on the server; a name limits it to one:
 
    ```bash
-   pnpm --dir quiz reading:crawl
+   pnpm reading:crawl
    ```
 
    ```bash
-   pnpm --dir quiz reading:crawl <exam>
+   pnpm reading:crawl <exam>
    ```
 
    After signing in it prints `Signed in as <address>`, read from the site's account settings page, so it is plain which Google
@@ -61,12 +61,15 @@ is always visible.
    project's PDF module (`quiz/lib/pdf-text.ts`); nothing is saved to disk.
 
    Every run also writes a log file (the last line of the output is `Log: <path>`), with one line per event and no lesson text.
-   When a run fails or looks wrong, run it again with `--debug` (`pnpm --dir quiz reading:crawl <exam> --debug`) and read the log
+   When a run fails or looks wrong, run it again with `--debug` (`pnpm reading:crawl <exam> --debug`) and read the log
    before guessing: it shows the sign-in route, each lesson's outcome, every retry with its error and, with `--debug`, the addresses visited.
 
 3. **Read the report.** It ends with one headline and then each course, as its number and title, with its lesson counts
    (new, updated, unchanged) and any problem on its own line:
-   - `FINISHED`: every lesson of every course is accounted for.
+   - `FINISHED`: every lesson of every course is accounted for. A `! not read` line under a course (and a `! N course(s) with unread cards, shown below` line under the headline)
+     is a warning, not a failure: the crawl could not read a card, so it removes no saved lesson of that course. Tell the user which cards.
+   - `! FINISHED, but no lesson could be read in N courses`: a warning, not a failure (exit code 0): every lesson-like card the crawl found is one it
+     cannot read, so nothing was read and nothing was removed. The unread cards are named under their courses; tell the user which.
    - `NOT FINISHED`: at least one course is incomplete. The problem lines name what is missing (not accounted for, no
      reading text, failed).
    - `STOPPED`: the run was stopped (Ctrl-C, or a closed browser) and says where.
@@ -77,13 +80,15 @@ is always visible.
 4. **Validate it.** Do not trust the verdict alone. Run:
 
    ```bash
-   pnpm --dir quiz reading:list <exam>
+   pnpm reading:list <exam>
    ```
 
    Check that for each course the lessons listed equal the lessons saved plus those reported empty or failed, that every
    title is accounted for, and that no lesson is marked MISSING without being named in the report. Say what you checked.
 
-5. **If lesson text changed**, the report names those lessons and says they were saved again. Tell the user which ones.
+5. **If the report says lessons were removed**, the crawl has deleted the saved copies of lessons Google no longer lists (it does this itself at the end of a finished run; `pnpm reading:prune <exam> --dry-run` lists them without deleting). Tell the user which ones.
+
+   **If lesson text changed**, the report names those lessons and says they were saved again. Tell the user which ones.
 
 6. **Finish with the verdicts.** Report the verdict of every course as the command printed it, and which checks of step 4 you
    ran. Never say the capture is done without a verdict for each course.

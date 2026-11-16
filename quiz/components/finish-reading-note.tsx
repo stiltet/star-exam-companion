@@ -6,7 +6,7 @@ export function FinishReadingNote() {
   return (
     <div className="mb-6 space-y-1" data-testid="finish-reading">
       <Text variant="strong">To finish, run in the project folder:</Text>
-      <Text variant="muted">pnpm --dir quiz reading:crawl</Text>
+      <Text variant="muted">pnpm reading:crawl</Text>
     </div>
   )
 }

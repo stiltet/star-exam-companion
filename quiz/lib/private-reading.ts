@@ -1,6 +1,6 @@
-import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import type { Dirent } from "node:fs"
-import { chmod, link, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
+import { chmod, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import path from "node:path"
 import { repoRoot } from "./pack.ts"
@@ -12,7 +12,7 @@ const PAGE_ID = PRIVATE_PAGE_ID
 const MAX_TITLE_CHARS = 500
 const MAX_TEXT_CHARS = 1_000_000
 const MAX_RECORD_BYTES = 4_000_000
-// What one course may hold, so nobody who can reach the capture route can fill the disk.
+// What one course may hold, so a runaway capture cannot fill the disk.
 export const MAX_RECORDS_PER_COURSE = 300
 export const MAX_COURSE_BYTES = 200_000_000
 
@@ -245,46 +245,6 @@ function sortRecords(records: PrivateReadingRecord[]): PrivateReadingRecord[] {
   return records.sort((a, b) => Date.parse(a.savedAt) - Date.parse(b.savedAt) || a.pageId.localeCompare(b.pageId, undefined, { numeric: true }))
 }
 
-// The secret a caller of the save route must send, so only a program that can read this file can save: a device on the network
-// cannot, and no header it writes can stand in for it. One per install, made on first use, in the store's own folder, mode 0600.
-const WRITE_TOKEN_FILE = ".write-token"
-const WRITE_TOKEN = /^[a-f0-9]{64}$/
-
-export async function privateWriteToken(): Promise<string> {
-  const root = await checkedRoot()
-  const file = path.join(root, WRITE_TOKEN_FILE)
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const existing = (await readFile(file, "utf8")).trim()
-      if (WRITE_TOKEN.test(existing)) return existing
-      throw new Error("The private write token file is damaged: delete it and a new one is made.")
-    } catch (error) {
-      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
-    }
-    await mkdir(root, { recursive: true, mode: 0o700 })
-    // Written whole to a temporary file and linked into place, which fails when the file exists: a reader never sees it half written,
-    // and two first requests at once end with one token.
-    const temporary = `${file}.${randomUUID()}.tmp`
-    await writeFile(temporary, `${randomBytes(32).toString("hex")}\n`, { mode: 0o600 })
-    try {
-      await link(temporary, file)
-    } catch (error) {
-      // Another process made it first: the next pass reads theirs. Any other error is real.
-      if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error
-    } finally {
-      await rm(temporary, { force: true })
-    }
-  }
-  throw new Error("The private write token could not be made.")
-}
-
-export async function isPrivateWriteToken(candidate: string | null): Promise<boolean> {
-  if (!candidate || !WRITE_TOKEN.test(candidate)) return false
-  const expected = Buffer.from(await privateWriteToken())
-  const given = Buffer.from(candidate)
-  return given.length === expected.length && timingSafeEqual(given, expected)
-}
-
 export async function allPrivateReadings(): Promise<PrivateReadingRecord[]> {
   const root = await checkedRoot()
   async function directories(directory: string, pattern: RegExp): Promise<string[]> {
@@ -358,6 +318,25 @@ export async function savePrivateReading(
     await rm(temporary, { force: true })
   }
   return record
+}
+
+// Removes one saved page, for a lesson Google no longer lists. True when a copy was there. The same folder checks as a save apply.
+export async function deletePrivateReading(packId: string, courseId: string, pageId: string): Promise<boolean> {
+  const root = await checkedRoot()
+  const directory = courseDirectory(root, packId, courseId)
+  const file = recordFile(directory, pageId)
+  const [physicalDirectory, physicalRoot] = await Promise.all([physicalPath(directory), physicalPath(root)])
+  if (!isWithin(physicalRoot, physicalDirectory)) throw new Error("The private reading directory points outside QUIZ_PRIVATE_DIR.")
+  let existed = true
+  try {
+    await stat(file)
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
+    existed = false
+  }
+  await rm(file, { force: true })
+  recordCache.delete(directory)
+  return existed
 }
 
 export function privateReadingRoot(): string {

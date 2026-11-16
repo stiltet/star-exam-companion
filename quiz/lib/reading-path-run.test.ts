@@ -120,6 +120,6 @@ test("the path command lists a learning path's courses in Google's order, as tex
   await t.test("an address that is not a learning path is refused with the usage line, before any browser starts", async () => {
     const run = await runPath(profile, site, ["https://evil.example/paths/4525"])
     assert.equal(run.code, 2)
-    assert.match(run.err, /Usage: pnpm --dir quiz reading:path/)
+    assert.match(run.err, /Usage: pnpm reading:path/)
   })
 })
