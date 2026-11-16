@@ -5,8 +5,8 @@ import { Text } from "@/components/atoms/text"
 import { ActionLink } from "@/components/atoms/button"
 import { TextLink } from "@/components/atoms/text-link"
 
-// What the app does, in the order a visitor meets it. The page holds nothing about anyone's studying: figures and plans live on the
-// Progress page, on the person's own device.
+// The About page is public: it ships in the static demo. It holds no study plan and no progress figures. Those live on the Progress
+// page, on the person's own device. It lists what the app does in the order a visitor meets it.
 const FEATURES: { name: string; what: string }[] = [
   { name: "Voice quiz", what: "Answer spoken questions out loud." },
   { name: "Read aloud", what: "Listen to course lessons." },
@@ -30,7 +30,7 @@ export default function AboutPage() {
 
         <section className="mb-8">
           <Heading variant="rule" placement="mb-3">What it does</Heading>
-          <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 list-none p-0 m-0">
+          <ul role="list" className="grid gap-x-6 gap-y-3 sm:grid-cols-2 list-none p-0 m-0">
             {FEATURES.map((feature) => (
               <li key={feature.name}>
                 <Text variant="strong">{feature.name}</Text>
@@ -60,6 +60,7 @@ export default function AboutPage() {
           <Text variant="muted" placement="mb-3">Released under the MIT licence. Contributions and bug reports are welcome.</Text>
           <div className="flex flex-wrap gap-3 mb-3">
             <ActionLink variant="outlined" href="https://github.com/stiltet/star-exam-companion" newTab>VIEW SOURCE ON GITHUB</ActionLink>
+            <ActionLink variant="outlined" href="https://github.com/stiltet/star-exam-companion" newTab>STAR THE PROJECT ON GITHUB</ActionLink>
             <ActionLink variant="outlined" href="https://github.com/stiltet/star-exam-companion/issues" newTab>REPORT AN ISSUE</ActionLink>
           </div>
           <Text variant="note">

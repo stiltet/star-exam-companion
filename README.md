@@ -133,7 +133,7 @@ One install studies one exam. The exam is a folder under [`exams/`](exams/), and
 you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you get the default,
 `generative-ai-leader`.
 
-| Pack (`QUIZ_EXAM`) | Exam |
+| `QUIZ_EXAM` | Exam |
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
 | `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 8 courses of Google's learning path (`skills.google/paths/4525`, in Google's order) this server can read from its private store; it says **Unfinished** while any are unreadable. Every course is captured from Google Skills as you see it. |
@@ -144,10 +144,10 @@ For all eight Agentic Architect courses (and any private course of any exam), on
 lesson with no AI and no cost:
 
 ```bash
-pnpm --dir quiz reading:crawl
+pnpm reading:crawl
 ```
 
-With no argument it covers every exam on the server; `pnpm --dir quiz reading:crawl <exam>` limits it to one.
+With no argument it covers every exam on the server; `pnpm reading:crawl <exam>` limits it to one.
 It starts a separate headless Chrome for Testing of its own (the one the browser tests already use, on its own
 profile folder, apart from your everyday Chrome), signs in by pressing the browser's **Continue as** button for your saved Google
 account when Google Skills offers it, or else the site's **Sign in** and **Sign in with Google** buttons, and closes it when it ends. A lesson delivered as a PDF is read too: the command fetches it in memory and extracts its text. The first time only, sign in to Google Skills once in a
@@ -158,7 +158,7 @@ progress, and ends with one verdict per course: complete and current, complete b
 incomplete (what). A video lesson is listed in its place and saved by its title only: the command never opens a video page (that would play it and mark it
 watched) and keeps no transcript, and Read Aloud gives it a **Watch the video** button that opens it on Google Skills. It keeps a manifest per course, with lesson titles, addresses and hashes but never text, beside
 the saved readings, so the next run reports lessons added, removed or reordered and any address or text that
-changed. `pnpm --dir quiz reading:list <exam>` prints which lessons are saved against that manifest. Read Aloud's
+changed. `pnpm reading:list <exam>` prints which lessons are saved against that manifest. At the end of a run that was not stopped, the crawl removes, for good, the saved copy of any lesson Google no longer lists in every course that finished with a complete list and no card left unread (`pnpm reading:prune [<exam>] --dry-run` lists them first; copy the private folder to keep them). A course with a card the crawl could not read keeps every saved lesson, and its report line says so on every run. Read Aloud's
 **Unfinished** note says how to finish, and [`skills/capture-reading/SKILL.md`](skills/capture-reading/SKILL.md)
 has the steps, including the exact Chrome start command, for a person or for any AI tool that can run commands.
 **Use a secondary Google account for the capture, not the one you study with.** Google Skills counts a lesson as completed when
@@ -176,7 +176,7 @@ account is the one you asked for", when another account is signed in, when the s
 unset: `READING_SITE` and `READING_FRAME_HOSTS` decide which hosts the signed-in session is sent to.
 
 To add a new exam, use the `/add-exam <exam name>` skill ([`skills/add-exam/SKILL.md`](skills/add-exam/SKILL.md)). It lists the
-exam's Google Skills learning path in Google's order with `pnpm --dir quiz reading:path <address>` (which prints the courses, or with
+exam's Google Skills learning path in Google's order with `pnpm reading:path <address>` (which prints the courses, or with
 `--json` the whole `courses.json`), creates the exam, runs the crawl for it, and then writes the glossary, voice scenes, study
 topics and practice questions from official Google sources, one stage at a time, each ending with `node --test`. Anything with no
 official source is left out and named as unfinished, never invented.
@@ -232,19 +232,19 @@ If a device cannot update its older offline worker after a switch, it says so an
 it does not quietly reopen the previous exam.
 
 `QUIZ_EXAM` sets the exam a fresh install starts with, before anything is chosen. Set it for the
-build and for the start. Replace `PACK` with a name from the list:
+build and for the start. Replace `EXAM` with a name from the list:
 
 ```bash
-QUIZ_EXAM=PACK pnpm build
+QUIZ_EXAM=EXAM pnpm build
 ```
 
 ```bash
-QUIZ_EXAM=PACK pnpm start:local
+QUIZ_EXAM=EXAM pnpm start:local
 ```
 
-For development, `QUIZ_EXAM=PACK pnpm dev:local`
+For development, `QUIZ_EXAM=EXAM pnpm dev:local`
 serves the same exam. If you run the quiz as a login service ([full local setup](#full-local-setup)),
-put `QUIZ_EXAM=PACK` in `quiz/.env.local`, then build and restart. Your answers stay separate for
+put `QUIZ_EXAM=EXAM` in `quiz/.env.local`, then build and restart. Your answers stay separate for
 each exam, so switching never mixes them.
 
 Missing your exam? An exam is a folder of data, with no code to change: see

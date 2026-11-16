@@ -55,14 +55,20 @@ const newId = (): string => (typeof crypto.randomUUID === "function" ? crypto.ra
 export function BackButton() {
   const pathname = usePathname()
   const router = useRouter()
-  // The entry the page is on, and whether the next new entry is a move up a level (it has no entry before it).
+  // The entry the page is on, and the path a move up a level is heading for (the entry it opens has no
+  // entry before it). It only counts for the entry that opens at that path, so a stale one is harmless.
   const current = useRef<string | null>(null)
-  const goingUp = useRef(false)
+  const goingUp = useRef<string | null>(null)
+  // A scroll that has not been saved yet: it names the entry it happened on, so a move before the save
+  // cannot write it onto the next page.
+  const pending = useRef<{ id: string; y: number } | null>(null)
+  const scrollTimer = useRef(0)
   // True while the restorer holds the scroll, so a scroll it causes, or the page growing, is not saved.
   const holding = useRef(false)
   const restoring = useRef(0)
   // A tap on Back is not answered again until the move it made has happened.
   const tapped = useRef(false)
+  const tapTimer = useRef(0)
   const standalone = useStandalone()
 
   // Names the entry the page is on. One without an id is new: a move forward by a link or the router,
@@ -89,19 +95,33 @@ export function BackButton() {
         // Without storage Back goes up a level.
       }
     }
-    writeEntry(id, { prev: goingUp.current ? null : before, scroll: 0 })
-    goingUp.current = false
+    const movedUp = goingUp.current !== null && window.location.pathname === goingUp.current
+    writeEntry(id, { prev: movedUp ? null : before, scroll: 0 })
+    goingUp.current = null
     window.history.replaceState({ ...(window.history.state as object | null), [ENTRY_STATE_KEY]: id }, "")
     current.current = id
     rememberLast(id)
     return id
   }
 
+  const currentScrollY = () => Math.max(0, Math.round(window.scrollY))
+
+  const flushScroll = () => {
+    window.clearTimeout(scrollTimer.current)
+    const p = pending.current
+    pending.current = null
+    if (!p) return
+    writeEntry(p.id, { ...(readEntry(p.id) ?? { prev: null, scroll: 0 }), scroll: p.y })
+  }
+
   const save = () => {
+    // A click, a page hide or a move away saves at once, and a scroll waiting to be saved is dropped.
+    window.clearTimeout(scrollTimer.current)
+    pending.current = null
     const id = sync()
     if (!id || holding.current) return
     const entry = readEntry(id) ?? { prev: null, scroll: 0 }
-    writeEntry(id, { ...entry, scroll: Math.max(0, Math.round(window.scrollY)) })
+    writeEntry(id, { ...entry, scroll: currentScrollY() })
   }
 
   const restore = (target: number) => {
@@ -152,16 +172,19 @@ export function BackButton() {
         if (entry) restore(entry.scroll)
       }
     }
-    let frame = 0
+    // Saved when the scroll rests, not on every frame, and onto the entry it happened on.
     const onScroll = () => {
-      if (frame) return
-      frame = window.requestAnimationFrame(() => {
-        frame = 0
-        save()
-      })
+      if (holding.current) return
+      const id = sync()
+      if (!id) return
+      pending.current = { id, y: currentScrollY() }
+      window.clearTimeout(scrollTimer.current)
+      scrollTimer.current = window.setTimeout(flushScroll, 150)
     }
     const onPop = () => {
       if (!readStandalone()) return
+      // A scroll waiting to be saved belongs to the page just left: save it before the move is read.
+      flushScroll()
       tapped.current = false
       const id = sync()
       const entry = id ? readEntry(id) : null
@@ -176,7 +199,8 @@ export function BackButton() {
     window.addEventListener("pagehide", save)
     document.addEventListener("visibilitychange", onHide)
     return () => {
-      window.cancelAnimationFrame(frame)
+      flushScroll()
+      window.clearTimeout(tapTimer.current)
       window.removeEventListener("scroll", onScroll)
       document.removeEventListener("click", save, true)
       window.removeEventListener("popstate", onPop)
@@ -205,14 +229,17 @@ export function BackButton() {
         // A double tap is one Back, not two.
         if (tapped.current) return
         tapped.current = true
-        window.setTimeout(() => { tapped.current = false }, 800)
+        // Cleared when the page it moved to is reached (the pathname effect) or on popstate. This is only a
+        // safety net for a move that never happens, and is long enough for a slow push.
+        window.clearTimeout(tapTimer.current)
+        tapTimer.current = window.setTimeout(() => { tapped.current = false }, 2000)
         const id = sync()
         const entry = id ? readEntry(id) : null
         if (entry?.prev) return router.back()
         // Going up is not a move back through history: the page it opens counts as opened directly,
         // so the next Back goes up again instead of bouncing between the two pages.
-        goingUp.current = true
-        window.setTimeout(() => { goingUp.current = false }, 800)
+        // sync reads it when the page at that path opens, however long the push takes.
+        goingUp.current = up
         router.push(up)
       }}
       className="round-float fixed bottom-8 left-8 z-50 flex size-11 items-center justify-center bg-black text-white shadow-lg ring-1 ring-white/20 active:scale-95"

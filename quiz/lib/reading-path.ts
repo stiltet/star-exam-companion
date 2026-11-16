@@ -1,5 +1,5 @@
-// The logic behind `pnpm --dir quiz reading:path`: turning what a Google Skills learning-path page lists into the courses an exam
-// exam needs. The command (scripts/reading-path.mts) holds the browser; nothing here touches one.
+// The logic behind `pnpm reading:path`: turning what a Google Skills learning-path page lists into the courses an exam
+// needs. The command (scripts/reading-path.mts) holds the browser; nothing here touches one.
 
 // A card as the learning-path page lists it.
 export type PathCard = { type: string; title: string; href: string }

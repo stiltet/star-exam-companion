@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import test from "node:test"
+import { browserTest as test } from "./browser-test.ts"
 import { startFakeSite, type FakeSite } from "./fake-lesson-site.ts"
 import { BUNDLE_BASE } from "./reading-path.ts"
 import { testRoot } from "./test-pack.ts"
@@ -120,6 +120,6 @@ test("the path command lists a learning path's courses in Google's order, as tex
   await t.test("an address that is not a learning path is refused with the usage line, before any browser starts", async () => {
     const run = await runPath(profile, site, ["https://evil.example/paths/4525"])
     assert.equal(run.code, 2)
-    assert.match(run.err, /Usage: pnpm --dir quiz reading:path/)
+    assert.match(run.err, /Usage: pnpm reading:path/)
   })
 })

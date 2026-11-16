@@ -1,4 +1,4 @@
-// pnpm --dir quiz reading:crawl [<exam>|all]
+// pnpm reading:crawl [<exam>|all]
 //
 // Saves the lessons of every private course of every exam (or of one named exam) as private readings. No AI, no tokens:
 // it uses a separate Chrome for Testing on its own profile folder (never the user's everyday Chrome), started headless by
@@ -11,6 +11,7 @@ import { describeError, maskAddress } from "../lib/debug-log.ts"
 import { cleanLessonText } from "../lib/lesson-text.ts"
 import { looksLikePdf, pdfText } from "../lib/pdf-text.ts"
 import { privateReadingRoot, readPrivateReadings, savePrivateReading } from "../lib/private-reading.ts"
+import { pruneFinishedCourses } from "../lib/reading-prune.ts"
 import {
   LISTING_VERSION,
   compareLessons,
@@ -42,6 +43,12 @@ const SETTLE_MS = Number(process.env.READING_SETTLE_MS ?? 2_000)
 const MIN_WATCH_MS = Number(process.env.READING_MIN_WATCH_MS ?? 3_500)
 const EMPTY_AFTER_MS = Number(process.env.READING_EMPTY_AFTER_MS ?? 6_000)
 const MAX_WATCH_MS = 25_000
+// A course page fills in its cards after it loads. Its list is trusted only once the count of cards is the same on two reads this far
+// apart; if it is still changing after the longest wait, the course is reported as unsettled and nothing is pruned for it.
+const LIST_SETTLE_MS = Number(process.env.READING_LIST_SETTLE_MS ?? 1_500)
+const LIST_MAX_MS = Number(process.env.READING_LIST_MAX_MS ?? 30_000)
+// How long the first card may take to appear at all; a page that shows none in that time is not trusted either.
+const LIST_FIRST_CARD_MS = Number(process.env.READING_LIST_WAIT_MS ?? 30_000)
 
 const args = process.argv.slice(2)
 const target = args.find((arg) => !arg.startsWith("--")) ?? "all"
@@ -92,9 +99,29 @@ function privateCourses(): { examId: string; title: string; selected: boolean; c
 // The lessons the course page lists, in order: its html_bundle, link and document cards. An address is made stable by dropping the
 // per-person session number, so a manifest from one run compares with the next. The other cards (labs, videos, quizzes) hold no
 // reading; they are counted by kind so a course with nothing to read can say what it holds instead.
-async function listLessons(page: Page, template: string): Promise<{ lessons: Lesson[]; other: string }> {
+async function listLessons(page: Page, template: string): Promise<{ lessons: Lesson[]; other: string; settled: boolean; notRead: string[] }> {
   await page.goto(`${SITE}/course_templates/${template}`, { waitUntil: "domcontentloaded", timeout: 60_000 })
-  await page.waitForSelector("ql-activity-card", { timeout: 30_000 }).catch(() => {})
+  await page.waitForSelector("ql-activity-card", { timeout: LIST_FIRST_CARD_MS }).catch(() => {})
+  // The first card appearing does not mean the rest have: the count must be the same on three reads in a row, LIST_SETTLE_MS apart,
+  // and above zero (a page that shows no card at all has not loaded). Otherwise the list may be short and is not trusted.
+  let settled = false
+  let count = -1
+  let agreeing = 0
+  const giveUpAt = Date.now() + LIST_MAX_MS
+  for (;;) {
+    const now = await page.evaluate(() => document.querySelectorAll("ql-activity-card").length)
+    if (now === count && now > 0) agreeing += 1
+    else {
+      agreeing = 0
+      count = now
+    }
+    if (agreeing >= 2) {
+      settled = true
+      break
+    }
+    if (Date.now() >= giveUpAt) break
+    await sleep(LIST_SETTLE_MS)
+  }
   const cards = await page.evaluate(() =>
     [...document.querySelectorAll("ql-activity-card")].map((card) => ({
       type: card.getAttribute("type") ?? "",
@@ -106,23 +133,30 @@ async function listLessons(page: Page, template: string): Promise<{ lessons: Les
   // A video card is listed in its place among the readings. Its page is never opened (that would play it and mark it watched):
   // it is saved by its title, and Read Aloud gives it a button that opens it on Google Skills.
   const videoOf = (href: string): string | null => /\/video\/(\d+)/.exec(href)?.[1] ?? null
-  const lessons: Lesson[] = cards
-    .filter((card) => reading.has(card.type) || videoOf(card.href) !== null)
-    .map((entry): Lesson => {
-      const video = videoOf(entry.href)
-      if (video !== null) return { title: entry.title.trim(), href: `/course_templates/${template}/video/${video}`, kind: "video" }
-      // Some courses list their lessons as html bundles, others as documents; both open a page that embeds the reading.
-      const found = /\/(html_bundles|documents)\/(\d+)/.exec(entry.href)
-      return { title: entry.title.trim(), href: found ? `/course_templates/${template}/${found[1]}/${found[2]}` : "" }
-    })
-    .filter((lesson) => lesson.title !== "" && lesson.href !== "")
+  // A card whose link is a lesson page counts as a lesson card whatever its type, so a renamed type cannot hide one.
+  const lessonShaped = (href: string): boolean => /\/(html_bundles|documents)\/\d+/.test(href)
+  const readingCards = cards.filter((card) => reading.has(card.type) || videoOf(card.href) !== null)
+  const made = readingCards.map((entry) => {
+    const video = videoOf(entry.href)
+    if (video !== null) return { entry, lesson: { title: entry.title.trim(), href: `/course_templates/${template}/video/${video}`, kind: "video" } as Lesson }
+    // Some courses list their lessons as html bundles, others as documents; both open a page that embeds the reading.
+    const found = /\/(html_bundles|documents)\/(\d+)/.exec(entry.href)
+    return { entry, lesson: { title: entry.title.trim(), href: found ? `/course_templates/${template}/${found[1]}/${found[2]}` : "" } as Lesson }
+  })
+  const lessons: Lesson[] = made.filter(({ lesson }) => lesson.title !== "" && lesson.href !== "").map(({ lesson }) => lesson)
+  // Cards that look like lessons but are not read (no title, a link not in the expected place or shape, or a type not known as a reading) are
+  // named, and while any exists the course is not trusted to say what Google no longer lists, so nothing is pruned for it.
+  const notRead = [
+    ...made.filter(({ lesson }) => lesson.title === "" || lesson.href === "").map(({ entry }) => entry.title.trim() || "(untitled)"),
+    ...cards.filter((card) => !reading.has(card.type) && videoOf(card.href) === null && lessonShaped(card.href)).map((card) => card.title.trim() || "(untitled)"),
+  ]
   const kinds = new Map<string, number>()
   for (const card of cards) {
     if (reading.has(card.type) || videoOf(card.href) !== null || card.type === "" || card.type === "credential" || card.type === "survey") continue
     kinds.set(card.type, (kinds.get(card.type) ?? 0) + 1)
   }
   const other = [...kinds].map(([type, count]) => `${count} ${type}${count === 1 ? "" : "s"}`).join(", ")
-  return { lessons, other }
+  return { lessons, other, settled, notRead }
 }
 
 // A lesson's reading is the page of the frame the lesson embeds, from the site's public lesson storage.
@@ -258,6 +292,7 @@ async function main(): Promise<void> {
   const { page, context } = opened
   closeBrowser = opened.close
   const summaries: CourseSummary[] = []
+  const finishedCourses: { examId: string; courseId: string }[] = []
   try {
     process.stdout.write(say("dim", "Signing in to Google Skills (this can take up to half a minute)...") + "\n")
     await acceptOfferedSignIn(page, context)
@@ -274,25 +309,28 @@ async function main(): Promise<void> {
       stopping = true
     }
     // List every course first, so the total is known before anything is saved.
-    const listed: { examId: string; course: PrivateCourse; lessons: Lesson[]; other: string }[] = []
+    const listed: { examId: string; course: PrivateCourse; lessons: Lesson[]; other: string; settled: boolean; notRead: string[] }[] = []
     if (!stopping) for (const entry of work) listed.push({ ...entry, ...(await listLessons(page, entry.course.template)) })
     state.total = listed.reduce((sum, entry) => sum + entry.lessons.length, 0)
-    for (const entry of listed) log("list.course", { course: entry.course.id, title: entry.course.title, lessons: entry.lessons.length, other: entry.other })
+    for (const entry of listed) log("list.course", { course: entry.course.id, title: entry.course.title, lessons: entry.lessons.length, other: entry.other, settled: entry.settled, notRead: entry.notRead.length })
     log("run.listed", { courses: listed.length, lessons: state.total })
     if (stopping) {
       // Already stopped: the signed-in account is not the wanted one, so nothing is listed or opened.
-    } else if (state.total === 0) {
+    } else if (state.total === 0 && !listed.some((entry) => entry.notRead.length > 0)) {
       // No course lists a lesson: most likely the browser is not signed in, so each course is named as an error.
       for (const entry of listed) logLine(say("red", `✖ ${entry.course.id}. ${entry.course.title}: the site lists no lessons for it.`))
       stoppedBecause = "the site lists no lessons"
       stopping = true
+    } else if (state.total === 0) {
+      logLine(say("yellow", "No lesson can be read: every lesson-like card is one the crawl cannot read (named in the report)."))
+      logLine("")
     } else {
       logLine(`Checking ${say("bold", String(state.total))} lessons in ${listed.length} course(s), pausing 2 to 15 s between pages. Ctrl-C stops it safely.`)
       logLine("")
     }
 
     lessonsStarted = true
-    for (const { examId, course, lessons, other } of listed) {
+    for (const { examId, course, lessons, other, settled, notRead } of listed) {
       if (stopping) break
       const file = manifestFile(privateReadingRoot(), examId, course.id)
       const previous = await readManifest(file)
@@ -306,7 +344,7 @@ async function main(): Promise<void> {
       const savedByTitle = new Map<string, (typeof saved)[number][]>()
       for (const record of saved) savedByTitle.set(record.title, [...(savedByTitle.get(record.title) ?? []), record])
       const claimed = new Set<string>()
-      const outcome: CourseResult = { listed: lessons.length, saved: 0, already: 0, empty: [], failed: [], textChanged: [], unaccounted: [], comparison }
+      const outcome: CourseResult = { listed: lessons.length, saved: 0, already: 0, empty: [], failed: [], textChanged: [], unaccounted: [], unsettled: !settled, notRead, comparison }
       const entries: ManifestLesson[] = []
       state.course = `${course.id}. ${course.title}`
 
@@ -392,15 +430,17 @@ async function main(): Promise<void> {
         }
         log("lesson.done", { course: course.id, n: state.page, of: state.total, title: lesson.title, outcome: outcomeName, chars, ms: Date.now() - lessonStarted })
         entries.push({ ...lesson, pageId, hash })
-        const manifest: Manifest = { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
+        const manifest: Manifest = { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, complete: false, lessons: entries.concat(lessons.slice(entries.length).map((rest) => ({ ...rest, pageId: lessonPageId(rest.href), hash: null }))) }
         await writeManifest(file, manifest)
         show(true)
         if (!stopping && state.page < state.total && lesson.kind !== "video") await pause()
       }
 
       if (stopping) break
-      await writeManifest(file, { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, lessons: entries })
-      summaries.push({ id: course.id, title: course.title, result: outcome, noLessons: lessons.length === 0 ? other || "nothing to read" : undefined })
+      await writeManifest(file, { checkedAt: new Date().toISOString(), listing: LISTING_VERSION, complete: settled && notRead.length === 0, lessons: entries })
+      summaries.push({ id: course.id, title: course.title, result: outcome, noLessons: lessons.length === 0 && settled && notRead.length === 0 ? other || "nothing to read" : undefined })
+      if (settled && notRead.length === 0) finishedCourses.push({ examId, courseId: course.id })
+      else log("list.untrusted", { course: course.id, lessons: lessons.length, settled, notRead: notRead.length })
     }
   } finally {
     await opened.close()
@@ -410,8 +450,25 @@ async function main(): Promise<void> {
   const report = finalReport({ courses: summaries, stopped: stoppedBecause, page: state.page, total: state.total, elapsedMs: Date.now() - startedAt }, colour, (process.stdout.columns || 80) - 1)
   console.log("")
   console.log(report)
+  // Always at the end of a run that was not stopped: a saved copy of a lesson Google no longer lists is removed, so the store matches the
+  // courses as they are now. A course that was stopped part-way, or that lists no lessons, is never pruned (see pruneCourse).
+  if (!stoppedBecause) {
+    const removed: string[] = []
+    for (const entry of await pruneFinishedCourses(finishedCourses)) {
+      if (entry.error !== undefined) {
+        // One course that cannot be pruned (a permission problem, a damaged manifest) must not hide the verdict or skip the others.
+        log("prune.error", { exam: entry.examId, course: entry.courseId, error: entry.error })
+        console.error(say("red", `✖ Could not remove stale saved lessons of ${entry.examId} course ${entry.courseId}: ${entry.error}`))
+        process.exitCode = 1
+        continue
+      }
+      log("prune", { exam: entry.examId, course: entry.courseId, removed: entry.removed.length, skipped: entry.skipped ?? "" })
+      removed.push(...entry.removed.map((title) => `${entry.examId} ${entry.courseId}. ${title}`))
+    }
+    if (removed.length > 0) console.log(`\n${say("yellow", `Removed ${removed.length} saved lesson(s) Google no longer lists:`)}\n${removed.map((line) => `  ${line}`).join("\n")}`)
+  }
   if (tty) process.stdout.write("\x07")
-  if (stoppedBecause || summaries.some((entry) => entry.result.failed.length + entry.result.empty.length > 0 || entry.result.unaccounted.length > 0)) process.exitCode = 1
+  if (stoppedBecause || summaries.some((entry) => entry.result.failed.length + entry.result.empty.length > 0 || entry.result.unaccounted.length > 0 || entry.result.unsettled)) process.exitCode = 1
   if (stoppedBecause) log("stop", { reason: stoppedBecause, page: state.page, of: state.total })
   log("run.end", { exit: process.exitCode ?? 0, elapsedMs: Date.now() - startedAt, saved: state.saved, updated: state.updated, same: state.same, empty: state.empty, failed: state.failed })
   if (logPath()) console.log(`\n${say("dim", "Log:")} ${logPath()}`)

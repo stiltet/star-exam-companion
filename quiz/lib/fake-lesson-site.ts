@@ -5,6 +5,9 @@ import { makePdf } from "./test-pdf.ts"
 // A small local site that looks, to the reading crawl, like the course pages of Google Skills: a course page that lists lesson
 // cards, lesson pages that embed the reading in a frame, and the frames. Every title and text is made up by the test.
 
+// The card type a lesson is listed under, where it is not the usual html_bundle (documents and PDFs are listed as links).
+const CARD_TYPE: Record<string, string> = { document: "link", pdf: "link", "odd-type": "html_bundle_v2", "credential-type": "credential" }
+
 // How long a drop-first lesson refuses every request after its first one.
 const DROP_WINDOW_MS = 150
 
@@ -13,8 +16,10 @@ export type FakeLesson = {
   // bundle and document: a lesson page whose frame holds the text, listed as an html bundle or as a document.
   // settle: the text changes shortly after the frame loads, as the real ones do.
   // pdf: the frame is a PDF. notext: the frame holds almost no text.
+  // credential-type: listed as a credential card but with a lesson link.
+  // odd-type: listed as a lesson card of a type the crawl does not know (html_bundle_v2), with a lesson link.
   // drop-first: every request for the lesson page in the first moments is cut off, so the crawl has to try again.
-  kind?: "bundle" | "document" | "settle" | "pdf" | "notext" | "drop-first"
+  kind?: "bundle" | "document" | "settle" | "pdf" | "notext" | "drop-first" | "odd-type" | "credential-type"
   // One line, so the text a page shows is exactly this text.
   text: string
 }
@@ -27,6 +32,10 @@ export type FakeSite = {
   port: number
   // True: every lesson page sends the visitor to the sign-in page, as a signed-out visitor is.
   signedOut: boolean
+  // A course page that sends only its first card and adds the others this many milliseconds after it loads, as the real page fills in.
+  slowCards: { template: string; afterMs: number } | null
+  // Lesson pages of these course templates send the visitor to sign in, as if the session ended part-way through a run.
+  signedOutTemplates: string[]
   // The addresses the account settings page shows (one, as the real page does, unless a test says otherwise).
   addresses: string[]
   // How many times a video page was opened.
@@ -60,8 +69,9 @@ export function jsonForScript(value: string): string {
 export type FakePath = { title: string; cards: { type: string; title: string; template?: string }[] }
 
 // courses: the cards of each course page, by course template number. paths: the learning-path pages, by path number.
-export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: Record<string, FakePath> = {}): Promise<FakeSite> {
-  let nextId = 1000
+// firstId is where lesson numbers start, so a second site in one test can give the same lessons other numbers, as a changed course would.
+export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: Record<string, FakePath> = {}, firstId = 1000): Promise<FakeSite> {
+  let nextId = firstId
   type Entry = { id: number; template: string; lesson: FakeLesson; hits: number; firstHitAt?: number }
   const lessons = new Map<string, Entry>()
   const pages = new Map<string, { card: FakeCard; id: number | null }[]>()
@@ -80,6 +90,8 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
     url: "",
     port: 0,
     signedOut: false,
+    slowCards: null,
+    signedOutTemplates: [],
     addresses: ["synthetic.user@example.test"],
     videoPagesOpened: 0,
     setText(title, text) {
@@ -125,11 +137,15 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
         if ("video" in card) return `<ql-activity-card type="video" name="${escapeHtml(card.title)}"><a href="/course_sessions/7/video/${id}">${escapeHtml(card.title)}</a></ql-activity-card>`
         const lesson = card as FakeLesson
         const document = lesson.kind === "document" || lesson.kind === "pdf"
-        const type = document ? "link" : "html_bundle"
+        const type = CARD_TYPE[lesson.kind ?? "bundle"] ?? (document ? "link" : "html_bundle")
         const href = `/course_sessions/7/${document ? "documents" : "html_bundles"}/${id}`
         return `<ql-activity-card type="${type}" name="${escapeHtml(lesson.title)}"><a href="${href}">${escapeHtml(lesson.title)}</a></ql-activity-card>`
-      }).join("\n")
-      return send(response, 200, "text/html", `<html><body><h1>Course</h1>\n${html}\n</body></html>`)
+      })
+      if (site.slowCards?.template === parts[1] && html.length > 1) {
+        const rest = jsonForScript(html.slice(1).join("\n"))
+        return send(response, 200, "text/html", `<html><body><h1>Course</h1>\n${html[0]}\n<script>setTimeout(() => document.body.insertAdjacentHTML("beforeend", ${rest}), ${site.slowCards.afterMs})</script></body></html>`)
+      }
+      return send(response, 200, "text/html", `<html><body><h1>Course</h1>\n${html.join("\n")}\n</body></html>`)
     }
 
     // A video page, which the crawl never opens: opening one plays it and marks it watched.
@@ -143,6 +159,7 @@ export async function startFakeSite(courses: Record<string, FakeCard[]>, paths: 
       if (site.signedOut) return send(response, 302, "text/plain", "", { location: "/users/sign_in" })
       const entry = lessons.get(parts[3])
       if (!entry) return send(response, 404, "text/plain", "No such lesson")
+      if (site.signedOutTemplates.includes(entry.template)) return send(response, 302, "text/plain", "", { location: "/users/sign_in" })
       // Every request in a short window after the first is cut off, however many quiet tries the browser makes of its own, so the failure
       // always reaches the crawl, which then tries again after its own short wait and finds the page back.
       if (entry.lesson.kind === "drop-first") {

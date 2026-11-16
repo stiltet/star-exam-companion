@@ -4,7 +4,7 @@ import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/pr
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import test from "node:test"
+import { browserTest as test } from "./browser-test.ts"
 import { startFakeSite, type FakeCard, type FakeSite } from "./fake-lesson-site.ts"
 import { readPrivateReadings } from "./private-reading.ts"
 import { testRoot } from "./test-pack.ts"
@@ -433,4 +433,277 @@ test("a course whose manifest was made under an older listing rule is not compar
   const log = await readFile(path.join(base, "logs", files[0] as string), "utf8")
   assert.match(log, /compare\.skipped {2}course=1 {2}reason=listing/)
   assert.equal(log.includes("compare.skipped  course=2"), false, "a course with no manifest at all is simply a first run, not a skipped comparison")
+})
+
+test("a finished crawl removes the saved copy of a lesson Google no longer lists, names it, and leaves the other courses alone", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: "Synthetic text of a lesson that stays, long enough to count as a reading." }],
+    "9002": [
+      { title: "Also stays", kind: "bundle", text: "Synthetic text of the second lesson that stays, long enough to count as a reading." },
+      { title: "Goes away", kind: "bundle", text: "Synthetic text of a lesson Google removes later, long enough to count as a reading." },
+    ],
+  })
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: "Synthetic text of a lesson that stays, long enough to count as a reading." }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: "Synthetic text of the second lesson that stays, long enough to count as a reading." }],
+  })
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  const one = await runCrawl(base, first)
+  assert.equal(one.code, 0, one.out)
+  assert.doesNotMatch(one.out, /Removed \d+ saved lesson/)
+  assert.equal((await saved(base, "2")).length, 2)
+  const two = await runCrawl(base, second)
+  assert.equal(two.code, 0, two.out)
+  assert.match(two.out, /Removed 1 saved lesson\(s\) Google no longer lists:\n {2}crawl-test 2\. Goes away/)
+  assert.deepEqual((await saved(base, "2")).map((record) => record.title), ["Also stays"])
+  assert.equal((await saved(base, "1")).length, 1)
+  noLessonText(two, ["Synthetic text of a lesson Google removes later, long enough to count as a reading."])
+})
+
+// The lists a second run is given: the course "2" has lost "Goes away" and, to be a real change, gained "Brand new lesson".
+const KEEP = "Synthetic text of the second lesson that stays, long enough to count as a reading."
+const GONE = "Synthetic text of a lesson Google removes later, long enough to count as a reading."
+const NEW_LESSON = "Synthetic text of a lesson Google adds later, long enough to count as a reading."
+const ONE = "Synthetic text of a lesson that stays, long enough to count as a reading."
+const before = (): Record<string, FakeCard[]> => ({
+  "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+  "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Goes away", kind: "bundle", text: GONE }],
+})
+const after = (): Record<string, FakeCard[]> => ({
+  "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+  "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Brand new lesson", kind: "bundle", text: NEW_LESSON }],
+})
+
+test("a course page that fills in its cards late is read once the count settles, and what it lists is trusted", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite(after(), {}, 2000)
+  second.slowCards = { template: "9002", afterMs: 600 }
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second, { READING_LIST_SETTLE_MS: "1000" })
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /✔ FINISHED: all 3 lessons/, "both cards of the slow course were read")
+  assert.deepEqual((await saved(base, "2")).map((record) => record.title).sort(), ["Also stays", "Brand new lesson"])
+  assert.match(run.out, /Removed 1 saved lesson\(s\) Google no longer lists:\n {2}crawl-test 2\. Goes away/)
+})
+
+test("a course page still changing after the longest wait is reported as unsettled, and nothing is pruned for it", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite(after(), {}, 2000)
+  second.slowCards = { template: "9002", afterMs: 1200 }
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second, { READING_LIST_SETTLE_MS: "1500", READING_LIST_MAX_MS: "3000" })
+  assert.equal(run.code, 1, run.out)
+  assert.match(run.out, /the lesson list may be short: run it again/)
+  assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
+  assert.ok((await saved(base, "2")).some((record) => record.title === "Goes away"), "the lesson missing from the possibly short list is still saved")
+  const manifest = JSON.parse(await readFile(path.join(base, "private", "crawl-test", "2.manifest.json"), "utf8")) as { complete?: boolean }
+  assert.equal(manifest.complete, false, "the manifest of an unsettled listing is not trusted by a later prune")
+})
+
+test("the run after an untrusted run does not blame Google for what the short list missed", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const slow = await startFakeSite(after(), {}, 2000)
+  slow.slowCards = { template: "9002", afterMs: 1200 }
+  const plain = await startFakeSite(after(), {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await slow.close()
+    await plain.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  assert.equal((await runCrawl(base, slow, { READING_LIST_SETTLE_MS: "1500", READING_LIST_MAX_MS: "3000" })).code, 1)
+  const run = await runCrawl(base, plain)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /✔ 2\. Second Course/)
+  assert.doesNotMatch(run.out, /Google changed this course: .*added/, "the baseline of the untrusted run was not used")
+  assert.match(run.out, /Removed 1 saved lesson\(s\) Google no longer lists:\n {2}crawl-test 2\. Goes away/)
+})
+
+test("a run that stops part-way removes nothing, not even from the course it had already finished", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }, { title: "Goes first", kind: "bundle", text: "Synthetic text of a lesson of the first course that Google removes." }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Goes away", kind: "bundle", text: GONE }],
+  })
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Brand new lesson", kind: "bundle", text: NEW_LESSON }],
+  }, {}, 2000)
+  // The session ends while the second course is being read: the first course has finished and has a stale copy, the second stops.
+  second.signedOutTemplates = ["9002"]
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 1, run.out)
+  assert.match(run.out, /■ STOPPED/)
+  assert.match(run.out, /Stale saved lessons are removed only by a full run/)
+  assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
+  assert.ok((await saved(base, "1")).some((record) => record.title === "Goes first"), "the finished course was not pruned either, because the run was stopped")
+  assert.ok((await saved(base, "2")).some((record) => record.title === "Goes away"))
+})
+
+test("a lesson card the crawl cannot read is named, and nothing is removed for its course", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "", kind: "bundle", text: NEW_LESSON }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, "a card that cannot be read is a warning, not a failed run: " + run.out)
+  assert.match(run.out, /✔ FINISHED: all 2 lessons[^\n]*\n {2}! 1 course with unread cards, shown below/, "the warning sits on its own line under the headline")
+  assert.match(run.out, /! not read \(untitled, unknown type or no lesson link\):\n {8}\(untitled\)/)
+  assert.match(run.out, /no saved lesson of this course is removed while they stay unread/)
+  assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
+  assert.match(run.out, /[✔✖] 2\. Second Course/)
+  assert.doesNotMatch(run.out, /[✔✖] 2\. Second Course[\s\S]*Google changed this course/, "an untrusted list is not blamed on Google")
+  assert.ok((await saved(base, "2")).some((record) => record.title === "Goes away"))
+})
+
+test("a lesson-page card of a type the crawl does not know is not ignored: its course is not pruned", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Goes away", kind: "odd-type", text: GONE }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /! not read \(untitled, unknown type or no lesson link\):\n {8}Goes away/)
+  assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
+  assert.ok((await saved(base, "2")).some((record) => record.title === "Goes away"), "Google still lists it, so its copy stays")
+})
+
+test("a course whose only lesson card cannot be read says so, instead of saying it has nothing to read", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "", kind: "bundle", text: NEW_LESSON }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /! not read \(untitled, unknown type or no lesson link\):\n {8}\(untitled\)/)
+  assert.doesNotMatch(run.out, /no readable lessons/)
+  assert.deepEqual((await saved(base, "2")).map((record) => record.title).sort(), ["Also stays", "Goes away"], "nothing was removed")
+})
+
+test("when every course has only unreadable cards the run still finishes, naming them, instead of saying the site lists no lessons", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "", kind: "bundle", text: ONE }, { title: "", kind: "bundle", text: KEEP }],
+    "9002": [{ title: "", kind: "bundle", text: NEW_LESSON }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, run.out)
+  assert.doesNotMatch(run.out, /lists no lessons|STOPPED|all 0 lessons/)
+  assert.match(run.out, /! FINISHED, but no lesson could be read in 2 courses/)
+  assert.match(run.out, /No lesson can be read: every lesson-like card is one the crawl cannot read/)
+  assert.match(run.out, /! 2 courses with unread cards, shown below/)
+  assert.match(run.out, /! not read \(untitled, unknown type or no lesson link\):\n {8}\(untitled\) x2/, "two untitled cards are counted, not shown once")
+  assert.equal((await saved(base, "1")).length, 1, "nothing was removed from the first course")
+  assert.equal((await saved(base, "2")).length, 2, "nothing was removed from the second course")
+})
+
+test("a lesson-page link on a credential card is not ignored: its course is not pruned", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "Goes away", kind: "credential-type", text: GONE }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /! not read \(untitled, unknown type or no lesson link\):\n {8}Goes away/)
+  assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
+  assert.ok((await saved(base, "2")).some((record) => record.title === "Goes away"), "its saved copy stays")
+})
+
+test("a card of an unknown type with no lesson link is deliberately not counted: it cannot hold a saved copy, so the course is still pruned", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({
+    "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }],
+    "9002": [{ title: "Also stays", kind: "bundle", text: KEEP }, { title: "A lab of a new kind", other: "lab_v2" }],
+  }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second)
+  assert.equal(run.code, 0, run.out)
+  assert.doesNotMatch(run.out, /not read/)
+  assert.match(run.out, /Removed 1 saved lesson\(s\) Google no longer lists:\n {2}crawl-test 2\. Goes away/)
+})
+
+test("a course page that shows no card at all is not trusted: it is reported as incomplete", { timeout: 240_000 }, async (t) => {
+  const base = await scratch()
+  const first = await startFakeSite(before())
+  const second = await startFakeSite({ "9001": [{ title: "Stays lesson", kind: "bundle", text: ONE }], "9002": [] }, {}, 2000)
+  t.after(async () => {
+    await first.close()
+    await second.close()
+    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+  })
+  assert.equal((await runCrawl(base, first)).code, 0)
+  const run = await runCrawl(base, second, { READING_LIST_WAIT_MS: "300", READING_LIST_MAX_MS: "300", READING_LIST_SETTLE_MS: "100" })
+  assert.equal(run.code, 1, run.out)
+  assert.match(run.out, /the lesson list may be short/)
+  assert.deepEqual((await saved(base, "2")).map((record) => record.title).sort(), ["Also stays", "Goes away"])
 })
