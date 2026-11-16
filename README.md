@@ -4,7 +4,7 @@
 
 # Star Exam Companion
 
-**An open-source, voice-first study app for any Google Cloud certification exam**
+**An accessible, open-source, voice-first study app for everyone and anything**
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933.svg)](https://nodejs.org)
@@ -35,6 +35,7 @@ below gets everything working.
 ## Contents
 
 - [Why Star Exam Companion](#why-star-exam-companion)
+- [Accessible and neuro-friendly](#accessible-and-neuro-friendly)
 - [Features](#features)
 - [How it works](#how-it-works)
 - [Requirements](#requirements)
@@ -56,6 +57,18 @@ any Google Cloud exam, starting with that one and Professional Agentic Architect
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
+
+## Accessible and neuro-friendly
+
+The app is built to be accessible and neuro-friendly, so that anyone can study with it:
+
+- **Voice first.** You can listen and answer by tapping, without reading long text. Read Aloud reads lessons sentence by
+  sentence, with a night-reading mode.
+- **One thing at a time.** Practice shows one question at a time, in a plain, minimal interface.
+- **Checked for accessibility.** The browser tests scan the main pages with axe for WCAG 2.1 level A and AA violations in Chromium at
+  375 px, the lowest phone width.
+- **Honest about the limits.** A scan finds only what a machine can see. It does not cover keyboard or screen-reader use,
+  the course lesson pages, or most study topics, so those still need checking by hand. If something blocks you, [report an issue](https://github.com/stiltet/star-exam-companion/issues).
 
 ## Features
 
@@ -517,6 +530,10 @@ unused port:
 ```bash
 QUIZ_E2E_PORT=47824 pnpm e2e
 ```
+
+The browser suite also scans the main pages, one study section and topic, and the open menu, the saving panel, an answered question, the voice
+quiz and its offline state, with axe for WCAG 2.1 level A and AA violations at 375 px (`quiz/e2e/a11y.spec.ts`).
+A scan finds only what a machine can see, so keyboard and screen-reader use are not covered and still need checking by hand.
 
 Chromium runs the pages and WebKit (iPhone Safari's engine) runs the offline and installed-app Back tests, both at 375 px, the lowest phone width. The tests cover page rendering, voice answers,
 practice filters, exam resume and submission, flashcards, glossary links, study navigation, reading navigation, progress,
