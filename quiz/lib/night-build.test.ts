@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, CLIPS_DIR, UNKNOWN_VOICE, UNSTABLE_VOICE, voiceFingerprint, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, CLIPS_DIR, UNKNOWN_VOICE, VOICE_FILE, UNSTABLE_VOICE, voiceFingerprint, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
 import { savePrivateReading } from "./private-reading.ts"
@@ -560,5 +560,41 @@ test("a build that stopped because the voice could not be identified is tried ag
   const ready = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
   assert.equal(ready.state, "ready")
   assert.deepEqual(spoken, ["One.", "Two."])
-  assert.equal(readFileSync(path.join(dir, "voice"), "utf8"), VOICE_A)
+  assert.equal(readFileSync(path.join(dir, VOICE_FILE), "utf8"), VOICE_A)
+})
+
+test("a build that needs no speech and has no remembered voice asks for it once, then remembers it", async () => {
+  const dir = path.join(scratch, "voice-forgotten")
+  const spoken: string[] = []
+  const first = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
+  rmSync(path.join(dir, VOICE_FILE))
+  writeFileSync(path.join(dir, first.key, "manifest.json"), "{\"version\":1,")
+  let asked = 0
+  const ask = async () => {
+    asked += 1
+    return VOICE_A
+  }
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: ask })
+  assert.equal(asked, 1, "with no voice remembered the clips cannot be found without it")
+  assert.deepEqual(spoken, ["One.", "Two."], "the clips found under the same voice are not spoken again")
+  assert.equal(readFileSync(path.join(dir, VOICE_FILE), "utf8"), VOICE_A)
+})
+
+test("a build that needs no speech still deletes the clips no reading uses, under the remembered voice", async () => {
+  const dir = path.join(scratch, "voice-settled-prune")
+  const spoken: string[] = []
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
+  const onlyOne = [parts[0] as NightPart]
+  let asked = 0
+  await buildRecording({
+    dir, parts: onlyOne, render: speak(spoken), encode: encodeStub, canPrune: async () => true,
+    voice: async () => {
+      asked += 1
+      return VOICE_A
+    },
+  })
+  assert.equal(asked, 0, "every clip of the remaining reading is there, so the voice is not asked for")
+  assert.deepEqual(spoken, ["One.", "Two."])
+  assert.equal(exists(clipFile(dir, "One.", VOICE_A)), true)
+  assert.equal(exists(clipFile(dir, "Two.", VOICE_A)), false, "the clip of the reading that is gone is deleted")
 })

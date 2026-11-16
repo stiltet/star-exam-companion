@@ -49,14 +49,14 @@ export function clipFile(dir: string, script: string, voice = ""): string {
 // System voice (`say` is run with no -v), so the voice is known by its sound: the hash of this sentence spoken twice. A `say` that fails or
 // is slow is UNKNOWN_VOICE, and the build then stops with a plain message and tries again later, so a clip is never named for a voice that
 // was not identified. A voice that gives two different hashes is UNSTABLE_VOICE: voices are then not told apart, so a recording can hold two
-// voices, and nothing is deleted. The voice is asked for only when a clip must be spoken (see buildRecording), and an identified voice is
-// remembered in the night folder, so a restart or a damaged manifest that needs no speech never runs `say`.
+// voices, and nothing is deleted. The voice is asked for only when a clip must be spoken or none is remembered yet (see buildRecording), and
+// an identified voice is remembered in the night folder, so a restart or a damaged manifest that needs no speech never runs `say`.
 export const UNKNOWN_VOICE = "unknown"
 export const UNSTABLE_VOICE = "unstable"
 const VOICE_PROBE = "Night reading voice check."
 const PROBE_TIMEOUT_MS = 10_000
 export const REAL_VOICE = /^[0-9a-f]{64}$/
-const VOICE_FILE = "voice"
+export const VOICE_FILE = "voice"
 export async function voiceFingerprint(render: (text: string, file: string) => Promise<boolean> = (text, file) => renderSpeech(text, file, PROBE_TIMEOUT_MS)): Promise<string> {
   const folder = await mkdtemp(path.join(tmpdir(), "star-night-voice-"))
   try {
@@ -207,8 +207,9 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   await chmod(clipFolder, 0o700).catch(() => undefined)
   const have = async (file: string) => (await stat(file).then((info) => info.size, () => 0)) > 0
   const pairsFor = (voice: string) => deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
-  // The voice is asked for only when a clip must be spoken. Every clip already there under the remembered voice means no speech is needed,
-  // so a restart or a damaged manifest never runs `say`, and a Mac that cannot be asked cannot stop such a build.
+  // The voice is asked for only when a clip must be spoken or no voice is remembered yet (the first build, or a night folder that was cleared).
+  // Every clip already there under the remembered voice means no speech is needed, so a restart or a damaged manifest never runs `say`, and a
+  // Mac that cannot be asked cannot stop such a build. A remembered voice may have gone stale (the owner changed it), which only costs a re-speak.
   const voiceFile = path.join(deps.dir, VOICE_FILE)
   let voice = ""
   let identified = !deps.voice
@@ -221,7 +222,11 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
       if (voice === UNKNOWN_VOICE) throw new Error("The Mac could not identify its voice. Try again.")
       // Only a voice identified now may delete a clip: an unstable one cannot tell old clips from new.
       identified = REAL_VOICE.test(voice)
+      // A voice that cannot be written down still builds the recording; the next build that needs speech just asks again.
       if (identified) await writeFile(voiceFile, voice).catch(() => undefined)
+    } else {
+      // Every clip is there under a voice that was identified in an earlier build, so clips no reading uses can be deleted too.
+      identified = true
     }
   }
   const pairs = pairsFor(voice)
