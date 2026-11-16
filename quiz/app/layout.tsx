@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from "next"
 import { BackButton } from "@/components/back-button"
 import { DevBadgeStyle } from "@/components/dev-badge-style"
 import { PullToRefresh } from "@/components/pull-to-refresh"
+import { NavProgress } from "@/components/nav-progress"
+import { PageGate } from "@/components/page-gate"
 import "./globals.css"
 import { activePack } from "@/lib/pack"
 import { OutboxSender } from "@/components/outbox"
@@ -59,15 +61,17 @@ export default async function RootLayout({
     // next-themes sets the theme class on <html> before React loads, so the server's copy differs.
     <html lang="en" suppressHydrationWarning data-exam={pack.id}>
       <body>
+        <noscript><style>{".page-loading{display:none}[data-page-ready]{visibility:visible!important}"}</style></noscript>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange enableColorScheme={false} storageKey="quiz-theme">
           <DemoBanner />
-          {children}
+          <PageGate>{children}</PageGate>
           <BackButton />
           <DevBadgeStyle />
           <OutboxSender />
           <OfflineShell />
           <SnapshotPrefetch />
           <AudioUnlock />
+          <NavProgress />
           <PullToRefresh />
           <InstallHint />
         </ThemeProvider>
