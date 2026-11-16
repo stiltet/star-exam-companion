@@ -155,7 +155,7 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
                 href={question.officialDoc}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-muted-foreground"
+                className="text-sm text-muted-foreground break-all"
               >
                 [OFFICIAL DOC] → {question.officialDoc}
               </a>
