@@ -16,7 +16,7 @@ test("Progress displays a saved answer and reset clears scratch scores", async (
   await page.getByRole("button", { name: "Reset progress", exact: true }).click()
   // The question names the exam being reset, so nobody clears the wrong one.
   await expect(page.getByRole("alertdialog").getByRole("heading")).toHaveText("Reset all progress for Generative AI Leader?")
-  await expect(page.getByRole("alertdialog")).toContainText("Every Voice Quiz, Practice, Exam, Flashcards and Read Aloud result for Generative AI Leader is cleared")
+  await expect(page.getByRole("alertdialog")).toContainText("Every Voice Quiz, Practice, Test exam, Flashcards and Read Aloud result for Generative AI Leader is cleared")
   const reset = page.waitForResponse("**/api/scores/reset")
   const reloaded = page.waitForEvent("framenavigated", (frame) => frame === page.mainFrame())
   await page.getByRole("alertdialog").getByRole("button", { name: "Reset progress", exact: true }).click()

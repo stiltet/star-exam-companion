@@ -94,7 +94,7 @@ export function ExamSwitcher({ exams, current }: Props) {
           <DialogHeader>
             <DialogTitle>Switch every device to {title(target)}?</DialogTitle>
             <DialogDescription>
-              Study, Practice, Voice Quiz, the Exam, Flashcards and Progress all show {title(target)} from now on, on every device. {title(current)} keeps its scores and comes back as you left it when you switch back. A device that is offline changes the next time it reaches the Mac.
+              Study, Practice, Voice Quiz, the Test exam, Flashcards and Progress all show {title(target)} from now on, on every device. {title(current)} keeps its scores and comes back as you left it when you switch back. A device that is offline changes the next time it reaches the Mac.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

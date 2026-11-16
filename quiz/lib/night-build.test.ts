@@ -507,6 +507,19 @@ test("a recording that is already ready still deletes the clips no reading uses 
   assert.equal(spoken.length, before, "the ready recording is served as it is")
 })
 
+test("a ready recording tidies up under the remembered voice: the clips of that voice in use stay and the unused one goes", async () => {
+  const dir = path.join(scratch, "ready-prune-voice")
+  const spoken: string[] = []
+  const voice = async () => VOICE_A
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice })
+  await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice })
+  assert.equal(exists(clipFile(dir, "Two.", VOICE_A)), true, "no check was sure when the recording was built")
+  await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice, canPrune: async () => true })
+  assert.equal(exists(clipFile(dir, "Two.", VOICE_A)), false, "the reading that no longer exists is tidied up")
+  assert.equal(exists(clipFile(dir, "One.", VOICE_A)), true, "a clip in use under the remembered voice is kept")
+  assert.equal(exists(clipFile(dir, "Two, changed.", VOICE_A)), true, "the changed reading's clip is kept")
+})
+
 test("the recording is joined from the changed reading's new clip, not from the old one", async () => {
   const dir = path.join(scratch, "joined-content")
   const spoken: string[] = []

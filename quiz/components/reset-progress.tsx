@@ -62,7 +62,7 @@ export function ResetProgress({ examTitle }: { examTitle: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Reset all progress for {examTitle}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Every Voice Quiz, Practice, Exam, Flashcards and Read Aloud result for {examTitle} is cleared, and each mode starts from the beginning. Answers still on this device are sent first, and a copy of your current scores is kept, so nothing is lost.
+              Every Voice Quiz, Practice, Test exam, Flashcards and Read Aloud result for {examTitle} is cleared, and each mode starts from the beginning. Answers still on this device are sent first, and a copy of your current scores is kept, so nothing is lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
