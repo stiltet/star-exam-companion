@@ -9,7 +9,7 @@ import { appendFile, chmod, mkdir, open, readdir, readFile, rename, rm, stat, wr
 import { homedir } from "node:os"
 import path from "node:path"
 import { Readable } from "node:stream"
-import { courseBundle } from "./course-text.ts"
+import { courseBundle } from "./reading-provider.ts"
 import {
   byteRange, chapterList, manifestRecord, nightParts, parseManifest, pcmDuration, pcmOf, sayTimeoutMs, wavFromPcm,
   type NightBuildState, type NightPart, type NightSource,

@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from "react"
 // classes (self-stretch, margins), never size, spacing or colour.
 // filled: an action that goes somewhere (the review on Google, the next reading).
 // outlined: an action done here (MARK AS READ), or a link beside a filled one, such as PRACTICE
-// EXAM beside START STUDYING on the home page. aria-disabled dims it and stops the hover.
+// EXAM beside START STUDYING on the home page. aria-disabled, or a disabled button, dims it and stops the hover.
 // danger: an action that ends something, such as END EXAM.
 // toggle: a small on/off control, such as a review filter; on (aria-pressed) is inverted.
 // flag: the exam's FLAG control; on is the flag colour.
@@ -33,7 +33,7 @@ const VARIANTS: Record<"filled" | "outlined" | "danger", string> = {
   filled: "bg-foreground text-background hover:opacity-80",
   danger: "bg-danger text-danger-foreground hover:opacity-80",
   outlined:
-    "bg-background text-foreground hover:bg-foreground hover:text-background aria-disabled:opacity-60 aria-disabled:cursor-default aria-disabled:hover:bg-background aria-disabled:hover:text-foreground",
+    "bg-background text-foreground hover:bg-foreground hover:text-background aria-disabled:opacity-60 aria-disabled:cursor-default aria-disabled:hover:bg-background aria-disabled:hover:text-foreground disabled:opacity-60 disabled:cursor-default disabled:hover:bg-background disabled:hover:text-foreground",
 }
 
 export function buttonClass(variant: ButtonVariant, placement = "", wrap = false): string {

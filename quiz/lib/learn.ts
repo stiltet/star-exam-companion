@@ -148,7 +148,7 @@ export function parseWeights(plan: string): Record<number, number> {
 }
 
 export function parseSections(plan: string): { id: number; title: string; weight: number }[] {
-  return [...plan.matchAll(/Section (\d) \(([^,]+), ~(\d+)%\)/g)].map((match) => ({
+  return [...plan.matchAll(/Section (\d) \(([^,]+), ~(\d+(?:\.\d+)?)%\)/g)].map((match) => ({
     id: Number(match[1]),
     title: (match[2] ?? "").trim(),
     weight: Number(match[3]),

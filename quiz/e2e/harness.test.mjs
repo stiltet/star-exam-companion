@@ -27,13 +27,13 @@ test("playwright.config.ts discovers every browser and width without nested or m
     cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: "47825" }, encoding: "utf8",
   })
   assert.equal(result.status, 0, result.stderr)
-  // Chromium runs the pages; WebKit only the offline worker and the installed app's Back button.
+  // Chromium runs the pages; WebKit only the offline worker, the installed app's Back button and the About list.
   // Properties, not totals: a new spec must not break a test that proves nothing about the config.
   const chromium = result.stdout.split("\n").filter((line) => line.includes("[chromium-375]"))
   const webkit = result.stdout.split("\n").filter((line) => line.includes("[webkit-375]"))
   assert.ok(chromium.length > 0, "the Chromium project lists tests")
   assert.ok(webkit.length > 0, "the WebKit project lists tests")
-  assert.ok(webkit.every((line) => /offline\.spec|back-history\.spec|back-from-review\.spec/.test(line)), "WebKit runs only the offline and Back specs")
+  assert.ok(webkit.every((line) => /offline\.spec|back-history\.spec|back-from-review\.spec|about-webkit\.spec/.test(line)), "WebKit runs only the offline, Back and About list specs")
   assert.ok(chromium.some((line) => /smoke\.spec/.test(line)), "Chromium runs the page smoke tests")
   assert.doesNotMatch(result.stdout, /\[(?!chromium-375|webkit-375)[a-z0-9-]+\] ›/, "no other project is configured")
   assert.match(result.stdout, /Total: \d+ tests in \d+ files/)
@@ -72,8 +72,11 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
   const result = spawnSync(process.execPath, ["--import", preload, "--input-type=module", "-e", `
     import { seedNight } from "./e2e/night-fixture.mjs"
     import { nightDirFor } from "./lib/night-build.ts"
+    import { savePrivateReading } from "./lib/private-reading.ts"
     import { readFile, readdir } from "node:fs/promises"
     import path from "node:path"
+    // Every Agentic Architect course is captured from Google Skills, so the test saves one synthetic captured page into its own private store.
+    await savePrivateReading("agentic-architect", "1", { pageId: "98001", title: "Synthetic private fixture", text: "Synthetic private fixture text for the test." })
     await seedNight()
     const result = {}
     for (const exam of ["generative-ai-leader", "agentic-architect"]) {
@@ -86,7 +89,7 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
       result[exam] = { key: keys[0], manifest, bytes: audio.length, format: audio.subarray(4, 8).toString() }
     }
     process.stdout.write(JSON.stringify(result))
-  `], { cwd: quiz, env: { ...process.env, QUIZ_ROOT: path.resolve(quiz, ".."), NIGHT_DIR: dir }, encoding: "utf8" })
+  `], { cwd: quiz, env: { ...process.env, QUIZ_ROOT: path.resolve(quiz, ".."), NIGHT_DIR: dir, QUIZ_PRIVATE_DIR: path.join(dir, "private-readings") }, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr)
   const records = JSON.parse(result.stdout)
   const first = records["generative-ai-leader"]
@@ -95,8 +98,8 @@ test("night-fixture.mjs seeds separate real manifests using synthetic course tex
   assert.equal(first.manifest.hash, first.key)
   assert.equal(second.manifest.hash, second.key)
   assert.equal(first.manifest.chapters[0].courseTitle, "Gen AI: Beyond the Chatbot")
-  assert.equal(second.manifest.chapters[0].courseTitle, "Manage Agent Memory and State")
-  assert.ok(second.manifest.chapters.some((chapter) => chapter.title === "Test Rise reading one"))
+  assert.equal(second.manifest.chapters[0].courseTitle, "Understand Google Cloud Agents")
+  assert.ok(second.manifest.chapters.some((chapter) => chapter.title === "Synthetic private fixture"))
   assert.ok(first.bytes > 0 && second.bytes > 0)
   assert.equal(first.format, "ftyp")
   assert.equal(second.format, "ftyp")

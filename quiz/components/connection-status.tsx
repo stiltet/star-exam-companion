@@ -4,6 +4,7 @@ import { useEffect, useState, type Ref } from "react"
 import { fetchedAt, fetchSnapshot, REFRESHED, useSnapshot } from "@/components/snapshot"
 import { connectionText, forceUpdate, type Connection } from "@/lib/connection"
 import { STATIC_DEMO } from "@/lib/static-demo"
+import { IconButton } from "@/components/atoms/icon-button"
 
 // Asks the browser to fetch the latest worker now. A new build's worker installs and stores its
 // pages before it takes over and drops the old caches, so offline keeps working throughout.
@@ -84,19 +85,18 @@ export function ConnectionIcon({ state, open, onToggle, buttonRef }: { state: Co
   const { from, long } = state
   const live = from === "mac"
   const text = STATIC_DEMO ? "Saving status (online demo)" : long
-  const colour = STATIC_DEMO ? "" : live ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"
+  const tone = STATIC_DEMO ? "neutral" : live ? "good" : "bad"
   return (
-    <button
+    <IconButton
       ref={buttonRef}
-      type="button"
+      tone={tone}
       aria-label={text}
       title={text}
       aria-expanded={open}
       aria-controls="saving-panel"
       onClick={onToggle}
-      className={`flex size-11 shrink-0 items-center justify-center ${colour}`}
     >
       <LaptopStatus live={STATIC_DEMO || live} />
-    </button>
+    </IconButton>
   )
 }

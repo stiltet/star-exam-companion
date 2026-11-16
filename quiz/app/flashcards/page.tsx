@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { FlashcardsClient } from "@/components/flashcards-client"
+import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { loadPlay } from "@/lib/load"
 import { sectionLabel } from "@/lib/progress"
 import { applyNames, label } from "@/lib/sources"
@@ -25,6 +26,7 @@ export default async function FlashcardsPage() {
       <SiteHeader />
 
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+        <UnfinishedNotice need="glossary" />
         <FlashcardsClient glossary={glossary} />
       </main>
 
