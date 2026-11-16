@@ -296,7 +296,10 @@ test("a request that was already on its way when another failed clears the backo
 
 test("the unreachable page offers a saved page when Home is not saved, never a data request", async () => {
   const body = (await (await load(offline).request("/x", { mode: "navigate" }))!.text())
-  const script = /<script>([\s\S]*)<\/script>/.exec(body)![1]
+  const start = body.indexOf("<script>") + "<script>".length
+  const end = body.lastIndexOf("</script>")
+  assert.ok(start >= "<script>".length && end > start, "the page holds its inline script")
+  const script = body.slice(start, end)
   const home = { href: "/", textContent: "GO HOME" }
   const again: { disabled: boolean; textContent: string; busy: string; onclick?: () => Promise<void>; setAttribute: (name: string, value: string) => void } = { disabled: false, textContent: "TRY AGAIN", busy: "", setAttribute: (_name, value) => { again.busy = value } }
   let reloaded = false
