@@ -201,7 +201,8 @@ Good to know about private readings:
   hash of its page id, so open a file to see its `title` and `savedAt` and find the page it holds. Clear this site's
   data on each device to remove its offline copies. Night reading's recording is built from the text and
   lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
-  the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
+  the exam is switched, or when its page asks), so delete that folder to remove it at once. Each reading's spoken clip is kept
+  in a `clips` folder inside `NIGHT_DIR`, uncompressed and so much larger than the recording, so a changed reading is the only one spoken again; delete `clips` too to remove them. Deleting a
   copy does not remove the ticks you earned for it, which stay in your saved scores. The capture also keeps two things beside the store, outside the
   repository: its run logs (one small file per run in a `logs` folder next to `private-reading`, holding no lesson text and the signed-in
   account only as its first letter and domain; delete them whenever you like) and the capture browser's own profile folder, `cft-profile`, which

@@ -4,9 +4,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, CLIPS_DIR, crawlComplete, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, CLIPS_DIR, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
+import { savePrivateReading } from "./private-reading.ts"
+import { LISTING_VERSION, manifestFile, textHash, writeManifest, type ManifestLesson } from "./reading-crawl.ts"
+import { crawlCompleteFor } from "./reading-provider.ts"
 
 // A test reads the default exam, whatever exam this machine has chosen on the Progress page.
 process.env.QUIZ_EXAM_SETTING_FILE = "/nonexistent/active-exam.json"
@@ -420,18 +423,46 @@ test("a failed build prunes nothing", async () => {
   assert.equal(exists(clipFile(dir, "Two.")), true)
 })
 
-test("no clip is judged unused while a private exam's crawl is missing, and a public exam needs no crawl", async () => {
+test("a crawl is complete only when the manifest and the saved readings agree one for one, and a public course needs none", async () => {
   const before = process.env.QUIZ_PRIVATE_DIR
-  const rootBefore = process.env.QUIZ_ROOT
-  process.env.QUIZ_PRIVATE_DIR = path.join(scratch, "private")
-  process.env.QUIZ_ROOT = path.resolve(import.meta.dirname, "..", "..")
+  const root = path.join(scratch, "private")
+  process.env.QUIZ_PRIVATE_DIR = root
+  const courses = [{ id: "1", packId: "night-test", provider: "private" as const }]
+  const lesson = (pageId: string, text: string | null): ManifestLesson => ({ title: `Lesson ${pageId}`, href: `/course_templates/1/documents/${pageId}`, pageId, hash: text === null ? null : textHash(text) })
+  const manifest = (lessons: ManifestLesson[], listing: number | undefined = LISTING_VERSION) =>
+    writeManifest(manifestFile(root, "night-test", "1"), { checkedAt: "2026-11-16T00:00:00.000Z", listing, lessons })
   try {
-    assert.equal(await crawlComplete("generative-ai-leader"), true, "every course is public")
-    assert.equal(await crawlComplete("agentic-architect"), false, "no crawl manifest yet")
+    assert.equal(await crawlCompleteFor([{ id: "1", packId: "night-test", provider: "google" }]), true, "a public course needs no crawl")
+    assert.equal(await crawlCompleteFor(courses), false, "no manifest yet")
+    await savePrivateReading("night-test", "1", { pageId: "11", title: "One", text: "Text one." })
+    await savePrivateReading("night-test", "1", { pageId: "12", title: "Two", text: "Text two." })
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two.")])
+    assert.equal(await crawlCompleteFor(courses), true, "manifest and readings agree")
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two."), lesson("13", "Text three.")])
+    assert.equal(await crawlCompleteFor(courses), false, "a listed lesson with no saved reading")
+    await manifest([lesson("11", "Text one."), lesson("12", "Changed text.")])
+    assert.equal(await crawlCompleteFor(courses), false, "a saved reading that no longer matches its hash")
+    await manifest([lesson("11", "Text one."), lesson("12", null)])
+    assert.equal(await crawlCompleteFor(courses), false, "a lesson with no saved text")
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two.")], 1)
+    assert.equal(await crawlCompleteFor(courses), false, "a manifest made under another listing rule")
+    await manifest([lesson("11", "Text one.")])
+    assert.equal(await crawlCompleteFor(courses), false, "a saved reading the manifest does not list")
+    writeFileSync(manifestFile(root, "night-test", "1"), "{\"checkedAt\":")
+    assert.equal(await crawlCompleteFor(courses), false, "a damaged manifest")
   } finally {
     if (before === undefined) delete process.env.QUIZ_PRIVATE_DIR
     else process.env.QUIZ_PRIVATE_DIR = before
-    if (rootBefore === undefined) delete process.env.QUIZ_ROOT
-    else process.env.QUIZ_ROOT = rootBefore
   }
+})
+
+test("a stopped say's leftover in the clips folder is cleared by a finished build, and the clips folder is private", async () => {
+  const dir = path.join(scratch, "clip-partials")
+  const spoken: string[] = []
+  mkdirSync(path.join(dir, CLIPS_DIR), { recursive: true })
+  const leftover = path.join(dir, CLIPS_DIR, `${"c".repeat(64)}.wav.999.partial`)
+  writeFileSync(leftover, "cut short")
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub })
+  assert.equal(exists(leftover), false)
+  assert.equal(statSync(path.join(dir, CLIPS_DIR)).mode & 0o777, 0o700)
 })

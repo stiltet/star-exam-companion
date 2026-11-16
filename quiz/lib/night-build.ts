@@ -9,9 +9,7 @@ import { appendFile, chmod, mkdir, open, readdir, readFile, rename, rm, stat, wr
 import { homedir } from "node:os"
 import path from "node:path"
 import { Readable } from "node:stream"
-import { courseBundle } from "./reading-provider.ts"
-import { LISTING_VERSION, manifestFile, readManifest, textHash } from "./reading-crawl.ts"
-import { privateReadingRoot, readPrivateReadings } from "./private-reading.ts"
+import { courseBundle, crawlCompleteFor } from "./reading-provider.ts"
 import {
   byteRange, chapterList, manifestRecord, nightParts, parseManifest, pcmDuration, pcmOf, sayTimeoutMs, wavFromPcm,
   type NightBuildState, type NightPart, type NightSource,
@@ -49,27 +47,9 @@ export function scriptKey(parts: readonly NightPart[]): string {
   return createHash("sha256").update(parts.map((part) => part.script).join("\n")).digest("hex")
 }
 
-// True only when every private course of the exam is fully and consistently captured, so a clip that no reading uses is really unused and
-// not merely missing from a crawl still running. A public course needs no crawl. Any doubt, an error included, answers false.
+// True only when the exam's private readings are fully and consistently captured (see crawlCompleteFor), so a clip no reading uses is really unused.
 export async function crawlComplete(exam: string): Promise<boolean> {
-  try {
-    for (const course of loadPack(repoRoot(), exam).courses) {
-      if (course.provider !== "private") continue
-      const manifest = await readManifest(manifestFile(privateReadingRoot(), course.packId, course.id))
-      if (!manifest || manifest.listing !== LISTING_VERSION || manifest.lessons.length === 0) return false
-      if (manifest.lessons.some((lesson) => lesson.hash === null)) return false
-      const records = await readPrivateReadings(course.packId, course.id)
-      if (records.length !== manifest.lessons.length) return false
-      for (const record of records) {
-        const lesson = manifest.lessons.find((item) => item.pageId === record.pageId)
-        if (!lesson || lesson.hash !== textHash(record.text)) return false
-      }
-    }
-    return true
-  } catch {
-    // Dropping the error is safe: false only means "not sure", which deletes nothing. The build itself reports its own failures.
-    return false
-  }
+  return crawlCompleteFor(loadPack(repoRoot(), exam).courses)
 }
 
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
@@ -190,6 +170,7 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   const total = deps.parts.length
   const clipFolder = path.join(deps.dir, CLIPS_DIR)
   await mkdir(clipFolder, { recursive: true })
+  await chmod(clipFolder, 0o700).catch(() => undefined)
   const files = deps.parts.map((part) => clipFile(deps.dir, part.script))
   const have = async (file: string) => (await stat(file).then((info) => info.size, () => 0)) > 0
   // Readings already spoken count as done, so the page never shows 0 of N for a reading that will not be spoken again.
@@ -197,13 +178,15 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   for (const file of files) if (await have(file)) done += 1
   deps.onProgress?.(done, total)
   for (const [index, part] of deps.parts.entries()) {
-    const file = files[index]
-    if (!file || (await have(file))) continue
+    const file = files[index] as string
+    if (await have(file)) continue
     const spoke = await deps.render(part.script, file)
     if (!spoke) throw new Error(`The Mac could not speak reading ${part.number} of course ${part.courseId}.`)
     done += 1
     deps.onProgress?.(done, total)
   }
+  // Two readings with the same script share one clip, so the count above can end below the total for a finished build.
+  deps.onProgress?.(total, total)
   const joined = path.join(root, "joined.wav")
   const durations = await writeJoinedWav(files, joined)
   await deps.encode(joined, m4a)
