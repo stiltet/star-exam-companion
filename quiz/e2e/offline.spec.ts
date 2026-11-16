@@ -312,6 +312,9 @@ test.describe("exam changes", () => {
       await expect(question).toBeVisible()
       const answeredText = (await question.textContent()) ?? ""
       expect(answeredText).not.toBe("")
+      const position = page.locator("main").getByText(/^Question 1 of \d+$/)
+      const unanswered = Number(/of (\d+)$/.exec((await position.textContent()) ?? "")?.[1])
+      expect(unanswered).toBeGreaterThan(1)
       await context.setOffline(true)
       await page.goto("/practice?section=1&unanswered=1")
       await expect(page.locator("main").getByRole("alert")).toHaveCount(0)
@@ -323,6 +326,9 @@ test.describe("exam changes", () => {
       expect(reopened?.status()).toBe(200)
       await expect(page.locator("main").getByRole("status").filter({ hasText: "Loading your answers" })).toHaveCount(0)
       await expect(page.locator("main").getByRole("alert")).toHaveCount(0)
+      // The count comes from the device's own data, one fewer than before, so the list is not empty and does not still hold the answered question.
+      await expect(position).toHaveText(`Question 1 of ${unanswered - 1}`)
+      await expect(question).toBeVisible()
       await expect(question).not.toHaveText(answeredText)
       expect((await queue()).length).toBe(1)
       await context.setOffline(false)
