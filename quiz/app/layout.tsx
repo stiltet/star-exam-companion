@@ -1,4 +1,5 @@
 import type React from "react"
+import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
 import { BackButton } from "@/components/back-button"
 import { DevBadgeStyle } from "@/components/dev-badge-style"
@@ -71,7 +72,9 @@ export default async function RootLayout({
           <OfflineShell />
           <SnapshotPrefetch />
           <AudioUnlock />
-          <NavProgress />
+          <Suspense fallback={null}>
+            <NavProgress />
+          </Suspense>
           <PullToRefresh />
           <InstallHint />
         </ThemeProvider>

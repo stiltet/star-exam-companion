@@ -8,7 +8,7 @@ const slow = (ms: number) => async (route: { continue: () => Promise<void> }) =>
   await route.continue()
 }
 
-test("the tapped link fills after 200 ms, other links are refused, and it never goes back to normal before the page arrives", async ({ page }) => {
+test("the tapped link fills after 200 ms, other links are refused for the first 6 seconds, and it never goes back to normal before the page arrives", async ({ page }) => {
   // A page the app has not already fetched in the background (the card near the bottom of Home), held for 8 s.
   await page.route(/\/flashcards(\?|$)/, slow(8000))
   await page.goto("/")
@@ -33,7 +33,8 @@ test("the tapped link fills after 200 ms, other links are refused, and it never 
   await page.locator('main a[href="/exam"]').first().click({ force: true })
   await page.waitForTimeout(1000)
   await expect(page).toHaveURL(/\/$/)
-  // After the unlock time the button is still loading: it never goes back to normal by itself.
+  // The 6 s failsafe lifts the refusal of other links (so the app can never stay locked), but the tapped
+  // button is still loading after it: it never goes back to normal by itself.
   await page.waitForTimeout(6500)
   await expect(study).toHaveAttribute("data-loading", "true")
   await expect(page).toHaveURL(/\/$/)
@@ -62,4 +63,18 @@ test("a page whose scripts are slow is shown after 5 seconds, by CSS alone", asy
   await expect(gate, "shown after 5 s with what the server drew").toHaveCSS("visibility", "visible", { timeout: 6500 })
   await expect(page.locator("main")).toBeVisible()
   await page.unroute(/\/_next\/static\/.*\.js/)
+})
+
+test("a move that changes only the query (a Practice filter) loads the tapped link and locks the others", async ({ page }) => {
+  // Held before the page opens, so the filter's data is not already fetched in the background when it is tapped.
+  await page.route(/\/practice\?section=1(&|$)/, slow(3000))
+  await page.goto("/practice")
+  const filter = page.locator('main a[href="/practice?section=1"]').first()
+  await filter.click()
+  await expect(filter).toHaveAttribute("data-loading", "true")
+  await page.locator('main a[href="/practice?section=2"]').first().click({ force: true })
+  await page.waitForTimeout(500)
+  await expect(page).not.toHaveURL(/section=2/)
+  await expect(page).toHaveURL(/section=1/, { timeout: 15_000 })
+  await expect(page.locator("[data-loading]")).toHaveCount(0)
 })

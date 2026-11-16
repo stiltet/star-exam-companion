@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
 
 const SPINNER_AFTER_MS = 200
@@ -49,6 +49,8 @@ function markIdle(link: HTMLElement) {
 // always works. One listener for every link in the app.
 export function NavProgress() {
   const pathname = usePathname()
+  // A move that changes only the query (a Practice filter) is a move too: the tapped link loads and the others are locked.
+  const search = useSearchParams().toString()
   const from = useRef<string | null>(null)
   const link = useRef<HTMLAnchorElement | null>(null)
   const locked = useRef(false)
@@ -102,7 +104,9 @@ export function NavProgress() {
         return
       }
       if (target.target === "_blank") return
-      if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return
+      if (url.origin !== window.location.origin) return
+      // The same page again (only the #hash differs) is no move.
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return
       // The logo and title link never changes itself (owner, 16 Nov): the loading box is shown over the page.
       const logo = target.matches("header a:has(img)")
       // A button still waiting after being unlocked stays loading, and the new tap waits beside it.
@@ -111,7 +115,7 @@ export function NavProgress() {
         timers.current = []
       }
       link.current = target
-      from.current = window.location.pathname
+      from.current = window.location.pathname + window.location.search
       locked.current = true
       timers.current.push(window.setTimeout(() => {
         if (logo) return setOverlay(true)
@@ -124,8 +128,9 @@ export function NavProgress() {
   }, [])
 
   useEffect(() => {
-    if (from.current !== null && from.current !== pathname) finish()
-  }, [pathname])
+    // The page or its query changed: the move has arrived.
+    if (from.current !== null && from.current !== window.location.pathname + window.location.search) finish()
+  }, [pathname, search])
 
   // A page restored from the back/forward cache must not come back still waiting.
   useEffect(() => {
