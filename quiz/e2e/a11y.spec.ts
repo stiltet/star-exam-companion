@@ -48,6 +48,7 @@ test("the main pages and states have no WCAG 2.1 AA violation axe can detect", a
 
   await page.goto("/progress")
   await page.getByRole("button", { name: "Open menu" }).click()
+  await expect(page.locator("#site-menu")).toBeVisible()
   await scan(page, "/progress (menu open)", found)
 
   await page.goto("/")
