@@ -7,7 +7,7 @@ const PASSED_LINE = "passed october 2026"
 // anyone's studying. The owner approved its contents (a plan and a mockup); these tests fail if figures or plans come back onto it.
 test("the About page shows the approved sections and none of the visitor's own study figures", async ({ page, baseURL }) => {
   // A person who has answered questions: twelve saved exam sessions, which the page this replaced turned into a count and a best
-  // percentage ("12 · best 50%" under "Practice exams taken"), next to the answered counts, flashcards known and lessons read. The page
+  // percentage ("12 · best 50%" under "Test exams taken"), next to the answered counts, flashcards known and lessons read. The page
   // is static today and reads none of this, so the guard below is on its text; the seed makes the test fail for the right reason if a
   // later version of the page starts to read what is saved.
   const snapshot = (await (await page.request.get("/api/snapshot")).json()) as { snapshot: { items: { id: string }[] } }
@@ -44,7 +44,7 @@ test("the About page's features are a list in the accessibility tree", async ({ 
     /^Voice quiz/,
     /^Read aloud/,
     /^Practice questions/,
-    /^Practice exam/,
+    /^Test exam/,
     /^Flashcards/,
     /^Private and offline/,
   ])

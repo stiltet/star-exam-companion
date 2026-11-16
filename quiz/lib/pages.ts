@@ -15,17 +15,17 @@ const ALL_PAGES: readonly SitePage[] = [
   { href: "/practice", menu: "PRACTICE", title: "Practice Questions", blurb: "Individual questions with explanations" },
   { href: "/voice", menu: "VOICE QUIZ", title: "Voice Quiz", blurb: "Voice Quiz. An exam question, read aloud" },
   { href: "/read", menu: "READ ALOUD", title: "Read Aloud", blurb: "The official learning path, read aloud" },
-  { href: "/exam", menu: "EXAM", title: "Practice Exam", blurb: "Timed practice exam" },
+  { href: "/exam", menu: "TEST EXAM", title: "Test Exam", blurb: "Timed test exam" },
   { href: "/flashcards", menu: "FLASHCARDS", title: "Flashcards", blurb: "Term recall from official terminology" },
   { href: "/glossary", menu: "GLOSSARY", title: "Glossary", blurb: "All terms linked and categorized" },
   { href: "/progress", menu: "PROGRESS", title: "Progress", blurb: "Track completion and weak areas" },
 ]
 
 // The pages of the exam this install serves: every exam shows every page, a pack with no course to read
-// included (its Read Aloud page says so), and the Practice exam's blurb gives that exam's length.
+// included (its Read Aloud page says so), and the Test exam's blurb gives that exam's length.
 export function sitePages(pack: { exam: { questions: number; minutes: number } }): readonly SitePage[] {
   return ALL_PAGES.map((page) =>
-    page.href === "/exam" ? { ...page, blurb: `Timed practice exam (${pack.exam.minutes} min, ${pack.exam.questions} questions)` } : page,
+    page.href === "/exam" ? { ...page, blurb: `Timed test exam (${pack.exam.minutes} min, ${pack.exam.questions} questions)` } : page,
   )
 }
 

@@ -189,7 +189,7 @@ test.describe("a pack with no course to read", () => {
 test.describe("an exam whose study data is not written yet", () => {
   test.use({ serviceWorkers: "block" })
 
-  test("says so on each feature page, and the practice exam cannot be started with no questions", async ({ page, baseURL }) => {
+  test("says so on each feature page, and the test exam cannot be started with no questions", async ({ page, baseURL }) => {
     const origin = { origin: baseURL! }
     try {
       // Professional Cloud Architect is added with its courses only: no glossary, scenes, study topics or questions, and a notice that says so.
@@ -199,7 +199,7 @@ test.describe("an exam whose study data is not written yet", () => {
         await expect(page.getByTestId(path === "/" ? "pack-notice" : "unfinished-notice"), `${path} names what is missing`).toContainText("Unfinished")
       }
       await page.goto("/exam")
-      const start = page.getByRole("button", { name: /Start exam/ })
+      const start = page.getByRole("button", { name: /Start test exam/ })
       await expect(start).toBeDisabled()
       // Dimmed, so it does not look like a button that works.
       await expect(start).toHaveCSS("opacity", "0.6")

@@ -36,7 +36,7 @@ test("Read Aloud opens a course and turns to its next reading", async ({ page })
   await expect(page.locator("main")).toContainText("This is the second original test paragraph")
 })
 
-test("Practice exam resumes its answer, submits and saves a review", async ({ page }) => {
+test("Test exam resumes its answer, submits and saves a review", async ({ page }) => {
   await page.goto("/exam")
   await page.getByRole("button", { name: /START.*EXAM/i }).click()
   const choice = page.getByRole("button", { name: /^A\./ })
@@ -50,7 +50,7 @@ test("Practice exam resumes its answer, submits and saves a review", async ({ pa
   )
   await page.getByRole("dialog").getByRole("button", { name: "Submit", exact: true }).click()
   expect((await saved).ok()).toBe(true)
-  await expect(page.getByRole("heading", { name: "EXAM RESULTS", exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS", exact: true })).toBeVisible()
   const response = await page.request.get("/api/snapshot")
   const body = await response.json()
   expect(body).toMatchObject({ ok: true, snapshot: { lines: [expect.objectContaining({ mode: "exam" })] } })
