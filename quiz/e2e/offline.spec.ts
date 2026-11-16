@@ -331,9 +331,14 @@ test.describe("exam changes", () => {
       await expect(question).toBeVisible()
       await expect(question).not.toHaveText(answeredText)
       expect((await queue()).length).toBe(1)
+      const queuedId = (await queue())[0]!.id
       await context.setOffline(false)
       await page.goto("/progress")
       await expect.poll(async () => (await queue()).length).toBe(0)
+      // The queue emptying is not enough: the Mac must now hold the answer, once.
+      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "generative-ai-leader" } })
+      const lines = (await snapshot.json()).snapshot.lines as { id: string }[]
+      expect(lines.filter((line) => line.id === queuedId)).toHaveLength(1)
     } finally {
       await context.setOffline(false)
     }
