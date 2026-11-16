@@ -297,5 +297,237 @@
     "scene": "A company has existing Apache Spark and Hadoop jobs. It wants to keep the code and run it on managed clusters that can be switched off when idle. What should it use?",
     "constraint": "The jobs are open source Spark code that must move without being rewritten.",
     "guide": "1.3"
+  },
+  {
+    "id": "pca-cloud-vpn",
+    "correct": "Cloud VPN",
+    "distractors": [
+      "Cloud Interconnect",
+      "VPC Network Peering",
+      "Private Service Connect"
+    ],
+    "scene": "A branch office needs an encrypted IPsec connection to its Google Cloud network by next week, and it does not need a dedicated physical link. What should the network team set up?",
+    "constraint": "The link must be an encrypted tunnel that can be created quickly, not a physical circuit.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-interconnect",
+    "correct": "Cloud Interconnect",
+    "distractors": [
+      "Cloud VPN",
+      "VPC Network Peering",
+      "Shared VPC"
+    ],
+    "scene": "A data centre must move large volumes of data to Google Cloud every day, with low latency and high availability over a direct physical connection. What should the team order?",
+    "constraint": "Low latency and high availability are required, so an encrypted tunnel over shared links is not enough.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-cloud-armor",
+    "correct": "Cloud Armor",
+    "distractors": [
+      "Cloud Next Generation Firewall (Cloud NGFW)",
+      "Cloud Intrusion Detection System (Cloud IDS)",
+      "Cloud Load Balancing"
+    ],
+    "scene": "A public web store behind a load balancer is hit by a distributed denial-of-service attack and by SQL injection attempts. Which service should protect it?",
+    "constraint": "The protection must block DDoS and web application attacks at the edge, not only detect them.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-cloud-ids",
+    "correct": "Cloud Intrusion Detection System (Cloud IDS)",
+    "distractors": [
+      "Cloud Armor",
+      "Cloud Next Generation Firewall (Cloud NGFW)",
+      "Cloud Load Balancing"
+    ],
+    "scene": "A compliance team wants managed threat detection for malware, spyware and command-and-control traffic by inspecting mirrored VM traffic. Which service fits?",
+    "constraint": "The service must detect intrusions from mirrored traffic rather than only filter packets with rules.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-compute-engine",
+    "correct": "Compute Engine",
+    "distractors": [
+      "Cloud Run",
+      "Google Kubernetes Engine (GKE)",
+      "Cloud Run functions"
+    ],
+    "scene": "A vendor ships a licensed Windows application that must run on a virtual machine where the team controls the operating system. Which compute product should host it?",
+    "constraint": "The team must control the guest operating system, so a managed platform that hides the machine will not work."
+  },
+  {
+    "id": "pca-vmware-engine",
+    "correct": "Google Cloud VMware Engine",
+    "distractors": [
+      "Compute Engine",
+      "Google Kubernetes Engine (GKE)",
+      "Google Cloud Migration Center"
+    ],
+    "scene": "A company runs hundreds of VMware virtual machines on premises. It wants to move them to Google Cloud with the same VMware tools and no conversion of the VMs. What should it use?",
+    "constraint": "Operations staff must keep their existing VMware platform and skills while the workloads move.",
+    "guide": "2.3"
+  },
+  {
+    "id": "pca-mig",
+    "correct": "Managed instance groups (MIGs)",
+    "distractors": [
+      "Compute Engine",
+      "Spot VMs",
+      "Custom machine types"
+    ],
+    "scene": "A web tier of identical VMs must grow and shrink with demand, and unhealthy VMs should be replaced automatically. What should the team put the VMs in?",
+    "constraint": "The identical VMs must be managed together as one group, not one by one.",
+    "guide": "2.3"
+  },
+  {
+    "id": "pca-vm-manager-patch",
+    "correct": "VM Manager patch management",
+    "distractors": [
+      "Managed instance groups (MIGs)",
+      "Terraform",
+      "Compute Engine"
+    ],
+    "scene": "A fleet of long-running VMs needs monthly operating system updates applied across all of them on a schedule, with a report of the result. Which feature should the team use?",
+    "constraint": "The task is applying OS patches to many existing VMs, not creating or scaling them.",
+    "guide": "2.3"
+  },
+  {
+    "id": "pca-terraform",
+    "correct": "Terraform",
+    "distractors": [
+      "VM Manager patch management",
+      "Managed instance groups (MIGs)",
+      "Google Cloud Migration Center"
+    ],
+    "scene": "A platform team wants to declare its networks, projects and VMs in version-controlled files so that every environment can be recreated the same way. What tool should it adopt?",
+    "constraint": "Resources must be defined as infrastructure as code, with a provider for Google Cloud."
+  },
+  {
+    "id": "pca-direct-vpc-egress",
+    "correct": "Direct VPC egress",
+    "distractors": [
+      "Private Service Connect",
+      "VPC Network Peering",
+      "Cloud VPN"
+    ],
+    "scene": "A Cloud Run service must reach a database that has only an internal address inside a VPC network, and the team does not want to run a connector. What should it enable?",
+    "constraint": "The serverless service must send traffic straight into the network, with no separate connector resource.",
+    "guide": "2.3"
+  },
+  {
+    "id": "pca-storage-transfer",
+    "correct": "Storage Transfer Service",
+    "distractors": [
+      "Cloud Storage",
+      "Backup and DR Service",
+      "Filestore"
+    ],
+    "scene": "A company must copy hundreds of terabytes from Amazon S3 into Cloud Storage and then keep syncing on a schedule. What should it use?",
+    "constraint": "The data must move between object stores in different clouds without the team writing its own copy scripts.",
+    "guide": "2.2"
+  },
+  {
+    "id": "pca-object-lifecycle",
+    "correct": "Object Lifecycle Management",
+    "distractors": [
+      "Storage Transfer Service",
+      "Backup and DR Service",
+      "Cloud Storage"
+    ],
+    "scene": "Log files in a bucket are rarely read after thirty days and should be moved to a cheaper storage class, then deleted after a year, with no manual work. What should the team configure?",
+    "constraint": "Rules on the bucket must change storage class and delete objects automatically over time.",
+    "guide": "2.2"
+  },
+  {
+    "id": "pca-agent-platform",
+    "correct": "Agent Platform",
+    "distractors": [
+      "Model Garden",
+      "AI Hypercomputer",
+      "Gemini Enterprise"
+    ],
+    "scene": "An ML team wants one platform to build, deploy, govern and optimise its AI agents and models, from picking a foundation model to running the finished agent in production. What should it use?",
+    "constraint": "The need is a unified development and operations platform, not a single model catalogue or a hardware system."
+  },
+  {
+    "id": "pca-agent-pipelines",
+    "correct": "Agent Platform Pipelines",
+    "distractors": [
+      "Dataflow",
+      "Terraform",
+      "Model Garden"
+    ],
+    "scene": "A data science team wants to automate and orchestrate its ML lifecycle as repeatable steps, from data preparation to training and deployment, without managing servers. What should it use?",
+    "constraint": "The ML workflow must run as serverless, repeatable pipeline steps with tracked runs."
+  },
+  {
+    "id": "pca-cloud-tpu",
+    "correct": "Cloud TPU",
+    "distractors": [
+      "GPUs",
+      "Spot VMs",
+      "Custom machine types"
+    ],
+    "scene": "A team is training a very large model on Google's own custom accelerator chips, which are application-specific circuits built to speed up machine learning. What should it request?",
+    "constraint": "The chips must be Google-designed ASICs for ML, not general-purpose graphics processors."
+  },
+  {
+    "id": "pca-gpus",
+    "correct": "GPUs",
+    "distractors": [
+      "Cloud TPU",
+      "Spot VMs",
+      "Custom machine types"
+    ],
+    "scene": "A studio needs NVIDIA accelerators attached to its Compute Engine VMs for ML inference and graphics-heavy rendering. What should it add?",
+    "constraint": "The accelerators must be NVIDIA graphics processors that suit both ML and graphics workloads."
+  },
+  {
+    "id": "pca-gemini-enterprise",
+    "correct": "Gemini Enterprise",
+    "distractors": [
+      "Agent Platform",
+      "Model Garden",
+      "Gemini Cloud Assist"
+    ],
+    "scene": "A company wants its employees to search company knowledge across apps such as shared drives and wikis, and to use AI assistants and agents on that data. What should it deploy?",
+    "constraint": "The users are knowledge workers who need search and agents over internal data through prebuilt connectors."
+  },
+  {
+    "id": "pca-notebooklm",
+    "correct": "NotebookLM",
+    "distractors": [
+      "Gemini Enterprise",
+      "Agent Platform",
+      "Gemini Cloud Assist"
+    ],
+    "scene": "Analysts want an AI research tool that summarises and pulls key facts from dense reports they upload, within an enterprise-ready service. What should they use?",
+    "constraint": "The need is an AI research and writing notebook over the user's own sources, not a platform for building agents."
+  },
+  {
+    "id": "pca-speech-to-text",
+    "correct": "Cloud Speech-to-Text",
+    "distractors": [
+      "Cloud Vision API",
+      "Gemini Enterprise",
+      "Model Garden"
+    ],
+    "scene": "A call centre wants to turn recorded customer calls into written transcripts through an API it can call from its own application. Which Google API fits?",
+    "constraint": "The input is audio and the output must be text.",
+    "guide": "2.5"
+  },
+  {
+    "id": "pca-vision-api",
+    "correct": "Cloud Vision API",
+    "distractors": [
+      "Cloud Speech-to-Text",
+      "Gemini Enterprise",
+      "Model Garden"
+    ],
+    "scene": "A retailer wants to label product photos, read printed text from images and flag explicit content, using a ready-made API instead of training a model. Which API fits?",
+    "constraint": "The input is images, and a prebuilt API is wanted rather than a custom-trained model.",
+    "guide": "2.5"
   }
 ]

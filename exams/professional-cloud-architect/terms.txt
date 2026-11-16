@@ -19,3 +19,16 @@ Spot VMs
 Custom machine types
 # 1.4
 Google Cloud Migration Center
+
+# 2.3
+Compute Engine
+Google Cloud VMware Engine
+Terraform
+# 2.4
+Agent Platform
+Agent Platform Pipelines
+Cloud TPU
+GPUs
+# 2.5
+Gemini Enterprise
+NotebookLM
