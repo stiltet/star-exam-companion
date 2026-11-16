@@ -326,9 +326,9 @@ export function ProgressClient({ stats }: Props) {
       </div>
 
       <div className="border-t border-foreground pt-6">
-        {canReset && <ResetProgress />}
+        {canReset && <ResetProgress examTitle={stats.exam.title} />}
         <p className="text-xs text-muted-foreground">
-          Your progress is saved on the Mac as you go and backed up at the end of each study day. Clearing this browser does not lose it, and a reset keeps a copy first.
+          Your progress is saved on the Mac as you go. Clearing this browser does not lose it, and a reset keeps a copy first.
         </p>
       </div>
 

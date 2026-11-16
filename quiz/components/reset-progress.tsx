@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-export function ResetProgress() {
+export function ResetProgress({ examTitle }: { examTitle: string }) {
   const [message, setMessage] = useState<string | null>(null)
 
   async function reset() {
@@ -47,7 +47,7 @@ export function ResetProgress() {
       return
     }
     clearDeviceSessions(window.localStorage)
-    setMessage(body.backup ? "Progress reset. A copy of your old scores is kept and backed up at the end of the day." : "Progress reset. There were no scores to keep.")
+    setMessage("Progress has been reset.")
     // A full reload fetches the emptied scores for every table on the page.
     window.setTimeout(() => window.location.reload(), 1500)
   }
@@ -60,9 +60,9 @@ export function ResetProgress() {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset all progress to 0?</AlertDialogTitle>
+            <AlertDialogTitle>Reset all progress for {examTitle}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Every Voice Quiz, Practice, Exam, Flashcards and Read Aloud result is cleared, and each mode starts from the beginning. Answers still on this device are sent first, and a copy of your current scores is kept, so nothing is lost.
+              Every Voice Quiz, Practice, Exam, Flashcards and Read Aloud result for {examTitle} is cleared, and each mode starts from the beginning. Answers still on this device are sent first, and a copy of your current scores is kept, so nothing is lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
