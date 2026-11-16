@@ -300,12 +300,15 @@ test("the unreachable page offers a saved page when Home is not saved, never a d
   const home = { href: "/", textContent: "GO HOME" }
   const again: { disabled: boolean; textContent: string; busy: string; onclick?: () => Promise<void>; setAttribute: (name: string, value: string) => void } = { disabled: false, textContent: "TRY AGAIN", busy: "", setAttribute: (_name, value) => { again.busy = value } }
   let reloaded = false
+  const posted: string[] = []
+  const channel = { port1: {} as { onmessage?: () => void }, port2: {} }
   const keys = [`${ORIGIN}/x`, `${ORIGIN}/practice?_rsc=abc`, `${ORIGIN}/voice?section=2`]
   vm.runInContext(script, vm.createContext({
     document: { getElementById: (id: string) => (id === "home" ? home : again) },
     caches: { match: async () => undefined, keys: async () => ["quiz-pages-b2", "quiz-voice"], open: async () => ({ keys: async () => keys.map((url) => ({ url })) }) },
     location: { pathname: "/x", reload: () => { reloaded = true } },
-    navigator: {},
+    navigator: { serviceWorker: { controller: { postMessage: (message: string) => { posted.push(message); channel.port1.onmessage?.() } } } },
+    MessageChannel: class { port1 = channel.port1; port2 = channel.port2 },
     URL,
     setTimeout,
   }))
@@ -318,4 +321,5 @@ test("the unreachable page offers a saved page when Home is not saved, never a d
   assert.equal(again.busy, "true")
   assert.equal(again.textContent, "TRYING…")
   assert.equal(reloaded, true)
+  assert.deepEqual(posted, ["quiz-mac-reachable"], "the button tells the worker to forget the backoff before it reloads")
 })

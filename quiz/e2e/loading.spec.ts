@@ -53,6 +53,10 @@ test("a tapped link that arrives ends its loading", async ({ page }) => {
   await expect(study).toHaveAttribute("data-loading", "true")
   await expect(page).toHaveURL(/\/flashcards$/, { timeout: 15_000 })
   await expect(page.locator("[data-loading]")).toHaveCount(0)
+  // The refusal of other links ended with the move: the logo link, which lives in the header that survives it, works at once
+  // (the 6 s failsafe is not what freed it, as the page arrived after 1.5 s).
+  await page.locator("header a:has(img)").first().click()
+  await expect(page).toHaveURL(/\/$/, { timeout: 3000 })
 })
 
 test("the logo link never changes itself: a page-sized loading box shows instead", async ({ page }) => {
