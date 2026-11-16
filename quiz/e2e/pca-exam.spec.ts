@@ -23,10 +23,21 @@ test.describe("the Professional Cloud Architect exam", () => {
       await expect(page.getByText("WHY OTHER OPTIONS ARE WRONG:")).toBeVisible()
       const reasons = await page.locator("ul.space-y-2 li").allInnerTexts()
       expect(reasons).toHaveLength(3)
-      // Each reason carries the letter of its own option, and never the letter of the right answer.
-      const letters = await page.locator("ul.space-y-2 li span:first-child").allInnerTexts()
+      // Each reason carries the letter of its own option: the reason starts with that option's name.
+      const options = await page.locator("main button:has(span.font-bold)").evaluateAll((buttons) =>
+        buttons.map((button) => ({ letter: (button.querySelector("span.font-bold")?.textContent ?? "").trim().charAt(0), text: (button.querySelectorAll("span")[1]?.textContent ?? "").trim() })),
+      )
+      expect(options.map((option) => option.letter)).toEqual(["A", "B", "C", "D"])
       const right = (await page.locator("button.bg-foreground").first().innerText()).trim().charAt(0)
-      expect(letters.map((letter) => letter.trim().charAt(0)).sort()).toEqual(["A", "B", "C", "D"].filter((letter) => letter !== right))
+      const rows = await page.locator("ul.space-y-2 li").evaluateAll((items) =>
+        items.map((item) => ({ letter: (item.querySelector("span")?.textContent ?? "").trim().charAt(0), reason: (item.querySelectorAll("span")[1]?.textContent ?? "").trim() })),
+      )
+      for (const row of rows) {
+        const own = options.find((option) => option.letter === row.letter)
+        expect(own, `a reason lettered ${row.letter} has an option`).toBeTruthy()
+        expect(row.letter, "never the right answer's letter").not.toBe(right)
+        expect(row.reason.startsWith(own!.text), `reason ${row.letter} is about option ${row.letter} (${own!.text})`).toBe(true)
+      }
       expect(new Set(reasons).size, "no reason repeats").toBe(3)
       for (const reason of reasons) expect(reason).not.toMatch(/does not meet the constraint|not the answer the scene asks for/)
     } finally {
