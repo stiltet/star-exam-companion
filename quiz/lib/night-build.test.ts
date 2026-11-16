@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { execFile } from "node:child_process"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
@@ -465,15 +465,61 @@ test("a crawl is complete only when the manifest and the saved readings agree on
   }
 })
 
-test("a stopped say's leftover in the clips folder is cleared by a finished build, and the clips folder is private", async () => {
+test("an abandoned say's leftover in the clips folder is cleared by a finished build, a fresh one is left for the build that may own it, and the folder is private", async () => {
   const dir = path.join(scratch, "clip-partials")
   const spoken: string[] = []
   mkdirSync(path.join(dir, CLIPS_DIR), { recursive: true })
-  const leftover = path.join(dir, CLIPS_DIR, `${"c".repeat(64)}.wav.999.partial`)
-  writeFileSync(leftover, "cut short")
+  const abandoned = path.join(dir, CLIPS_DIR, `${"c".repeat(64)}.wav.999.partial`)
+  const fresh = path.join(dir, CLIPS_DIR, `${"d".repeat(64)}.wav.998.partial`)
+  writeFileSync(abandoned, "cut short")
+  writeFileSync(fresh, "still being written")
+  const longAgo = new Date(Date.now() - 2 * 60 * 60 * 1000)
+  utimesSync(abandoned, longAgo, longAgo)
   await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub })
-  assert.equal(exists(leftover), false)
+  assert.equal(exists(abandoned), false)
+  assert.equal(exists(fresh), true, "a file another server may still be writing is not removed")
   assert.equal(statSync(path.join(dir, CLIPS_DIR)).mode & 0o777, 0o700)
+})
+
+test("a clip that is not a WAV is removed and spoken again instead of failing every build", async () => {
+  const dir = path.join(scratch, "clip-corrupt")
+  const spoken: string[] = []
+  mkdirSync(path.join(dir, CLIPS_DIR), { recursive: true })
+  writeFileSync(clipFile(dir, "One."), "not a wav at all, but not empty")
+  const ready = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub })
+  assert.equal(ready.state, "ready")
+  assert.deepEqual(spoken, ["One.", "Two."], "the damaged clip is spoken again with the missing one")
+})
+
+test("a recording that is already ready still deletes the clips no reading uses once the crawl check is sure", async () => {
+  const dir = path.join(scratch, "ready-prune")
+  const spoken: string[] = []
+  await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub })
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub })
+  const stale = clipFile(dir, "Two, changed.")
+  assert.equal(exists(stale), true, "no check was sure when the recording was built")
+  const before = spoken.length
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, canPrune: async () => false })
+  assert.equal(exists(stale), true, "an unsure check deletes nothing")
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, canPrune: async () => true })
+  assert.equal(exists(stale), false, "the crawl finished later, so the next look at the ready recording tidies up")
+  assert.equal(exists(clipFile(dir, "One.")), true)
+  assert.equal(spoken.length, before, "the ready recording is served as it is")
+})
+
+test("the recording is joined from the changed reading's new clip, not from the old one", async () => {
+  const dir = path.join(scratch, "joined-content")
+  const spoken: string[] = []
+  const joined: Buffer[] = []
+  const capture = async (wav: string, m4a: string) => {
+    joined.push(readFileSync(wav))
+    writeFileSync(m4a, "audio")
+  }
+  await buildRecording({ dir, parts, render: speak(spoken), encode: capture })
+  await buildRecording({ dir, parts: second, render: speak(spoken), encode: capture })
+  const expected = (scripts: string[]) => Buffer.from(joinWavs(scripts.map((script) => tone(script.length))).wav)
+  assert.deepEqual(joined[0], expected(["One.", "Two."]))
+  assert.deepEqual(joined[1], expected(["One.", "Two, changed."]), "the changed reading's new audio is in the recording, and the old Two. is not")
 })
 
 const VOICE_A = "a".repeat(64)

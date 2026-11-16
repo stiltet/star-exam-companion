@@ -187,6 +187,35 @@ export async function pruneClips(dir: string, parts: readonly NightPart[], voice
   return removed
 }
 
+// The voice a build remembered, or "" when none was written or it is not a fingerprint.
+async function rememberedVoice(dir: string): Promise<string> {
+  const text = (await readFile(path.join(dir, VOICE_FILE), "utf8").catch(() => "")).trim()
+  return REAL_VOICE.test(text) ? text : ""
+}
+
+// Deletes the clips no reading uses, but only when the crawl check is sure. Pruning is a tidy-up: it never fails a build, and a doubt deletes nothing.
+async function pruneIfSure(deps: BuildDeps, voice: string): Promise<void> {
+  if (deps.canPrune && (await deps.canPrune().catch(() => false))) await pruneClips(deps.dir, deps.parts, voice).catch(() => 0)
+}
+
+// A clip counts as spoken only when it is a WAV with sound in it. A clip that is not (a disk that filled up, a file touched by hand) is not
+// kept: it is removed so the reading is spoken again, instead of failing every build at the join.
+async function validClip(file: string): Promise<boolean> {
+  const handle = await open(file, "r").catch(() => null)
+  if (!handle) return false
+  try {
+    const head = Buffer.alloc(12)
+    const { bytesRead } = await handle.read(head, 0, 12, 0)
+    const size = (await handle.stat()).size
+    return bytesRead === 12 && head.toString("latin1", 0, 4) === "RIFF" && head.toString("latin1", 8, 12) === "WAVE" && size > 44
+  } finally {
+    await handle.close()
+  }
+}
+
+// A `.partial` file in the clips folder may be another server's `say` still writing it, so only one old enough to be abandoned is removed.
+const STALE_PARTIAL_MS = 30 * 60 * 1000
+
 export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuildState, { state: "ready" }>> {
   if (deps.parts.length === 0) throw new Error("There is nothing to read.")
   await mkdir(deps.dir, { recursive: true })
@@ -200,13 +229,24 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   if (existsSync(m4a) && existsSync(manifestPath)) {
     const manifest = parseManifest(await readFile(manifestPath, "utf8"), key)
     const info = await stat(m4a)
-    if (manifest && info.size > 0) return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
+    if (manifest && info.size > 0) {
+      // A crawl that finished after this recording was built makes the clips no reading uses safe to delete now, so a ready recording checks too.
+      const remembered = deps.voice ? await rememberedVoice(deps.dir) : ""
+      if (!deps.voice || remembered !== "") await pruneIfSure(deps, remembered)
+      return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
+    }
   }
   const total = deps.parts.length
   const clipFolder = path.join(deps.dir, CLIPS_DIR)
-  await mkdir(clipFolder, { recursive: true })
+  await mkdir(clipFolder, { recursive: true, mode: 0o700 })
+  // Like the recording folder, a folder that cannot be tightened still works; it was created private, so only a folder that already existed is affected.
   await chmod(clipFolder, 0o700).catch(() => undefined)
-  const have = async (file: string) => (await stat(file).then((info) => info.size, () => 0)) > 0
+  const have = async (file: string) => {
+    if (!(await stat(file).then((info) => info.size > 0, () => false))) return false
+    if (await validClip(file)) return true
+    await rm(file, { force: true })
+    return false
+  }
   const pairsFor = (voice: string) => deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
   // The voice is asked for only when a clip must be spoken or no voice is remembered yet (the first build, or a night folder that was cleared).
   // Every clip already there under the remembered voice means no speech is needed, so a restart or a damaged manifest never runs `say`, and a
@@ -217,8 +257,7 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   // With no voice asked for at all (tests) the clips carry no voice, so they may be deleted; with a voice, a clip may be deleted only once it is identified below.
   let identified = !deps.voice
   if (deps.voice) {
-    const remembered = (await readFile(voiceFile, "utf8").catch(() => "")).trim()
-    voice = REAL_VOICE.test(remembered) ? remembered : ""
+    voice = await rememberedVoice(deps.dir)
     const settled = voice !== "" && (await Promise.all(pairsFor(voice).map((pair) => have(pair.file)))).every(Boolean)
     if (!settled) {
       voice = await deps.voice()
@@ -259,15 +298,17 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   await rename(temporary, manifestPath)
   await rm(joined, { force: true })
   // A `say` that was stopped mid-reading leaves a .partial file behind; the finished build clears it. The clips stay.
-  const partials = [
-    ...(await readdir(root)).filter((name) => name.endsWith(".partial")).map((name) => path.join(root, name)),
-    ...(await readdir(clipFolder)).filter((name) => name.endsWith(".partial")).map((name) => path.join(clipFolder, name)),
-  ]
+  const partials = (await readdir(root)).filter((name) => name.endsWith(".partial")).map((name) => path.join(root, name))
   await Promise.all(partials.map((file) => rm(file, { force: true })))
+  for (const name of (await readdir(clipFolder)).filter((entry) => entry.endsWith(".partial"))) {
+    const file = path.join(clipFolder, name)
+    const age = Date.now() - (await stat(file).then((info) => info.mtimeMs, () => Date.now()))
+    if (age > STALE_PARTIAL_MS) await rm(file, { force: true })
+  }
   const old = (await readdir(deps.dir)).filter((name) => /^[0-9a-f]{64}$/.test(name) && name !== key)
   await Promise.all(old.map((name) => rm(path.join(deps.dir, name), { recursive: true, force: true })))
-  // Pruning is a tidy-up: it never fails a finished recording, and a doubt deletes nothing (a voice that could not be told apart included).
-  if (identified && deps.canPrune && (await deps.canPrune().catch(() => false))) await pruneClips(deps.dir, deps.parts, voice).catch(() => 0)
+  // A doubt deletes nothing, a voice that could not be told apart included.
+  if (identified) await pruneIfSure(deps, voice)
   return { state: "ready", key, bytes, duration, chapters }
 }
 
