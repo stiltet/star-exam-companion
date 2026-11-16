@@ -111,6 +111,36 @@ describe('the GitHub Pages build', () => {
       const home = readFileSync(path.join(out, 'index.html'), 'utf8');
       assert.match(home, /href="\/demo-test\/favicon\.png"/, 'the icon must carry the base path');
       assert.match(home, /Online demo\./, 'every page carries the demo banner');
+      // The banner sits in the app's own container and has the yellow warning look, not a full-width grey bar.
+      // Each part is its own check inside the banner's own element, so a reordered attribute does not fail it and a
+      // copy of the sentence elsewhere on the page does not satisfy it.
+      const banner = /<div ((?:[^>]*\s)?)data-testid="demo-banner"([^>]*)>(.*?)<\/div>/s.exec(home);
+      assert.ok(banner, 'the banner has its own element');
+      const [, before, after, inner] = banner;
+      // Whole class names, never a word boundary: \bp-4\b would also match md:p-4, and \bbg-flag\b would match bg-flag-foreground.
+      const classesOf = (attributes: string) => (/(?:^|\s)class="([^"]*)"/.exec(attributes)?.[1] ?? '').split(/\s+/);
+      const wrapper = classesOf(`${before}${after}`);
+      for (const token of ['max-w-4xl', 'mx-auto', 'px-4', 'pt-4']) assert.ok(wrapper.includes(token), `the banner is in the app container (${token})`);
+      const warning = /<p ([^>]*)>(.*?)<\/p>/s.exec(inner);
+      assert.ok(warning, 'the banner is a paragraph');
+      const paragraph = warning[1] as string;
+      const words = warning[2] as string;
+      assert.match(paragraph, /(?:^|\s)role="note"/, 'the banner keeps its note role');
+      const look = classesOf(paragraph);
+      for (const token of ['bg-flag', 'text-flag-foreground', 'border-2', 'p-4', 'text-center']) assert.ok(look.includes(token), `the banner has the warning look (${token})`);
+      assert.doesNotMatch(home, /<div role="note"/, 'the old full-width grey bar is gone');
+      assert.match(words, /Online demo\.<\/strong> Study, Practice, Test exam, Flashcards and Glossary work here, and all\s+answers stay locally in your browser\.(?:<!-- -->)?\s+<a [^>]*>Clone it and serve it locally<\/a>\s+(?:<!-- -->)?to use all features\./, 'the banner says what works here, that answers stay in the browser, and links to the setup to use all features');
+      assert.match(words, /features\. Not affiliated with Google: see(?:<!-- -->)?\s+<a [^>]*>the notice<\/a>\.$/, 'the banner ends by saying it is not Google and linking to the notice');
+      // Both links open in a new tab and cannot reach back to the page: the same-tab form would leave the offline demo.
+      const links = [...words.matchAll(/<a ([^>]*)>/g)].map((link) => link[1] as string);
+      assert.equal(links.length, 2, 'the banner has the setup link and the notice link');
+      // An attribute name must start the attribute: data-target="_blank" or data-href must not stand in for the real one.
+      assert.match(links[0] as string, /(?:^|\s)href="https:\/\/github\.com\/stiltet\/star-exam-companion#full-local-setup"/, 'the first link is the setup guide');
+      assert.match(links[1] as string, /(?:^|\s)href="https:\/\/github\.com\/stiltet\/star-exam-companion\/blob\/main\/NOTICE"/, 'the second link is the notice');
+      for (const link of links) {
+        assert.match(link, /(?:^|\s)target="_blank"/, 'the banner link opens in a new tab');
+        assert.match(link, /(?:^|\s)rel="noopener noreferrer"/, 'the banner link cannot reach back to the demo');
+      }
       assert.doesNotMatch(home, /href="\/favicon\.png"/);
       assert.match(home, /rel="manifest" href="\/demo-test\/manifest\.webmanifest"/, 'Android installs from the manifest');
       const manifest = JSON.parse(readFileSync(path.join(out, 'manifest.webmanifest'), 'utf8'));
