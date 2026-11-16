@@ -150,7 +150,8 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
               ))}
             </ul>
 
-            {question.officialDoc && (
+            {/* Only a web address is a link: a bare source such as a page of the study guide would open the quiz's own 404 page. */}
+            {question.officialDoc && /^https?:\/\//.test(question.officialDoc) && (
               <a
                 href={question.officialDoc}
                 target="_blank"

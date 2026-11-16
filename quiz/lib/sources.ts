@@ -32,7 +32,8 @@ const SOURCE_URLS: Record<string, string> = {
 function sourceUrl(source: string): string {
   const link = source.match(/\((https?:\/\/[^)]+)\)/)
   if (link?.[1]) return link[1]
-  const key = source.split(",")[0]?.trim() ?? ""
+  // "SG p.8" and "SG p.5–6" name the study guide and a page: the key is the first word, so the page does not hide the address.
+  const key = (source.split(",")[0]?.trim() ?? "").replace(/\s+p\..*$/, "")
   return SOURCE_URLS[key] ?? ""
 }
 

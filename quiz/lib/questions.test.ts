@@ -36,6 +36,11 @@ test("a voice scene in Practice shows its constraint in the question and gives e
   }
 })
 
+test("every voice scene's official document is a web address, so its link never opens the quiz's own 404 page", () => {
+  const bad = items.filter((item) => !/^https:\/\//.test(item.source)).map((item) => `${item.id}: ${item.source}`)
+  assert.deepEqual(bad, [])
+})
+
 test("written questions sit in exam sections 1 to 4 and keep their own explanations", () => {
   const written = quizQuestions(glossary, items, testBank).filter((question) => question.id.startsWith("q"))
   assert.deepEqual([...new Set(written.map((question) => question.sectionId))].sort(), ["1", "2", "3", "4"])
