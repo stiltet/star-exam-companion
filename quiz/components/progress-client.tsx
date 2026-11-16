@@ -150,9 +150,9 @@ export function ProgressClient({ stats }: Props) {
       </div>
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
-        <SectionBar>EXAMS</SectionBar>
+        <SectionBar>TEST EXAMS</SectionBar>
         {exams.length === 0 ? (
-          <p className={cell}>No exam finished yet.</p>
+          <p className={cell}>No test exam finished yet.</p>
         ) : (
           <table className="w-full text-xs sm:text-sm">
             <thead>
@@ -182,7 +182,7 @@ export function ProgressClient({ stats }: Props) {
       {retakes.length > 0 && (
         <div className="border-2 border-foreground mb-6 overflow-x-auto">
           <SectionBar>RETAKES</SectionBar>
-          <p className={`${cell} text-muted-foreground border-b border-foreground`}>Retakes of missed and flagged questions. They do not count as practice exams.</p>
+          <p className={`${cell} text-muted-foreground border-b border-foreground`}>Retakes of missed and flagged questions. They do not count as test exams.</p>
           <table className="w-full text-xs sm:text-sm">
             <thead>
               <tr className="border-b border-foreground">
@@ -291,7 +291,7 @@ export function ProgressClient({ stats }: Props) {
               <li>→ Target accuracy is {PRACTICE_TARGET}%. Focus on understanding concepts, not memorization.</li>
               <li>→ Review topics where you consistently answer incorrectly.</li>
               <li>→ Pay attention to &quot;Common Traps&quot; in each topic page.</li>
-              <li>→ Take full practice exams to build time management skills.</li>
+              <li>→ Take full test exams to build time management skills.</li>
             </ul>
           ) : (
             <p className="text-sm">Your accuracy meets the target. Continue practicing to maintain readiness.</p>
@@ -311,7 +311,7 @@ export function ProgressClient({ stats }: Props) {
           href="/exam"
           className="border-2 border-foreground px-4 py-2 no-underline hover:bg-foreground hover:text-background"
         >
-          TAKE EXAM →
+          TAKE TEST EXAM →
         </Link>
         <Link
           href="/flashcards"
@@ -328,22 +328,24 @@ export function ProgressClient({ stats }: Props) {
       </div>
 
       <div className="border-t border-foreground pt-6">
-        {canReset && <ResetProgress />}
+        <div className="border-2 border-foreground overflow-x-auto">
+          <SectionBar>EXAM PACKAGE</SectionBar>
+          <table className="w-full text-xs sm:text-sm">
+            <tbody>
+              <Row label="Package" value={stats.exam.title} last />
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="border-t border-foreground pt-6 mt-6">
+        {canReset && <ResetProgress examTitle={stats.exam.title} />}
         <p className="text-xs text-muted-foreground">
-          Your progress is saved on the Mac as you go and backed up at the end of each study day. Clearing this browser does not lose it, and a reset keeps a copy first.
+          Your progress is saved on the Mac as you go. Clearing this browser does not lose it, and a reset keeps a copy first.
         </p>
       </div>
 
       <div className="border-t border-foreground pt-6 mt-6">
-        <div className="border-2 border-foreground mb-6 overflow-x-auto">
-          <SectionBar>EXAM PACKAGE</SectionBar>
-          <table className="w-full text-xs sm:text-sm">
-            <tbody>
-              <Row label="Package" value={stats.exam.title} />
-              <Row label="Id" value={stats.exam.id} last />
-            </tbody>
-          </table>
-        </div>
         <ExamSwitcher exams={stats.exams} current={stats.exam.id} />
       </div>
     </div>

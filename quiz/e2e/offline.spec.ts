@@ -301,6 +301,49 @@ test.describe("exam changes", () => {
     }
   })
 
+  test("the Unanswered filter works with the Mac unreachable and leaves out an answer queued on the device", async ({ context, page }) => {
+    const question = page.locator("main p.font-medium")
+    const queue = () => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-outbox-generative-ai-leader") ?? "[]") as { id: string }[])
+    try {
+      await page.goto("/progress")
+      await readyOffline(page)
+      // Once online, so the device keeps a copy of the saved answers for the filter to read.
+      await page.goto("/practice?section=1&unanswered=1")
+      await expect(question).toBeVisible()
+      const answeredText = (await question.textContent()) ?? ""
+      expect(answeredText).not.toBe("")
+      const position = page.locator("main").getByText(/^Question 1 of \d+$/)
+      const unanswered = Number(/of (\d+)$/.exec((await position.textContent()) ?? "")?.[1])
+      expect(unanswered).toBeGreaterThan(1)
+      await context.setOffline(true)
+      await page.goto("/practice?section=1&unanswered=1")
+      await expect(page.locator("main").getByRole("alert")).toHaveCount(0)
+      await expect(question).toHaveText(answeredText)
+      await page.getByRole("button", { name: /^A\./ }).click()
+      await expect.poll(async () => (await queue()).length).toBe(1)
+      // Opened again with the Mac still unreachable: the filter reads the copy and the queued answer, and the answered question is gone.
+      const reopened = await page.goto("/practice?section=1&unanswered=1")
+      expect(reopened?.status()).toBe(200)
+      await expect(page.locator("main").getByRole("status").filter({ hasText: "Loading your answers" })).toHaveCount(0)
+      await expect(page.locator("main").getByRole("alert")).toHaveCount(0)
+      // The count comes from the device's own data, one fewer than before, so the list is not empty and does not still hold the answered question.
+      await expect(position).toHaveText(`Question 1 of ${unanswered - 1}`)
+      await expect(question).toBeVisible()
+      await expect(question).not.toHaveText(answeredText)
+      expect((await queue()).length).toBe(1)
+      const queuedId = (await queue())[0]!.id
+      await context.setOffline(false)
+      await page.goto("/progress")
+      await expect.poll(async () => (await queue()).length).toBe(0)
+      // The queue emptying is not enough: the Mac must now hold the answer, once.
+      const snapshot = await page.request.get("/api/snapshot", { headers: { "x-quiz-exam": "generative-ai-leader" } })
+      const lines = (await snapshot.json()).snapshot.lines as { id: string }[]
+      expect(lines.filter((line) => line.id === queuedId)).toHaveLength(1)
+    } finally {
+      await context.setOffline(false)
+    }
+  })
+
   test("a Rise reading opens, saves progress and reopens offline", async ({ context, page, baseURL }) => {
     const origin = { origin: baseURL! }
     try {

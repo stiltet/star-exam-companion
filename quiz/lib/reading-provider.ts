@@ -4,7 +4,7 @@ import type { Loaded } from "./course-text.ts"
 import type { Course } from "./reading-view.ts"
 import { pageList, type Bundle } from "./reading.ts"
 import { PrivateRecordError, privateReadingRoot, readPrivateReadings } from "./private-reading.ts"
-import { manifestFile, readManifest } from "./reading-crawl.ts"
+import { manifestFile, manifestProblem, readManifest, textHash } from "./reading-crawl.ts"
 
 export interface ReadingProvider {
   load(course: Course): Promise<Loaded>
@@ -65,4 +65,29 @@ export const privateReadingProvider: ReadingProvider = {
 
 export function courseBundle(course: Course): Promise<Loaded> {
   return (course.provider === "private" ? privateReadingProvider : googleReadingProvider).load(course)
+}
+
+// True only when every private course given is fully and consistently captured: its crawl manifest is trusted (complete, so no crawl is running on it) and matches the saved readings one for one (a lesson with no saved text has no reading and does not block). A caller that deletes something derived from the readings (a spoken clip) asks this
+// first, so a reading missing from a crawl that is still running is never taken for an unused one. A public course needs no crawl. Any
+// doubt, an error included, answers false.
+export async function crawlCompleteFor(courses: readonly Pick<Course, "id" | "packId" | "provider">[]): Promise<boolean> {
+  try {
+    for (const course of courses) {
+      if (course.provider !== "private") continue
+      const manifest = await readManifest(manifestFile(privateReadingRoot(), course.packId, course.id))
+      if (!manifest || manifestProblem(manifest) !== null) return false
+      const records = await readPrivateReadings(course.packId, course.id)
+      // A lesson with no saved text (an empty or unreadable one) has no reading and so no clip: it must have no record, and it does not block.
+      const saved = manifest.lessons.filter((lesson) => lesson.hash !== null)
+      if (records.length !== saved.length) return false
+      for (const record of records) {
+        const lesson = saved.find((item) => item.pageId === record.pageId)
+        if (!lesson || lesson.hash !== textHash(record.text)) return false
+      }
+    }
+    return true
+  } catch {
+    // Dropping the error is safe: false only means "not sure", which makes the caller delete nothing.
+    return false
+  }
 }

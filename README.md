@@ -28,7 +28,7 @@
 > before you trust it with anything that matters.
 
 **[Try the online demo](https://stiltet.github.io/star-exam-companion/)**: Study, Practice, the
-Practice exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
+Test exam, Flashcards and the Glossary run in your browser. Voice Quiz, Read Aloud and Progress
 are core features that need the quiz on your own computer; every exam has its own copy of the demo, linked from the bar under the header; the [full local setup](#full-local-setup)
 below gets everything working.
 
@@ -77,7 +77,7 @@ The app is built to be accessible and neuro-friendly, so that anyone can study w
 | **Voice Quiz** | Reads each exam-style scene and its four options aloud, explains a wrong answer and its binding constraint, and keeps asking until each term is learned. | The local server, on macOS |
 | **Read Aloud** | Reads public Google learning-path text and private copies saved on this server, sentence by sentence, with a night-reading mode. Previous and Next lesson, and Previous and Next course, sit at the top and bottom of each page. Private copies stay outside the repository and build. | The local server, on macOS |
 | **Practice** | Exam-style questions by section or topic, with explanations and an "unanswered only" filter. | The local server, to save answers |
-| **Practice exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
+| **Test exam** | A timed exam that mirrors the real one, with a full review afterwards. | The local server, to save answers |
 | **Flashcards and Glossary** | Every exam term, using the exam guide's own name first, each meaning with its source. | Nothing extra |
 | **Progress** | Results per mode and per section, from every device that studies against your machine. | The local server |
 | **Offline / connection status** | Tap the laptop icon in the header: answers waiting to send (Send now), where the questions came from (Update now), and whether the connection is secure and offline mode is ready (it needs https://). A dropdown on a phone, a dialog on a wide screen. The online demo shows fixed values. | The local server |
@@ -215,7 +215,8 @@ Good to know about private readings:
   hash of its page id, so open a file to see its `title` and `savedAt` and find the page it holds. Clear this site's
   data on each device to remove its offline copies. Night reading's recording is built from the text and
   lives in `NIGHT_DIR`: it is replaced the next time Night reading builds (when the server starts, when
-  the exam is switched, or when its page asks), so delete that folder to remove it at once. Deleting a
+  the exam is switched, or when its page asks), so delete that folder to remove it at once. Each reading's spoken clip is kept
+  in a `clips` folder inside `NIGHT_DIR`, uncompressed and so much larger than the recording, so a changed reading is the only one spoken again, and a changed Mac voice speaks every reading again the next time a reading has to be spoken. The voice is identified by speaking a short sentence, only when a clip must be spoken or none is remembered yet, and remembered in `NIGHT_DIR`; if that fails the build stops with a message and tries again later. A voice that is not repeatable, or one switched while a build is running, can leave two voices in one recording. Delete `clips` too to remove the clips. Deleting a
   copy does not remove the ticks you earned for it, which stay in your saved scores. The capture also keeps two things beside the store, outside the
   repository: its run logs (one small file per run in a `logs` folder next to `private-reading`, holding no lesson text and the signed-in
   account only as its first letter and domain; delete them whenever you like) and the capture browser's own profile folder, `cft-profile`, which
