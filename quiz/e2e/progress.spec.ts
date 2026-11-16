@@ -8,6 +8,11 @@ test("Progress displays a saved answer and reset clears scratch scores", async (
   const table = page.locator("table").filter({ has: page.getByRole("cell", { name: "All", exact: true }) })
   await expect(table.getByRole("row").last().getByRole("cell").nth(1)).toHaveText(/^1\//)
   await page.waitForLoadState("networkidle")
+  // The exam package is shown above Reset progress, and without its internal id.
+  const packageBox = await page.getByText("EXAM PACKAGE", { exact: true }).boundingBox()
+  const resetBox = await page.getByRole("button", { name: "Reset progress", exact: true }).boundingBox()
+  expect(packageBox!.y).toBeLessThan(resetBox!.y)
+  await expect(page.getByRole("cell", { name: "Id", exact: true })).toHaveCount(0)
   await page.getByRole("button", { name: "Reset progress", exact: true }).click()
   // The question names the exam being reset, so nobody clears the wrong one.
   await expect(page.getByRole("alertdialog").getByRole("heading")).toHaveText("Reset all progress for Generative AI Leader?")

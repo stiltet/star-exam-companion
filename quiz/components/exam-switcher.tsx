@@ -71,7 +71,7 @@ export function ExamSwitcher({ exams, current }: Props) {
   }
 
   return (
-    <div className="mt-6">
+    <div>
       <Heading variant="label" placement="mb-4">SWITCH EXAM</Heading>
       <label className="sr-only" htmlFor="exam-choice">Exam</label>
       <Select
