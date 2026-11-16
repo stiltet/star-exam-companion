@@ -101,8 +101,8 @@ export function ExamReview({ exam, bank, sections, unsaved, retakeCount, onRetak
 
   return (
     <div>
-      <Heading variant="page" placement="mb-2">{exam.retake ? "RETAKE RESULTS" : "EXAM RESULTS"}</Heading>
-      <p className="text-muted-foreground mb-6">{exam.date} · {total} questions{exam.retake ? " · a retake, not counted as a practice exam" : ""}</p>
+      <Heading variant="page" placement="mb-2">{exam.retake ? "RETAKE RESULTS" : "TEST EXAM RESULTS"}</Heading>
+      <p className="text-muted-foreground mb-6">{exam.date} · {total} questions{exam.retake ? " · a retake, not counted as a test exam" : ""}</p>
       {unsaved && <p role="alert" className="mb-6 font-bold">This exam was not saved. This device could not keep it and the Mac could not be reached. It stays here until you leave this page.</p>}
 
       <div className={`border-2 border-foreground p-6 mb-6 text-center ${passed && !exam.retake ? "bg-foreground text-background" : "bg-muted"}`}>

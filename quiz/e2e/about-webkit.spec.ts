@@ -10,7 +10,7 @@ test("the About page's features are a list, with the role Safari needs", async (
     /^Voice quiz/,
     /^Read aloud/,
     /^Practice questions/,
-    /^Practice exam/,
+    /^Test exam/,
     /^Flashcards/,
     /^Private and offline/,
   ])

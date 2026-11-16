@@ -292,7 +292,7 @@ export function ExamClient({ questions, sections, length }: Props) {
 
     return (
       <div>
-        <Heading variant="page" placement="sr-only">PRACTICE EXAM</Heading>
+        <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
         {/* Timer Bar */}
         <div className="border-2 border-foreground mb-6 sticky top-0 bg-background z-10">
           <div className="p-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
@@ -404,7 +404,7 @@ export function ExamClient({ questions, sections, length }: Props) {
     if (!exam) {
       return (
         <div>
-          <Heading variant="page" placement="mb-6">EXAM RESULTS</Heading>
+          <Heading variant="page" placement="mb-6">TEST EXAM RESULTS</Heading>
           <p className="border-2 border-foreground p-4 mb-6">This exam is not on this device yet. It appears once this device has fetched your results from the Mac.</p>
           <ActionButton variant="outlined" onClick={close}>Back</ActionButton>
         </div>
@@ -429,7 +429,7 @@ export function ExamClient({ questions, sections, length }: Props) {
   // Intro Screen
   return (
     <div>
-      <Heading variant="page" placement="sr-only">PRACTICE EXAM</Heading>
+      <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
       <Text variant="muted" placement="mb-8">Simulated exam environment with realistic pacing.</Text>
       {notResumed && <p role="alert" className="mb-6 font-bold">The exam in progress could not be reopened: the glossary changed since it started. Start a new one.</p>}
 
@@ -483,13 +483,13 @@ export function ExamClient({ questions, sections, length }: Props) {
 
       {/* An exam with no questions has nothing to start: the page above says so, and the button waits for questions. */}
       <ActionButton variant="outlined" placement="w-full mb-6" disabled={bank.size === 0} onClick={() => startExam()}>
-        Start exam →
+        Start test exam →
       </ActionButton>
 
       <div className="border-2 border-foreground mb-6 overflow-x-auto">
-        <SectionBar>PAST EXAMS</SectionBar>
+        <SectionBar>PAST TEST EXAMS</SectionBar>
         {history.length === 0 ? (
-          <p className="p-3">No exam finished yet.</p>
+          <p className="p-3">No test exam finished yet.</p>
         ) : (
           <ul className="divide-y divide-foreground list-none p-0 m-0">
             {history.map((exam, index) => (

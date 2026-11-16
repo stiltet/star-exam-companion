@@ -11,7 +11,7 @@ const FEATURES: { name: string; what: string }[] = [
   { name: "Voice quiz", what: "Answer spoken questions out loud." },
   { name: "Read aloud", what: "Listen to course lessons." },
   { name: "Practice questions", what: "Exam-style questions with explanations." },
-  { name: "Practice exam", what: "A timed run of the full exam." },
+  { name: "Test exam", what: "A timed run of the full exam." },
   { name: "Flashcards", what: "Revise the key terms." },
   { name: "Private and offline", what: "Your answers stay on your device." },
 ]

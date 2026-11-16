@@ -5,11 +5,11 @@
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { createReadStream, existsSync } from "node:fs"
-import { appendFile, chmod, mkdir, open, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
-import { homedir } from "node:os"
+import { appendFile, chmod, mkdir, mkdtemp, open, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
+import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import { Readable } from "node:stream"
-import { courseBundle } from "./reading-provider.ts"
+import { courseBundle, crawlCompleteFor } from "./reading-provider.ts"
 import {
   byteRange, chapterList, manifestRecord, nightParts, parseManifest, pcmDuration, pcmOf, sayTimeoutMs, wavFromPcm,
   type NightBuildState, type NightPart, type NightSource,
@@ -23,6 +23,7 @@ import { renderSpeech } from "./say.ts"
 const ENCODE_TIMEOUT_MS = 10 * 60 * 1000
 
 export const BUILD_LOG = "build-errors.log"
+export const CLIPS_DIR = "clips"
 
 // The user's caches folder, which a restart keeps, so the hours of speech are not built again.
 export function nightDir(): string {
@@ -36,8 +37,51 @@ export function nightDirFor(exam: string = examId()): string {
   return exam === DEFAULT_EXAM ? nightDir() : path.join(nightDir(), exam)
 }
 
+// One spoken clip per reading, named by a hash of that reading's own script and of the Mac's voice, and kept beside the recording
+// folders, so a changed script speaks again only the readings that changed and a changed voice speaks them all again. A recording can
+// still hold two voices in two cases, both rare: the voice cannot be told apart (UNSTABLE_VOICE), or it is switched while a build runs.
+// The recording's own key (scriptKey) is unchanged, so a recording that exists is still served as it is.
+export function clipFile(dir: string, script: string, voice = ""): string {
+  return path.join(dir, CLIPS_DIR, `${createHash("sha256").update(`${voice}\u0000${script}`).digest("hex")}.wav`)
+}
+
+// A sentence with no private text, spoken to tell the Mac's voice from another. macOS gives a program no way to read which voice is the
+// System voice (`say` is run with no -v), so the voice is known by its sound: the hash of this sentence spoken twice. A `say` that fails or
+// is slow is UNKNOWN_VOICE, and the build then stops with a plain message and tries again later, so a clip is never named for a voice that
+// was not identified. A voice that gives two different hashes is UNSTABLE_VOICE: voices are then not told apart, so a recording can hold two
+// voices, and nothing is deleted. The voice is asked for only when a clip must be spoken or none is remembered yet (see buildRecording), and
+// an identified voice is remembered in the night folder, so a restart or a damaged manifest that needs no speech never runs `say`.
+export const UNKNOWN_VOICE = "unknown"
+export const UNSTABLE_VOICE = "unstable"
+const VOICE_PROBE = "Night reading voice check."
+const PROBE_TIMEOUT_MS = 10_000
+export const REAL_VOICE = /^[0-9a-f]{64}$/
+export const VOICE_FILE = "voice"
+export async function voiceFingerprint(render: (text: string, file: string) => Promise<boolean> = (text, file) => renderSpeech(text, file, PROBE_TIMEOUT_MS)): Promise<string> {
+  const folder = await mkdtemp(path.join(tmpdir(), "star-night-voice-"))
+  try {
+    const hashes: string[] = []
+    for (const index of [0, 1]) {
+      const file = path.join(folder, `${index}.wav`)
+      if (!(await render(VOICE_PROBE, file))) return UNKNOWN_VOICE
+      hashes.push(createHash("sha256").update(await readFile(file)).digest("hex"))
+    }
+    return hashes[0] === hashes[1] ? (hashes[0] as string) : UNSTABLE_VOICE
+  } catch {
+    // A probe that cannot be spoken or read leaves the voice unknown, which stops the build with a message and deletes nothing.
+    return UNKNOWN_VOICE
+  } finally {
+    await rm(folder, { recursive: true, force: true })
+  }
+}
+
 export function scriptKey(parts: readonly NightPart[]): string {
   return createHash("sha256").update(parts.map((part) => part.script).join("\n")).digest("hex")
+}
+
+// True only when the exam's private readings are fully and consistently captured (see crawlCompleteFor), so a clip no reading uses is really unused.
+export async function crawlComplete(exam: string): Promise<boolean> {
+  return crawlCompleteFor(loadPack(repoRoot(), exam).courses)
 }
 
 // Text and headings only. A review stop or a video stop is a place Read Aloud waits; Night
@@ -123,7 +167,54 @@ export type BuildDeps = {
   render: (script: string, file: string) => Promise<boolean>
   encode: (wav: string, m4a: string) => Promise<void>
   onProgress?: (done: number, total: number) => void
+  // Asked only after a finished build. Clips no reading uses are deleted only when this answers true; no answer or an error deletes nothing.
+  canPrune?: () => Promise<boolean>
+  // The Mac's voice as a short text, asked once per build that needs speech. Without it clips are not told apart by voice.
+  voice?: () => Promise<string>
 }
+
+// Deletes the clips none of these readings uses in this voice, and every clip made in another voice, which no reading in this voice uses. Called only
+// with the readings of a build that just finished in full.
+export async function pruneClips(dir: string, parts: readonly NightPart[], voice = ""): Promise<number> {
+  const folder = path.join(dir, CLIPS_DIR)
+  const used = new Set(parts.map((part) => path.basename(clipFile(dir, part.script, voice))))
+  let removed = 0
+  for (const name of await readdir(folder).catch(() => [] as string[])) {
+    if (!/^[0-9a-f]{64}\.wav$/.test(name) || used.has(name)) continue
+    await rm(path.join(folder, name), { force: true })
+    removed += 1
+  }
+  return removed
+}
+
+// The voice a build remembered, or "" when none was written or it is not a fingerprint.
+async function rememberedVoice(dir: string): Promise<string> {
+  const text = (await readFile(path.join(dir, VOICE_FILE), "utf8").catch(() => "")).trim()
+  return REAL_VOICE.test(text) ? text : ""
+}
+
+// Deletes the clips no reading uses, but only when the crawl check is sure. Pruning is a tidy-up: it never fails a build, and a doubt deletes nothing.
+async function pruneIfSure(deps: BuildDeps, voice: string): Promise<void> {
+  if (deps.canPrune && (await deps.canPrune().catch(() => false))) await pruneClips(deps.dir, deps.parts, voice).catch(() => 0)
+}
+
+// A clip counts as spoken only when it is a WAV with sound in it. A clip that is not (a disk that filled up, a file touched by hand) is not
+// kept: it is removed so the reading is spoken again, instead of failing every build at the join.
+async function validClip(file: string): Promise<boolean> {
+  const handle = await open(file, "r").catch(() => null)
+  if (!handle) return false
+  try {
+    const head = Buffer.alloc(12)
+    const { bytesRead } = await handle.read(head, 0, 12, 0)
+    const size = (await handle.stat()).size
+    return bytesRead === 12 && head.toString("latin1", 0, 4) === "RIFF" && head.toString("latin1", 8, 12) === "WAVE" && size > 44
+  } finally {
+    await handle.close()
+  }
+}
+
+// A `.partial` file in the clips folder may be another server's `say` still writing it, so only one old enough to be abandoned is removed.
+const STALE_PARTIAL_MS = 30 * 60 * 1000
 
 export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuildState, { state: "ready" }>> {
   if (deps.parts.length === 0) throw new Error("There is nothing to read.")
@@ -138,22 +229,63 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   if (existsSync(m4a) && existsSync(manifestPath)) {
     const manifest = parseManifest(await readFile(manifestPath, "utf8"), key)
     const info = await stat(m4a)
-    if (manifest && info.size > 0) return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
+    if (manifest && info.size > 0) {
+      // A crawl that finished after this recording was built makes the clips no reading uses safe to delete now, so a ready recording checks too.
+      const remembered = deps.voice ? await rememberedVoice(deps.dir) : ""
+      if (!deps.voice || remembered !== "") await pruneIfSure(deps, remembered)
+      return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
+    }
   }
   const total = deps.parts.length
-  const files: string[] = []
-  let done = 0
-  deps.onProgress?.(done, total)
-  for (const part of deps.parts) {
-    const file = path.join(root, `${String(done).padStart(3, "0")}.wav`)
-    files.push(file)
-    if (!existsSync(file)) {
-      const spoke = await deps.render(part.script, file)
-      if (!spoke) throw new Error(`The Mac could not speak reading ${part.number} of course ${part.courseId}.`)
+  const clipFolder = path.join(deps.dir, CLIPS_DIR)
+  await mkdir(clipFolder, { recursive: true, mode: 0o700 })
+  // Like the recording folder, a folder that cannot be tightened still works; it was created private, so only a folder that already existed is affected.
+  await chmod(clipFolder, 0o700).catch(() => undefined)
+  const have = async (file: string) => {
+    if (!(await stat(file).then((info) => info.size > 0, () => false))) return false
+    if (await validClip(file)) return true
+    await rm(file, { force: true })
+    return false
+  }
+  const pairsFor = (voice: string) => deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
+  // The voice is asked for only when a clip must be spoken or no voice is remembered yet (the first build, or a night folder that was cleared).
+  // Every clip already there under the remembered voice means no speech is needed, so a restart or a damaged manifest never runs `say`, and a
+  // Mac that cannot be asked cannot stop such a build. A voice the owner has changed since is noticed only when a clip must be spoken; until then
+  // the recording and its clips stay in the old voice, and the next build that must speak asks again and speaks every reading in the new one.
+  const voiceFile = path.join(deps.dir, VOICE_FILE)
+  let voice = ""
+  // With no voice asked for at all (tests) the clips carry no voice, so they may be deleted; with a voice, a clip may be deleted only once it is identified below.
+  let identified = !deps.voice
+  if (deps.voice) {
+    voice = await rememberedVoice(deps.dir)
+    const settled = voice !== "" && (await Promise.all(pairsFor(voice).map((pair) => have(pair.file)))).every(Boolean)
+    if (!settled) {
+      voice = await deps.voice()
+      if (voice === UNKNOWN_VOICE) throw new Error("The Mac could not identify its voice. Try again.")
+      // Only a voice identified now may delete a clip: an unstable one cannot tell old clips from new.
+      identified = REAL_VOICE.test(voice)
+      // A voice that cannot be written down still builds the recording; the next build that needs speech just asks again.
+      if (identified) await writeFile(voiceFile, voice).catch(() => undefined)
+    } else {
+      // Every clip is there under a voice that was identified in an earlier build, so clips no reading uses can be deleted too.
+      identified = true
     }
+  }
+  const pairs = pairsFor(voice)
+  const files = pairs.map((pair) => pair.file)
+  // Readings already spoken count as done, so the page never shows 0 of N for a reading that will not be spoken again.
+  let done = 0
+  for (const file of files) if (await have(file)) done += 1
+  deps.onProgress?.(done, total)
+  for (const { part, file } of pairs) {
+    if (await have(file)) continue
+    const spoke = await deps.render(part.script, file)
+    if (!spoke) throw new Error(`The Mac could not speak reading ${part.number} of course ${part.courseId}.`)
     done += 1
     deps.onProgress?.(done, total)
   }
+  // Two readings with the same script share one clip, so the count above can end below the total for a finished build.
+  deps.onProgress?.(total, total)
   const joined = path.join(root, "joined.wav")
   const durations = await writeJoinedWav(files, joined)
   await deps.encode(joined, m4a)
@@ -165,11 +297,18 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   await writeFile(temporary, manifestRecord(key, { duration, chapters }))
   await rename(temporary, manifestPath)
   await rm(joined, { force: true })
-  // A `say` that was stopped mid-reading leaves a .partial file behind; the finished build clears it.
+  // A `say` that was stopped mid-reading leaves a .partial file behind; the finished build clears it. The clips stay.
   const partials = (await readdir(root)).filter((name) => name.endsWith(".partial")).map((name) => path.join(root, name))
-  await Promise.all([...files, ...partials].map((file) => rm(file, { force: true })))
+  await Promise.all(partials.map((file) => rm(file, { force: true })))
+  for (const name of (await readdir(clipFolder)).filter((entry) => entry.endsWith(".partial"))) {
+    const file = path.join(clipFolder, name)
+    const age = Date.now() - (await stat(file).then((info) => info.mtimeMs, () => Date.now()))
+    if (age > STALE_PARTIAL_MS) await rm(file, { force: true })
+  }
   const old = (await readdir(deps.dir)).filter((name) => /^[0-9a-f]{64}$/.test(name) && name !== key)
   await Promise.all(old.map((name) => rm(path.join(deps.dir, name), { recursive: true, force: true })))
+  // A doubt deletes nothing, a voice that could not be told apart included.
+  if (identified) await pruneIfSure(deps, voice)
   return { state: "ready", key, bytes, duration, chapters }
 }
 
@@ -178,6 +317,8 @@ type Runner = {
   load: () => Promise<NightPart[]>
   render: (script: string, file: string) => Promise<boolean>
   encode: (wav: string, m4a: string) => Promise<void>
+  canPrune?: () => Promise<boolean>
+  voice?: () => Promise<string>
 }
 
 async function noteFailure(dir: string, message: string, done: number, total: number) {
@@ -220,6 +361,8 @@ export function createNightBuild(deps: Runner): { begin: (retry: boolean, preloa
           parts,
           render: deps.render,
           encode: deps.encode,
+          canPrune: deps.canPrune,
+          voice: deps.voice,
           onProgress: (done, total) => {
             reached = { done, total }
             status = { state: "building", done, total }
@@ -254,6 +397,8 @@ export function beginNightBuild(retry: boolean, preload = false, exam = examId()
       load: () => loadCourseParts(exam),
       render: (script, file) => renderSpeech(script, file, sayTimeoutMs(script)),
       encode: encodeNightAudio,
+      canPrune: () => crawlComplete(exam),
+      voice: () => voiceFingerprint(),
     })
     shared.set(exam, build)
   }

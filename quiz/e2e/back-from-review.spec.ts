@@ -58,7 +58,7 @@ test.describe("in the installed app", () => {
 
     await last.click()
     await expect(page).toHaveURL(/\/exam#/)
-    await expect(page.getByRole("heading", { name: "EXAM RESULTS" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
     await backButton(page).click()
     await expect(page).toHaveURL(/\/progress$/)
     await expect.poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(5)
@@ -90,7 +90,7 @@ test.describe("in the installed app", () => {
       await context.setOffline(true)
       await page.getByRole("link", { name: "Review →" }).last().click()
       await expect(page).toHaveURL(/\/exam#/)
-      await expect(page.getByRole("heading", { name: "EXAM RESULTS" })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
       await backButton(page).click()
       await expect(page).toHaveURL(/\/progress$/)
     })

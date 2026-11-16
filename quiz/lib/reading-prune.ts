@@ -1,6 +1,6 @@
 import { describeError } from "./debug-log.ts"
 import { deletePrivateReading, privateReadingRoot, readPrivateReadings, type PrivateReadingRecord } from "./private-reading.ts"
-import { LISTING_VERSION, manifestFile, readManifest, type Manifest } from "./reading-crawl.ts"
+import { manifestFile, manifestProblem, readManifest, type Manifest } from "./reading-crawl.ts"
 
 // A saved copy is stale when the manifest of a finished crawl no longer lists its page. The crawl keeps the id of a copy it matched by
 // title, so a lesson that is still listed is never stale, whatever tool saved it first.
@@ -21,12 +21,8 @@ export type PruneResult = {
 export async function pruneCourse(examId: string, courseId: string, options: { dryRun?: boolean } = {}): Promise<PruneResult> {
   const manifest = await readManifest(manifestFile(privateReadingRoot(), examId, courseId))
   if (!manifest) return { removed: [], skipped: "no manifest yet: run pnpm reading:crawl first" }
-  if (manifest.complete === undefined) return { removed: [], skipped: "the manifest was made before automatic pruning existed: run pnpm reading:crawl once to refresh it" }
-  if (manifest.complete !== true) return { removed: [], skipped: "the last crawl of this course did not finish, its lesson list was still changing, or a card could not be read: run pnpm reading:crawl first" }
-  if (manifest.listing !== LISTING_VERSION) return { removed: [], skipped: "the manifest was made under an older listing rule: run pnpm reading:crawl first" }
-  if (manifest.lessons.length === 0) return { removed: [], skipped: "the course lists no lessons" }
-  // An entry without a page id would match nothing, so every saved copy would look gone.
-  if (!manifest.lessons.every((lesson) => typeof lesson.pageId === "string" && lesson.pageId !== "")) return { removed: [], skipped: "the manifest has an entry with no page id: run pnpm reading:crawl to rewrite it" }
+  const problem = manifestProblem(manifest)
+  if (problem) return { removed: [], skipped: problem }
   const stale = staleRecords(await readPrivateReadings(examId, courseId), manifest)
   if (!options.dryRun) for (const record of stale) await deletePrivateReading(examId, courseId, record.pageId)
   return { removed: stale.map((record) => record.title) }

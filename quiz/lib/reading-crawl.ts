@@ -339,3 +339,17 @@ export async function writeManifest(file: string, manifest: Manifest): Promise<v
   await writeFile(temporary, JSON.stringify(manifest, null, 1), { encoding: "utf8", mode: 0o600 })
   await rename(temporary, file)
 }
+
+// Why a manifest cannot be trusted to say what the course lists, or null when it can. It is trusted only when it is complete (a run
+// finished the whole course from a settled listing; a crawl still running writes it with complete false), was made under today's listing
+// rule, lists at least one lesson, and every entry has a page id. The prune command and the check before a spoken clip is deleted both
+// ask this, so there is one rule for "the crawl is done and its list is right".
+export function manifestProblem(manifest: Manifest): string | null {
+  if (manifest.complete === undefined) return "the manifest was made before automatic pruning existed: run pnpm reading:crawl once to refresh it"
+  if (manifest.complete !== true) return "the last crawl of this course did not finish, its lesson list was still changing, or a card could not be read: run pnpm reading:crawl first"
+  if (manifest.listing !== LISTING_VERSION) return "the manifest was made under an older listing rule: run pnpm reading:crawl first"
+  if (manifest.lessons.length === 0) return "the course lists no lessons"
+  // An entry without a page id would match nothing, so every saved copy would look gone.
+  if (!manifest.lessons.every((lesson) => typeof lesson.pageId === "string" && lesson.pageId !== "")) return "the manifest has an entry with no page id: run pnpm reading:crawl to rewrite it"
+  return null
+}
