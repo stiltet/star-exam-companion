@@ -15,8 +15,8 @@ export function DemoBanner() {
         <a href={SETUP_URL} target="_blank" rel="noopener noreferrer" className="underline font-bold">
           clone it and serve it locally
         </a>{" "}
-        to use them. Not affiliated with or endorsed by Google. Google&apos;s rights, its trademarks and the
-        sources of the glossary are in{" "}
+        to use them. Not affiliated with or endorsed by Google. Google&apos;s rights, its trademarks and where
+        the glossary cites its sources are explained in{" "}
         <a href={NOTICE_URL} target="_blank" rel="noopener noreferrer" className="underline font-bold">
           the notice
         </a>
