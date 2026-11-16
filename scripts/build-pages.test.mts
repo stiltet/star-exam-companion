@@ -111,6 +111,9 @@ describe('the GitHub Pages build', () => {
       const home = readFileSync(path.join(out, 'index.html'), 'utf8');
       assert.match(home, /href="\/demo-test\/favicon\.png"/, 'the icon must carry the base path');
       assert.match(home, /Online demo\./, 'every page carries the demo banner');
+      // The banner sits in the app's own container and has the yellow warning look, not a full-width grey bar.
+      assert.match(home, /<div class="max-w-4xl mx-auto px-4 pt-4" data-testid="demo-banner"><p role="note" class="[^"]*\bbg-flag\b[^"]*\btext-center\b/, 'the banner is a warning inside the app container');
+      assert.doesNotMatch(home, /<div role="note"/, 'the old full-width grey bar is gone');
       assert.doesNotMatch(home, /href="\/favicon\.png"/);
       assert.match(home, /rel="manifest" href="\/demo-test\/manifest\.webmanifest"/, 'Android installs from the manifest');
       const manifest = JSON.parse(readFileSync(path.join(out, 'manifest.webmanifest'), 'utf8'));

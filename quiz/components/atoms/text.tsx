@@ -29,7 +29,7 @@ export function Text({
 }: {
   variant: TextVariant
   placement?: string
-  role?: "status" | "alert"
+  role?: "status" | "alert" | "note"
   testId?: string
   children: ReactNode
 }) {
