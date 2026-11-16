@@ -20,5 +20,7 @@
       "href": "https://www.skills.google/paths/12"
     }
   ],
-  "sectionOf": {}
+  "sectionOf": {
+    "designing-planning": "1"
+  }
 }

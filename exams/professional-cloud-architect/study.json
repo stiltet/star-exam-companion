@@ -1,4 +1,562 @@
 {
-  "sections": [],
-  "questions": []
+  "sections": [
+    {
+      "id": "designing-planning",
+      "title": "Designing and planning a cloud solution architecture",
+      "weight": 25,
+      "description": "Business and technical requirements, network, storage and compute choices, migration plans and future improvements",
+      "topics": [
+        {
+          "id": "1-1",
+          "title": "1.1 Designing for business requirements",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Google Cloud Well-Architected Framework",
+              "url": "https://docs.cloud.google.com/architecture/framework"
+            },
+            {
+              "title": "Cost optimization pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            }
+          ],
+          "concepts": [
+            "Functional and non-functional requirements, business continuity, cost optimization and observability",
+            "Workload disposition strategies: build, buy, modify or deprecate",
+            "Success measurements such as key performance indicators, return on investment and metrics"
+          ],
+          "examFocus": "Start from the business need, then pick the design that meets it. The Well-Architected Framework pillars are the checklist for the trade-offs.",
+          "traps": [
+            "Choosing a product before finding the requirement that decides the design",
+            "Treating cost as the only trade-off when reliability, security or performance is the binding constraint"
+          ],
+          "studyQA": [
+            {
+              "question": "Which pillars does the exam guide name for the Google Cloud Well-Architected Framework?",
+              "answer": "Operational excellence, security, reliability, performance optimization, cost optimization and sustainability. The guide says they are woven through the exam objectives and should guide architectural decisions.",
+              "officialSource": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "question": "What does the cost optimization pillar of the Well-Architected Framework give you?",
+              "answer": "Principles and recommendations to help you optimise the cost of your workloads in Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            },
+            {
+              "question": "What is the Well-Architected Framework for?",
+              "answer": "It gives architectural recommendations and best practices to design a secure, efficient and resilient cloud topology that is optimised for cost, performance and sustainability.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework"
+            }
+          ]
+        },
+        {
+          "id": "1-2",
+          "title": "1.2 Designing for technical requirements",
+          "officialDocs": [
+            {
+              "title": "Reliability pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/reliability"
+            },
+            {
+              "title": "Gemini Cloud Assist overview",
+              "url": "https://docs.cloud.google.com/cloud-assist/overview"
+            },
+            {
+              "title": "Backup and DR overview",
+              "url": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr"
+            }
+          ],
+          "concepts": [
+            "High availability and fail-over design, scalability, performance and latency",
+            "Gemini Cloud Assist for designing, deploying, troubleshooting and optimising workloads",
+            "Backup and recovery for workloads in Google Cloud and in hybrid environments"
+          ],
+          "examFocus": "Match the technical requirement (availability, scale, latency, recovery) to the design choice, and name the pillar the choice serves.",
+          "traps": [
+            "Using one zone for a workload that must stay available when a zone fails",
+            "Confusing a backup service with a fail-over design"
+          ],
+          "studyQA": [
+            {
+              "question": "What does the reliability pillar help you do?",
+              "answer": "It provides principles and recommendations to design, deploy and manage reliable workloads in Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/reliability"
+            },
+            {
+              "question": "What is Gemini Cloud Assist?",
+              "answer": "An AI-powered collaborator that gives agentic guidance for designing, deploying, troubleshooting and optimising workloads, moving teams from reactive troubleshooting towards proactive operations.",
+              "officialSource": "https://docs.cloud.google.com/cloud-assist/overview"
+            },
+            {
+              "question": "What does Backup and DR provide?",
+              "answer": "Centralised backup and recovery for enterprise workloads running in Google Cloud and in hybrid environments, with policy-based governance.",
+              "officialSource": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr"
+            }
+          ]
+        },
+        {
+          "id": "1-3",
+          "title": "1.3 Designing network, storage and compute resources",
+          "officialDocs": [
+            {
+              "title": "VPC networks",
+              "url": "https://docs.cloud.google.com/vpc/docs/vpc"
+            },
+            {
+              "title": "Shared VPC",
+              "url": "https://docs.cloud.google.com/vpc/docs/shared-vpc"
+            },
+            {
+              "title": "VPC Network Peering",
+              "url": "https://docs.cloud.google.com/vpc/docs/vpc-peering"
+            },
+            {
+              "title": "Private Service Connect",
+              "url": "https://docs.cloud.google.com/vpc/docs/private-service-connect"
+            },
+            {
+              "title": "What is Cloud Run",
+              "url": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run"
+            },
+            {
+              "title": "GKE overview",
+              "url": "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview"
+            },
+            {
+              "title": "Cloud Storage overview",
+              "url": "https://docs.cloud.google.com/storage/docs/introduction"
+            }
+          ],
+          "concepts": [
+            "Cloud-native networking: VPC, peering, firewalls, load balancers, Shared VPC and Private Service Connect",
+            "Storage types: object (Cloud Storage), file (Filestore) and databases (Cloud SQL, Spanner, Bigtable, Firestore)",
+            "Compute choices: GKE, Cloud Run, Cloud Run functions, Spot VMs and custom machine types",
+            "AI infrastructure and models: AI Hypercomputer and Model Garden"
+          ],
+          "examFocus": "Read the binding constraint: who must control the network, whether the data is objects, files or rows, and how much control the team needs over orchestration.",
+          "traps": [
+            "Picking GKE when the team only needs to run a container and has no need for Kubernetes control",
+            "Using VPC peering when one central team must own the network, which is the Shared VPC case",
+            "Choosing a single-region relational database when the requirement is global scale"
+          ],
+          "studyQA": [
+            {
+              "question": "How do Shared VPC and VPC Network Peering differ?",
+              "answer": "Shared VPC connects resources from several projects to one common VPC network that a host project administers centrally. VPC Network Peering connects two separately administered VPC networks so their resources can talk over internal IP addresses.",
+              "officialSource": "https://docs.cloud.google.com/vpc/docs/shared-vpc"
+            },
+            {
+              "question": "What does Private Service Connect let consumers do?",
+              "answer": "It lets consumers access managed services privately from inside their own VPC network.",
+              "officialSource": "https://docs.cloud.google.com/vpc/docs/private-service-connect"
+            },
+            {
+              "question": "When does Cloud Run fit better than GKE?",
+              "answer": "Cloud Run is a fully managed platform for running code, a function or a container, so it fits when you want to deploy without managing a cluster. GKE is a managed Kubernetes service, which fits when you need the Kubernetes API and control over orchestration.",
+              "officialSource": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run"
+            },
+            {
+              "question": "What are Spot VMs good for?",
+              "answer": "Spot VMs are excess Compute Engine capacity at large discounts, and Google may preempt them to reclaim capacity, so they suit fault-tolerant workloads such as batch jobs.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/instances/spot"
+            },
+            {
+              "question": "What is a custom machine type?",
+              "answer": "A Compute Engine VM with your own number of vCPUs and amount of memory, for when no predefined machine type fits.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type"
+            },
+            {
+              "question": "Which storage service holds unstructured objects with high durability?",
+              "answer": "Cloud Storage lets you store, manage and retrieve unstructured data with high durability and global availability.",
+              "officialSource": "https://docs.cloud.google.com/storage/docs/introduction"
+            }
+          ]
+        },
+        {
+          "id": "1-4",
+          "title": "1.4 Creating a migration plan",
+          "officialDocs": [
+            {
+              "title": "Migration Center overview",
+              "url": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview"
+            },
+            {
+              "title": "Database Migration Service overview",
+              "url": "https://docs.cloud.google.com/database-migration/docs/overview"
+            }
+          ],
+          "concepts": [
+            "Assessing systems and data, then migrating them with Google Cloud Migration Center",
+            "Migration methodologies, workload testing, network planning and dependency planning",
+            "Software licence implications and financial impact"
+          ],
+          "examFocus": "A migration plan starts with discovery and assessment, including cost estimates, before any workload moves.",
+          "traps": [
+            "Moving workloads before discovering their dependencies",
+            "Ignoring licence terms when estimating the cost of the move"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Migration Center help you do?",
+              "answer": "It is a unified platform that accelerates your journey to Google Cloud. It estimates cloud costs, discovers and assesses your assets, and provides tooling for different migration scenarios, without changing your workloads.",
+              "officialSource": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview"
+            },
+            {
+              "question": "What does Database Migration Service migrate?",
+              "answer": "Data and metadata from a source database to a destination database, supporting migrations to Cloud SQL and AlloyDB for PostgreSQL.",
+              "officialSource": "https://docs.cloud.google.com/database-migration/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "1-5",
+          "title": "1.5 Envisioning future solution improvements",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Google Cloud Well-Architected Framework",
+              "url": "https://docs.cloud.google.com/architecture/framework"
+            }
+          ],
+          "concepts": [
+            "Cloud and technology improvements, and the evolution of business needs",
+            "A cloud-first design approach"
+          ],
+          "examFocus": "Expect scenarios where a design must keep working as needs change. Use the framework pillars to judge a proposed improvement.",
+          "traps": [
+            "Designing only for today's load with no room for the business to grow"
+          ],
+          "studyQA": [
+            {
+              "question": "Which framework does the exam guide call a key requirement for the role?",
+              "answer": "Familiarity with the Google Cloud Well-Architected Framework, whose pillars should guide architectural decisions.",
+              "officialSource": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "pca-q1",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A central network team must own one VPC network, its subnets and its firewall rules, while many project teams launch VMs into it. Which design fits?",
+      "options": [
+        "VPC Network Peering between a network in every project",
+        "Shared VPC with a host project and service projects",
+        "Private Service Connect endpoints in every project",
+        "Cloud VPN tunnels between the projects"
+      ],
+      "correctIndex": 1,
+      "explanation": "Shared VPC connects resources from several projects to one common VPC network administered in a host project, so network control stays central.",
+      "whyOthersWrong": [
+        "Peering connects separately administered networks, so each team would still run its own network.",
+        "Private Service Connect publishes and reaches a service privately; it does not share one network among projects.",
+        "Cloud VPN joins networks through encrypted tunnels; it does not give one team central control of a shared network."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/shared-vpc",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q2",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "Two business units each run their own VPC network and must keep administering it themselves, but their VMs need to talk over internal IP addresses. What should the architect recommend?",
+      "options": [
+        "Shared VPC",
+        "A single project for both units",
+        "VPC Network Peering",
+        "Cloud Load Balancing"
+      ],
+      "correctIndex": 2,
+      "explanation": "VPC Network Peering connects two VPC networks so their resources communicate over internal IP addresses, and each network stays administered separately.",
+      "whyOthersWrong": [
+        "Shared VPC hands network administration to a central host project, which the units do not want.",
+        "Merging into one project removes the separation the units want to keep.",
+        "A load balancer distributes traffic across instances; it does not connect two networks."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/vpc-peering",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q3",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A team has a containerised API and no Kubernetes expertise. It wants to deploy the image and let Google handle servers and scaling. Which platform fits?",
+      "options": [
+        "Google Kubernetes Engine Standard",
+        "Compute Engine with a managed instance group",
+        "Cloud Run",
+        "Filestore"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Run is a fully managed platform for running code, a function or a container on Google's scalable infrastructure, with no cluster to manage.",
+      "whyOthersWrong": [
+        "GKE Standard gives Kubernetes control, which this team neither needs nor has the skills for.",
+        "A managed instance group of VMs leaves the team managing machines and images.",
+        "Filestore is a managed file server, not a compute platform."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q4",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A media company renders video overnight. Jobs can restart safely and the company wants the lowest compute price, accepting that capacity may be reclaimed. What should it use?",
+      "options": [
+        "Spot VMs",
+        "Custom machine types only",
+        "A single large on-demand VM",
+        "Cloud Run functions"
+      ],
+      "correctIndex": 0,
+      "explanation": "Spot VMs are excess Compute Engine capacity at large discounts that Google may preempt, which suits fault-tolerant batch work.",
+      "whyOthersWrong": [
+        "Custom machine types change a VM's shape, not its price model or preemption behaviour.",
+        "A standard on-demand VM is not discounted for fault-tolerant work.",
+        "Functions respond to events; they are not the discounted compute for long batch rendering."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/compute/docs/instances/spot",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q5",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A legacy application needs 6 vCPUs and 40 GB of memory, and no predefined machine type matches. What is the best way to avoid paying for unused resources?",
+      "options": [
+        "Choose the next larger predefined machine type",
+        "Create the VM with a custom machine type",
+        "Use Spot VMs",
+        "Move the application to Cloud Storage"
+      ],
+      "correctIndex": 1,
+      "explanation": "A custom machine type lets you choose your own number of vCPUs and amount of memory when predefined types do not fit.",
+      "whyOthersWrong": [
+        "A larger predefined type pays for unused vCPUs and memory.",
+        "Spot VMs change the price and the availability, not the machine shape.",
+        "Cloud Storage holds objects; it does not run applications."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q6",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A global payments platform needs a relational database with strongly consistent transactions, virtually unlimited scale and no maintenance windows. Which database should the architect choose?",
+      "options": [
+        "Cloud SQL",
+        "Bigtable",
+        "Firestore",
+        "Spanner"
+      ],
+      "correctIndex": 3,
+      "explanation": "Spanner combines relational capabilities with virtually unlimited scale and no maintenance windows.",
+      "whyOthersWrong": [
+        "Cloud SQL is a managed engine for MySQL, PostgreSQL and SQL Server, without the global scale requirement.",
+        "Bigtable is a wide-column table for single-keyed data, not a relational database.",
+        "Firestore is a document database, not a relational one."
+      ],
+      "officialDoc": "https://cloud.google.com/spanner",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q7",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "An advertising firm ingests billions of events keyed by a single row key and reads them by that key at very high throughput. Which storage fits best?",
+      "options": [
+        "Cloud SQL",
+        "Bigtable",
+        "Filestore",
+        "BigQuery"
+      ],
+      "correctIndex": 1,
+      "explanation": "Bigtable is a sparsely populated table that scales to billions of rows and thousands of columns for single-keyed data.",
+      "whyOthersWrong": [
+        "Cloud SQL is a relational service, not built for billions of key-addressed rows.",
+        "Filestore is a shared file server and does not suit key-based lookups at that scale.",
+        "BigQuery analyses data with SQL; it is not the store for key-based reads at high throughput."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/bigtable/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q8",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A render farm of VMs needs one shared file system that every machine can mount. Which service fits?",
+      "options": [
+        "Cloud Storage",
+        "Bigtable",
+        "Filestore",
+        "Spanner"
+      ],
+      "correctIndex": 2,
+      "explanation": "Filestore provides fully managed file servers that VMs and other clients can mount.",
+      "whyOthersWrong": [
+        "Cloud Storage is object storage, not a mountable file system with file semantics.",
+        "Bigtable is a table store, not a file system.",
+        "Spanner is a database, not a file server."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/filestore/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q9",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A team must build a pipeline that processes both streams and batches with the same Apache Beam code, using a managed service. What should it use?",
+      "options": [
+        "Managed Service for Apache Spark",
+        "Dataflow",
+        "Cloud Storage",
+        "Cloud Build"
+      ],
+      "correctIndex": 1,
+      "explanation": "Dataflow provides unified stream and batch data processing at scale and uses Apache Beam.",
+      "whyOthersWrong": [
+        "Managed Service for Apache Spark runs Spark and other open source tools on clusters; the requirement here is Beam code.",
+        "Cloud Storage stores objects and does not process data.",
+        "Cloud Build runs software builds, not data pipelines."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/dataflow/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q10",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A software vendor publishes a managed service and wants customers to reach it privately from inside their own VPC networks, without joining whole networks together. What should the vendor use?",
+      "options": [
+        "Private Service Connect",
+        "Shared VPC",
+        "Cloud Armor",
+        "VPC Network Peering"
+      ],
+      "correctIndex": 0,
+      "explanation": "Private Service Connect lets consumers access managed services privately from inside their own VPC network.",
+      "whyOthersWrong": [
+        "Shared VPC shares one network across projects of one organisation; it does not publish a service to customers.",
+        "Cloud Armor protects against DDoS and web attacks; it does not provide private connectivity.",
+        "Peering connects two whole networks, which the vendor wants to avoid."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/private-service-connect",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q11",
+      "sectionId": "designing-planning",
+      "topicId": "1-4",
+      "question": "A company plans to move hundreds of on-premises servers. What should it do first, using Google Cloud tooling?",
+      "options": [
+        "Discover and assess the assets and estimate the cost in Migration Center",
+        "Copy every server to Spot VMs",
+        "Create a Cloud Run service per server",
+        "Deploy Cloud Armor in front of the data centre"
+      ],
+      "correctIndex": 0,
+      "explanation": "Migration Center estimates cloud costs, discovers and assesses assets and plans the move without changing workloads.",
+      "whyOthersWrong": [
+        "Moving first, without assessment, ignores dependencies and costs.",
+        "Cloud Run is a platform for containers and functions, not a method to move servers as they are.",
+        "Cloud Armor protects Google Cloud deployments; it does not help plan a move."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q12",
+      "sectionId": "designing-planning",
+      "topicId": "1-4",
+      "question": "A team must move a running PostgreSQL database into Cloud SQL with a managed tool that migrates data and metadata. Which service fits?",
+      "options": [
+        "Storage Transfer Service",
+        "Database Migration Service",
+        "Dataflow",
+        "Backup and DR"
+      ],
+      "correctIndex": 1,
+      "explanation": "Database Migration Service migrates data and metadata from a source database to a destination such as Cloud SQL or AlloyDB for PostgreSQL.",
+      "whyOthersWrong": [
+        "Storage Transfer Service moves object and file data between storage systems, not live databases.",
+        "Dataflow builds data pipelines; it is not a database migration tool.",
+        "Backup and DR protects workloads with backups; it does not migrate a database into another service."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/database-migration/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q13",
+      "sectionId": "designing-planning",
+      "topicId": "1-2",
+      "question": "A bank wants centralised, policy-based backup and recovery for VMs, databases and hybrid workloads in one managed service. Which service should it choose?",
+      "options": [
+        "Cloud Storage",
+        "Backup and DR Service",
+        "Filestore",
+        "Cloud Monitoring"
+      ],
+      "correctIndex": 1,
+      "explanation": "Backup and DR is a managed service for centralised backup and recovery of enterprise workloads in Google Cloud and hybrid environments, with policy-based governance.",
+      "whyOthersWrong": [
+        "Cloud Storage stores objects; it is not a policy-based backup service for many workload types.",
+        "Filestore is a file server, not a backup service.",
+        "Cloud Monitoring collects metrics; it does not back up workloads."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q14",
+      "sectionId": "designing-planning",
+      "topicId": "1-1",
+      "question": "An architecture board wants one Google source of principles covering reliability, security, cost, performance, sustainability and operational excellence before approving a design. What should the architects use?",
+      "options": [
+        "The Well-Architected Framework",
+        "Migration Center",
+        "Cloud Billing budgets",
+        "Model Garden"
+      ],
+      "correctIndex": 0,
+      "explanation": "The Google Cloud Well-Architected Framework gives recommendations and best practices across its pillars for designing secure, efficient and resilient cloud topologies.",
+      "whyOthersWrong": [
+        "Migration Center helps assess and plan a move; it is not a set of design principles.",
+        "Budgets set spend alerts; they do not cover design principles.",
+        "Model Garden is a library of AI models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q15",
+      "sectionId": "designing-planning",
+      "topicId": "1-2",
+      "question": "An on-call engineer wants an AI collaborator in Google Cloud that helps troubleshoot an outage and suggests how to optimise the affected workload. What should the team use?",
+      "options": [
+        "Gemini Cloud Assist",
+        "Cloud Trace",
+        "Spot VMs",
+        "Binary Authorization"
+      ],
+      "correctIndex": 0,
+      "explanation": "Gemini Cloud Assist is an AI-powered collaborator that gives agentic guidance for designing, deploying, troubleshooting and optimising workloads.",
+      "whyOthersWrong": [
+        "Cloud Trace shows request latency; it is not an AI assistant that guides troubleshooting and optimisation.",
+        "Spot VMs are discounted, preemptible compute.",
+        "Binary Authorization enforces which container images may deploy."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/cloud-assist/overview",
+      "difficulty": "easy"
+    }
+  ]
 }
