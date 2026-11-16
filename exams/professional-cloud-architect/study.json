@@ -41,7 +41,7 @@
             },
             {
               "question": "What does the cost optimization pillar of the Well-Architected Framework give you?",
-              "answer": "Principles and recommendations to help you optimise the cost of your workloads in Google Cloud.",
+              "answer": "The pillar about keeping the cost of Google Cloud workloads under control.",
               "officialSource": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
             },
             {
@@ -773,7 +773,7 @@
           "studyQA": [
             {
               "question": "What does the cost optimization pillar cover?",
-              "answer": "Principles and recommendations to help you optimise the cost of your workloads in Google Cloud.",
+              "answer": "The pillar about keeping the cost of Google Cloud workloads under control.",
               "officialSource": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
             },
             {
@@ -940,7 +940,7 @@
           "studyQA": [
             {
               "question": "What does the operational excellence pillar cover?",
-              "answer": "Principles and recommendations to help you manage and operate workloads efficiently in Google Cloud.",
+              "answer": "The pillar about running workloads smoothly and efficiently day to day.",
               "officialSource": "https://docs.cloud.google.com/architecture/framework/operational-excellence"
             }
           ]

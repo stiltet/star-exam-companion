@@ -103,7 +103,7 @@ Validated against Google docs: 2026-11-16
 | Cloud Deploy | A managed service that automates delivery of your applications to a series of target environments in a defined promotion sequence. A release moves through a delivery pipeline. | — | [Google page](https://docs.cloud.google.com/deploy/docs/overview) |
 | Artifact Registry | A single place to store and manage your packages and Docker container images, as an integrated part of Google Cloud. | — | [Google page](https://docs.cloud.google.com/artifact-registry/docs/overview) |
 | Disaster recovery | The planning process for restoring service after a disaster. Google's planning guide describes what you need to know to design and implement a disaster recovery plan in Google Cloud. | 4.1 | EG, [Google page](https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide) |
-| Cost optimization | The Well-Architected Framework pillar whose principles and recommendations help you optimise the cost of your workloads in Google Cloud. | 1.1, 4.2 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/cost-optimization) |
+| Cost optimization | The Well-Architected Framework pillar about keeping the cost of Google Cloud workloads under control. | 1.1, 4.2 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/cost-optimization) |
 | Cloud Billing budgets | Budgets and budget alerts that let you monitor all your Google Cloud charges in one place and avoid surprises on the bill. Alerts-only budgets track spend, and spend cap budgets can be set on a project where the service supports it. | — | [Google page](https://docs.cloud.google.com/billing/docs/how-to/budgets) |
 
 ## Section 5 — Managing implementation
@@ -125,7 +125,7 @@ Validated against Google docs: 2026-11-16
 
 | Term | Meaning | Guide | Source |
 |---|---|---|---|
-| Operational excellence pillar | The Well-Architected Framework pillar whose principles and recommendations help you manage and operate workloads efficiently in Google Cloud. | 6.1 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/operational-excellence) |
+| Operational excellence pillar | The Well-Architected Framework pillar about running workloads smoothly and efficiently day to day. | 6.1 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/operational-excellence) |
 | Google Cloud Observability | A set of services, including monitoring, logging and tracing, that help you understand the behaviour, health and performance of your applications, agentic applications included. | 6.2 | EG, [Google page](https://docs.cloud.google.com/stackdriver/docs) |
 | Cloud Monitoring | Collects, stores and analyses metric data to show how your applications and Google Cloud services behave and perform. It collects metrics for most Google Cloud services automatically and offers dashboards, queries and alerts. | 6.2 | EG, [Google page](https://docs.cloud.google.com/monitoring/docs/monitoring-overview) |
 | Cloud Logging | A real-time log-management system with storage, search, analysis and monitoring support. It collects log data automatically from Google Cloud resources, and from your applications and on-premises resources. | 6.2 | EG, [Google page](https://docs.cloud.google.com/logging/docs/overview) |

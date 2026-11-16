@@ -1,5 +1,5 @@
 # Terms Google's exam guide names, one per line, spelled as the guide spells them. The pack test checks each is the answer to a voice scene.
-# A bullet that names a topic but no product (for example "Business continuity plan") is not a term here; the report names each one left out.
+# A bullet that names a topic but no product (for example "Business continuity plan") is not a term here; the study topics name it instead.
 # Every term here is the answer to at least one scene. Guide validated: 2026-11-16.
 
 # 1.2
