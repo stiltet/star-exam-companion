@@ -1,1 +1,301 @@
-[]
+[
+  {
+    "id": "pca-wa-framework",
+    "correct": "Google Cloud Well-Architected Framework",
+    "distractors": [
+      "Gemini Cloud Assist",
+      "Google Cloud Migration Center",
+      "AI Hypercomputer"
+    ],
+    "scene": "An architecture review board wants one Google source of principles on reliability, security, cost, performance and sustainability before it approves a new design. What should the architects study?",
+    "constraint": "The guidance must cover design principles across every pillar, not the setup steps of one product."
+  },
+  {
+    "id": "pca-cloud-assist",
+    "correct": "Gemini Cloud Assist",
+    "distractors": [
+      "Google Cloud Well-Architected Framework",
+      "Google Cloud Migration Center",
+      "Backup and DR Service"
+    ],
+    "scene": "An on-call engineer wants an AI collaborator inside Google Cloud that helps troubleshoot an outage and suggests how to optimise the affected workload. What should the team use?",
+    "constraint": "The help must come from an AI assistant that works inside the cloud platform, not from a document or a migration tool.",
+    "guide": "1.2"
+  },
+  {
+    "id": "pca-backup-dr",
+    "correct": "Backup and DR Service",
+    "distractors": [
+      "Cloud Storage",
+      "Filestore",
+      "Cloud SQL"
+    ],
+    "scene": "A bank wants centralised, policy-based backup and recovery for its VMs, databases and hybrid workloads under one managed service. Which service should it choose?",
+    "constraint": "One service must govern backup and recovery for many kinds of workload, rather than each storage product keeping its own copies.",
+    "guide": "1.2"
+  },
+  {
+    "id": "pca-vpc",
+    "correct": "Virtual Private Cloud (VPC)",
+    "distractors": [
+      "VPC Network Peering",
+      "Shared VPC",
+      "Private Service Connect"
+    ],
+    "scene": "A team needs its own private network in Google Cloud for its virtual machines, with its own subnets, routes and firewall rules. What is the basic building block?",
+    "constraint": "It is the network itself that the other options link, share or publish services from, not a way of joining two of them."
+  },
+  {
+    "id": "pca-vpc-peering",
+    "correct": "VPC Network Peering",
+    "distractors": [
+      "Shared VPC",
+      "Private Service Connect",
+      "Virtual Private Cloud (VPC)"
+    ],
+    "scene": "Two business units run separate networks in different projects, each administered by its own team. They want internal IP traffic between the two networks. What should they set up?",
+    "constraint": "Each team must keep administering its own network, so neither network may be handed to a central host project."
+  },
+  {
+    "id": "pca-shared-vpc",
+    "correct": "Shared VPC",
+    "distractors": [
+      "VPC Network Peering",
+      "Private Service Connect",
+      "Virtual Private Cloud (VPC)"
+    ],
+    "scene": "A central network team wants to own one network with its subnets and firewall rules, while many projects across the organisation launch their VMs into it. What should the team use?",
+    "constraint": "One host project must administer the network that several other projects share, so that network control stays central."
+  },
+  {
+    "id": "pca-psc",
+    "correct": "Private Service Connect",
+    "distractors": [
+      "VPC Network Peering",
+      "Shared VPC",
+      "Cloud Load Balancing"
+    ],
+    "scene": "A software vendor offers a managed service, and customers want to reach it privately from inside their own networks using an internal address. What should the vendor and customers use?",
+    "constraint": "Consumers must reach one service on an internal IP address in their own network, without joining their whole network to the producer's."
+  },
+  {
+    "id": "pca-ngfw",
+    "correct": "Cloud Next Generation Firewall (Cloud NGFW)",
+    "distractors": [
+      "Cloud Load Balancing",
+      "VPC Network Peering",
+      "Shared VPC"
+    ],
+    "scene": "A security team wants a distributed, cloud-native service that filters traffic to its workloads with firewall rules and policies. What should it use?",
+    "constraint": "The control must be a firewall that allows or blocks traffic, not a service that only spreads traffic out.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-load-balancing",
+    "correct": "Cloud Load Balancing",
+    "distractors": [
+      "Cloud Next Generation Firewall (Cloud NGFW)",
+      "Private Service Connect",
+      "Cloud Run"
+    ],
+    "scene": "A web shop expects a spike in visitors. The team must spread incoming requests across many instances of the application so that no single instance slows down. What should it use?",
+    "constraint": "Requests must be distributed across instances to protect performance, and blocking traffic is not the goal.",
+    "guide": "2.1"
+  },
+  {
+    "id": "pca-model-garden",
+    "correct": "Model Garden",
+    "distractors": [
+      "AI Hypercomputer",
+      "Gemini Cloud Assist",
+      "Cloud Run"
+    ],
+    "scene": "A data science team wants one library in Google Cloud where it can discover, test, customise and deploy models from Google and from partners. Where should it go?",
+    "constraint": "The need is a catalogue of ready models, not training hardware or an operations assistant."
+  },
+  {
+    "id": "pca-ai-hypercomputer",
+    "correct": "AI Hypercomputer",
+    "distractors": [
+      "Model Garden",
+      "Spot VMs",
+      "Google Kubernetes Engine (GKE)"
+    ],
+    "scene": "A research lab wants an integrated supercomputing system, optimised for AI and ML workloads, as the infrastructure for training and serving large models. What should it build on?",
+    "constraint": "The answer is Google Cloud's unified AI infrastructure portfolio, not a model catalogue or a single VM option."
+  },
+  {
+    "id": "pca-gke",
+    "correct": "Google Kubernetes Engine (GKE)",
+    "distractors": [
+      "Cloud Run",
+      "Cloud Run functions",
+      "Spot VMs"
+    ],
+    "scene": "A team packages its applications as containers and needs the Kubernetes API, pod-level control and custom networking, but wants Google to manage the control plane. Which platform fits?",
+    "constraint": "Control over orchestration is required, so a fully abstracted container platform will not do."
+  },
+  {
+    "id": "pca-cloud-run",
+    "correct": "Cloud Run",
+    "distractors": [
+      "Google Kubernetes Engine (GKE)",
+      "Cloud Run functions",
+      "Spot VMs"
+    ],
+    "scene": "A startup wants to deploy a containerised web API and let the platform handle servers and scaling. The team has no Kubernetes experience. What should it deploy to?",
+    "constraint": "The team wants to run a container image directly, with no cluster to create or manage."
+  },
+  {
+    "id": "pca-run-functions",
+    "correct": "Cloud Run functions",
+    "distractors": [
+      "Cloud Run",
+      "Google Kubernetes Engine (GKE)",
+      "Cloud Storage"
+    ],
+    "scene": "A developer wants a short piece of code to run whenever a new file arrives, and wants to write only the function, not a container or a server. What should the developer use?",
+    "constraint": "The unit of deployment is one small function that reacts to an event."
+  },
+  {
+    "id": "pca-spot-vms",
+    "correct": "Spot VMs",
+    "distractors": [
+      "Custom machine types",
+      "Cloud Run",
+      "Google Kubernetes Engine (GKE)"
+    ],
+    "scene": "A media company renders thousands of video frames overnight. Jobs restart safely, and finance wants the deepest compute discount even if Google may reclaim the capacity. What should it use?",
+    "constraint": "The workload is fault tolerant, so the VMs may be stopped at any time without harm."
+  },
+  {
+    "id": "pca-custom-machine",
+    "correct": "Custom machine types",
+    "distractors": [
+      "Spot VMs",
+      "Cloud Run",
+      "Filestore"
+    ],
+    "scene": "A legacy application needs 6 vCPUs and 40 GB of memory. No predefined VM shape matches, and the team does not want to pay for resources it will not use. What should it choose?",
+    "constraint": "The vCPU count and the memory must be chosen separately for the VM."
+  },
+  {
+    "id": "pca-migration-center",
+    "correct": "Google Cloud Migration Center",
+    "distractors": [
+      "Backup and DR Service",
+      "Gemini Cloud Assist",
+      "Google Cloud Well-Architected Framework"
+    ],
+    "scene": "A company plans to move hundreds of on-premises servers. Before it plans the move it must discover the assets, assess the infrastructure and estimate cloud costs in one place. What should it use?",
+    "constraint": "The tool must cover discovery, assessment and cost estimation without changing the workloads."
+  },
+  {
+    "id": "pca-cloud-storage",
+    "correct": "Cloud Storage",
+    "distractors": [
+      "Filestore",
+      "Cloud SQL",
+      "Bigtable"
+    ],
+    "scene": "An app stores millions of user-uploaded photos and videos and needs high durability and global availability. Where should the files go?",
+    "constraint": "The data is unstructured objects, not files on a shared file system or rows in a database.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-filestore",
+    "correct": "Filestore",
+    "distractors": [
+      "Cloud Storage",
+      "Cloud SQL",
+      "Bigtable"
+    ],
+    "scene": "A render farm of virtual machines needs one shared file system that every machine can mount with normal file semantics. What should provide it?",
+    "constraint": "Many clients must mount the same managed file server, so object storage will not fit.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-cloud-sql",
+    "correct": "Cloud SQL",
+    "distractors": [
+      "Spanner",
+      "Bigtable",
+      "Firestore"
+    ],
+    "scene": "A team is moving a PostgreSQL-backed application and wants the database fully managed, so it no longer handles routine administration itself. Usage is regional and modest. What should it pick?",
+    "constraint": "The application needs a standard relational engine such as PostgreSQL, with no global scale requirement.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-spanner",
+    "correct": "Spanner",
+    "distractors": [
+      "Cloud SQL",
+      "Bigtable",
+      "Firestore"
+    ],
+    "scene": "A global payments platform needs a relational database with strongly consistent transactions, virtually unlimited scale and no maintenance windows. Which database fits?",
+    "constraint": "Relational structure and virtually unlimited scale are both required, which a single managed engine for MySQL or PostgreSQL cannot supply.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-bigtable",
+    "correct": "Bigtable",
+    "distractors": [
+      "Spanner",
+      "Cloud SQL",
+      "Firestore"
+    ],
+    "scene": "An advertising firm ingests billions of events keyed by a single row key and reads them back by that key at very high throughput. Which database fits?",
+    "constraint": "The data is a sparsely populated wide table at terabyte or petabyte scale, with no relational joins needed.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-firestore",
+    "correct": "Firestore",
+    "distractors": [
+      "Bigtable",
+      "Cloud SQL",
+      "Spanner"
+    ],
+    "scene": "A mobile app team wants a fully managed document database with flexible data, ACID transactions and multi-region replication. Which database fits?",
+    "constraint": "The data model is documents rather than tables with a fixed schema.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-bigquery",
+    "correct": "BigQuery",
+    "distractors": [
+      "Cloud SQL",
+      "Bigtable",
+      "Dataflow"
+    ],
+    "scene": "Analysts want to run SQL over many terabytes of sales data for reports, with no servers to manage. What should they use?",
+    "constraint": "The task is large-scale, serverless analytics, not serving individual transactions.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-dataflow",
+    "correct": "Dataflow",
+    "distractors": [
+      "BigQuery",
+      "Managed Service for Apache Spark",
+      "Cloud Storage"
+    ],
+    "scene": "A team must build a pipeline that reads events from several sources, transforms them and writes the results out. The same code has to run on streams and on batches, using Apache Beam. What should it use?",
+    "constraint": "It must be a managed service that unifies stream and batch processing in one programming model.",
+    "guide": "1.3"
+  },
+  {
+    "id": "pca-managed-spark",
+    "correct": "Managed Service for Apache Spark",
+    "distractors": [
+      "Dataflow",
+      "BigQuery",
+      "Cloud Storage"
+    ],
+    "scene": "A company has existing Apache Spark and Hadoop jobs. It wants to keep the code and run it on managed clusters that can be switched off when idle. What should it use?",
+    "constraint": "The jobs are open source Spark code that must move without being rewritten.",
+    "guide": "1.3"
+  }
+]

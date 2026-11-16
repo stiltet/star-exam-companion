@@ -1,2 +1,21 @@
-# Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
-# Every term here is the answer to at least one scene.
+# Terms Google's exam guide names, one per line, spelled as the guide spells them. The pack test checks each is the answer to a voice scene.
+# A bullet that names a topic but no product (for example "Business continuity plan") is not a term here; the report names each one left out.
+# Every term here is the answer to at least one scene. Guide validated: 2026-11-16.
+
+# 1.2
+Google Cloud Well-Architected Framework
+Gemini Cloud Assist
+# 1.3
+Virtual Private Cloud (VPC)
+VPC Network Peering
+Shared VPC
+Private Service Connect
+Model Garden
+AI Hypercomputer
+Google Kubernetes Engine (GKE)
+Cloud Run
+Cloud Run functions
+Spot VMs
+Custom machine types
+# 1.4
+Google Cloud Migration Center
