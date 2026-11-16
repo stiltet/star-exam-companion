@@ -1,5 +1,6 @@
 "use client"
 
+import { usePageReady } from "@/components/page-gate"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { EXAM_TARGET, PRACTICE_TARGET, voiceProgress } from "@/lib/learn"
@@ -51,7 +52,8 @@ function Row({ label, value, last = false }: { label: string; value: string; las
 const minutes = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
 
 export function ProgressClient({ stats }: Props) {
-  const { snapshot, broken, lines } = useSnapshot()
+  const { snapshot, broken, lines, from } = useSnapshot()
+  usePageReady(from !== "loading")
   const items = snapshot?.items ?? []
   const sections = snapshot?.sections ?? []
   // A copy saved before questions carried a course still groups by the exam-guide section.

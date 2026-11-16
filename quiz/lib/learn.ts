@@ -49,6 +49,9 @@ export type RoundItem = {
   // Why the right answer is right: its glossary.md meaning, and that row's Source cell.
   why: string
   whySource: string
+  // Why each wrong option is wrong, in option order and without the correct one: the option's name and its own glossary.md meaning.
+  // Absent on a copy saved before this was stored.
+  wrong?: string[]
 }
 
 /** A gap this long between answers starts a new session. */

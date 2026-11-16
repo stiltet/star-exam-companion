@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CHANGED } from "@/components/outbox"
 import { useSnapshot } from "@/components/snapshot"
+import { usePageReady } from "@/components/page-gate"
 import { VoiceQuiz } from "@/components/voice-quiz"
 import type { RoundItem } from "@/lib/learn"
 import { mergeLines, readOutbox } from "@/lib/outbox"
@@ -45,6 +46,8 @@ export function VoiceRound() {
     setBuilt((count) => count + 1)
   }, [round, snapshot, from, signature])
 
+  // The page waits for the questions: no "Loading the questions…" line is ever shown first.
+  usePageReady(!(from === "loading" || (snapshot && round === null)))
   const heading = <h1 className="sr-only text-2xl font-bold mb-4">Voice Quiz</h1>
   if (broken) return <div>{heading}<p>The glossary row “{broken.row}” cannot be read. {broken.error}.</p></div>
   if (from === "loading" || (snapshot && round === null)) return <div>{heading}<p aria-live="polite">Loading the questions…</p></div>

@@ -53,6 +53,17 @@ await writeFile(path.join(riseOnly, "courses.json"), JSON.stringify({
 const meta = JSON.parse(await readFile(path.join(bare, "pack.json"), "utf8"))
 await writeFile(path.join(bare, "pack.json"), JSON.stringify({ ...meta, id: "no-course-test", title: "Exam With No Course", reading: false }, null, 2))
 await rm(path.join(bare, "courses.json"))
+// A pack that says it is unfinished: its glossary, scenes, study topics and questions are empty, with a notice. No shipped pack is in
+// that state any more, so the browser test of the unfinished notices serves this one.
+const unfinished = path.join(root, "exams", "unfinished-test")
+await cp(path.join(root, "exams", "agentic-architect"), unfinished, { recursive: true })
+const unfinishedMeta = JSON.parse(await readFile(path.join(unfinished, "pack.json"), "utf8"))
+const unfinishedNotice = "Unfinished: the glossary, the voice scenes, the study topics and the practice questions are not written yet, so only the course readings are available for this exam."
+await writeFile(path.join(unfinished, "pack.json"), JSON.stringify({ ...unfinishedMeta, id: "unfinished-test", title: "Exam Not Written Yet", notice: unfinishedNotice, homeNotice: unfinishedNotice, sectionOf: {}, notAsked: [] }, null, 2))
+await writeFile(path.join(unfinished, "glossary.md"), "# Glossary\n\nValidated against Google docs: 2026-01-01\n")
+await writeFile(path.join(unfinished, "terms.txt"), "# No terms yet.\n")
+await writeFile(path.join(unfinished, "scenes.json"), "[]\n")
+await writeFile(path.join(unfinished, "study.json"), JSON.stringify({ sections: [], questions: [] }))
 // An explicit empty file override also blocks a QUIZ_SCORES_FILE from .env.local. The scratch folder
 // keeps one file per exam, and the chosen exam and Night recording stay in scratch as well.
 const env = browserServerEnv(process.env, scratch, root)

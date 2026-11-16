@@ -53,7 +53,7 @@ below gets everything working.
 ## Why Star Exam Companion
 
 It started as a way to pass the Google Cloud Generative AI Leader exam, and its author passed it on the first try. It now serves
-any Google Cloud exam, starting with that one and Professional Agentic Architect. It turns an exam
+any Google Cloud exam, starting with that one, Professional Agentic Architect and Professional Cloud Architect. It turns an exam
 guide into spoken scenes you answer out loud or with a tap, keeps asking what you have not learned
 yet, and explains every wrong answer with the constraint that decides it. It runs on your own
 machine, keeps your answers there, and works on a phone without a connection once installed.
@@ -150,6 +150,7 @@ you pick it with `QUIZ_EXAM` when you build and start the quiz. Without it you g
 |---|---|
 | `generative-ai-leader` (default) | Google Cloud Generative AI Leader |
 | `agentic-architect` | Google Cloud Professional Agentic Architect. Read Aloud computes how many of the 8 courses of Google's learning path (`skills.google/paths/4525`, in Google's order) this server can read from its private store; it says **Unfinished** while any are unreadable. Every course is captured from Google Skills as you see it. |
+| `professional-cloud-architect` | Google Cloud Professional Cloud Architect. Its glossary, voice scenes, study topics and practice questions are written from Google's own documentation, and the exam guide's six sections carry their weights. Read Aloud counts the 17 courses of Google's learning path (`skills.google/paths/12`, in Google's order) and says **Unfinished** until the ones with reading text are captured from your own Google Skills account; six courses are labs, videos and quizzes and have no text to read. |
 
 ### Private course readings
 

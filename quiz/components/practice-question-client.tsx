@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { saveAnswer } from "@/components/outbox"
 import type { Question } from "@/lib/exam-data"
 import { loadState, practiceKey, practicePlace, saveState } from "@/lib/resume"
+import { isWebAddress } from "@/lib/sources"
 
 type Props = {
   questions: Question[]
@@ -28,6 +29,8 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
   const topic = { title: question.topicId }
   const selectedAnswer = picked[question.id] ?? null
   const showExplanation = selectedAnswer !== null
+  // The letters of the wrong options, in order, so each reason carries the letter of its own option.
+  const wrongLetters = question.options.flatMap((_, at) => (at === question.correctIndex ? [] : [String.fromCharCode(65 + at)]))
   const answeredCount = Object.keys(picked).length
   const correctCount = questions.filter((q) => picked[q.id] === q.correctIndex).length
 
@@ -143,18 +146,20 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
             <ul className="space-y-2 mb-4">
               {question.whyOthersWrong.map((reason, index) => (
                 <li key={index} className="flex gap-2 text-sm">
-                  <span className="text-muted-foreground font-bold">{String.fromCharCode(65 + index)}.</span>
+                  {/* The reasons are for the wrong options only, so each takes the letter of the index-th option that is not the correct one. */}
+                  <span className="text-muted-foreground font-bold">{wrongLetters[index] ?? String.fromCharCode(65 + index)}.</span>
                   <span>{reason}</span>
                 </li>
               ))}
             </ul>
 
-            {question.officialDoc && (
+            {/* Only a web address is a link: a bare source such as a page of the study guide would open the quiz's own 404 page. */}
+            {question.officialDoc && isWebAddress(question.officialDoc) && (
               <a
                 href={question.officialDoc}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-muted-foreground"
+                className="text-sm text-muted-foreground break-all"
               >
                 [OFFICIAL DOC] → {question.officialDoc}
               </a>
