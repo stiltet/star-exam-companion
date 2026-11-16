@@ -38,33 +38,38 @@ export function nightDirFor(exam: string = examId()): string {
 }
 
 // One spoken clip per reading, named by a hash of that reading's own script and of the Mac's voice, and kept beside the recording
-// folders, so a changed script speaks again only the readings that changed and a changed voice speaks them all again, never a mix
-// of two voices. The recording's own key (scriptKey) is unchanged, so a recording that exists is still served as it is.
+// folders, so a changed script speaks again only the readings that changed and a changed voice speaks them all again. A recording can
+// still hold two voices in two cases, both rare: the voice cannot be told apart (UNSTABLE_VOICE), or it is switched while a build runs.
+// The recording's own key (scriptKey) is unchanged, so a recording that exists is still served as it is.
 export function clipFile(dir: string, script: string, voice = ""): string {
   return path.join(dir, CLIPS_DIR, `${createHash("sha256").update(`${voice}\u0000${script}`).digest("hex")}.wav`)
 }
 
 // A sentence with no private text, spoken to tell the Mac's voice from another. macOS gives a program no way to read which voice is the
 // System voice (`say` is run with no -v), so the voice is known by its sound: the hash of this sentence spoken twice. A `say` that fails or
-// is slow is "unknown", and the build then stops with a plain message and tries again later, so a clip is never named for a voice that was not
-// identified. A voice that gives two different hashes is "unstable": voices are then not told apart, which is the one case where a recording
-// can hold two voices, and nothing is deleted.
+// is slow is UNKNOWN_VOICE, and the build then stops with a plain message and tries again later, so a clip is never named for a voice that
+// was not identified. A voice that gives two different hashes is UNSTABLE_VOICE: voices are then not told apart, so a recording can hold two
+// voices, and nothing is deleted. The voice is asked for only when a clip must be spoken (see buildRecording), and an identified voice is
+// remembered in the night folder, so a restart or a damaged manifest that needs no speech never runs `say`.
+export const UNKNOWN_VOICE = "unknown"
+export const UNSTABLE_VOICE = "unstable"
 const VOICE_PROBE = "Night reading voice check."
 const PROBE_TIMEOUT_MS = 10_000
 export const REAL_VOICE = /^[0-9a-f]{64}$/
+const VOICE_FILE = "voice"
 export async function voiceFingerprint(render: (text: string, file: string) => Promise<boolean> = (text, file) => renderSpeech(text, file, PROBE_TIMEOUT_MS)): Promise<string> {
   const folder = await mkdtemp(path.join(tmpdir(), "star-night-voice-"))
   try {
     const hashes: string[] = []
     for (const index of [0, 1]) {
       const file = path.join(folder, `${index}.wav`)
-      if (!(await render(VOICE_PROBE, file))) return "unknown"
+      if (!(await render(VOICE_PROBE, file))) return UNKNOWN_VOICE
       hashes.push(createHash("sha256").update(await readFile(file)).digest("hex"))
     }
-    return hashes[0] === hashes[1] ? (hashes[0] as string) : "unstable"
+    return hashes[0] === hashes[1] ? (hashes[0] as string) : UNSTABLE_VOICE
   } catch {
     // A probe that cannot be spoken or read leaves the voice unknown, which stops the build with a message and deletes nothing.
-    return "unknown"
+    return UNKNOWN_VOICE
   } finally {
     await rm(folder, { recursive: true, force: true })
   }
@@ -197,16 +202,30 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
     if (manifest && info.size > 0) return { state: "ready", key, bytes: info.size, duration: manifest.duration, chapters: manifest.chapters }
   }
   const total = deps.parts.length
-  const voice = deps.voice ? await deps.voice() : ""
-  if (voice === "unknown") throw new Error("The Mac could not identify its voice. Try again.")
-  // Only a voice that was identified may delete a clip: an unstable one cannot tell old clips from new.
-  const identified = !deps.voice || REAL_VOICE.test(voice)
   const clipFolder = path.join(deps.dir, CLIPS_DIR)
   await mkdir(clipFolder, { recursive: true })
   await chmod(clipFolder, 0o700).catch(() => undefined)
-  const pairs = deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
-  const files = pairs.map((pair) => pair.file)
   const have = async (file: string) => (await stat(file).then((info) => info.size, () => 0)) > 0
+  const pairsFor = (voice: string) => deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
+  // The voice is asked for only when a clip must be spoken. Every clip already there under the remembered voice means no speech is needed,
+  // so a restart or a damaged manifest never runs `say`, and a Mac that cannot be asked cannot stop such a build.
+  const voiceFile = path.join(deps.dir, VOICE_FILE)
+  let voice = ""
+  let identified = !deps.voice
+  if (deps.voice) {
+    const remembered = (await readFile(voiceFile, "utf8").catch(() => "")).trim()
+    voice = REAL_VOICE.test(remembered) ? remembered : ""
+    const settled = voice !== "" && (await Promise.all(pairsFor(voice).map((pair) => have(pair.file)))).every(Boolean)
+    if (!settled) {
+      voice = await deps.voice()
+      if (voice === UNKNOWN_VOICE) throw new Error("The Mac could not identify its voice. Try again.")
+      // Only a voice identified now may delete a clip: an unstable one cannot tell old clips from new.
+      identified = REAL_VOICE.test(voice)
+      if (identified) await writeFile(voiceFile, voice).catch(() => undefined)
+    }
+  }
+  const pairs = pairsFor(voice)
+  const files = pairs.map((pair) => pair.file)
   // Readings already spoken count as done, so the page never shows 0 of N for a reading that will not be spoken again.
   let done = 0
   for (const file of files) if (await have(file)) done += 1

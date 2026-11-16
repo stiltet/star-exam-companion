@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, CLIPS_DIR, voiceFingerprint, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, CLIPS_DIR, UNKNOWN_VOICE, UNSTABLE_VOICE, voiceFingerprint, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
 import { savePrivateReading } from "./private-reading.ts"
@@ -517,7 +517,7 @@ test("a build that cannot identify the Mac's voice stops with a message and spea
   await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
   const before = spoken.length
   await assert.rejects(
-    () => buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "unknown", canPrune: async () => true }),
+    () => buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => UNKNOWN_VOICE, canPrune: async () => true }),
     /could not identify its voice/,
   )
   assert.equal(spoken.length, before, "one failed probe speaks nothing, so no reading is spoken again and none in another voice")
@@ -528,8 +528,37 @@ test("a build that cannot identify the Mac's voice stops with a message and spea
 test("an unstable voice is named by a fixed word, and a build in it never deletes a clip", async () => {
   const dir = path.join(scratch, "voice-unstable")
   const spoken: string[] = []
-  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => "unstable" })
-  await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "unstable", canPrune: async () => true })
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => UNSTABLE_VOICE })
+  await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => UNSTABLE_VOICE, canPrune: async () => true })
   assert.deepEqual(spoken, ["One.", "Two.", "Two, changed."])
-  assert.equal(exists(clipFile(dir, "Two.", "unstable")), true)
+  assert.equal(exists(clipFile(dir, "Two.", UNSTABLE_VOICE)), true)
+})
+
+test("a restart or a damaged manifest that needs no speech never asks for the voice, so a Mac that cannot be asked cannot stop it", async () => {
+  const dir = path.join(scratch, "voice-not-needed")
+  const spoken: string[] = []
+  const first = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
+  writeFileSync(path.join(dir, first.key, "manifest.json"), "{\"version\":1,")
+  let asked = 0
+  const again = await buildRecording({
+    dir, parts, render: speak(spoken), encode: encodeStub,
+    voice: async () => {
+      asked += 1
+      return UNKNOWN_VOICE
+    },
+  })
+  assert.equal(asked, 0, "every clip is there under the remembered voice, so the voice is not asked for")
+  assert.deepEqual(spoken, ["One.", "Two."], "nothing is spoken again")
+  assert.equal(again.key, first.key)
+})
+
+test("a build that stopped because the voice could not be identified is tried again and then succeeds", async () => {
+  const dir = path.join(scratch, "voice-retry")
+  const spoken: string[] = []
+  await assert.rejects(() => buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => UNKNOWN_VOICE }), /could not identify its voice/)
+  assert.deepEqual(spoken, [])
+  const ready = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => VOICE_A })
+  assert.equal(ready.state, "ready")
+  assert.deepEqual(spoken, ["One.", "Two."])
+  assert.equal(readFileSync(path.join(dir, "voice"), "utf8"), VOICE_A)
 })
