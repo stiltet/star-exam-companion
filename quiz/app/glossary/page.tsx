@@ -69,7 +69,7 @@ export default async function GlossaryPage() {
         {categories.map((category) => (
           <section key={category} id={anchorId(category)} className="mb-8 scroll-mt-[50px]">
             <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
-            <div className="border-2 border-foreground divide-y divide-foreground">
+            <dl className="border-2 border-foreground divide-y divide-foreground">
               {grouped[category]
                 .sort((a, b) => plainNames(a.term).localeCompare(plainNames(b.term)))
                 .map((item) => (
@@ -78,7 +78,7 @@ export default async function GlossaryPage() {
                     <dd className="text-muted-foreground mt-1"><Names text={item.definition} /></dd>
                   </div>
                 ))}
-            </div>
+            </dl>
           </section>
         ))}
 
