@@ -298,11 +298,13 @@ test("the unreachable page offers a saved page when Home is not saved, never a d
   const body = (await (await load(offline).request("/x", { mode: "navigate" }))!.text())
   const script = /<script>([\s\S]*)<\/script>/.exec(body)![1]
   const home = { href: "/", textContent: "GO HOME" }
+  const again: { disabled: boolean; textContent: string; busy: string; onclick?: () => Promise<void>; setAttribute: (name: string, value: string) => void } = { disabled: false, textContent: "TRY AGAIN", busy: "", setAttribute: (_name, value) => { again.busy = value } }
+  let reloaded = false
   const keys = [`${ORIGIN}/x`, `${ORIGIN}/practice?_rsc=abc`, `${ORIGIN}/voice?section=2`]
   vm.runInContext(script, vm.createContext({
-    document: { getElementById: (id: string) => (id === "home" ? home : { }) },
+    document: { getElementById: (id: string) => (id === "home" ? home : again) },
     caches: { match: async () => undefined, keys: async () => ["quiz-pages-b2", "quiz-voice"], open: async () => ({ keys: async () => keys.map((url) => ({ url })) }) },
-    location: { pathname: "/x" },
+    location: { pathname: "/x", reload: () => { reloaded = true } },
     navigator: {},
     URL,
     setTimeout,
@@ -310,4 +312,10 @@ test("the unreachable page offers a saved page when Home is not saved, never a d
   await new Promise((resolve) => setImmediate(resolve))
   assert.equal(home.textContent, "OPEN A SAVED PAGE")
   assert.equal(home.href, "/voice?section=2", "a different saved page, and not the data request of /practice")
+  // Try again shows at once that it is working, so a long wait never looks like a tap that did nothing.
+  await again.onclick!()
+  assert.equal(again.disabled, true)
+  assert.equal(again.busy, "true")
+  assert.equal(again.textContent, "TRYING…")
+  assert.equal(reloaded, true)
 })
