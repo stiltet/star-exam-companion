@@ -12,7 +12,7 @@ function hash(text: string): number {
   return value
 }
 
-function findTerm(glossary: Glossary, name: string): Term | undefined {
+export function findTerm(glossary: Glossary, name: string): Term | undefined {
   return glossary.terms.find((term) => term.term.toLowerCase() === name.toLowerCase())
 }
 

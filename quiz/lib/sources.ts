@@ -29,7 +29,12 @@ const SOURCE_URLS: Record<string, string> = {
   "Product page": "https://cloud.google.com/vertex-ai",
 }
 
-function sourceUrl(source: string): string {
+// True only for a web address: a bare source such as a page of the study guide would be a link to a page of the quiz that does not exist.
+export function isWebAddress(source: string | undefined): boolean {
+  return /^https?:\/\//.test(source ?? "")
+}
+
+export function sourceUrl(source: string): string {
   const link = source.match(/\((https?:\/\/[^)]+)\)/)
   if (link?.[1]) return link[1]
   // "SG p.8" and "SG p.5–6" name the study guide and a page: the key is the first word, so the page does not hide the address.

@@ -33,7 +33,8 @@ export function quizQuestions(glossary: Glossary, items: RoundItem[], bank: Bank
     question: `${item.stem} ${item.constraint}`,
     options: item.options,
     correctIndex: item.correctIndex,
-    explanation: `${item.options[item.correctIndex] ?? ""}: ${item.why}`,
+    // The plan the owner approved: the explanation keeps the constraint and adds the correct term's meaning.
+    explanation: `${item.constraint} ${item.options[item.correctIndex] ?? ""}: ${item.why}`,
     // One reason per wrong option, never the correct one. A copy saved before the reasons were stored falls back to one plain line each.
     whyOthersWrong: item.wrong ?? item.options.filter((_, index) => index !== item.correctIndex).map(() => "It does not meet the constraint."),
     officialDoc: item.source,

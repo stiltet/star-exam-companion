@@ -32,7 +32,7 @@ test("a voice scene in Practice shows its constraint in the question and gives e
       assert.notEqual(reason, "It does not meet the constraint.")
     })
     assert.equal(new Set(question.whyOthersWrong).size, question.whyOthersWrong.length, `${question.id}: no reason repeats`)
-    assert.ok(question.explanation.startsWith(`${question.options[question.correctIndex]}:`), `${question.id}: the explanation names the right answer`)
+    assert.ok(question.explanation.startsWith(item.constraint) && question.explanation.includes(`${question.options[question.correctIndex]}:`), `${question.id}: the explanation keeps the constraint and names the right answer`)
   }
 })
 
