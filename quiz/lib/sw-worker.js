@@ -7,9 +7,9 @@ const STATIC_CACHE = `quiz-static-${CONFIG.build}`
 const VOICE_CACHE = "quiz-voice"
 const NIGHT_CACHE = "quiz-night"
 // How long a page waits for the Mac before it opens from the device. Only when a copy is on the
-// device: with none, the page is waited for much longer, because a slow Mac is not an unreachable one.
+// device: with none, the page is waited for much longer (30 s), because a slow Mac is not an unreachable one.
 const TIMEOUT_MS = 2500
-const NO_COPY_TIMEOUT_MS = 10000
+const NO_COPY_TIMEOUT_MS = 30000
 // After one failure, pages open from the device without asking the Mac for this long.
 const SKIP_MS = 30000
 let downUntil = 0
@@ -23,10 +23,12 @@ function pageKey(url) {
   return parsed.pathname + parsed.search
 }
 
-// hasCopy: a copy is on the device to open instead, so the Mac is given only 2.5 s. skipWhenDown: a recent
-// failure means the Mac is not asked at all for a while.
-async function fromMac(request, hasCopy, skipWhenDown) {
-  if (skipWhenDown && Date.now() < downUntil) throw new Error("the Mac was not reachable a moment ago")
+// hasCopy: a copy is on the device to open instead, so the Mac is given only 2.5 s. A recent failure means
+// the Mac is not asked at all for a while, for every request, so an unreachable Mac costs one wait, not two
+// (a failed client-side move and the full page load Next.js then makes). Try again on the unreachable
+// page clears that, and so does any answer from the Mac.
+async function fromMac(request, hasCopy) {
+  if (Date.now() < downUntil) throw new Error("the Mac was not reachable a moment ago")
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), hasCopy ? TIMEOUT_MS : NO_COPY_TIMEOUT_MS)
   const generation = connectionGeneration
@@ -36,6 +38,8 @@ async function fromMac(request, hasCopy, skipWhenDown) {
       ? await fetch(request.url, { signal: controller.signal, credentials: "same-origin" })
       : await fetch(request, { signal: controller.signal })
     if (response.status >= 500) throw new Error(`the Mac answered ${response.status}`)
+    // The Mac answered, so a backoff set a moment ago no longer holds.
+    if (generation === connectionGeneration) downUntil = 0
     return response
   } catch (error) {
     if (generation === connectionGeneration) downUntil = Date.now() + SKIP_MS
@@ -50,7 +54,7 @@ async function page(request) {
   const key = pageKey(request.url)
   const kept = (await cache.match(key)) || (await cache.match(new URL(request.url).pathname))
   try {
-    const response = await fromMac(request, Boolean(kept), Boolean(kept))
+    const response = await fromMac(request, Boolean(kept))
     if (response.ok && !response.redirected) await cache.put(key, response.clone())
     return response
   } catch {
@@ -59,8 +63,8 @@ async function page(request) {
 }
 
 // Shown only when the Mac cannot be reached and the page was never opened on this device. It is
-// never a dead end: it can try again and go Home, which is kept on the device.
-const UNREACHABLE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not on this device yet</title><style>body{font:18px/1.5 ui-monospace,Menlo,monospace;margin:0;padding:24px;background:#fff;color:#000}@media(prefers-color-scheme:dark){body{background:#0a0a0a;color:#fff}}a,button{display:block;box-sizing:border-box;width:100%;margin-top:16px;padding:14px;border:2px solid currentColor;background:none;color:inherit;font:inherit;font-weight:700;text-align:center;text-decoration:none}</style></head><body><p>The Mac cannot be reached, and this page is not on this device yet.</p><button onclick="location.reload()">TRY AGAIN</button><a href="/">GO HOME</a></body></html>`
+// never a dead end: it can try again (which first clears the backoff) and go Home, which is kept on the device, or to any saved page when Home is not.
+const UNREACHABLE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not on this device yet</title><style>body{font:18px/1.5 ui-monospace,Menlo,monospace;margin:0;padding:24px;background:#fff;color:#000}@media(prefers-color-scheme:dark){body{background:#0a0a0a;color:#fff}}a,button{display:block;box-sizing:border-box;width:100%;margin-top:16px;padding:14px;border:2px solid currentColor;background:none;color:inherit;font:inherit;font-weight:700;text-align:center;text-decoration:none}</style></head><body><p>The Mac cannot be reached, and this page is not on this device yet.</p><button id="again">TRY AGAIN</button><a id="home" href="/">GO HOME</a><script>document.getElementById("again").onclick=async()=>{const c=navigator.serviceWorker&&navigator.serviceWorker.controller;if(c){const ch=new MessageChannel();c.postMessage("quiz-mac-reachable",[ch.port2]);await new Promise((done)=>{ch.port1.onmessage=()=>done();setTimeout(done,500)})}location.reload()};(async()=>{try{if(await caches.match("/"))return;for(const name of await caches.keys()){if(name.indexOf("quiz-pages-")!==0)continue;const saved=(await(await caches.open(name)).keys()).map((r)=>new URL(r.url)).find((u)=>u.pathname!==location.pathname);if(saved){const home=document.getElementById("home");home.href=saved.pathname+saved.search;home.textContent="OPEN A SAVED PAGE";return}}}catch(e){}})()</script></body></html>`
 
 // Next.js's data for a client-side navigation. Kept by its full URL: the _rsc value is a hash of
 // the request's router headers, so the same URL always asks for the same data. Offline, a kept
@@ -70,9 +74,8 @@ async function flight(request) {
   const cache = await caches.open(PAGE_CACHE)
   const kept = await cache.match(request)
   try {
-    // Skipped while the Mac is known to be down, so an unreachable Mac costs one wait, not two. A slow
-    // answer is still waited for (10 s) when no copy is on the device, so a slow page is never cut off.
-    const response = await fromMac(request, Boolean(kept), true)
+    // A slow answer is still waited for (30 s) when no copy is on the device, so a slow page is never cut off.
+    const response = await fromMac(request, Boolean(kept))
     if (response.ok && !response.redirected) await cache.put(request, response.clone())
     return response
   } catch {

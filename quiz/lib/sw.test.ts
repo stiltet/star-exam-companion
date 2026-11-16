@@ -212,7 +212,7 @@ test("two exams that number their courses from 1 never share a course's remember
   assert.deepEqual(result, [{ id: "1", pages: null }])
 })
 
-test("a page that is not on the device waits for a slow Mac instead of giving up, and one Mac failure never blocks it", async () => {
+test("a page that is not on the device waits for a slow Mac instead of giving up", async () => {
   const sw = load(async (url) => {
     await new Promise((resolve) => setTimeout(resolve, 2700))
     return ok("slow page")
@@ -220,8 +220,6 @@ test("a page that is not on the device waits for a slow Mac instead of giving up
   const slow = await sw.request("/slow-test", { mode: "navigate" })
   assert.equal(slow?.status, 200, "slower than 2.5 s, still answered by the Mac")
   assert.equal(await slow?.text(), "slow page")
-  const again = await sw.request("/slow-test2", { mode: "navigate" })
-  assert.equal(again?.status, 200, "after a failure a page with no copy still asks the Mac")
 })
 
 test("a page that is neither reachable nor on the device shows a page with Try again and Go home, never plain text", async () => {
@@ -249,4 +247,30 @@ test("a client-side navigation to a slow page that is not on the device is waite
   })
   const response = await sw.request("/slow-test?_rsc=a", { headers: { RSC: "1" } })
   assert.equal(response?.status, 200)
+})
+
+test("an unreachable Mac costs one wait: after a failed client-side move the full page load skips the Mac, and Try again clears that", async () => {
+  let up = false
+  const sw = load(() => (up ? ok("the page") : offline()))
+  assert.equal((await sw.request("/not-kept?_rsc=a", { headers: { RSC: "1" } }))?.status, 503)
+  const asked = sw.calls.length
+  const full = await sw.request("/not-kept", { mode: "navigate" })
+  assert.equal(full?.status, 503)
+  assert.match(await full!.text(), /TRY AGAIN/)
+  assert.equal(sw.calls.length, asked, "the Mac is not asked a second time while it is known to be down")
+  // Try again tells the worker to forget the backoff, and the page then loads once the Mac is back.
+  up = true
+  assert.equal(sw.message("quiz-mac-reachable"), "ready")
+  const again = await sw.request("/not-kept", { mode: "navigate" })
+  assert.equal(again?.status, 200)
+  assert.equal(await again?.text(), "the page")
+})
+
+test("the Mac answering clears a backoff, and the unreachable page offers a saved page when Home is not saved", async () => {
+  const sw = load(() => ok("fine"))
+  assert.equal((await sw.request("/a", { mode: "navigate" }))?.status, 200)
+  assert.equal((await sw.request("/b", { mode: "navigate" }))?.status, 200)
+  const page = await (await load(offline).request("/x", { mode: "navigate" }))!.text()
+  assert.match(page, /OPEN A SAVED PAGE/)
+  assert.match(page, /quiz-mac-reachable/)
 })
