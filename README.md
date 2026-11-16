@@ -502,6 +502,8 @@ Run the complete gate (unit tests, then the browser tests, which build and type-
 pnpm gate
 ```
 
+The same gate runs as two steps, for a runner that limits how long one command may take: `pnpm gate:unit`, then `pnpm gate:browser`.
+
 Or run just the browser suite:
 
 ```bash
