@@ -5,6 +5,9 @@ import { silentWav } from "./voice-fixture.mjs"
 // storage calls it cut off as uncaught errors.
 const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
 
+// The one address the Mac-unreachable test opens that the device has never seen: the offline helper answers it 503 on purpose.
+export const UNREACHABLE_PATH = "/never-opened-on-this-device"
+
 export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean }>({
   offlineNetwork: [false, { option: true }],
   navigationCutOff: [false, { option: true }],
@@ -25,6 +28,8 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
         if (url.pathname.startsWith("/api/") || url.searchParams.has("_rsc") || /^\/(?:favicon|apple-touch-icon)\.png$/.test(url.pathname)) return
       }
       if (offlineNetwork && /(?:[?&]_rsc=|\/api\/).+ due to access control checks\.$/.test(message.text())) return
+      // The page shown for the address the offline-unreachable test opens is answered 503 on purpose, and only that one.
+      if (offlineNetwork && /status of 503\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === UNREACHABLE_PATH) return
       if (navigationCutOff && CUT_OFF.test(message.text())) return
       if (expectedWrongExam && /status of 409\b/.test(message.text()) && new URL(message.location().url || baseURL!).pathname === "/api/snapshot") return
       errors.push(message.text())
@@ -46,10 +51,21 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
     await use()
     await context.setOffline(false)
     if (!page.isClosed()) {
-      await page.evaluate(async () => {
-        const workers = await navigator.serviceWorker.getRegistrations()
-        await Promise.all(workers.map((worker) => worker.unregister()))
-      })
+      // Best effort, and bounded: each test has its own browser context, so this only tidies up. A page still busy
+      // storing the voice clips can leave this call waiting for a minute and would use up the test's whole time.
+      let giveUp: ReturnType<typeof setTimeout> | undefined
+      await Promise.race([
+        page
+          .evaluate(async () => {
+            const workers = await navigator.serviceWorker.getRegistrations()
+            await Promise.all(workers.map((worker) => worker.unregister()))
+          })
+          .catch(() => undefined),
+        new Promise((resolve) => {
+          giveUp = setTimeout(resolve, 10_000)
+        }),
+      ])
+      clearTimeout(giveUp)
     }
     expect(errors, "Uncaught browser errors").toEqual([])
   }, { auto: true }],

@@ -211,3 +211,42 @@ test("two exams that number their courses from 1 never share a course's remember
   const result = await coursePages([other], async () => ({ ok: false as const }), Promise.resolve(null), last)
   assert.deepEqual(result, [{ id: "1", pages: null }])
 })
+
+test("a page that is not on the device waits for a slow Mac instead of giving up, and one Mac failure never blocks it", async () => {
+  const sw = load(async (url) => {
+    await new Promise((resolve) => setTimeout(resolve, 2700))
+    return ok("slow page")
+  })
+  const slow = await sw.request("/slow-test", { mode: "navigate" })
+  assert.equal(slow?.status, 200, "slower than 2.5 s, still answered by the Mac")
+  assert.equal(await slow?.text(), "slow page")
+  const again = await sw.request("/slow-test2", { mode: "navigate" })
+  assert.equal(again?.status, 200, "after a failure a page with no copy still asks the Mac")
+})
+
+test("a page that is neither reachable nor on the device shows a page with Try again and Go home, never plain text", async () => {
+  const sw = load(offline)
+  const response = await sw.request("/glossary", { mode: "navigate" })
+  assert.equal(response?.status, 503)
+  assert.match(response?.headers.get("Content-Type") ?? "", /text\/html/)
+  const body = (await response?.text()) ?? ""
+  assert.match(body, /TRY AGAIN/)
+  assert.match(body, /href="\/"/)
+})
+
+test("with the Mac unreachable, a client-side navigation with no kept copy fails at once after the first miss, so the page opens without a second wait", async () => {
+  const sw = load(offline)
+  assert.equal((await sw.request("/?_rsc=a", { headers: { RSC: "1" } }))?.status, 503)
+  const before = sw.calls.length
+  assert.equal((await sw.request("/?_rsc=b", { headers: { RSC: "1" } }))?.status, 503)
+  assert.equal(sw.calls.length, before, "the Mac is not asked again for a while")
+})
+
+test("a client-side navigation to a slow page that is not on the device is waited for, so a slow page is never cut off", async () => {
+  const sw = load(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2700))
+    return ok("flight")
+  })
+  const response = await sw.request("/slow-test?_rsc=a", { headers: { RSC: "1" } })
+  assert.equal(response?.status, 200)
+})
