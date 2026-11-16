@@ -112,8 +112,33 @@ describe('the GitHub Pages build', () => {
       assert.match(home, /href="\/demo-test\/favicon\.png"/, 'the icon must carry the base path');
       assert.match(home, /Online demo\./, 'every page carries the demo banner');
       // The banner sits in the app's own container and has the yellow warning look, not a full-width grey bar.
-      assert.match(home, /<div class="max-w-4xl mx-auto px-4 pt-4" data-testid="demo-banner"><p role="note" class="[^"]*\bbg-flag\b[^"]*\btext-center\b/, 'the banner is a warning inside the app container');
+      // Each part is its own check inside the banner's own element, so a reordered attribute does not fail it and a
+      // copy of the sentence elsewhere on the page does not satisfy it.
+      const banner = /<div ([^>]*)data-testid="demo-banner"([^>]*)>(.*?)<\/div>/s.exec(home);
+      assert.ok(banner, 'the banner has its own element');
+      const [, before, after, inner] = banner;
+      // Whole class names, never a word boundary: \bp-4\b would also match md:p-4, and \bbg-flag\b would match bg-flag-foreground.
+      const classesOf = (attributes: string) => (/class="([^"]*)"/.exec(attributes)?.[1] ?? '').split(/\s+/);
+      const wrapper = classesOf(`${before}${after}`);
+      for (const token of ['max-w-4xl', 'mx-auto', 'px-4', 'pt-4']) assert.ok(wrapper.includes(token), `the banner is in the app container (${token})`);
+      const warning = /<p ([^>]*)>(.*?)<\/p>/s.exec(inner);
+      assert.ok(warning, 'the banner is a paragraph');
+      const paragraph = warning[1] as string;
+      const words = warning[2] as string;
+      assert.match(paragraph, /role="note"/, 'the banner keeps its note role');
+      const look = classesOf(paragraph);
+      for (const token of ['bg-flag', 'text-flag-foreground', 'border-2', 'p-4', 'text-center']) assert.ok(look.includes(token), `the banner has the warning look (${token})`);
       assert.doesNotMatch(home, /<div role="note"/, 'the old full-width grey bar is gone');
+      assert.match(words, /Not affiliated with or endorsed by Google\. Google(?:'|&#x27;)s rights, its trademarks and the\s+sources of the glossary are in(?:<!-- -->)?\s+<a [^>]*>the notice<\/a>\./, 'the banner says it is not Google and links to the notice that states Google\'s rights');
+      // Both links open in a new tab and cannot reach back to the page: the same-tab form would leave the offline demo.
+      const links = [...words.matchAll(/<a ([^>]*)>/g)].map((link) => link[1] as string);
+      assert.equal(links.length, 2, 'the banner has the setup link and the notice link');
+      assert.match(links[0] as string, /href="https:\/\/github\.com\/stiltet\/star-exam-companion#full-local-setup"/, 'the first link is the setup guide');
+      assert.match(links[1] as string, /href="https:\/\/github\.com\/stiltet\/star-exam-companion\/blob\/main\/NOTICE"/, 'the second link is the notice');
+      for (const link of links) {
+        assert.match(link, /target="_blank"/, 'the banner link opens in a new tab');
+        assert.match(link, /rel="noopener noreferrer"/, 'the banner link cannot reach back to the demo');
+      }
       assert.doesNotMatch(home, /href="\/favicon\.png"/);
       assert.match(home, /rel="manifest" href="\/demo-test\/manifest\.webmanifest"/, 'Android installs from the manifest');
       const manifest = JSON.parse(readFileSync(path.join(out, 'manifest.webmanifest'), 'utf8'));
