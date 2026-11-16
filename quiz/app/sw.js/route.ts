@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { activePack } from "@/lib/pack"
-import { courseBundle } from "@/lib/course-text"
+import { courseBundle } from "@/lib/reading-provider"
 import type { PageSummary } from "@/lib/reading-view"
 import { coursePages, pageList, readingPages, staticList, workerScript } from "@/lib/sw"
 

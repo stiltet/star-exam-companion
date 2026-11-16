@@ -6,7 +6,7 @@ import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
 import { PageNav } from "@/components/page-nav"
 import { ActionLink } from "@/components/atoms/button"
-import { courseBundle } from "@/lib/course-text"
+import { courseBundle } from "@/lib/reading-provider"
 import { activePack } from "@/lib/pack"
 import { courseById, nextReading, previousLesson, reading, reviewUrl } from "@/lib/reading"
 
@@ -29,7 +29,7 @@ export default async function ReadingPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-          <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} />
+          <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
         </main>
         <SiteFooter />
       </div>
@@ -42,6 +42,8 @@ export default async function ReadingPage({ params }: Props) {
   const at = list.findIndex((entry) => entry.id === pageId)
   // The reading on Google, where its review is done and its videos play.
   const google = reviewUrl(course, loaded.ids, list.length, at)
+  // A private course's video opens the video lesson itself on Google Skills; its page id is the video's number.
+  const watch = course.provider === "private" ? { url: `${course.path}/course_templates/${course.template}/video/${pageId}`, direct: true } : google
   const previous = previousLesson(course, list, pageId)
   const following = nextReading(course, list, pageId, ordered)
 
@@ -68,7 +70,7 @@ export default async function ReadingPage({ params }: Props) {
           next={following}
           review={page.review ? google : null}
           reviewAt={page.reviewAt}
-          video={page.videoAt.length > 0 ? google : null}
+          video={page.videoAt.length > 0 ? watch : null}
           videoAt={page.videoAt}
         />
         {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
