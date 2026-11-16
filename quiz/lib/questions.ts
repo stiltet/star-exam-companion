@@ -29,11 +29,13 @@ export function quizQuestions(glossary: Glossary, items: RoundItem[], bank: Bank
     id: item.id,
     sectionId: String(item.section),
     topicId: item.guideId,
-    question: item.stem,
+    // The binding constraint is part of the question, as in the Voice quiz, so the answer can be worked out from it.
+    question: `${item.stem} ${item.constraint}`,
     options: item.options,
     correctIndex: item.correctIndex,
-    explanation: item.constraint,
-    whyOthersWrong: item.options.map(() => "It does not meet the constraint."),
+    explanation: `${item.options[item.correctIndex] ?? ""}: ${item.why}`,
+    // One reason per wrong option, never the correct one. A copy saved before the reasons were stored falls back to one plain line each.
+    whyOthersWrong: item.wrong ?? item.options.filter((_, index) => index !== item.correctIndex).map(() => "It does not meet the constraint."),
     officialDoc: item.source,
     difficulty: "medium" as const,
   }))

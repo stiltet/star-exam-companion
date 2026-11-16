@@ -143,7 +143,8 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
             <ul className="space-y-2 mb-4">
               {question.whyOthersWrong.map((reason, index) => (
                 <li key={index} className="flex gap-2 text-sm">
-                  <span className="text-muted-foreground font-bold">{String.fromCharCode(65 + index)}.</span>
+                  {/* The reasons are for the wrong options only, so each takes the letter of the index-th option that is not the correct one. */}
+                  <span className="text-muted-foreground font-bold">{String.fromCharCode(65 + (question.options.map((_, at) => at).filter((at) => at !== question.correctIndex)[index] ?? index))}.</span>
                   <span>{reason}</span>
                 </li>
               ))}

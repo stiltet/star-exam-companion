@@ -19,6 +19,23 @@ test("Practice and Exam ask every voice scene and every written question", () =>
   for (const question of testPack.study.questions) assert.ok(ids.includes(question.id), question.id)
 })
 
+test("a voice scene in Practice shows its constraint in the question and gives each wrong option, and only those, its own reason", () => {
+  const scenes = quizQuestions(glossary, items, testBank).filter((question) => items.some((item) => item.id === question.id))
+  assert.ok(scenes.length > 0)
+  for (const question of scenes) {
+    const item = items.find((entry) => entry.id === question.id)!
+    assert.ok(question.question.includes(item.constraint), `${question.id}: the constraint is in the question`)
+    assert.equal(question.whyOthersWrong.length, question.options.length - 1, `${question.id}: one reason per wrong option`)
+    const wrong = question.options.filter((_, index) => index !== question.correctIndex)
+    question.whyOthersWrong.forEach((reason, index) => {
+      assert.ok(reason.startsWith(`${wrong[index]}:`), `${question.id}: reason ${index} is for option ${wrong[index]}`)
+      assert.notEqual(reason, "It does not meet the constraint.")
+    })
+    assert.equal(new Set(question.whyOthersWrong).size, question.whyOthersWrong.length, `${question.id}: no reason repeats`)
+    assert.ok(question.explanation.startsWith(`${question.options[question.correctIndex]}:`), `${question.id}: the explanation names the right answer`)
+  }
+})
+
 test("written questions sit in exam sections 1 to 4 and keep their own explanations", () => {
   const written = quizQuestions(glossary, items, testBank).filter((question) => question.id.startsWith("q"))
   assert.deepEqual([...new Set(written.map((question) => question.sectionId))].sort(), ["1", "2", "3", "4"])
