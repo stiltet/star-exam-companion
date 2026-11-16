@@ -420,7 +420,7 @@
             },
             {
               "title": "Agent Platform Pipelines",
-              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/"
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction"
             },
             {
               "title": "Introduction to Cloud TPU",
@@ -454,7 +454,7 @@
             {
               "question": "What do Agent Platform Pipelines do?",
               "answer": "They let you automate, monitor and govern your machine learning systems in a serverless manner.",
-              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/"
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction"
             },
             {
               "question": "What is a Tensor Processing Unit?",
@@ -487,7 +487,7 @@
             },
             {
               "title": "Model Garden overview",
-              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore"
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore-models"
             },
             {
               "title": "Cloud Speech-to-Text overview",
@@ -516,7 +516,7 @@
             {
               "question": "What does Model Garden offer?",
               "answer": "An AI and ML model library where you discover, test, customise and deploy models and assets from Google and Google partners.",
-              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore"
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore-models"
             },
             {
               "question": "What does the Cloud Vision API detect?",
@@ -1633,7 +1633,7 @@
         "Filestore is a file server.",
         "Cloud Interconnect is a network connection."
       ],
-      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/",
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction",
       "difficulty": "medium"
     },
     {
