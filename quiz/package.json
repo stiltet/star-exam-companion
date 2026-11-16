@@ -13,6 +13,8 @@
     "e2e": "playwright test",
     "e2e:install": "playwright install chromium webkit",
     "gate": "cd .. && pnpm gate",
+    "gate:unit": "cd .. && pnpm gate:unit",
+    "gate:browser": "cd .. && pnpm gate:browser",
     "lint": "eslint .",
     "reading:crawl": "node scripts/reading-crawl.mts",
     "reading:list": "node scripts/reading-list.mts",
