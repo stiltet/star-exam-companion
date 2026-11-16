@@ -731,5 +731,264 @@
     "scene": "A public-sector agency must keep its data in specific regions, restrict support staff to approved personnel and apply a regulatory control package. What should it set up?",
     "constraint": "Data residency, access and personnel controls must be configured together as one regulated boundary.",
     "guide": "3.2"
+  },
+  {
+    "id": "pca-cloud-build",
+    "correct": "Cloud Build",
+    "distractors": [
+      "Cloud Deploy",
+      "Artifact Registry",
+      "Terraform"
+    ],
+    "scene": "Every commit to a repository must trigger a run that compiles the code, runs its tests and produces a container image. Which service should execute those builds?",
+    "constraint": "The service must run the build steps and produce artifacts, not store them or promote them between environments.",
+    "guide": "4.1"
+  },
+  {
+    "id": "pca-cloud-deploy",
+    "correct": "Cloud Deploy",
+    "distractors": [
+      "Cloud Build",
+      "Artifact Registry",
+      "Managed instance groups (MIGs)"
+    ],
+    "scene": "A release must move from a test environment to staging and then to production in a defined order, with an approval before production. Which service manages that promotion?",
+    "constraint": "The need is automated delivery through a defined promotion sequence of target environments, not building the image.",
+    "guide": "4.1"
+  },
+  {
+    "id": "pca-artifact-registry",
+    "correct": "Artifact Registry",
+    "distractors": [
+      "Cloud Build",
+      "Cloud Deploy",
+      "Cloud Storage"
+    ],
+    "scene": "A team wants one managed place to keep its Docker container images and language packages, so that pipelines and clusters pull from the same location. Where should the artifacts live?",
+    "constraint": "The need is storing and managing packages and images centrally, rather than building or deploying them.",
+    "guide": "4.1"
+  },
+  {
+    "id": "pca-disaster-recovery",
+    "correct": "Disaster recovery",
+    "distractors": [
+      "Backup and DR Service",
+      "Google Cloud Well-Architected Framework",
+      "Managed instance groups (MIGs)"
+    ],
+    "scene": "The board asks for a documented plan that says how the company restores its critical systems in Google Cloud after a regional outage, including targets for recovery time. What discipline is this?",
+    "constraint": "The deliverable is a plan for restoring service after a disaster, not a single backup product."
+  },
+  {
+    "id": "pca-cost-optimization",
+    "correct": "Cost optimization",
+    "distractors": [
+      "Disaster recovery",
+      "Cloud Billing budgets",
+      "Google Cloud Migration Center"
+    ],
+    "scene": "Leadership asks the architects to review which design choices lower the running cost of workloads in Google Cloud without hurting what the business needs. Which pillar of the Well-Architected Framework does the review follow?",
+    "constraint": "The goal is the principles that reduce the cost of workloads, not a tool that sets a spending alert."
+  },
+  {
+    "id": "pca-billing-budgets",
+    "correct": "Cloud Billing budgets",
+    "distractors": [
+      "Cost optimization",
+      "Cloud Monitoring",
+      "Google Cloud Migration Center"
+    ],
+    "scene": "A finance team wants an email alert when a project's monthly Google Cloud spend passes 80 percent of what was planned. What should it create?",
+    "constraint": "The need is a spend threshold with an alert, not a review of design principles.",
+    "guide": "4.2"
+  },
+  {
+    "id": "pca-apigee",
+    "correct": "Apigee",
+    "distractors": [
+      "Cloud Load Balancing",
+      "Cloud Armor",
+      "Identity-Aware Proxy (IAP)"
+    ],
+    "scene": "A bank wants to expose its internal services to partners as managed APIs, with API proxies, security policies and analytics for each API. Which platform should it adopt?",
+    "constraint": "The need is full API management for building, managing and securing APIs, not just distributing traffic or blocking attacks."
+  },
+  {
+    "id": "pca-cloud-shell",
+    "correct": "Cloud Shell",
+    "distractors": [
+      "Cloud Shell Editor",
+      "Cloud Code",
+      "gcloud CLI"
+    ],
+    "scene": "A new administrator on a locked-down laptop must run a few commands against Google Cloud right now, from a browser tab, with the tools already installed. What should they open?",
+    "constraint": "Nothing can be installed locally, and the command-line tools must come pre-installed in the browser session."
+  },
+  {
+    "id": "pca-cloud-shell-editor",
+    "correct": "Cloud Shell Editor",
+    "distractors": [
+      "Cloud Shell",
+      "Cloud Code",
+      "Terraform"
+    ],
+    "scene": "A developer wants a full code editor in the browser, with debugging and source control, that is connected to a terminal for the same Google Cloud project. What should the developer use?",
+    "constraint": "The need is an IDE workspace in the browser, not only a command line."
+  },
+  {
+    "id": "pca-cloud-code",
+    "correct": "Cloud Code",
+    "distractors": [
+      "Cloud Shell Editor",
+      "Cloud Build",
+      "Cloud Client Libraries"
+    ],
+    "scene": "Developers use their own desktop IDE and want plugins that create, run and debug Kubernetes and Cloud Run applications from sample templates without leaving the editor. What should they install?",
+    "constraint": "The tooling must plug into the developers' own local IDE rather than run in the browser."
+  },
+  {
+    "id": "pca-gcloud-cli",
+    "correct": "gcloud CLI",
+    "distractors": [
+      "Terraform",
+      "Cloud Shell",
+      "Cloud Client Libraries"
+    ],
+    "scene": "An operations engineer wants to script the creation of a VM and a firewall rule from a shell script, using the main command-line tool for Google Cloud. What should the script call?",
+    "constraint": "The script must run the Google Cloud command-line tool directly, and no declarative infrastructure files are wanted."
+  },
+  {
+    "id": "pca-bq",
+    "correct": "bq",
+    "distractors": [
+      "gcloud CLI",
+      "gsutil",
+      "Cloud Shell"
+    ],
+    "scene": "An analyst wants to load a CSV file into a table and run a query from a terminal, using the command-line tool made specifically for BigQuery. Which tool should the analyst use?",
+    "constraint": "The tool must be the BigQuery-specific command-line interface, not the general tool for all Google Cloud services."
+  },
+  {
+    "id": "pca-gsutil",
+    "correct": "gsutil",
+    "distractors": [
+      "bq",
+      "gcloud CLI",
+      "Storage Transfer Service"
+    ],
+    "scene": "An old backup script copies files to a Cloud Storage bucket with the legacy command-line tool, and Google now tells users to move to gcloud storage commands. Which tool does the script call today?",
+    "constraint": "The tool is the legacy Cloud Storage command-line tool that Google no longer recommends."
+  },
+  {
+    "id": "pca-cloud-emulators",
+    "correct": "Cloud emulators",
+    "distractors": [
+      "Cloud Shell",
+      "Cloud Code",
+      "gcloud CLI"
+    ],
+    "scene": "Developers want to run integration tests on their laptops against local stand-ins for Pub/Sub and Firestore, without creating cloud resources or paying for them. What should they use?",
+    "constraint": "The tests must run locally against emulated services, with no real cloud service involved."
+  },
+  {
+    "id": "pca-client-libraries",
+    "correct": "Cloud Client Libraries",
+    "distractors": [
+      "gcloud CLI",
+      "Terraform",
+      "Apigee"
+    ],
+    "scene": "A Python team wants its application code to call Google Cloud APIs in the idiomatic style of its language, without hand-writing low-level HTTP requests. What should it import?",
+    "constraint": "Application code must call the APIs through language-native libraries, not through a command-line tool or configuration files."
+  },
+  {
+    "id": "pca-dms",
+    "correct": "Database Migration Service",
+    "distractors": [
+      "Storage Transfer Service",
+      "Google Cloud Migration Center",
+      "Dataflow"
+    ],
+    "scene": "A company wants to move a running PostgreSQL database from another environment into Cloud SQL with minimal downtime, using a managed migration tool. What should it use?",
+    "constraint": "The data and metadata of a source database must be moved to a destination database, not files between buckets.",
+    "guide": "5.1"
+  },
+  {
+    "id": "pca-operational-excellence",
+    "correct": "Operational excellence pillar",
+    "distractors": [
+      "Cost optimization",
+      "Disaster recovery",
+      "Google Cloud Well-Architected Framework"
+    ],
+    "scene": "An architect reviews how a team deploys, monitors and runs its workloads day to day, and wants the Well-Architected Framework guidance on managing and operating workloads efficiently. Which part of the framework applies?",
+    "constraint": "The guidance sought is about running workloads efficiently, rather than about their cost or recovery plans."
+  },
+  {
+    "id": "pca-observability",
+    "correct": "Google Cloud Observability",
+    "distractors": [
+      "Cloud Audit Logs",
+      "Gemini Cloud Assist",
+      "Cloud Deploy"
+    ],
+    "scene": "A platform team wants one family of Google Cloud services for metrics, logs and traces so it can understand the behaviour, health and performance of its applications. What should it adopt?",
+    "constraint": "The answer is the whole set of observability services, not one single signal type."
+  },
+  {
+    "id": "pca-cloud-monitoring",
+    "correct": "Cloud Monitoring",
+    "distractors": [
+      "Cloud Logging",
+      "Cloud Trace",
+      "Cloud Profiler"
+    ],
+    "scene": "An SRE team wants dashboards of CPU and latency metrics collected automatically from its Google Cloud services, with charts it can query. Which service provides them?",
+    "constraint": "The data to chart is numeric metrics over time, not log entries, request traces or code profiles."
+  },
+  {
+    "id": "pca-cloud-logging",
+    "correct": "Cloud Logging",
+    "distractors": [
+      "Cloud Monitoring",
+      "Cloud Trace",
+      "Cloud Audit Logs"
+    ],
+    "scene": "Developers need to search and analyse the text log lines that their applications and Google Cloud resources produce, in real time. Which service stores and searches them?",
+    "constraint": "The data is log entries from resources and applications, collected and searched in one log-management system."
+  },
+  {
+    "id": "pca-cloud-trace",
+    "correct": "Cloud Trace",
+    "distractors": [
+      "Cloud Profiler",
+      "Cloud Monitoring",
+      "Cloud Logging"
+    ],
+    "scene": "Checkout requests are slow, and the team must see how long each downstream service call takes within a single request to find the bottleneck. Which service shows that?",
+    "constraint": "The view must follow one request across services and show the latency at each step.",
+    "guide": "6.2"
+  },
+  {
+    "id": "pca-cloud-profiler",
+    "correct": "Cloud Profiler",
+    "distractors": [
+      "Cloud Trace",
+      "Cloud Monitoring",
+      "Cloud Logging"
+    ],
+    "scene": "A service in production uses too much CPU, and developers want to see which functions in the running code consume it, without slowing production down. Which service should they use?",
+    "constraint": "The measurement must show resource use by function in running production code, not request latency between services."
+  },
+  {
+    "id": "pca-alerting-policies",
+    "correct": "Alerting policies",
+    "distractors": [
+      "Cloud Billing budgets",
+      "Cloud Logging",
+      "Cloud Audit Logs"
+    ],
+    "scene": "The on-call engineer must be paged when the error rate stays above a threshold for five minutes, without watching a dashboard. What should the team configure?",
+    "constraint": "The system must evaluate metric data against conditions and send notifications when they are met."
   }
 ]

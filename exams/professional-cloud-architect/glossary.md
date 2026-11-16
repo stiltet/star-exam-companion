@@ -94,3 +94,41 @@ Validated against Google docs: 2026-11-16
 | Model Armor | A service that screens LLM prompts and responses to prevent malicious input, protect sensitive data and enforce AI safety policies, on Google Cloud or elsewhere. | 3.1 | EG, [Google page](https://docs.cloud.google.com/model-armor/overview) |
 | Sensitive Data Protection | Helps you discover, classify and de-identify sensitive data inside and outside Google Cloud. | 3.1 | EG, [Google page](https://docs.cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview) |
 | Assured Workloads | Lets organisations in regulated sectors configure a sovereign data and access boundary, with data residency, access and personnel controls, for sensitive workloads in the cloud. | — | [Google page](https://docs.cloud.google.com/assured-workloads/docs/overview) |
+
+## Section 4 — Analyzing and optimizing technical and business processes
+
+| Term | Meaning | Guide | Source |
+|---|---|---|---|
+| Cloud Build | A service that runs your builds on Google Cloud. It imports source code from repositories or Cloud Storage, runs the build you specify and produces artifacts such as Docker containers or Java archives. | — | [Google page](https://docs.cloud.google.com/build/docs/overview) |
+| Cloud Deploy | A managed service that automates delivery of your applications to a series of target environments in a defined promotion sequence. A release moves through a delivery pipeline. | — | [Google page](https://docs.cloud.google.com/deploy/docs/overview) |
+| Artifact Registry | A single place to store and manage your packages and Docker container images, as an integrated part of Google Cloud. | — | [Google page](https://docs.cloud.google.com/artifact-registry/docs/overview) |
+| Disaster recovery | The planning process for restoring service after a disaster. Google's planning guide describes what you need to know to design and implement a disaster recovery plan in Google Cloud. | 4.1 | EG, [Google page](https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide) |
+| Cost optimization | The Well-Architected Framework pillar whose principles and recommendations help you optimise the cost of your workloads in Google Cloud. | 1.1, 4.2 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/cost-optimization) |
+| Cloud Billing budgets | Budgets and budget alerts that let you monitor all your Google Cloud charges in one place and avoid surprises on the bill. Alerts-only budgets track spend, and spend cap budgets can be set on a project where the service supports it. | — | [Google page](https://docs.cloud.google.com/billing/docs/how-to/budgets) |
+
+## Section 5 — Managing implementation
+
+| Term | Meaning | Guide | Source |
+|---|---|---|---|
+| Apigee | Google Cloud's native API management platform, used to build, manage and secure APIs at any scale. It offers high-performance API proxies. | 5.1 | EG, [Google page](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee) |
+| Cloud Shell | An interactive shell environment for Google Cloud, in your browser. The Google Cloud CLI and other utilities come pre-installed. Its terminal is the Cloud Shell Terminal. | 5.2 | EG, [Google page](https://docs.cloud.google.com/shell/docs) |
+| Cloud Shell Editor | A browser-based IDE to develop, build and debug Google Cloud applications, with source control, language tooling and access to the Cloud Shell terminal. | 5.2 | EG, [Google page](https://docs.cloud.google.com/shell/docs/editor-overview) |
+| Cloud Code | IDE extensions that support the full development cycle of Kubernetes and Cloud Run applications, from templates to running the finished app. | 5.2 | EG, [Google page](https://docs.cloud.google.com/code/docs) |
+| gcloud CLI | The command-line tool set of the Google Cloud CLI, for creating and managing Google Cloud resources and performing common platform tasks. | 5.2 | EG, [Google page](https://docs.cloud.google.com/sdk/gcloud) |
+| bq | The Python-based command-line tool for BigQuery, used for example to create datasets, load data and query tables. | 5.2 | EG, [Google page](https://docs.cloud.google.com/bigquery/docs/quickstarts/load-data-bq) |
+| gsutil | The older command-line tool for Cloud Storage. Google says it is not the recommended CLI and tells you to use gcloud storage commands in the Google Cloud CLI instead. | 5.2 | EG, [Google page](https://docs.cloud.google.com/storage/docs/gsutil) |
+| Cloud emulators | Local emulators that set up your development environment so you can test against services such as Bigtable, Spanner, Pub/Sub and Firestore without using the real service. They are started through the gcloud emulators command group. | 5.2 | EG, [Google page](https://docs.cloud.google.com/sdk/gcloud/reference/beta/emulators) |
+| Cloud Client Libraries | Libraries that let you call Google Cloud APIs in each supported language's idiomatic style, with less boilerplate code. Google recommends them. | 5.2 | EG, [Google page](https://docs.cloud.google.com/apis/docs/cloud-client-libraries) |
+| Database Migration Service | A managed service to migrate your data to Google Cloud, supporting migrations to Cloud SQL and AlloyDB for PostgreSQL. | — | [Google page](https://docs.cloud.google.com/database-migration/docs/overview) |
+
+## Section 6 — Ensuring solution and operations excellence
+
+| Term | Meaning | Guide | Source |
+|---|---|---|---|
+| Operational excellence pillar | The Well-Architected Framework pillar whose principles and recommendations help you manage and operate workloads efficiently in Google Cloud. | 6.1 | EG, [Google page](https://docs.cloud.google.com/architecture/framework/operational-excellence) |
+| Google Cloud Observability | A set of services, including monitoring, logging and tracing, that help you understand the behaviour, health and performance of your applications, agentic applications included. | 6.2 | EG, [Google page](https://docs.cloud.google.com/stackdriver/docs) |
+| Cloud Monitoring | Collects, stores and analyses metric data to show how your applications and Google Cloud services behave and perform. It collects metrics for most Google Cloud services automatically and offers dashboards, queries and alerts. | 6.2 | EG, [Google page](https://docs.cloud.google.com/monitoring/docs/monitoring-overview) |
+| Cloud Logging | A real-time log-management system with storage, search, analysis and monitoring support. It collects log data automatically from Google Cloud resources, and from your applications and on-premises resources. | 6.2 | EG, [Google page](https://docs.cloud.google.com/logging/docs/overview) |
+| Cloud Trace | A distributed tracing system that tracks request latency and helps you find performance bottlenecks across services, including generative AI applications. | — | [Google page](https://docs.cloud.google.com/trace/docs/overview) |
+| Cloud Profiler | Continuously measures how your production code uses resources such as CPU and memory, because performance in production is hard to reproduce in test environments. | 6.2 | EG, [Google page](https://docs.cloud.google.com/profiler/docs/about-profiler) |
+| Alerting policies | Cloud Monitoring policies that detect application and infrastructure problems by evaluating metric, log or SQL query results. When data meets your conditions, an alert is created and notifications are sent. | 6.2 | EG, [Google page](https://docs.cloud.google.com/monitoring/alerts) |

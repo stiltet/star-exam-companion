@@ -48,3 +48,29 @@ Chrome Enterprise Premium
 Workload Identity Federation
 Model Armor
 Sensitive Data Protection
+
+# 4.1
+Disaster recovery
+# 4.2
+Cost optimization
+
+# 5.1
+Apigee
+# 5.2
+Cloud Shell
+Cloud Shell Editor
+Cloud Code
+gcloud CLI
+bq
+gsutil
+Cloud emulators
+Cloud Client Libraries
+
+# 6.1
+Operational excellence pillar
+# 6.2
+Google Cloud Observability
+Cloud Monitoring
+Cloud Logging
+Cloud Profiler
+Alerting policies
