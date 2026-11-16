@@ -67,8 +67,7 @@ export function courseBundle(course: Course): Promise<Loaded> {
   return (course.provider === "private" ? privateReadingProvider : googleReadingProvider).load(course)
 }
 
-// True only when every private course given is fully and consistently captured: its crawl manifest is current, lists a saved text for every
-// lesson, and matches the saved readings one for one. A caller that deletes something derived from the readings (a spoken clip) asks this
+// True only when every private course given is fully and consistently captured: its crawl manifest is current, and matches the saved readings one for one (a lesson with no saved text has no reading and does not block). A caller that deletes something derived from the readings (a spoken clip) asks this
 // first, so a reading missing from a crawl that is still running is never taken for an unused one. A public course needs no crawl. Any
 // doubt, an error included, answers false. It cannot see a crawl that is running between two writes: no lock exists to ask.
 export async function crawlCompleteFor(courses: readonly Pick<Course, "id" | "packId" | "provider">[]): Promise<boolean> {
@@ -77,11 +76,12 @@ export async function crawlCompleteFor(courses: readonly Pick<Course, "id" | "pa
       if (course.provider !== "private") continue
       const manifest = await readManifest(manifestFile(privateReadingRoot(), course.packId, course.id))
       if (!manifest || manifest.listing !== LISTING_VERSION || manifest.lessons.length === 0) return false
-      if (manifest.lessons.some((lesson) => lesson.hash === null)) return false
       const records = await readPrivateReadings(course.packId, course.id)
-      if (records.length !== manifest.lessons.length) return false
+      // A lesson with no saved text (an empty or unreadable one) has no reading and so no clip: it must have no record, and it does not block.
+      const saved = manifest.lessons.filter((lesson) => lesson.hash !== null)
+      if (records.length !== saved.length) return false
       for (const record of records) {
-        const lesson = manifest.lessons.find((item) => item.pageId === record.pageId)
+        const lesson = saved.find((item) => item.pageId === record.pageId)
         if (!lesson || lesson.hash !== textHash(record.text)) return false
       }
     }

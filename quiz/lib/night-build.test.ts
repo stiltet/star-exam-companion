@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 import test, { after } from "node:test"
-import { BUILD_LOG, CLIPS_DIR, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
+import { BUILD_LOG, CLIPS_DIR, voiceFingerprint, buildProblem, buildRecording, clipFile, pruneClips, createNightBuild, encodeNightAudio, nightAudioResponse, nightDir, nightDirFor, nightStatusResponse, scriptKey, writeJoinedWav } from "./night-build.ts"
 import { joinWavs, nightParts, wavFromPcm, type NightBuildState, type NightPart } from "./night.ts"
 import { renderSpeech } from "./say.ts"
 import { savePrivateReading } from "./private-reading.ts"
@@ -443,7 +443,9 @@ test("a crawl is complete only when the manifest and the saved readings agree on
     await manifest([lesson("11", "Text one."), lesson("12", "Changed text.")])
     assert.equal(await crawlCompleteFor(courses), false, "a saved reading that no longer matches its hash")
     await manifest([lesson("11", "Text one."), lesson("12", null)])
-    assert.equal(await crawlCompleteFor(courses), false, "a lesson with no saved text")
+    assert.equal(await crawlCompleteFor(courses), false, "a lesson with no saved text that still has a saved reading")
+    await manifest([lesson("11", "Text one."), lesson("12", "Text two."), lesson("13", null)])
+    assert.equal(await crawlCompleteFor(courses), true, "a lesson with no saved text has no reading, so it does not block")
     await manifest([lesson("11", "Text one."), lesson("12", "Text two.")], 1)
     assert.equal(await crawlCompleteFor(courses), false, "a manifest made under another listing rule")
     await manifest([lesson("11", "Text one.")])
@@ -465,4 +467,36 @@ test("a stopped say's leftover in the clips folder is cleared by a finished buil
   await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub })
   assert.equal(exists(leftover), false)
   assert.equal(statSync(path.join(dir, CLIPS_DIR)).mode & 0o777, 0o700)
+})
+
+test("a changed Mac voice speaks every reading again, and the old voice's clips are pruned, never mixed in", async () => {
+  const dir = path.join(scratch, "voice")
+  const spoken: string[] = []
+  const first = await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => "voice-a" })
+  assert.deepEqual(spoken, ["One.", "Two."])
+  assert.equal(exists(clipFile(dir, "One.", "voice-a")), true)
+  assert.notEqual(clipFile(dir, "One.", "voice-a"), clipFile(dir, "One.", "voice-b"))
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: async () => "voice-b" })
+  assert.deepEqual(spoken, ["One.", "Two."], "an existing recording is served as it is, whatever the voice")
+  const next = await buildRecording({ dir, parts: second, render: speak(spoken), encode: encodeStub, voice: async () => "voice-b", canPrune: async () => true })
+  assert.notEqual(next.key, first.key)
+  assert.deepEqual(spoken, ["One.", "Two.", "One.", "Two, changed."], "a changed script in a new voice speaks every reading in it")
+  assert.equal(exists(clipFile(dir, "One.", "voice-a")), false, "the old voice's clips are pruned once sure")
+  assert.equal(exists(clipFile(dir, "One.", "voice-b")), true)
+})
+
+test("the voice is known by its sound, and an unrepeatable or failed voice is not told apart", async () => {
+  const speakTone = (byte: number) => async (_text: string, file: string) => {
+    writeFileSync(file, tone(byte))
+    return true
+  }
+  const a = await voiceFingerprint(speakTone(1))
+  const b = await voiceFingerprint(speakTone(2))
+  assert.match(a, /^[0-9a-f]{64}$/)
+  assert.notEqual(a, b)
+  assert.equal(await voiceFingerprint(speakTone(1)), a, "the same voice gives the same fingerprint")
+  let n = 0
+  assert.equal(await voiceFingerprint(async (_text, file) => { writeFileSync(file, tone((n += 1))); return true }), "unstable")
+  assert.equal(await voiceFingerprint(async () => false), "unknown")
+  assert.equal(await voiceFingerprint(async () => { throw new Error("no say") }), "unknown")
 })
