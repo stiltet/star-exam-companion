@@ -129,7 +129,8 @@ describe('the GitHub Pages build', () => {
       const look = classesOf(paragraph);
       for (const token of ['bg-flag', 'text-flag-foreground', 'border-2', 'p-4', 'text-center']) assert.ok(look.includes(token), `the banner has the warning look (${token})`);
       assert.doesNotMatch(home, /<div role="note"/, 'the old full-width grey bar is gone');
-      assert.match(words, /Not affiliated with or endorsed by Google\. Google(?:'|&#x27;)s rights, its trademarks and where\s+the glossary cites its sources are explained in(?:<!-- -->)?\s+<a [^>]*>the notice<\/a>\./, 'the banner says it is not Google and links to the notice that states Google\'s rights');
+      assert.match(words, /Online demo\.<\/strong> Study, Practice, Test exam, Flashcards and Glossary work here, and all\s+answers stay locally in your browser\.(?:<!-- -->)?\s+<a [^>]*>Clone it and serve it locally<\/a>\s+(?:<!-- -->)?to use all features\./, 'the banner says what works here, that answers stay in the browser, and links to the setup to use all features');
+      assert.match(words, /features\. Not affiliated with Google: see(?:<!-- -->)?\s+<a [^>]*>the notice<\/a>\.$/, 'the banner ends by saying it is not Google and linking to the notice');
       // Both links open in a new tab and cannot reach back to the page: the same-tab form would leave the offline demo.
       const links = [...words.matchAll(/<a ([^>]*)>/g)].map((link) => link[1] as string);
       assert.equal(links.length, 2, 'the banner has the setup link and the notice link');

@@ -9,14 +9,12 @@ export function DemoBanner() {
     // The same container as the header and footer; the look is the warning atom's, the same yellow as the unfinished notice.
     <div className="max-w-4xl mx-auto px-4 pt-4" data-testid="demo-banner">
       <Text variant="banner" role="note">
-        <strong>Online demo.</strong> Study, Practice, the Test exam, Flashcards and the Glossary work
-        here, and your answers stay in this browser. Voice Quiz, Read Aloud and Progress are core features
-        that run on your own computer:{" "}
+        <strong>Online demo.</strong> Study, Practice, Test exam, Flashcards and Glossary work here, and all
+        answers stay locally in your browser.{" "}
         <a href={SETUP_URL} target="_blank" rel="noopener noreferrer" className="underline font-bold">
-          clone it and serve it locally
+          Clone it and serve it locally
         </a>{" "}
-        to use them. Not affiliated with or endorsed by Google. Google&apos;s rights, its trademarks and where
-        the glossary cites its sources are explained in{" "}
+        to use all features. Not affiliated with Google: see{" "}
         <a href={NOTICE_URL} target="_blank" rel="noopener noreferrer" className="underline font-bold">
           the notice
         </a>
