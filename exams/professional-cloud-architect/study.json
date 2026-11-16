@@ -1,4 +1,2597 @@
 {
-  "sections": [],
-  "questions": []
+  "sections": [
+    {
+      "id": "designing-planning",
+      "title": "Designing and planning a cloud solution architecture",
+      "weight": 25,
+      "description": "Business and technical requirements, network, storage and compute choices, migration plans and future improvements",
+      "topics": [
+        {
+          "id": "1-1",
+          "title": "1.1 Designing for business requirements",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Google Cloud Well-Architected Framework",
+              "url": "https://docs.cloud.google.com/architecture/framework"
+            },
+            {
+              "title": "Cost optimization pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            }
+          ],
+          "concepts": [
+            "Functional and non-functional requirements, business continuity, cost optimization and observability",
+            "Workload disposition strategies: build, buy, modify or deprecate",
+            "Success measurements such as key performance indicators, return on investment and metrics"
+          ],
+          "examFocus": "Start from the business need, then pick the design that meets it. The Well-Architected Framework pillars are the checklist for the trade-offs.",
+          "traps": [
+            "Choosing a product before finding the requirement that decides the design",
+            "Treating cost as the only trade-off when reliability, security or performance is the binding constraint"
+          ],
+          "studyQA": [
+            {
+              "question": "Which pillars does the exam guide name for the Google Cloud Well-Architected Framework?",
+              "answer": "Operational excellence, security, reliability, performance optimization, cost optimization and sustainability. The guide says they are woven through the exam objectives and should guide architectural decisions.",
+              "officialSource": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "question": "What does the cost optimization pillar of the Well-Architected Framework give you?",
+              "answer": "The pillar about keeping the cost of Google Cloud workloads under control.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            },
+            {
+              "question": "What is the Well-Architected Framework for?",
+              "answer": "It gives architectural recommendations and best practices to design a secure, efficient and resilient cloud topology that is optimised for cost, performance and sustainability.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework"
+            }
+          ]
+        },
+        {
+          "id": "1-2",
+          "title": "1.2 Designing for technical requirements",
+          "officialDocs": [
+            {
+              "title": "Reliability pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/reliability"
+            },
+            {
+              "title": "Gemini Cloud Assist overview",
+              "url": "https://docs.cloud.google.com/cloud-assist/overview"
+            },
+            {
+              "title": "Backup and DR overview",
+              "url": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr"
+            }
+          ],
+          "concepts": [
+            "High availability and fail-over design, scalability, performance and latency",
+            "Gemini Cloud Assist for designing, deploying, troubleshooting and optimising workloads",
+            "Backup and recovery for workloads in Google Cloud and in hybrid environments"
+          ],
+          "examFocus": "Match the technical requirement (availability, scale, latency, recovery) to the design choice, and name the pillar the choice serves.",
+          "traps": [
+            "Using one zone for a workload that must stay available when a zone fails",
+            "Confusing a backup service with a fail-over design"
+          ],
+          "studyQA": [
+            {
+              "question": "What does the reliability pillar help you do?",
+              "answer": "It provides principles and recommendations to design, deploy and manage reliable workloads in Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/reliability"
+            },
+            {
+              "question": "What is Gemini Cloud Assist?",
+              "answer": "An AI-powered collaborator that gives agentic guidance for designing, deploying, troubleshooting and optimising workloads, moving teams from reactive troubleshooting towards proactive operations.",
+              "officialSource": "https://docs.cloud.google.com/cloud-assist/overview"
+            },
+            {
+              "question": "What does Backup and DR provide?",
+              "answer": "Centralised backup and recovery for enterprise workloads running in Google Cloud and in hybrid environments, with policy-based governance.",
+              "officialSource": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr"
+            }
+          ]
+        },
+        {
+          "id": "1-3",
+          "title": "1.3 Designing network, storage and compute resources",
+          "officialDocs": [
+            {
+              "title": "VPC networks",
+              "url": "https://docs.cloud.google.com/vpc/docs/vpc"
+            },
+            {
+              "title": "Shared VPC",
+              "url": "https://docs.cloud.google.com/vpc/docs/shared-vpc"
+            },
+            {
+              "title": "VPC Network Peering",
+              "url": "https://docs.cloud.google.com/vpc/docs/vpc-peering"
+            },
+            {
+              "title": "Private Service Connect",
+              "url": "https://docs.cloud.google.com/vpc/docs/private-service-connect"
+            },
+            {
+              "title": "What is Cloud Run",
+              "url": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run"
+            },
+            {
+              "title": "GKE overview",
+              "url": "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview"
+            },
+            {
+              "title": "Cloud Storage overview",
+              "url": "https://docs.cloud.google.com/storage/docs/introduction"
+            }
+          ],
+          "concepts": [
+            "Cloud-native networking: VPC, peering, firewalls, load balancers, Shared VPC and Private Service Connect",
+            "Storage types: object (Cloud Storage), file (Filestore) and databases (Cloud SQL, Spanner, Bigtable, Firestore)",
+            "Compute choices: GKE, Cloud Run, Cloud Run functions, Spot VMs and custom machine types",
+            "AI infrastructure and models: AI Hypercomputer and Model Garden"
+          ],
+          "examFocus": "Read the binding constraint: who must control the network, whether the data is objects, files or rows, and how much control the team needs over orchestration.",
+          "traps": [
+            "Picking GKE when the team only needs to run a container and has no need for Kubernetes control",
+            "Using VPC peering when one central team must own the network, which is the Shared VPC case",
+            "Choosing a single-region relational database when the requirement is global scale"
+          ],
+          "studyQA": [
+            {
+              "question": "How do Shared VPC and VPC Network Peering differ?",
+              "answer": "Shared VPC connects resources from several projects to one common VPC network that a host project administers centrally. VPC Network Peering connects two separately administered VPC networks so their resources can talk over internal IP addresses.",
+              "officialSource": "https://docs.cloud.google.com/vpc/docs/shared-vpc"
+            },
+            {
+              "question": "What does Private Service Connect let consumers do?",
+              "answer": "It lets consumers access managed services privately from inside their own VPC network.",
+              "officialSource": "https://docs.cloud.google.com/vpc/docs/private-service-connect"
+            },
+            {
+              "question": "When does Cloud Run fit better than GKE?",
+              "answer": "Cloud Run is a fully managed platform for running code, a function or a container, so it fits when you want to deploy without managing a cluster. GKE is a managed Kubernetes service, which fits when you need the Kubernetes API and control over orchestration.",
+              "officialSource": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run"
+            },
+            {
+              "question": "What are Spot VMs good for?",
+              "answer": "Spot VMs are excess Compute Engine capacity at large discounts, and Google may preempt them to reclaim capacity, so they suit fault-tolerant workloads such as batch jobs.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/instances/spot"
+            },
+            {
+              "question": "What is a custom machine type?",
+              "answer": "A Compute Engine VM with your own number of vCPUs and amount of memory, for when no predefined machine type fits.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type"
+            },
+            {
+              "question": "Which storage service holds unstructured objects with high durability?",
+              "answer": "Cloud Storage lets you store, manage and retrieve unstructured data with high durability and global availability.",
+              "officialSource": "https://docs.cloud.google.com/storage/docs/introduction"
+            }
+          ]
+        },
+        {
+          "id": "1-4",
+          "title": "1.4 Creating a migration plan",
+          "officialDocs": [
+            {
+              "title": "Migration Center overview",
+              "url": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview"
+            },
+            {
+              "title": "Database Migration Service overview",
+              "url": "https://docs.cloud.google.com/database-migration/docs/overview"
+            }
+          ],
+          "concepts": [
+            "Assessing systems and data, then migrating them with Google Cloud Migration Center",
+            "Migration methodologies, workload testing, network planning and dependency planning",
+            "Software licence implications and financial impact"
+          ],
+          "examFocus": "A migration plan starts with discovery and assessment, including cost estimates, before any workload moves.",
+          "traps": [
+            "Moving workloads before discovering their dependencies",
+            "Ignoring licence terms when estimating the cost of the move"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Migration Center help you do?",
+              "answer": "It is a unified platform that accelerates your journey to Google Cloud. It estimates cloud costs, discovers and assesses your assets, and provides tooling for different migration scenarios, without changing your workloads.",
+              "officialSource": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview"
+            },
+            {
+              "question": "What does Database Migration Service migrate?",
+              "answer": "Data and metadata from a source database to a destination database, supporting migrations to Cloud SQL and AlloyDB for PostgreSQL.",
+              "officialSource": "https://docs.cloud.google.com/database-migration/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "1-5",
+          "title": "1.5 Envisioning future solution improvements",
+          "officialDocs": [
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            },
+            {
+              "title": "Google Cloud Well-Architected Framework",
+              "url": "https://docs.cloud.google.com/architecture/framework"
+            }
+          ],
+          "concepts": [
+            "Cloud and technology improvements, and the evolution of business needs",
+            "A cloud-first design approach"
+          ],
+          "examFocus": "Expect scenarios where a design must keep working as needs change. Use the framework pillars to judge a proposed improvement.",
+          "traps": [
+            "Designing only for today's load with no room for the business to grow"
+          ],
+          "studyQA": [
+            {
+              "question": "Which framework does the exam guide call a key requirement for the role?",
+              "answer": "The Well-Architected Framework from Google Cloud. The guide expects candidates to know it and to let its pillars steer their design choices.",
+              "officialSource": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "managing-provisioning",
+      "title": "Managing and provisioning a cloud solution infrastructure",
+      "weight": 17.5,
+      "description": "Network topologies, storage and compute configuration, and ML workflows and AI APIs on Agent Platform",
+      "topics": [
+        {
+          "id": "2-1",
+          "title": "2.1 Configuring network topologies",
+          "officialDocs": [
+            {
+              "title": "Cloud VPN overview",
+              "url": "https://docs.cloud.google.com/network-connectivity/docs/vpn/concepts/overview"
+            },
+            {
+              "title": "Cloud Interconnect overview",
+              "url": "https://docs.cloud.google.com/network-connectivity/docs/interconnect/concepts/overview"
+            },
+            {
+              "title": "Cloud Armor overview",
+              "url": "https://docs.cloud.google.com/armor/docs/cloud-armor-overview"
+            },
+            {
+              "title": "Cloud Load Balancing overview",
+              "url": "https://docs.cloud.google.com/load-balancing/docs/load-balancing-overview"
+            }
+          ],
+          "concepts": [
+            "Hybrid networking: Cloud VPN and Cloud Interconnect to extend to on-premises environments",
+            "Security protection: Cloud Armor, Cloud IDS and Cloud NGFW firewalls",
+            "VPC design and load balancing"
+          ],
+          "examFocus": "Choose the link by what the requirement stresses: a quick encrypted tunnel or a low-latency physical connection. Then choose the control that blocks, detects or distributes traffic.",
+          "traps": [
+            "Using a VPN tunnel when the requirement is a high-throughput, low-latency connection",
+            "Using a firewall when the problem is a DDoS or web application attack, which Cloud Armor addresses"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Cloud VPN do?",
+              "answer": "It securely extends your peer network to your VPC network through an IPsec VPN connection that encrypts the traffic between the networks.",
+              "officialSource": "https://docs.cloud.google.com/network-connectivity/docs/vpn/concepts/overview"
+            },
+            {
+              "question": "What does Cloud Interconnect provide?",
+              "answer": "Low-latency, high-availability connections that let you reliably transfer data between your networks and Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/network-connectivity/docs/interconnect/concepts/overview"
+            },
+            {
+              "question": "What does Cloud Armor protect against?",
+              "answer": "Distributed denial-of-service attacks and application attacks such as cross-site scripting and SQL injection.",
+              "officialSource": "https://docs.cloud.google.com/armor/docs/cloud-armor-overview"
+            },
+            {
+              "question": "How does Cloud IDS detect threats?",
+              "answer": "It creates a Google-managed peered network with mirrored VM instances and inspects that traffic for intrusions, malware, spyware and command-and-control attacks.",
+              "officialSource": "https://docs.cloud.google.com/intrusion-detection-system/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "2-2",
+          "title": "2.2 Configuring individual storage systems",
+          "officialDocs": [
+            {
+              "title": "Object Lifecycle Management",
+              "url": "https://docs.cloud.google.com/storage/docs/lifecycle"
+            },
+            {
+              "title": "Storage Transfer Service",
+              "url": "https://docs.cloud.google.com/storage-transfer/docs/overview"
+            },
+            {
+              "title": "Backup and DR overview",
+              "url": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr"
+            }
+          ],
+          "concepts": [
+            "Data retention and lifecycle management",
+            "Configuration for data transfer and latency",
+            "Data protection: backup and recovery",
+            "Security and access management for storage"
+          ],
+          "examFocus": "Automate lifecycle with bucket rules, and pick a transfer service when moving data between storage systems.",
+          "traps": [
+            "Scripting copies by hand when Storage Transfer Service moves data between clouds",
+            "Keeping rarely used objects in an expensive class when lifecycle rules can move them"
+          ],
+          "studyQA": [
+            {
+              "question": "What can Object Lifecycle Management do?",
+              "answer": "It automatically manages objects in a bucket by rules, for example setting a time to live, keeping noncurrent versions or downgrading storage classes to help manage costs.",
+              "officialSource": "https://docs.cloud.google.com/storage/docs/lifecycle"
+            },
+            {
+              "question": "What does Storage Transfer Service move?",
+              "answer": "Data between object and file storage systems, such as Amazon S3, Azure Blob Storage, on-premises storage and Cloud Storage, and from publicly accessible URLs.",
+              "officialSource": "https://docs.cloud.google.com/storage-transfer/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "2-3",
+          "title": "2.3 Configuring compute systems",
+          "officialDocs": [
+            {
+              "title": "Compute Engine overview",
+              "url": "https://docs.cloud.google.com/compute/docs/overview"
+            },
+            {
+              "title": "Instance groups",
+              "url": "https://docs.cloud.google.com/compute/docs/instance-groups"
+            },
+            {
+              "title": "VM Manager patch",
+              "url": "https://docs.cloud.google.com/compute/vm-manager/docs/patch"
+            },
+            {
+              "title": "Google Cloud VMware Engine overview",
+              "url": "https://docs.cloud.google.com/vmware-engine/docs/overview"
+            },
+            {
+              "title": "Terraform on Google Cloud",
+              "url": "https://docs.cloud.google.com/docs/terraform/terraform-overview"
+            },
+            {
+              "title": "Direct VPC egress for Cloud Run",
+              "url": "https://docs.cloud.google.com/run/docs/configuring/vpc-direct-vpc"
+            }
+          ],
+          "concepts": [
+            "Compute provisioning and volatility: spot versus standard VMs",
+            "Serverless networking, Compute Engine, GKE and Google Cloud VMware Engine",
+            "Infrastructure orchestration, resource configuration and patch management",
+            "Container orchestration and serverless computing"
+          ],
+          "examFocus": "Identify what must stay under the team's control: the guest OS (Compute Engine), the VMware stack (VMware Engine) or only the container (Cloud Run).",
+          "traps": [
+            "Patching VMs by hand when VM Manager patch applies updates across a set of VMs",
+            "Declaring infrastructure by clicking in the console when the requirement is repeatable environments"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Compute Engine?",
+              "answer": "Google Cloud's infrastructure-as-a-service product, offering self-managed virtual machine and bare metal instances with Linux or Windows and durable storage options.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/overview"
+            },
+            {
+              "question": "What is a managed instance group?",
+              "answer": "A group of identical VMs managed as a single entity, so you can operate apps on multiple identical VMs and make workloads scalable and highly available.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/instance-groups"
+            },
+            {
+              "question": "What does the Patch feature of VM Manager do?",
+              "answer": "It applies operating system patches across a set of Compute Engine VMs, which long-running VMs need to protect against defects and vulnerabilities.",
+              "officialSource": "https://docs.cloud.google.com/compute/vm-manager/docs/patch"
+            },
+            {
+              "question": "When do you use Google Cloud VMware Engine?",
+              "answer": "When you want to run the VMware platform in Google Cloud as a fully managed service, retaining operational continuity with existing VMware environments.",
+              "officialSource": "https://docs.cloud.google.com/vmware-engine/docs/overview"
+            },
+            {
+              "question": "What does Direct VPC egress let a Cloud Run service do?",
+              "answer": "Send traffic to a VPC network directly, with no Serverless VPC Access connector required.",
+              "officialSource": "https://docs.cloud.google.com/run/docs/configuring/vpc-direct-vpc"
+            }
+          ]
+        },
+        {
+          "id": "2-4",
+          "title": "2.4 Using Agent Platform for end-to-end ML workflows",
+          "officialDocs": [
+            {
+              "title": "Agent Platform overview",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "title": "Agent Platform Pipelines",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction"
+            },
+            {
+              "title": "Introduction to Cloud TPU",
+              "url": "https://docs.cloud.google.com/tpu/docs/intro-to-tpu"
+            },
+            {
+              "title": "GPU machine types",
+              "url": "https://docs.cloud.google.com/compute/docs/gpus"
+            },
+            {
+              "title": "AI Hypercomputer overview",
+              "url": "https://docs.cloud.google.com/ai-hypercomputer/docs/overview"
+            }
+          ],
+          "concepts": [
+            "Agent Platform Pipelines to automate and orchestrate the ML lifecycle",
+            "AI Hypercomputer, GPUs and TPUs for training and serving",
+            "Consumption models and large-scale model training"
+          ],
+          "examFocus": "Pick pipelines for repeatable ML workflow steps, and name the accelerator by its kind: TPU for Google's custom ML chips, GPU for NVIDIA processors.",
+          "traps": [
+            "Calling the platform Vertex AI only; the guide uses Agent Platform names, and Vertex AI is now part of it",
+            "Treating a TPU as a graphics processor"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Agent Platform?",
+              "answer": "Gemini Enterprise Agent Platform is a unified platform to build, deploy, govern and optimise enterprise-grade AI agents and model-based solutions. It is an evolution of Vertex AI.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview"
+            },
+            {
+              "question": "What do Agent Platform Pipelines do?",
+              "answer": "They let you automate, monitor and govern your machine learning systems in a serverless manner.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction"
+            },
+            {
+              "question": "What is a Tensor Processing Unit?",
+              "answer": "A custom-developed, application-specific integrated circuit (ASIC) made by Google to accelerate machine learning workloads.",
+              "officialSource": "https://docs.cloud.google.com/tpu/docs/intro-to-tpu"
+            },
+            {
+              "question": "What are GPUs used for on Compute Engine?",
+              "answer": "NVIDIA GPUs accelerate machine learning, data processing and graphics-intensive workloads on Compute Engine instances.",
+              "officialSource": "https://docs.cloud.google.com/compute/docs/gpus"
+            },
+            {
+              "question": "What is AI Hypercomputer?",
+              "answer": "An integrated supercomputing system optimised for AI and ML workloads, and Google Cloud's unified portfolio of AI infrastructure.",
+              "officialSource": "https://docs.cloud.google.com/ai-hypercomputer/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "2-5",
+          "title": "2.5 Configuring prebuilt solutions or APIs with Agent Platform",
+          "officialDocs": [
+            {
+              "title": "Gemini Enterprise",
+              "url": "https://docs.cloud.google.com/gemini/enterprise/docs"
+            },
+            {
+              "title": "Gemini Notebook Enterprise",
+              "url": "https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview"
+            },
+            {
+              "title": "Model Garden overview",
+              "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore-models"
+            },
+            {
+              "title": "Cloud Speech-to-Text overview",
+              "url": "https://docs.cloud.google.com/speech-to-text/docs/overview"
+            },
+            {
+              "title": "Cloud Vision API",
+              "url": "https://docs.cloud.google.com/vision/docs/"
+            }
+          ],
+          "concepts": [
+            "Telling the Google AI APIs apart: for example vision for images and speech for audio",
+            "Gemini Enterprise features such as AI agents, and NotebookLM",
+            "Integrating models from Model Garden"
+          ],
+          "examFocus": "Match the input type to the API (images, audio, text), and use a prebuilt API when no custom model is needed.",
+          "traps": [
+            "Training a custom model when a prebuilt API already covers the input type"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Gemini Enterprise?",
+              "answer": "An intranet search, AI assistant and agentic platform that gives knowledge workers generative AI and agent workflows over their organisation's data, with prebuilt connectors to common third-party apps.",
+              "officialSource": "https://docs.cloud.google.com/gemini/enterprise/docs"
+            },
+            {
+              "question": "What does Model Garden offer?",
+              "answer": "An AI and ML model library where you discover, test, customise and deploy models and assets from Google and Google partners.",
+              "officialSource": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-garden/explore-models"
+            },
+            {
+              "question": "What does the Cloud Vision API detect?",
+              "answer": "It adds vision detection to applications, including image labelling, face and landmark detection, optical character recognition and tagging of explicit content.",
+              "officialSource": "https://docs.cloud.google.com/vision/docs/"
+            },
+            {
+              "question": "What is Cloud Speech-to-Text?",
+              "answer": "An API that lets you integrate Google's speech recognition technologies into your applications.",
+              "officialSource": "https://docs.cloud.google.com/speech-to-text/docs/overview"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security-compliance",
+      "title": "Designing for security and compliance",
+      "weight": 17.5,
+      "description": "Identity and access, resource hierarchy, data security, security controls, secure remote access, securing AI, and compliance",
+      "topics": [
+        {
+          "id": "3-1",
+          "title": "3.1 Designing for security",
+          "officialDocs": [
+            {
+              "title": "IAM overview",
+              "url": "https://docs.cloud.google.com/iam/docs/overview"
+            },
+            {
+              "title": "About resource hierarchy",
+              "url": "https://docs.cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy"
+            },
+            {
+              "title": "Cloud KMS overview",
+              "url": "https://docs.cloud.google.com/kms/docs/key-management-service"
+            },
+            {
+              "title": "Customer-managed encryption keys",
+              "url": "https://docs.cloud.google.com/kms/docs/cmek"
+            },
+            {
+              "title": "VPC Service Controls overview",
+              "url": "https://docs.cloud.google.com/vpc-service-controls/docs/overview"
+            },
+            {
+              "title": "Organization Policy overview",
+              "url": "https://docs.cloud.google.com/organization-policy/overview"
+            },
+            {
+              "title": "Identity-Aware Proxy overview",
+              "url": "https://docs.cloud.google.com/iap/docs/concepts-overview"
+            },
+            {
+              "title": "Workload Identity Federation",
+              "url": "https://docs.cloud.google.com/iam/docs/workload-identity-federation"
+            },
+            {
+              "title": "Model Armor overview",
+              "url": "https://docs.cloud.google.com/model-armor/overview"
+            }
+          ],
+          "concepts": [
+            "Identity and Access Management and the resource hierarchy of organizations, folders and projects",
+            "Data security: key management, encryption (CMEK) and secret management",
+            "Security controls: auditing, VPC Service Controls, context-aware access, organization policy and hierarchical firewall policy",
+            "Secure remote access: Identity-Aware Proxy, service account impersonation, Chrome Enterprise Premium and Workload Identity Federation",
+            "Securing the software supply chain and securing AI: Model Armor and Sensitive Data Protection"
+          ],
+          "examFocus": "Separate who can act (IAM grants) from what is allowed at all (organization policy), and from where data may flow (VPC Service Controls). Pick the remote access option by what connects: a person, a service account or an external workload.",
+          "traps": [
+            "Granting broad roles when a narrower grant meets the need",
+            "Using a service account key for an external workload when Workload Identity Federation removes the key",
+            "Confusing organization policy, which restricts what is allowed, with IAM, which grants permissions"
+          ],
+          "studyQA": [
+            {
+              "question": "What does IAM let you control?",
+              "answer": "IAM is Google Cloud's fine-grained authorisation system, so you control who can do what on which resources.",
+              "officialSource": "https://docs.cloud.google.com/iam/docs/overview"
+            },
+            {
+              "question": "What is the resource hierarchy?",
+              "answer": "A parent-child structure of organizations, folders and projects that centralises asset ownership and lets access control and organization policies be inherited.",
+              "officialSource": "https://docs.cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy"
+            },
+            {
+              "question": "What do customer-managed encryption keys give you?",
+              "answer": "Ownership and control of the Cloud KMS keys that protect your data at rest in Google Cloud services that integrate with them.",
+              "officialSource": "https://docs.cloud.google.com/kms/docs/cmek"
+            },
+            {
+              "question": "What does VPC Service Controls reduce?",
+              "answer": "The risk of data exfiltration, by limiting access to resources to trusted networks and controlling data exchange across organisational boundaries.",
+              "officialSource": "https://docs.cloud.google.com/vpc-service-controls/docs/overview"
+            },
+            {
+              "question": "What does the Organization Policy Service give an administrator?",
+              "answer": "Centralised, programmatic control over the organisation's resources, by setting constraints across the whole resource hierarchy.",
+              "officialSource": "https://docs.cloud.google.com/organization-policy/overview"
+            },
+            {
+              "question": "How does Identity-Aware Proxy secure an application?",
+              "answer": "It sets up a central authorisation layer for applications reached over HTTPS. Users reach the app only through the proxy with the right IAM role, with no VPN needed.",
+              "officialSource": "https://docs.cloud.google.com/iap/docs/concepts-overview"
+            },
+            {
+              "question": "What is service account impersonation?",
+              "answer": "When an authenticated principal, such as a user or another service account, authenticates as a service account to gain that service account's permissions.",
+              "officialSource": "https://docs.cloud.google.com/iam/docs/service-account-impersonation"
+            },
+            {
+              "question": "Why use Workload Identity Federation?",
+              "answer": "It lets workloads outside Google Cloud access resources with federated identities instead of service account keys, which removes the burden and risk of managing keys.",
+              "officialSource": "https://docs.cloud.google.com/iam/docs/workload-identity-federation"
+            },
+            {
+              "question": "What does Model Armor do?",
+              "answer": "It screens LLM prompts and responses to prevent malicious input, protect sensitive data and enforce AI safety policies.",
+              "officialSource": "https://docs.cloud.google.com/model-armor/overview"
+            },
+            {
+              "question": "What does Sensitive Data Protection do?",
+              "answer": "It helps you discover, classify and de-identify sensitive data inside and outside Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview"
+            }
+          ]
+        },
+        {
+          "id": "3-2",
+          "title": "3.2 Designing for compliance",
+          "officialDocs": [
+            {
+              "title": "Assured Workloads overview",
+              "url": "https://docs.cloud.google.com/assured-workloads/docs/overview"
+            },
+            {
+              "title": "Cloud Audit Logs overview",
+              "url": "https://docs.cloud.google.com/logging/docs/audit"
+            }
+          ],
+          "concepts": [
+            "Legislation and regulation, including data privacy and data sovereignty",
+            "Commercial concerns such as card data and personally identifiable information",
+            "Industry certifications such as SOC 2, and audits including logs"
+          ],
+          "examFocus": "When data must stay in a region or be handled by approved personnel, think of a regulated boundary. When auditors ask who did what, think of audit logs.",
+          "traps": [
+            "Relying on IAM alone when a regulator requires data residency and personnel controls"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Assured Workloads configure?",
+              "answer": "A sovereign data and access boundary, with residency, access and personnel controls, for sensitive workloads in the cloud.",
+              "officialSource": "https://docs.cloud.google.com/assured-workloads/docs/overview"
+            },
+            {
+              "question": "What questions do Cloud Audit Logs answer?",
+              "answer": "Who did what, where and when within your Google Cloud resources, by recording administrative activity and resource access.",
+              "officialSource": "https://docs.cloud.google.com/logging/docs/audit"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "technical-business-processes",
+      "title": "Analyzing and optimizing technical and business processes",
+      "weight": 15,
+      "description": "Software delivery, testing, disaster recovery, stakeholders, change management and cost optimization",
+      "topics": [
+        {
+          "id": "4-1",
+          "title": "4.1 Analyzing and defining technical processes",
+          "officialDocs": [
+            {
+              "title": "Cloud Build overview",
+              "url": "https://docs.cloud.google.com/build/docs/overview"
+            },
+            {
+              "title": "Cloud Deploy overview",
+              "url": "https://docs.cloud.google.com/deploy/docs/overview"
+            },
+            {
+              "title": "Artifact Registry overview",
+              "url": "https://docs.cloud.google.com/artifact-registry/docs/overview"
+            },
+            {
+              "title": "Disaster recovery planning guide",
+              "url": "https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide"
+            }
+          ],
+          "concepts": [
+            "Software development lifecycle and CI/CD with Cloud Build, Artifact Registry and Cloud Deploy",
+            "Troubleshooting and root cause analysis, and testing and validation of software and infrastructure",
+            "Service catalog and provisioning",
+            "Disaster recovery planning"
+          ],
+          "examFocus": "Split the pipeline by job: build and test (Cloud Build), store artifacts (Artifact Registry), promote through environments (Cloud Deploy). Disaster recovery is a documented plan, not one product.",
+          "traps": [
+            "Using the build service to promote a release through environments, which is Cloud Deploy's job",
+            "Treating backups alone as a disaster recovery plan"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Cloud Build do?",
+              "answer": "It executes your builds on Google Cloud: it imports source code, runs a build to your specification and produces artifacts such as Docker containers or Java archives.",
+              "officialSource": "https://docs.cloud.google.com/build/docs/overview"
+            },
+            {
+              "question": "What does Cloud Deploy automate?",
+              "answer": "Delivery of your applications to a series of target environments in a defined promotion sequence, with each release managed by a delivery pipeline.",
+              "officialSource": "https://docs.cloud.google.com/deploy/docs/overview"
+            },
+            {
+              "question": "What does Artifact Registry store?",
+              "answer": "Packages and Docker container images, in a single location for storing and managing them.",
+              "officialSource": "https://docs.cloud.google.com/artifact-registry/docs/overview"
+            },
+            {
+              "question": "What does Google's disaster recovery planning guide cover?",
+              "answer": "An overview of the DR planning process in Google Cloud: what you need to know to design and implement a disaster recovery plan.",
+              "officialSource": "https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide"
+            }
+          ]
+        },
+        {
+          "id": "4-2",
+          "title": "4.2 Analyzing and defining business processes",
+          "officialDocs": [
+            {
+              "title": "Cost optimization pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            },
+            {
+              "title": "Cloud Billing budgets",
+              "url": "https://docs.cloud.google.com/billing/docs/how-to/budgets"
+            },
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            }
+          ],
+          "concepts": [
+            "Stakeholder management, change management and team skills readiness",
+            "Decision-making processes and customer success management",
+            "Cost and resource optimization, including CapEx versus OpEx",
+            "Business continuity"
+          ],
+          "examFocus": "Business-process questions test judgment: involve the right stakeholders, plan change, and use the cost pillar and budgets to control spend.",
+          "traps": [
+            "Optimising technology without checking the team's readiness for the change"
+          ],
+          "studyQA": [
+            {
+              "question": "What does the cost optimization pillar cover?",
+              "answer": "The pillar about keeping the cost of Google Cloud workloads under control.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/cost-optimization"
+            },
+            {
+              "question": "What do Cloud Billing budgets let you do?",
+              "answer": "Monitor all your Google Cloud charges in one place and avoid surprises on your bill. Alerts-only budgets track spend, and spend cap budgets can be set on a project where the service supports it.",
+              "officialSource": "https://docs.cloud.google.com/billing/docs/how-to/budgets"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "managing-implementation",
+      "title": "Managing implementation",
+      "weight": 12.5,
+      "description": "Advising teams on deployment, API management and testing, and using Google Cloud programmatically",
+      "topics": [
+        {
+          "id": "5-1",
+          "title": "5.1 Advising development and operation teams",
+          "officialDocs": [
+            {
+              "title": "What is Apigee",
+              "url": "https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee"
+            },
+            {
+              "title": "Database Migration Service overview",
+              "url": "https://docs.cloud.google.com/database-migration/docs/overview"
+            },
+            {
+              "title": "Gemini Cloud Assist overview",
+              "url": "https://docs.cloud.google.com/cloud-assist/overview"
+            }
+          ],
+          "concepts": [
+            "Application and infrastructure deployment, and testing frameworks (load, unit, integration)",
+            "API management best practices with Apigee",
+            "Data and system migration and management tooling",
+            "Gemini Cloud Assist"
+          ],
+          "examFocus": "When APIs are exposed to partners or customers, think of a managed API platform with proxies and security policies.",
+          "traps": [
+            "Exposing internal services directly when an API management platform should secure and manage them"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Apigee?",
+              "answer": "Google Cloud's native API management platform, used to build, manage and secure APIs for any use case, environment or scale. It offers high-performance API proxies.",
+              "officialSource": "https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee"
+            },
+            {
+              "question": "What does Database Migration Service support?",
+              "answer": "Migrating your data to Google Cloud, including migrations to Cloud SQL and AlloyDB for PostgreSQL.",
+              "officialSource": "https://docs.cloud.google.com/database-migration/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "5-2",
+          "title": "5.2 Interacting with Google Cloud programmatically",
+          "officialDocs": [
+            {
+              "title": "Cloud Shell",
+              "url": "https://docs.cloud.google.com/shell/docs"
+            },
+            {
+              "title": "Cloud Shell Editor",
+              "url": "https://docs.cloud.google.com/shell/docs/editor-overview"
+            },
+            {
+              "title": "Cloud Code",
+              "url": "https://docs.cloud.google.com/code/docs"
+            },
+            {
+              "title": "gcloud CLI overview",
+              "url": "https://docs.cloud.google.com/sdk/gcloud"
+            },
+            {
+              "title": "gsutil tool",
+              "url": "https://docs.cloud.google.com/storage/docs/gsutil"
+            },
+            {
+              "title": "Cloud Client Libraries",
+              "url": "https://docs.cloud.google.com/apis/docs/cloud-client-libraries"
+            },
+            {
+              "title": "Terraform on Google Cloud",
+              "url": "https://docs.cloud.google.com/docs/terraform/terraform-overview"
+            }
+          ],
+          "concepts": [
+            "Cloud Shell Editor, Cloud Code and Cloud Shell Terminal",
+            "Google Cloud SDKs: gcloud, gsutil and bq",
+            "Cloud emulators for Bigtable, Spanner, Pub/Sub and Firestore",
+            "Infrastructure as code with Terraform, and Google API client libraries"
+          ],
+          "examFocus": "Choose the interface by the job: a script uses the CLI, repeatable environments use infrastructure as code, and application code uses client libraries.",
+          "traps": [
+            "Still using gsutil for new Cloud Storage scripts when Google recommends gcloud storage",
+            "Testing against real services when an emulator would do"
+          ],
+          "studyQA": [
+            {
+              "question": "What is Cloud Shell?",
+              "answer": "An interactive shell environment for Google Cloud that you use from your browser. The Google Cloud CLI and other utilities come pre-installed.",
+              "officialSource": "https://docs.cloud.google.com/shell/docs"
+            },
+            {
+              "question": "What is Cloud Shell Editor?",
+              "answer": "A browser-based IDE to develop, build and debug Google Cloud applications, with source control, language tooling and access to the Cloud Shell terminal.",
+              "officialSource": "https://docs.cloud.google.com/shell/docs/editor-overview"
+            },
+            {
+              "question": "What does Cloud Code provide?",
+              "answer": "IDE support for the full development cycle of Kubernetes and Cloud Run applications.",
+              "officialSource": "https://docs.cloud.google.com/code/docs"
+            },
+            {
+              "question": "What is the gcloud CLI for?",
+              "answer": "It is a set of tools to create and manage Google Cloud resources and perform common platform tasks.",
+              "officialSource": "https://docs.cloud.google.com/sdk/gcloud"
+            },
+            {
+              "question": "What does Google say about gsutil?",
+              "answer": "gsutil is not the recommended CLI for Cloud Storage; Google says to use gcloud storage commands in the Google Cloud CLI instead.",
+              "officialSource": "https://docs.cloud.google.com/storage/docs/gsutil"
+            },
+            {
+              "question": "What do Cloud Client Libraries do?",
+              "answer": "They let you call Google Cloud APIs in each supported language's idiomatic style, with less boilerplate code.",
+              "officialSource": "https://docs.cloud.google.com/apis/docs/cloud-client-libraries"
+            },
+            {
+              "question": "What are the gcloud emulators for?",
+              "answer": "They set up your local development environment using emulators, so you can develop and test without real cloud services.",
+              "officialSource": "https://docs.cloud.google.com/sdk/gcloud/reference/beta/emulators"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operations-excellence",
+      "title": "Ensuring solution and operations excellence",
+      "weight": 12.5,
+      "description": "The operational excellence pillar, observability, release management, support, quality control and reliability in production",
+      "topics": [
+        {
+          "id": "6-1",
+          "title": "6.1 The operational excellence pillar",
+          "officialDocs": [
+            {
+              "title": "Operational excellence pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/operational-excellence"
+            }
+          ],
+          "concepts": [
+            "Principles and recommendations for managing and operating workloads efficiently in Google Cloud"
+          ],
+          "examFocus": "When a scenario is about how a team deploys, monitors and runs workloads day to day, the operational excellence pillar is the guide.",
+          "traps": [
+            "Answering a day-to-day operations question with the cost pillar"
+          ],
+          "studyQA": [
+            {
+              "question": "What does the operational excellence pillar cover?",
+              "answer": "The pillar about running workloads smoothly and efficiently day to day.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/operational-excellence"
+            }
+          ]
+        },
+        {
+          "id": "6-2",
+          "title": "6.2 Google Cloud Observability",
+          "officialDocs": [
+            {
+              "title": "Observability in Google Cloud",
+              "url": "https://docs.cloud.google.com/stackdriver/docs"
+            },
+            {
+              "title": "Cloud Monitoring overview",
+              "url": "https://docs.cloud.google.com/monitoring/docs/monitoring-overview"
+            },
+            {
+              "title": "Cloud Logging overview",
+              "url": "https://docs.cloud.google.com/logging/docs/overview"
+            },
+            {
+              "title": "Cloud Trace overview",
+              "url": "https://docs.cloud.google.com/trace/docs/overview"
+            },
+            {
+              "title": "Cloud Profiler overview",
+              "url": "https://docs.cloud.google.com/profiler/docs/about-profiler"
+            },
+            {
+              "title": "Alerting overview",
+              "url": "https://docs.cloud.google.com/monitoring/alerts"
+            }
+          ],
+          "concepts": [
+            "Monitoring and logging",
+            "Profiling and benchmarking",
+            "Alerting strategies"
+          ],
+          "examFocus": "Name the signal: numbers over time are metrics (Monitoring), text records are logs (Logging), one request across services is a trace (Trace), and code resource use is a profile (Profiler).",
+          "traps": [
+            "Using logs to find which downstream call makes a request slow when a trace shows it directly",
+            "Watching a dashboard instead of defining an alerting policy"
+          ],
+          "studyQA": [
+            {
+              "question": "What does Google Cloud Observability include?",
+              "answer": "Observability services that help you understand the behaviour, health and performance of your applications, including agentic applications.",
+              "officialSource": "https://docs.cloud.google.com/stackdriver/docs"
+            },
+            {
+              "question": "What does Cloud Monitoring collect?",
+              "answer": "It collects, stores and analyses metric data to help you understand the behaviour, health and performance of applications and Google Cloud services, and it collects metrics for most Google Cloud services automatically.",
+              "officialSource": "https://docs.cloud.google.com/monitoring/docs/monitoring-overview"
+            },
+            {
+              "question": "What is Cloud Logging?",
+              "answer": "A real-time log-management system with storage, search, analysis and monitoring support, which collects log data automatically from Google Cloud resources.",
+              "officialSource": "https://docs.cloud.google.com/logging/docs/overview"
+            },
+            {
+              "question": "What does Cloud Trace do?",
+              "answer": "It is a distributed tracing system that tracks request latency and helps you troubleshoot performance bottlenecks across services.",
+              "officialSource": "https://docs.cloud.google.com/trace/docs/overview"
+            },
+            {
+              "question": "Why use Cloud Profiler?",
+              "answer": "Understanding the performance of production systems is difficult because test environments rarely reproduce its pressures, so Cloud Profiler measures how your code uses resources in production.",
+              "officialSource": "https://docs.cloud.google.com/profiler/docs/about-profiler"
+            },
+            {
+              "question": "What do alerting policies in Cloud Monitoring do?",
+              "answer": "They detect application and infrastructure issues by evaluating metric, log or SQL query results, and when the data meets your conditions they create an alert and send notifications.",
+              "officialSource": "https://docs.cloud.google.com/monitoring/alerts"
+            }
+          ]
+        },
+        {
+          "id": "6-3",
+          "title": "6.3 Deployment and release management",
+          "officialDocs": [
+            {
+              "title": "Cloud Deploy overview",
+              "url": "https://docs.cloud.google.com/deploy/docs/overview"
+            }
+          ],
+          "concepts": [
+            "Releases promoted through target environments in a defined sequence"
+          ],
+          "examFocus": "Release management scenarios point to a delivery pipeline with defined promotion steps.",
+          "traps": [
+            "Deploying straight to production from a build with no promotion path"
+          ],
+          "studyQA": [
+            {
+              "question": "How does Cloud Deploy manage a release?",
+              "answer": "You create a release whose lifecycle is managed by a delivery pipeline that moves it through target environments in a defined promotion sequence.",
+              "officialSource": "https://docs.cloud.google.com/deploy/docs/overview"
+            }
+          ]
+        },
+        {
+          "id": "6-4",
+          "title": "6.4 Assisting with the support of deployed solutions",
+          "officialDocs": [
+            {
+              "title": "Gemini Cloud Assist overview",
+              "url": "https://docs.cloud.google.com/cloud-assist/overview"
+            }
+          ],
+          "concepts": [
+            "Supporting deployed solutions with monitoring, logging and AI-assisted troubleshooting"
+          ],
+          "examFocus": "Support questions combine the observability signals with an assistant that helps troubleshoot.",
+          "traps": [
+            "Troubleshooting from one signal alone when logs, metrics and traces together point to the cause"
+          ],
+          "studyQA": [
+            {
+              "question": "How can Gemini Cloud Assist help with a deployed solution?",
+              "answer": "It gives agentic guidance for troubleshooting and optimising workloads, moving teams from reactive troubleshooting towards proactive operations.",
+              "officialSource": "https://docs.cloud.google.com/cloud-assist/overview"
+            }
+          ]
+        },
+        {
+          "id": "6-5",
+          "title": "6.5 Evaluating quality control measures",
+          "officialDocs": [
+            {
+              "title": "DevOps capabilities (DORA)",
+              "url": "https://docs.cloud.google.com/architecture/devops"
+            },
+            {
+              "title": "Exam guide",
+              "url": "https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf"
+            }
+          ],
+          "concepts": [
+            "Test automation: reliable automated test suites and testing throughout the delivery lifecycle",
+            "Continuous delivery: deploying software as a reliable, low-risk process on demand"
+          ],
+          "examFocus": "Expect scenarios that ask which measure shows whether a solution meets its quality bar, such as automated tests and a low-risk delivery process.",
+          "traps": [
+            "Judging quality from a single measure"
+          ],
+          "studyQA": [
+            {
+              "question": "Which DORA capability improves software quality through automated test suites?",
+              "answer": "Test automation: building reliable automated test suites and performing all kinds of testing throughout the software delivery lifecycle.",
+              "officialSource": "https://docs.cloud.google.com/architecture/devops"
+            }
+          ]
+        },
+        {
+          "id": "6-6",
+          "title": "6.6 Ensuring the reliability of solutions in production",
+          "officialDocs": [
+            {
+              "title": "Reliability pillar",
+              "url": "https://docs.cloud.google.com/architecture/framework/reliability"
+            }
+          ],
+          "concepts": [
+            "Chaos engineering, penetration testing and load testing, as the exam guide lists them",
+            "Reliable workloads, per the reliability pillar"
+          ],
+          "examFocus": "Reliability in production is proven by testing failure and load deliberately, and by designing workloads to be reliable from the start.",
+          "traps": [
+            "Waiting for a real outage to learn how the system fails"
+          ],
+          "studyQA": [
+            {
+              "question": "What does the reliability pillar help you do?",
+              "answer": "It provides principles and recommendations to design, deploy and manage reliable workloads in Google Cloud.",
+              "officialSource": "https://docs.cloud.google.com/architecture/framework/reliability"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "pca-q1",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A central network team must own one VPC network, its subnets and its firewall rules, while many project teams launch VMs into it. Which design fits?",
+      "options": [
+        "Shared VPC with a host project and service projects",
+        "VPC Network Peering between a network in every project",
+        "Private Service Connect endpoints in every project",
+        "Cloud VPN tunnels between the projects"
+      ],
+      "correctIndex": 0,
+      "explanation": "Shared VPC connects resources from several projects to one common VPC network administered in a host project, so network control stays central.",
+      "whyOthersWrong": [
+        "Peering connects separately administered networks, so each team would still run its own network.",
+        "Private Service Connect publishes and reaches a service privately; it does not share one network among projects.",
+        "Cloud VPN joins networks through encrypted tunnels; it does not give one team central control of a shared network."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/shared-vpc",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q2",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "Two business units each run their own VPC network and must keep administering it themselves, but their VMs need to talk over internal IP addresses. What should the architect recommend?",
+      "options": [
+        "Shared VPC",
+        "VPC Network Peering",
+        "A single project for both units",
+        "Cloud Load Balancing"
+      ],
+      "correctIndex": 1,
+      "explanation": "VPC Network Peering connects two VPC networks so their resources communicate over internal IP addresses, and each network stays administered separately.",
+      "whyOthersWrong": [
+        "Shared VPC hands network administration to a central host project, which the units do not want.",
+        "Merging into one project removes the separation the units want to keep.",
+        "A load balancer distributes traffic across instances; it does not connect two networks."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/vpc-peering",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q3",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A team has a containerised API and no Kubernetes expertise. It wants to deploy the image and let Google handle servers and scaling. Which platform fits?",
+      "options": [
+        "Google Kubernetes Engine Standard",
+        "Compute Engine with a managed instance group",
+        "Cloud Run",
+        "Filestore"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Run is a fully managed platform for running code, a function or a container on Google's scalable infrastructure, with no cluster to manage.",
+      "whyOthersWrong": [
+        "GKE Standard gives Kubernetes control, which this team neither needs nor has the skills for.",
+        "A managed instance group of VMs leaves the team managing machines and images.",
+        "Filestore is a managed file server, not a compute platform."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q4",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A media company renders video overnight. Jobs can restart safely and the company wants the lowest compute price, accepting that capacity may be reclaimed. What should it use?",
+      "options": [
+        "Custom machine types only",
+        "A single large on-demand VM",
+        "Cloud Run functions",
+        "Spot VMs"
+      ],
+      "correctIndex": 3,
+      "explanation": "Spot VMs are excess Compute Engine capacity at large discounts that Google may preempt, which suits fault-tolerant batch work.",
+      "whyOthersWrong": [
+        "Custom machine types change a VM's shape, not its price model or preemption behaviour.",
+        "A standard on-demand VM is not discounted for fault-tolerant work.",
+        "Functions respond to events; they are not the discounted compute for long batch rendering."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/compute/docs/instances/spot",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q5",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A legacy application needs 6 vCPUs and 40 GB of memory, and no predefined machine type matches. What is the best way to avoid paying for unused resources?",
+      "options": [
+        "Create the VM with a custom machine type",
+        "Choose the next larger predefined machine type",
+        "Use Spot VMs",
+        "Move the application to Cloud Storage"
+      ],
+      "correctIndex": 0,
+      "explanation": "A custom machine type lets you choose your own number of vCPUs and amount of memory when predefined types do not fit.",
+      "whyOthersWrong": [
+        "A larger predefined type pays for unused vCPUs and memory.",
+        "Spot VMs change the price and the availability, not the machine shape.",
+        "Cloud Storage holds objects; it does not run applications."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q6",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A global payments platform needs a relational database with strongly consistent transactions, virtually unlimited scale and no maintenance windows. Which database should the architect choose?",
+      "options": [
+        "Cloud SQL",
+        "Spanner",
+        "Bigtable",
+        "Firestore"
+      ],
+      "correctIndex": 1,
+      "explanation": "Spanner combines relational capabilities with virtually unlimited scale and no maintenance windows.",
+      "whyOthersWrong": [
+        "Cloud SQL is a managed engine for MySQL, PostgreSQL and SQL Server, without the global scale requirement.",
+        "Bigtable is a wide-column table for single-keyed data, not a relational database.",
+        "Firestore is a document database, not a relational one."
+      ],
+      "officialDoc": "https://cloud.google.com/spanner",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q7",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "An advertising firm ingests billions of events keyed by a single row key and reads them by that key at very high throughput. Which storage fits best?",
+      "options": [
+        "Cloud SQL",
+        "Filestore",
+        "Bigtable",
+        "BigQuery"
+      ],
+      "correctIndex": 2,
+      "explanation": "Bigtable is a sparsely populated table that scales to billions of rows and thousands of columns for single-keyed data.",
+      "whyOthersWrong": [
+        "Cloud SQL is a relational service, not built for billions of key-addressed rows.",
+        "Filestore is a shared file server and does not suit key-based lookups at that scale.",
+        "BigQuery analyses data with SQL; it is not the store for key-based reads at high throughput."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/bigtable/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q8",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A render farm of VMs needs one shared file system that every machine can mount. Which service fits?",
+      "options": [
+        "Cloud Storage",
+        "Bigtable",
+        "Spanner",
+        "Filestore"
+      ],
+      "correctIndex": 3,
+      "explanation": "Filestore provides fully managed file servers that VMs and other clients can mount.",
+      "whyOthersWrong": [
+        "Cloud Storage is object storage, not a mountable file system with file semantics.",
+        "Bigtable is a table store, not a file system.",
+        "Spanner is a database, not a file server."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/filestore/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q9",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A team must build a pipeline that processes both streams and batches with the same Apache Beam code, using a managed service. What should it use?",
+      "options": [
+        "Dataflow",
+        "Managed Service for Apache Spark",
+        "Cloud Storage",
+        "Cloud Build"
+      ],
+      "correctIndex": 0,
+      "explanation": "Dataflow provides unified stream and batch data processing at scale and uses Apache Beam.",
+      "whyOthersWrong": [
+        "Managed Service for Apache Spark runs Spark and other open source tools on clusters; the requirement here is Beam code.",
+        "Cloud Storage stores objects and does not process data.",
+        "Cloud Build runs software builds, not data pipelines."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/dataflow/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q10",
+      "sectionId": "designing-planning",
+      "topicId": "1-3",
+      "question": "A software vendor publishes a managed service and wants customers to reach it privately from inside their own VPC networks, without joining whole networks together. What should the vendor use?",
+      "options": [
+        "Shared VPC",
+        "Private Service Connect",
+        "Cloud Armor",
+        "VPC Network Peering"
+      ],
+      "correctIndex": 1,
+      "explanation": "Private Service Connect lets consumers access managed services privately from inside their own VPC network.",
+      "whyOthersWrong": [
+        "Shared VPC shares one network across projects of one organisation; it does not publish a service to customers.",
+        "Cloud Armor protects against DDoS and web attacks; it does not provide private connectivity.",
+        "Peering connects two whole networks, which the vendor wants to avoid."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc/docs/private-service-connect",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q11",
+      "sectionId": "designing-planning",
+      "topicId": "1-4",
+      "question": "A company plans to move hundreds of on-premises servers. What should it do first, using Google Cloud tooling?",
+      "options": [
+        "Copy every server to Spot VMs",
+        "Create a Cloud Run service per server",
+        "Discover and assess the assets and estimate the cost in Migration Center",
+        "Deploy Cloud Armor in front of the data centre"
+      ],
+      "correctIndex": 2,
+      "explanation": "Migration Center estimates cloud costs, discovers and assesses assets and plans the move without changing workloads.",
+      "whyOthersWrong": [
+        "Moving first, without assessment, ignores dependencies and costs.",
+        "Cloud Run is a platform for containers and functions, not a method to move servers as they are.",
+        "Cloud Armor protects Google Cloud deployments; it does not help plan a move."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/migration-center/docs/migration-center-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q12",
+      "sectionId": "designing-planning",
+      "topicId": "1-4",
+      "question": "A team must move a running PostgreSQL database into Cloud SQL with a managed tool that migrates data and metadata. Which service fits?",
+      "options": [
+        "Storage Transfer Service",
+        "Dataflow",
+        "Backup and DR",
+        "Database Migration Service"
+      ],
+      "correctIndex": 3,
+      "explanation": "Database Migration Service migrates data and metadata from a source database to a destination such as Cloud SQL or AlloyDB for PostgreSQL.",
+      "whyOthersWrong": [
+        "Storage Transfer Service moves object and file data between storage systems, not live databases.",
+        "Dataflow builds data pipelines; it is not a database migration tool.",
+        "Backup and DR protects workloads with backups; it does not migrate a database into another service."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/database-migration/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q13",
+      "sectionId": "designing-planning",
+      "topicId": "1-2",
+      "question": "A bank wants centralised, policy-based backup and recovery for VMs, databases and hybrid workloads in one managed service. Which service should it choose?",
+      "options": [
+        "Backup and DR Service",
+        "Cloud Storage",
+        "Filestore",
+        "Cloud Monitoring"
+      ],
+      "correctIndex": 0,
+      "explanation": "Backup and DR is a managed service for centralised backup and recovery of enterprise workloads in Google Cloud and hybrid environments, with policy-based governance.",
+      "whyOthersWrong": [
+        "Cloud Storage stores objects; it is not a policy-based backup service for many workload types.",
+        "Filestore is a file server, not a backup service.",
+        "Cloud Monitoring collects metrics; it does not back up workloads."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-dr",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q14",
+      "sectionId": "designing-planning",
+      "topicId": "1-1",
+      "question": "An architecture board wants one Google source of principles covering reliability, security, cost, performance, sustainability and operational excellence before approving a design. What should the architects use?",
+      "options": [
+        "Migration Center",
+        "The Well-Architected Framework",
+        "Cloud Billing budgets",
+        "Model Garden"
+      ],
+      "correctIndex": 1,
+      "explanation": "The Google Cloud Well-Architected Framework gives recommendations and best practices across its pillars for designing secure, efficient and resilient cloud topologies.",
+      "whyOthersWrong": [
+        "Migration Center helps assess and plan a move; it is not a set of design principles.",
+        "Budgets set spend alerts; they do not cover design principles.",
+        "Model Garden is a library of AI models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q15",
+      "sectionId": "designing-planning",
+      "topicId": "1-2",
+      "question": "An on-call engineer wants an AI collaborator in Google Cloud that helps troubleshoot an outage and suggests how to optimise the affected workload. What should the team use?",
+      "options": [
+        "Cloud Trace",
+        "Spot VMs",
+        "Gemini Cloud Assist",
+        "Binary Authorization"
+      ],
+      "correctIndex": 2,
+      "explanation": "Gemini Cloud Assist is an AI-powered collaborator that gives agentic guidance for designing, deploying, troubleshooting and optimising workloads.",
+      "whyOthersWrong": [
+        "Cloud Trace shows request latency; it is not an AI assistant that guides troubleshooting and optimisation.",
+        "Spot VMs are discounted, preemptible compute.",
+        "Binary Authorization enforces which container images may deploy."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/cloud-assist/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q61",
+      "sectionId": "designing-planning",
+      "topicId": "1-5",
+      "question": "A team wants one set of Google recommendations to review a planned design against, covering security, resilience, performance, cost and sustainability. Which resource fits?",
+      "options": [
+        "A Cloud Deploy delivery pipeline",
+        "Gemini Cloud Assist",
+        "A Skaffold configuration",
+        "The Google Cloud Well-Architected Framework"
+      ],
+      "correctIndex": 3,
+      "explanation": "The Well-Architected Framework gives recommendations to design and operate a cloud topology that is secure, efficient, resilient, high-performing, cost-effective and sustainable.",
+      "whyOthersWrong": [
+        "Cloud Deploy delivers applications to a series of targets in a promotion sequence; it does not review a design.",
+        "Gemini Cloud Assist is an AI-powered collaborator for operating workloads; it is not the set of design recommendations.",
+        "Skaffold is used by Cloud Deploy to render and deploy; it holds no design recommendations."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q62",
+      "sectionId": "designing-planning",
+      "topicId": "1-5",
+      "question": "A team will run AI and ML workloads and wants guidance for each Well-Architected Framework pillar that is specific to those workloads. Which part of the framework gives it?",
+      "options": [
+        "The AI and ML perspective",
+        "The reliability pillar only",
+        "The operational excellence pillar only",
+        "The DevOps capabilities from DORA"
+      ],
+      "correctIndex": 0,
+      "explanation": "The AI and ML perspective describes principles and recommendations to design, build and manage AI and ML workloads that meet operational, security, reliability, cost and performance goals.",
+      "whyOthersWrong": [
+        "The reliability pillar covers reliable workloads in general, so it does not give guidance for each pillar that is specific to AI and ML.",
+        "The operational excellence pillar covers operating workloads in general and leaves out the other pillars.",
+        "The DORA DevOps capabilities describe software delivery capabilities, not Well-Architected Framework guidance for AI and ML."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework/perspectives/ai-ml",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q16",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-1",
+      "question": "A branch office needs an encrypted IPsec connection to its Google Cloud network by next week and does not need a dedicated physical link. What should the network team set up?",
+      "options": [
+        "Cloud Interconnect",
+        "Cloud VPN",
+        "Shared VPC",
+        "Private Service Connect"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cloud VPN extends a peer network to your VPC network through an encrypted IPsec VPN connection.",
+      "whyOthersWrong": [
+        "Cloud Interconnect provides low-latency, high-availability connections, a heavier option than an encrypted tunnel.",
+        "Shared VPC shares a network among projects inside Google Cloud; it does not connect a branch office.",
+        "Private Service Connect reaches managed services privately; it does not connect an office network."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/network-connectivity/docs/vpn/concepts/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q17",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-1",
+      "question": "A data centre must move large volumes of data to Google Cloud every day, and the requirement is low latency and high availability. Which option fits best?",
+      "options": [
+        "Cloud VPN",
+        "VPC Network Peering",
+        "Cloud Interconnect",
+        "Cloud Armor"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Interconnect provides low-latency, high-availability connections for reliably transferring data between your network and Google Cloud.",
+      "whyOthersWrong": [
+        "A VPN tunnel encrypts traffic but is not the option built for low-latency, high-availability data transfer.",
+        "Peering connects two VPC networks, not a data centre.",
+        "Cloud Armor protects against attacks and does not carry traffic."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/network-connectivity/docs/interconnect/concepts/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q18",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-1",
+      "question": "A public web store behind a load balancer suffers a distributed denial-of-service attack and SQL injection attempts. Which service should protect it?",
+      "options": [
+        "Cloud IDS",
+        "Cloud KMS",
+        "Cloud Profiler",
+        "Cloud Armor"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cloud Armor helps protect deployments from DDoS attacks and application attacks such as cross-site scripting and SQL injection.",
+      "whyOthersWrong": [
+        "Cloud IDS detects threats in mirrored traffic; the requirement is protection from these attacks.",
+        "Cloud KMS manages encryption keys.",
+        "Cloud Profiler measures code resource use."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/armor/docs/cloud-armor-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q19",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-1",
+      "question": "A compliance team wants managed detection of malware, spyware and command-and-control traffic using mirrored VM traffic. Which service fits?",
+      "options": [
+        "Cloud Intrusion Detection System",
+        "Cloud Armor",
+        "Cloud Load Balancing",
+        "Secret Manager"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud IDS is an intrusion detection service that detects intrusions, malware, spyware and command-and-control attacks by inspecting mirrored traffic.",
+      "whyOthersWrong": [
+        "Cloud Armor blocks DDoS and web application attacks at the edge.",
+        "A load balancer distributes traffic and does not detect intrusions.",
+        "Secret Manager stores credentials, not network threats."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/intrusion-detection-system/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q20",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-2",
+      "question": "Log files in a bucket are rarely read after thirty days. The team wants them moved to a cheaper storage class and then deleted after a year, without manual work. What should it configure?",
+      "options": [
+        "Storage Transfer Service",
+        "Object Lifecycle Management",
+        "Backup and DR",
+        "A managed instance group"
+      ],
+      "correctIndex": 1,
+      "explanation": "Object Lifecycle Management automatically manages objects by rules, including downgrading storage classes and deleting objects after a time to live.",
+      "whyOthersWrong": [
+        "Storage Transfer Service moves data between storage systems; it does not apply age-based rules in place.",
+        "Backup and DR protects workloads with backups; it does not manage the age of objects in a bucket.",
+        "A managed instance group manages VMs, not objects."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/storage/docs/lifecycle",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q21",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-2",
+      "question": "A company must copy hundreds of terabytes from Amazon S3 into Cloud Storage and keep it synced on a schedule. What should it use?",
+      "options": [
+        "Filestore",
+        "Cloud Build",
+        "Storage Transfer Service",
+        "Cloud Code"
+      ],
+      "correctIndex": 2,
+      "explanation": "Storage Transfer Service moves data between object and file storage systems, including Amazon S3 and Cloud Storage.",
+      "whyOthersWrong": [
+        "Filestore is a managed file server, not a transfer tool.",
+        "Cloud Build runs software builds.",
+        "Cloud Code is IDE tooling for application developers."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/storage-transfer/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q22",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-3",
+      "question": "A company runs hundreds of VMware VMs on premises and wants to move to Google Cloud while keeping the same VMware platform and operations skills. What should it use?",
+      "options": [
+        "Compute Engine with converted VMs",
+        "Cloud Run",
+        "Google Kubernetes Engine",
+        "Google Cloud VMware Engine"
+      ],
+      "correctIndex": 3,
+      "explanation": "Google Cloud VMware Engine is a fully managed service that runs the VMware platform in Google Cloud and keeps operations continuous for existing VMware environments.",
+      "whyOthersWrong": [
+        "Converting VMs to Compute Engine means leaving the VMware platform, which the company wants to keep.",
+        "Cloud Run runs containers and functions, not VMware workloads.",
+        "GKE runs Kubernetes workloads, not VMware virtual machines."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vmware-engine/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q23",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-3",
+      "question": "A fleet of long-running VMs needs operating system updates applied across all of them on a schedule. Which feature should the team use?",
+      "options": [
+        "VM Manager patch",
+        "Terraform provider",
+        "Cloud Load Balancing",
+        "Custom machine types"
+      ],
+      "correctIndex": 0,
+      "explanation": "The Patch feature of VM Manager applies operating system patches across a set of Compute Engine VMs.",
+      "whyOthersWrong": [
+        "Terraform provisions infrastructure from configuration; it is not the OS patching feature.",
+        "A load balancer distributes traffic.",
+        "Custom machine types set vCPU and memory, not patches."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/compute/vm-manager/docs/patch",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q24",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-3",
+      "question": "A platform team wants to declare networks, projects and VMs in version-controlled files so every environment can be recreated the same way. What should it adopt?",
+      "options": [
+        "Cloud Shell",
+        "Terraform",
+        "Cloud Monitoring",
+        "Spot VMs"
+      ],
+      "correctIndex": 1,
+      "explanation": "Terraform is an infrastructure-as-code tool, and its provider for Google Cloud lets you provision and manage resources from configuration files.",
+      "whyOthersWrong": [
+        "Cloud Shell is an interactive shell in the browser; it does not define environments declaratively.",
+        "Cloud Monitoring collects metrics.",
+        "Spot VMs are a discounted, preemptible price model."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/docs/terraform/terraform-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q25",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-4",
+      "question": "A data science team wants to automate its ML lifecycle as repeatable steps, from data preparation to deployment, without managing servers. What should it use?",
+      "options": [
+        "Cloud Armor",
+        "Filestore",
+        "Agent Platform Pipelines",
+        "Cloud Interconnect"
+      ],
+      "correctIndex": 2,
+      "explanation": "Agent Platform Pipelines automate, monitor and govern ML systems in a serverless manner.",
+      "whyOthersWrong": [
+        "Cloud Armor protects against web attacks.",
+        "Filestore is a file server.",
+        "Cloud Interconnect is a network connection."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/pipelines/introduction",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q26",
+      "sectionId": "managing-provisioning",
+      "topicId": "2-5",
+      "question": "A retailer wants to label product photos, read printed text from images and flag explicit content using a ready-made API, with no model training. Which API fits?",
+      "options": [
+        "Cloud Speech-to-Text",
+        "Dataflow",
+        "Model Armor",
+        "Cloud Vision API"
+      ],
+      "correctIndex": 3,
+      "explanation": "The Cloud Vision API provides image labelling, optical character recognition and tagging of explicit content as a prebuilt API.",
+      "whyOthersWrong": [
+        "Speech-to-Text converts audio to text.",
+        "Dataflow builds data pipelines and does not analyse images itself.",
+        "Model Armor screens LLM prompts and responses."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vision/docs/",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q27",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A central security team wants to forbid VMs with external IP addresses in every project of the company, whatever roles project owners hold. What should it use?",
+      "options": [
+        "Organization Policy Service constraints",
+        "IAM role grants",
+        "Cloud Audit Logs",
+        "Secret Manager"
+      ],
+      "correctIndex": 0,
+      "explanation": "The Organization Policy Service gives centralised control by setting constraints across the whole resource hierarchy.",
+      "whyOthersWrong": [
+        "IAM grants permissions to principals; it does not set a constraint that applies whatever roles owners hold.",
+        "Audit logs record activity but do not forbid anything.",
+        "Secret Manager stores credentials."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/organization-policy/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q28",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A healthcare company stores sensitive data in Cloud Storage and BigQuery. A user with valid IAM permissions must still not be able to copy it outside the company's boundary. What should it configure?",
+      "options": [
+        "Cloud Armor",
+        "VPC Service Controls",
+        "Cloud Load Balancing",
+        "Binary Authorization"
+      ],
+      "correctIndex": 1,
+      "explanation": "VPC Service Controls limits access to resources to trusted networks and reduces data exfiltration risk.",
+      "whyOthersWrong": [
+        "Cloud Armor protects against DDoS and web application attacks.",
+        "A load balancer distributes traffic.",
+        "Binary Authorization controls which container images deploy."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/vpc-service-controls/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q29",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A regulator requires that the bank, not the cloud provider, owns and controls the keys protecting its data at rest. What should the bank use?",
+      "options": [
+        "Secret Manager",
+        "Model Armor",
+        "Customer-managed encryption keys with Cloud KMS",
+        "Cloud Audit Logs"
+      ],
+      "correctIndex": 2,
+      "explanation": "CMEK gives you ownership and control of the Cloud KMS keys that protect data at rest in integrated Google Cloud services.",
+      "whyOthersWrong": [
+        "Secret Manager stores credentials such as API keys and passwords, not the encryption keys that protect services' data at rest.",
+        "Model Armor screens LLM prompts and responses.",
+        "Audit logs record activity and do not protect data."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/kms/docs/cmek",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q30",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "Developers keep database passwords and API keys in source files. The team wants to store them centrally and let applications fetch them at run time. What should it adopt?",
+      "options": [
+        "Cloud KMS",
+        "Sensitive Data Protection",
+        "VPC Service Controls",
+        "Secret Manager"
+      ],
+      "correctIndex": 3,
+      "explanation": "Secret Manager stores and manages sensitive data such as API keys, passwords and certificates.",
+      "whyOthersWrong": [
+        "Cloud KMS manages cryptographic keys, not application credentials.",
+        "Sensitive Data Protection discovers and de-identifies sensitive data.",
+        "VPC Service Controls limits data access by perimeter."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/secret-manager/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q31",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A company wants employees to reach an internal web application over HTTPS from anywhere, checked per user and group at the application, without giving everyone a VPN. What should it use?",
+      "options": [
+        "Identity-Aware Proxy",
+        "Cloud Interconnect",
+        "Cloud NAT",
+        "Cloud Armor"
+      ],
+      "correctIndex": 0,
+      "explanation": "Identity-Aware Proxy is a central authorisation layer for applications reached over HTTPS, using an application-level access model in place of network-level access.",
+      "whyOthersWrong": [
+        "Cloud Interconnect is a network connection and does not check each user at the application.",
+        "Cloud NAT handles outbound address translation and does not authorise users.",
+        "Cloud Armor protects against attacks; it is not a per-user authorisation layer."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/iap/docs/concepts-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q32",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A CI pipeline on GitHub must deploy to Google Cloud, and the security team will not accept a service account key stored as a pipeline secret. What should the pipeline use?",
+      "options": [
+        "A shared administrator account",
+        "Workload Identity Federation",
+        "A downloaded JSON key in the repository",
+        "Cloud Audit Logs"
+      ],
+      "correctIndex": 1,
+      "explanation": "Workload Identity Federation lets workloads such as GitHub pipelines access Google Cloud with federated identities instead of service account keys.",
+      "whyOthersWrong": [
+        "A shared administrator account is a broad credential and violates least privilege.",
+        "A key file in a repository is exactly the long-lived key the team refuses.",
+        "Audit logs record activity and do not authenticate the pipeline."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/iam/docs/workload-identity-federation",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q33",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "An engineer must temporarily act with a deployment service account's permissions to test a release, without anyone creating a downloadable key for it. What should the engineer use?",
+      "options": [
+        "Hierarchical firewall policies",
+        "Cloud IDS",
+        "Service account impersonation",
+        "Custom machine types"
+      ],
+      "correctIndex": 2,
+      "explanation": "Impersonation lets an authenticated principal gain a service account's permissions without a key file.",
+      "whyOthersWrong": [
+        "Firewall policies filter network traffic and do not grant permissions.",
+        "Cloud IDS detects network threats.",
+        "Custom machine types set VM shape."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/iam/docs/service-account-impersonation",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q34",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "A customer chatbot must not pass malicious prompts to the LLM or return responses that expose sensitive data. What should screen prompts and responses?",
+      "options": [
+        "Cloud Armor",
+        "Cloud Profiler",
+        "Binary Authorization",
+        "Model Armor"
+      ],
+      "correctIndex": 3,
+      "explanation": "Model Armor screens LLM prompts and responses to prevent malicious input and protect sensitive data.",
+      "whyOthersWrong": [
+        "Cloud Armor protects against DDoS and web application attacks, not LLM prompts.",
+        "Cloud Profiler measures resource use of running code.",
+        "Binary Authorization enforces deployment policy for container images."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/model-armor/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q35",
+      "sectionId": "security-compliance",
+      "topicId": "3-1",
+      "question": "Before sharing a dataset with a partner, a company must find names and card numbers hidden in free-text columns and mask them. What should it use?",
+      "options": [
+        "Sensitive Data Protection",
+        "Cloud KMS",
+        "Cloud Load Balancing",
+        "Shared VPC"
+      ],
+      "correctIndex": 0,
+      "explanation": "Sensitive Data Protection helps you discover, classify and de-identify sensitive data.",
+      "whyOthersWrong": [
+        "Cloud KMS manages keys; encryption alone does not find or mask data in text.",
+        "A load balancer distributes traffic.",
+        "Shared VPC shares a network among projects."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q36",
+      "sectionId": "security-compliance",
+      "topicId": "3-2",
+      "question": "A public-sector agency must keep data in specific regions, restrict support to approved personnel and apply a regulatory control package. What should it configure?",
+      "options": [
+        "Cloud Build",
+        "Assured Workloads",
+        "Managed instance groups",
+        "Cloud Trace"
+      ],
+      "correctIndex": 1,
+      "explanation": "Assured Workloads configures a sovereign data and access boundary with residency, access and personnel controls.",
+      "whyOthersWrong": [
+        "Cloud Build runs builds.",
+        "Managed instance groups manage identical VMs.",
+        "Cloud Trace analyses request latency."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/assured-workloads/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q37",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "Every commit must trigger a run that compiles the code, runs tests and produces a container image. Which service should execute those builds?",
+      "options": [
+        "Cloud Deploy",
+        "Artifact Registry",
+        "Cloud Build",
+        "Cloud Monitoring"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Build executes builds on Google Cloud and produces artifacts such as Docker containers.",
+      "whyOthersWrong": [
+        "Cloud Deploy promotes a release through environments.",
+        "Artifact Registry stores the resulting images and packages.",
+        "Cloud Monitoring collects metrics."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/build/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q38",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "A release must move from test to staging to production in a defined order, with an approval before production. Which service manages the promotion?",
+      "options": [
+        "Cloud Build",
+        "Cloud Shell",
+        "Storage Transfer Service",
+        "Cloud Deploy"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cloud Deploy automates delivery to a series of target environments in a defined promotion sequence.",
+      "whyOthersWrong": [
+        "Cloud Build runs builds rather than promoting releases.",
+        "Cloud Shell is an interactive shell.",
+        "Storage Transfer Service moves data between storage systems."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/deploy/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q39",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "A team wants one managed place for its Docker images and language packages so pipelines and clusters pull from the same location. Where should the artifacts live?",
+      "options": [
+        "Artifact Registry",
+        "Cloud Deploy",
+        "Cloud Armor",
+        "Cloud Logging"
+      ],
+      "correctIndex": 0,
+      "explanation": "Artifact Registry provides a single location for storing and managing packages and Docker container images.",
+      "whyOthersWrong": [
+        "Cloud Deploy delivers releases; it is not the artifact store.",
+        "Cloud Armor protects against attacks.",
+        "Cloud Logging stores logs."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/artifact-registry/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q40",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "The board asks for a documented plan that says how critical systems are restored in Google Cloud after a regional outage. What should the architects produce?",
+      "options": [
+        "A Cloud Billing budget",
+        "A disaster recovery plan",
+        "A custom machine type",
+        "A Terraform provider"
+      ],
+      "correctIndex": 1,
+      "explanation": "Google's DR planning guide covers the process of designing and implementing a disaster recovery plan in Google Cloud.",
+      "whyOthersWrong": [
+        "A budget monitors spend.",
+        "A custom machine type sets VM shape.",
+        "A Terraform provider provisions resources; it is not a recovery plan."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q41",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "A pipeline team is arguing about which tool should promote an already-built image from staging to production with an approval. What is the best advice?",
+      "options": [
+        "Use Artifact Registry to promote images",
+        "Use Cloud Shell Editor to promote images",
+        "Use Cloud Deploy for promotion, and keep Cloud Build for building",
+        "Use Cloud Trace to promote images"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Deploy manages promotion through target environments, while Cloud Build builds and Artifact Registry stores.",
+      "whyOthersWrong": [
+        "Artifact Registry stores images; it does not promote them.",
+        "Cloud Shell Editor is a browser IDE.",
+        "Cloud Trace analyses request latency."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/deploy/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q42",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-2",
+      "question": "Leadership asks which design choices lower the running cost of workloads in Google Cloud without hurting what the business needs. Which Well-Architected Framework pillar does the review follow?",
+      "options": [
+        "Reliability",
+        "Operational excellence",
+        "Sustainability",
+        "Cost optimization"
+      ],
+      "correctIndex": 3,
+      "explanation": "The cost optimization pillar gives principles and recommendations for optimising the cost of workloads.",
+      "whyOthersWrong": [
+        "Reliability concerns designing, deploying and managing reliable workloads.",
+        "Operational excellence concerns managing and operating workloads efficiently.",
+        "Sustainability is a different pillar from the one that targets cost."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework/cost-optimization",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q43",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-2",
+      "question": "A finance team wants an alert when a project's monthly Google Cloud spend passes a share of its plan. What should it create?",
+      "options": [
+        "A Cloud Billing budget with alerts",
+        "A VM Manager patch job",
+        "A managed instance group",
+        "A Cloud IDS endpoint"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Billing budgets monitor your Google Cloud charges and can alert you about spend.",
+      "whyOthersWrong": [
+        "A patch job applies operating system updates.",
+        "A managed instance group manages identical VMs.",
+        "A Cloud IDS endpoint detects network threats."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/billing/docs/how-to/budgets",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q44",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-2",
+      "question": "A team can set a hard limit on a project's spend, but it is unsure which budget type allows that. Which statement is correct?",
+      "options": [
+        "Every budget stops all spending automatically",
+        "Alerts-only budgets never stop spending, and spend cap budgets can be configured on a project if the service supports it",
+        "Budgets cannot be set per project",
+        "Budgets only work for Compute Engine"
+      ],
+      "correctIndex": 1,
+      "explanation": "Alerts-only budgets let you track spend, and spend cap budgets can be configured on a project if supported for your service.",
+      "whyOthersWrong": [
+        "Alerts-only budgets track and notify; they do not stop spending.",
+        "Spend caps can be configured on a project, so per-project budgets exist.",
+        "Budgets monitor all your Google Cloud charges, not only Compute Engine."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/billing/docs/how-to/budgets",
+      "difficulty": "hard"
+    },
+    {
+      "id": "pca-q45",
+      "sectionId": "technical-business-processes",
+      "topicId": "4-1",
+      "question": "Which statement best separates Cloud Build from Cloud Deploy?",
+      "options": [
+        "Cloud Build promotes releases, and Cloud Deploy compiles code",
+        "Both only store container images",
+        "Cloud Build executes builds and produces artifacts, while Cloud Deploy delivers applications through a defined sequence of target environments",
+        "Cloud Deploy replaces Artifact Registry"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Build runs builds and produces artifacts, and Cloud Deploy automates delivery to target environments in a promotion sequence.",
+      "whyOthersWrong": [
+        "The roles are reversed in this option.",
+        "Neither service is an image store; Artifact Registry stores images.",
+        "Cloud Deploy does not store packages, so it cannot replace Artifact Registry."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/deploy/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q46",
+      "sectionId": "managing-implementation",
+      "topicId": "5-1",
+      "question": "A bank wants to expose internal services to partners as managed APIs with proxies, security policies and analytics. Which platform should it adopt?",
+      "options": [
+        "Cloud Load Balancing",
+        "Cloud Armor",
+        "Filestore",
+        "Apigee"
+      ],
+      "correctIndex": 3,
+      "explanation": "Apigee is Google Cloud's native API management platform for building, managing and securing APIs.",
+      "whyOthersWrong": [
+        "A load balancer distributes traffic and is not an API management platform.",
+        "Cloud Armor protects against attacks but does not manage APIs.",
+        "Filestore is a file server."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q47",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "A new administrator on a locked-down laptop must run commands against Google Cloud now, from a browser tab, with the tools already installed. What should they open?",
+      "options": [
+        "Cloud Shell",
+        "Terraform",
+        "Cloud Build",
+        "Cloud Deploy"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Shell is an interactive shell environment in the browser with the Google Cloud CLI pre-installed.",
+      "whyOthersWrong": [
+        "Terraform is an infrastructure-as-code tool that must be installed and configured.",
+        "Cloud Build runs builds.",
+        "Cloud Deploy delivers releases."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/shell/docs",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q48",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "A developer wants a full browser-based editor with debugging and source control that is attached to a terminal for the project. What should the developer use?",
+      "options": [
+        "Cloud Code in a desktop IDE",
+        "Cloud Shell Editor",
+        "The bq tool",
+        "Cloud Profiler"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cloud Shell Editor is a browser IDE with source control, language tooling and access to the Cloud Shell terminal.",
+      "whyOthersWrong": [
+        "Cloud Code is a set of extensions for the developer's own IDE, not a browser editor.",
+        "bq is the command-line tool for BigQuery.",
+        "Cloud Profiler measures how running code uses resources."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/shell/docs/editor-overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q49",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "Developers want to run integration tests on their laptops against local stand-ins for Pub/Sub and Firestore, without creating cloud resources. What should they use?",
+      "options": [
+        "Spot VMs",
+        "Cloud Interconnect",
+        "Cloud emulators",
+        "Cloud KMS"
+      ],
+      "correctIndex": 2,
+      "explanation": "The gcloud emulators set up a local development environment so tests do not need real services.",
+      "whyOthersWrong": [
+        "Spot VMs are discounted cloud compute, not local stand-ins.",
+        "Cloud Interconnect is a network connection.",
+        "Cloud KMS manages encryption keys."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/sdk/gcloud/reference/beta/emulators",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q50",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "A Python team wants its application to call Google Cloud APIs in the idiomatic style of its language, without hand-written HTTP requests. What should it import?",
+      "options": [
+        "gcloud CLI",
+        "Cloud Shell",
+        "Terraform",
+        "Cloud Client Libraries"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cloud Client Libraries let you call Google Cloud APIs in each language's idiomatic conventions with less boilerplate.",
+      "whyOthersWrong": [
+        "The gcloud CLI is a command-line tool, not an application library.",
+        "Cloud Shell is a browser shell environment.",
+        "Terraform declares infrastructure rather than being called from application code."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/apis/docs/cloud-client-libraries",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q51",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "An old backup script copies files to Cloud Storage with a legacy command-line tool. What does Google recommend instead for Cloud Storage commands?",
+      "options": [
+        "gcloud storage commands in the Google Cloud CLI",
+        "Keep using gsutil indefinitely",
+        "bq load",
+        "Cloud Code"
+      ],
+      "correctIndex": 0,
+      "explanation": "Google says gsutil is not the recommended CLI for Cloud Storage and tells users to use gcloud storage commands instead.",
+      "whyOthersWrong": [
+        "Google does not recommend gsutil for Cloud Storage.",
+        "bq is the command-line tool for BigQuery.",
+        "Cloud Code is IDE tooling."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/storage/docs/gsutil",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q52",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "An engineer wants to script the creation of a VM and a firewall rule from a shell script, using the main command-line tool for Google Cloud. What should the script call?",
+      "options": [
+        "Apigee",
+        "gcloud CLI",
+        "Cloud Armor",
+        "Model Garden"
+      ],
+      "correctIndex": 1,
+      "explanation": "The gcloud CLI is a set of tools to create and manage Google Cloud resources.",
+      "whyOthersWrong": [
+        "Apigee manages APIs.",
+        "Cloud Armor protects against attacks.",
+        "Model Garden is a library of AI models."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/sdk/gcloud",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q53",
+      "sectionId": "managing-implementation",
+      "topicId": "5-2",
+      "question": "Developers using their own desktop IDE want plugins to create, run and debug Kubernetes and Cloud Run applications from sample templates. What should they install?",
+      "options": [
+        "Cloud Shell Editor",
+        "Cloud Billing budgets",
+        "Cloud Code",
+        "VPC Service Controls"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Code is a set of IDE extensions that supports Kubernetes and Cloud Run development from a template to a running app.",
+      "whyOthersWrong": [
+        "Cloud Shell Editor is a browser editor, not a plugin for the developers' own IDE.",
+        "Budgets monitor spend.",
+        "VPC Service Controls limits data access by perimeter."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/code/docs",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q54",
+      "sectionId": "operations-excellence",
+      "topicId": "6-1",
+      "question": "An architect reviews how a team deploys, monitors and runs its workloads day to day. Which Well-Architected Framework pillar gives guidance on managing and operating workloads efficiently?",
+      "options": [
+        "Cost optimization",
+        "Security",
+        "Sustainability",
+        "Operational excellence"
+      ],
+      "correctIndex": 3,
+      "explanation": "The operational excellence pillar gives principles and recommendations for managing and operating workloads efficiently in Google Cloud.",
+      "whyOthersWrong": [
+        "Cost optimization is about the cost of workloads.",
+        "Security is about protecting workloads and data.",
+        "Sustainability is a separate pillar from running workloads efficiently."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework/operational-excellence",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q55",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "An SRE team wants dashboards of CPU and latency metrics collected automatically from its Google Cloud services. Which service provides them?",
+      "options": [
+        "Cloud Monitoring",
+        "Cloud Logging",
+        "Cloud Trace",
+        "Artifact Registry"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Monitoring collects, stores and analyses metric data, and collects metrics for most Google Cloud services automatically.",
+      "whyOthersWrong": [
+        "Cloud Logging collects log entries, not metrics.",
+        "Cloud Trace follows request latency across services.",
+        "Artifact Registry stores packages and images."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/monitoring/docs/monitoring-overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q56",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "Checkout requests are slow, and the team must see how long each downstream call takes within a single request. Which service shows that?",
+      "options": [
+        "Cloud Profiler",
+        "Cloud Trace",
+        "Cloud Billing budgets",
+        "Cloud Armor"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cloud Trace is a distributed tracing system that tracks request latency and helps find performance bottlenecks across services.",
+      "whyOthersWrong": [
+        "Cloud Profiler shows resource use by code, not latency across services.",
+        "Budgets track spend.",
+        "Cloud Armor protects against attacks."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/trace/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q57",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "A production service uses too much CPU, and developers want to see which functions in the running code consume it. Which service should they use?",
+      "options": [
+        "Cloud Trace",
+        "Cloud Logging",
+        "Cloud Profiler",
+        "Cloud Deploy"
+      ],
+      "correctIndex": 2,
+      "explanation": "Cloud Profiler measures how code uses resources in production, where test environments rarely reproduce the pressures.",
+      "whyOthersWrong": [
+        "Cloud Trace shows request latency across services.",
+        "Cloud Logging stores log entries, not per-function resource use.",
+        "Cloud Deploy delivers releases."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/profiler/docs/about-profiler",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q58",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "The on-call engineer must be paged when the error rate stays above a threshold, without watching a dashboard. What should the team configure?",
+      "options": [
+        "A Cloud Billing budget",
+        "A Cloud Build trigger",
+        "A custom machine type",
+        "An alerting policy in Cloud Monitoring"
+      ],
+      "correctIndex": 3,
+      "explanation": "Alerting policies evaluate metric, log or SQL query results and send notifications when data meets the conditions.",
+      "whyOthersWrong": [
+        "A budget alerts on spend, not error rate.",
+        "A build trigger starts builds.",
+        "A machine type sets VM shape."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/monitoring/alerts",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q59",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "Developers need to search the text log lines that applications and Google Cloud resources produce, in real time. Which service stores and searches them?",
+      "options": [
+        "Cloud Logging",
+        "Cloud Monitoring",
+        "Cloud Profiler",
+        "Cloud Interconnect"
+      ],
+      "correctIndex": 0,
+      "explanation": "Cloud Logging is a real-time log-management system with storage, search, analysis and monitoring support.",
+      "whyOthersWrong": [
+        "Cloud Monitoring handles metric data.",
+        "Cloud Profiler measures code resource use.",
+        "Cloud Interconnect is a network connection."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/logging/docs/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q60",
+      "sectionId": "operations-excellence",
+      "topicId": "6-2",
+      "question": "A platform team wants one family of Google Cloud services for metrics, logs and traces to understand the health and performance of its applications. What should it adopt?",
+      "options": [
+        "Assured Workloads",
+        "Google Cloud Observability",
+        "Migration Center",
+        "Cloud Armor"
+      ],
+      "correctIndex": 1,
+      "explanation": "Google Cloud Observability includes services that help you understand the behaviour, health and performance of your applications.",
+      "whyOthersWrong": [
+        "Assured Workloads configures a regulated boundary.",
+        "Migration Center helps plan a move to Google Cloud.",
+        "Cloud Armor protects against attacks."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/stackdriver/docs",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q63",
+      "sectionId": "operations-excellence",
+      "topicId": "6-3",
+      "question": "A team wants its application delivered to a series of environments in a fixed order, with the order defined in one place. Which Cloud Deploy object defines that promotion sequence?",
+      "options": [
+        "The release",
+        "The Skaffold configuration",
+        "The delivery pipeline",
+        "A single target"
+      ],
+      "correctIndex": 2,
+      "explanation": "A Cloud Deploy delivery pipeline holds the promotion sequence, which describes the order in which to deploy to the configured targets.",
+      "whyOthersWrong": [
+        "A release is created each time you deploy an updated application; its lifecycle is managed by a delivery pipeline, which holds the order.",
+        "Cloud Deploy needs a Skaffold configuration to perform render and deploy operations, not to define the order of targets.",
+        "A target is one environment, so it cannot define the order of several."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/deploy/docs/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q64",
+      "sectionId": "operations-excellence",
+      "topicId": "6-3",
+      "question": "A team wants to release a new version to a subset of users first and send more traffic to it as it proves reliable. Which Cloud Deploy strategy fits?",
+      "options": [
+        "Deploying to every target at once",
+        "A single manual release with no traffic split",
+        "Rolling back before any user has the new version",
+        "A canary deployment"
+      ],
+      "correctIndex": 3,
+      "explanation": "A canary deployment is a progressive rollout that splits traffic between the deployed version and the new version, so the new version reaches a subset of users before a full rollout.",
+      "whyOthersWrong": [
+        "Deploying to every target at once gives the new version to all users together, so a fault reaches everyone.",
+        "A release with no traffic split gives no way to try the version on a subset of users.",
+        "Rolling back before any user has the version means the version is never tried by real users."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/deploy/docs/deployment-strategies/canary",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q65",
+      "sectionId": "operations-excellence",
+      "topicId": "6-4",
+      "question": "A team wants an AI-powered collaborator that helps move from reactive troubleshooting to proactive operations of its Google Cloud workloads. Which service is described?",
+      "options": [
+        "Gemini Cloud Assist",
+        "Cloud Deploy",
+        "The Well-Architected Framework",
+        "A Skaffold configuration"
+      ],
+      "correctIndex": 0,
+      "explanation": "Gemini Cloud Assist is described as an AI-powered collaborator that helps move from reactive troubleshooting to proactive cloud operations.",
+      "whyOthersWrong": [
+        "Cloud Deploy automates delivery to a series of targets; it does not troubleshoot workloads.",
+        "The Well-Architected Framework is a set of written recommendations, not an AI-powered collaborator.",
+        "Skaffold is a tool Cloud Deploy uses to render and deploy; it does not help troubleshoot."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/cloud-assist/overview",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q66",
+      "sectionId": "operations-excellence",
+      "topicId": "6-4",
+      "question": "Gemini Cloud Assist is marked as a Preview offering on its overview page. Which terms apply to that Preview offering?",
+      "options": [
+        "No terms apply to a Preview offering",
+        "The Pre-GA Offering Terms of the Google Cloud Specific Service Terms",
+        "Only the terms of the open source licence",
+        "The terms of the Well-Architected Framework"
+      ],
+      "correctIndex": 1,
+      "explanation": "Use of the Preview offering of Gemini Cloud Assist is subject to the Google Cloud Agreement, including the Pre-GA Offering Terms of the Google Cloud Specific Service Terms.",
+      "whyOthersWrong": [
+        "Preview use is subject to the Google Cloud Agreement and the Pre-GA Offering Terms, so some terms do apply.",
+        "The overview names Google Cloud terms for use of the Preview offering, not an open source licence.",
+        "The Well-Architected Framework is a set of recommendations and carries no terms for a service."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/cloud-assist/overview",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q67",
+      "sectionId": "operations-excellence",
+      "topicId": "6-5",
+      "question": "A team wants to improve software quality by building reliable automated test suites and testing throughout the delivery lifecycle. Which DORA capability is that?",
+      "options": [
+        "Code maintainability",
+        "Loosely coupled architecture",
+        "Test automation",
+        "Deployment automation"
+      ],
+      "correctIndex": 2,
+      "explanation": "The DORA test automation capability is to improve software quality by building reliable automated test suites and performing all kinds of testing throughout the delivery lifecycle.",
+      "whyOthersWrong": [
+        "Code maintainability makes code easy to find, reuse and change, and keeps dependencies up to date.",
+        "Loosely coupled architecture is about moving from a tightly coupled architecture to service-oriented and microservice architectures.",
+        "Deployment automation is about reducing manual intervention in the release process."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/devops",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q68",
+      "sectionId": "operations-excellence",
+      "topicId": "6-5",
+      "question": "A team wants deploying software to be a reliable, low-risk process that can be performed on demand at any time. Which DORA capability is that?",
+      "options": [
+        "Continuous integration",
+        "Database change management",
+        "Empowering teams to choose tools",
+        "Continuous delivery"
+      ],
+      "correctIndex": 3,
+      "explanation": "The DORA continuous delivery capability is to make deploying software a reliable, low-risk process that can be performed on demand at any time.",
+      "whyOthersWrong": [
+        "Continuous integration is about integrating changes often, and the DORA page covers its common mistakes, measures and improvements.",
+        "Database change management makes sure database changes do not cause problems or slow you down.",
+        "Empowering teams to choose tools is about letting teams make informed decisions on tools and technologies."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/devops",
+      "difficulty": "easy"
+    },
+    {
+      "id": "pca-q69",
+      "sectionId": "operations-excellence",
+      "topicId": "6-6",
+      "question": "A team must describe a system's ability to withstand and recover from failures or unexpected disruptions while maintaining performance. Which term does the Well-Architected Framework use for that ability?",
+      "options": [
+        "Resilience",
+        "Cost optimization",
+        "Sustainability",
+        "Operational excellence"
+      ],
+      "correctIndex": 0,
+      "explanation": "In the reliability pillar, resilience is the system's ability to withstand and recover from failures or unexpected disruptions while maintaining performance.",
+      "whyOthersWrong": [
+        "Cost optimization is a separate pillar about the cost of workloads.",
+        "Sustainability is a separate pillar and is not the ability to recover from failures.",
+        "Operational excellence is about operating workloads efficiently, not specifically about recovering from failures."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework/reliability",
+      "difficulty": "medium"
+    },
+    {
+      "id": "pca-q70",
+      "sectionId": "operations-excellence",
+      "topicId": "6-6",
+      "question": "Which set of Google Cloud features does the reliability pillar name as helping to improve a system's resilience?",
+      "options": [
+        "A single zone, manual backups and no recovery plan",
+        "Multi-regional deployments, automated backups and disaster recovery solutions",
+        "Fixed capacity, no monitoring and one copy of the data",
+        "Manual releases, no tests and no rollback"
+      ],
+      "correctIndex": 1,
+      "explanation": "The reliability pillar says features such as multi-regional deployments, automated backups and disaster recovery solutions can help you improve your system's resilience.",
+      "whyOthersWrong": [
+        "A single zone and no recovery plan leave one failure able to stop the system.",
+        "Fixed capacity, no monitoring and one copy of the data remove the redundancy that resilience needs.",
+        "Manual releases, no tests and no rollback are about delivery and do not name resilience features."
+      ],
+      "officialDoc": "https://docs.cloud.google.com/architecture/framework/reliability",
+      "difficulty": "medium"
+    }
+  ]
 }

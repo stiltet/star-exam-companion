@@ -185,3 +185,71 @@
 html[data-standalone] .footer-bottom {
   padding-bottom: 6rem;
 }
+
+/* A tapped link looks pressed at once, before any loading bar shows. */
+a:active {
+  opacity: 0.6;
+}
+
+/* The link that was tapped shows its own loading state until the new page is there: its words and
+   icons go, the button is empty, and it fills with its own text colour from left to right like a
+   loading bar, fast at first and then slower, never quite full. It keeps its size. NavProgress sets
+   the attribute and --spinner, the colour the words had. */
+a[data-loading] {
+  position: relative;
+  color: transparent !important;
+  cursor: progress;
+  overflow: hidden;
+}
+a[data-loading] * {
+  visibility: hidden;
+}
+[data-loading]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--spinner, currentColor);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: link-fill 4s linear forwards;
+}
+/* Steady, so it neither rushes at the start nor looks stuck at the end, and nearly full after 4 s. */
+@keyframes link-fill {
+  to { transform: scaleX(0.9); }
+}
+/* The app's icon, the book and the star, standing still in the middle of the button. It is the
+   same drawing as public/icon.svg, inline so it needs no address and works offline. */
+[data-loading]::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  height: min(2rem, 70%);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Crect%20width=%2264%22%20height=%2264%22%20rx=%2214%22%20fill=%22%23111111%22/%3E%3Cpath%20d=%22M8%2029c8-3.5%2016-3.5%2023%201.5V55c-7-5-15-5-23-1.5z%22%20fill=%22%23ffffff%22/%3E%3Cpath%20d=%22M56%2029c-8-3.5-16-3.5-23%201.5V55c7-5%2015-5%2023-1.5z%22%20fill=%22%23d9d9d9%22/%3E%3Cpath%20d=%22M32.0%204.0%20L34.5%2010.6%20L41.5%2010.9%20L36.0%2015.3%20L37.9%2022.1%20L32.0%2018.2%20L26.1%2022.1%20L28.0%2015.3%20L22.5%2010.9%20L29.5%2010.6Z%22%20fill=%22%23fbbc04%22/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
+.page-loading {
+  opacity: 0;
+  animation: page-loading-show 0s linear 200ms forwards, page-loading-hide 0s linear 5s forwards;
+}
+@keyframes page-loading-show {
+  to { opacity: 1; }
+}
+@keyframes page-loading-hide {
+  to { opacity: 0; visibility: hidden; }
+}
+/* The failsafe that needs no JavaScript: if the scripts never arrive (offline, a file not on the
+   device), the hidden page is shown after 5 s anyway, with what the server drew. */
+[data-page-ready="false"] {
+  animation: page-open 0s linear 5s forwards;
+}
+@keyframes page-open {
+  to { visibility: visible; }
+}
+.loading-box {
+  --spinner: currentColor;
+}

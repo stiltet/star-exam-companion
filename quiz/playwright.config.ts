@@ -5,7 +5,7 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535 || port === 3000) {
   throw new Error("QUIZ_E2E_PORT must be an unprivileged port other than the normal quiz port 3000")
 }
 
-const WEBKIT_SPECS = ["**/offline.spec.ts", "**/back-*.spec.ts", "**/about-webkit.spec.ts"]
+const WEBKIT_SPECS = ["**/offline.spec.ts", "**/offline-unreachable.spec.ts", "**/back-*.spec.ts", "**/about-webkit.spec.ts"]
 
 export default defineConfig({
   testDir: "./e2e",

@@ -12,7 +12,7 @@ function hash(text: string): number {
   return value
 }
 
-function findTerm(glossary: Glossary, name: string): Term | undefined {
+export function findTerm(glossary: Glossary, name: string): Term | undefined {
   return glossary.terms.find((term) => term.term.toLowerCase() === name.toLowerCase())
 }
 
@@ -55,6 +55,11 @@ export function itemsFromGlossary(glossary: Glossary, scenes: Scene[]): RoundIte
       source: correctTerm.sourceUrl || correctTerm.source,
       why: applyNames(glossary, reasonFrom(correctTerm.meaning)),
       whySource: sourceText(correctTerm.source),
+      wrong: options.flatMap((name, index) => {
+        if (index === correctIndex) return []
+        const term = findTerm(glossary, name)
+        return [`${label(glossary, name)}: ${term ? applyNames(glossary, reasonFrom(term.meaning)) : "This is not the answer the scene asks for."}`]
+      }),
     })
   }
   return items

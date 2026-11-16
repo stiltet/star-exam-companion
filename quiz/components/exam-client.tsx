@@ -1,5 +1,6 @@
 "use client"
 
+import { usePageReady } from "@/components/page-gate"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { keepAnswer } from "@/components/outbox"
 import { mergeLines, newAnswer, readOutbox, readRejected } from "@/lib/outbox"
@@ -62,7 +63,8 @@ export function ExamClient({ questions, sections, length }: Props) {
   const finished = useRef(false)
   const dialog = useRef<HTMLDivElement>(null)
   const endButton = useRef<HTMLDivElement>(null)
-  const { lines } = useSnapshot()
+  const { lines, from } = useSnapshot()
+  usePageReady(from !== "loading")
   const bank = useMemo(() => new Map(questions.map((q) => [q.id, q])), [questions])
   // Every exam and retake this device knows: the Mac's, and any still waiting on the device or
   // refused by the Mac, so one finished offline can be reviewed before it is sent.

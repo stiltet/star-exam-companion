@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Text } from "@/components/atoms/text"
 import { PracticeQuestionClient } from "@/components/practice-question-client"
+import { usePageReady } from "@/components/page-gate"
 import { refreshSnapshot } from "@/components/snapshot"
 import type { Question } from "@/lib/exam-data"
 import { mergeLines, readOutbox } from "@/lib/outbox"
@@ -39,6 +40,7 @@ function useAnswered(): Set<string> | "none" | null {
       live = false
     }
   }, [])
+  usePageReady(answered !== null)
   return answered
 }
 
