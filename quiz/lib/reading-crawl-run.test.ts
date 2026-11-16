@@ -4,7 +4,7 @@ import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/pr
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import test from "node:test"
+import { browserTest as test } from "./browser-test.ts"
 import { startFakeSite, type FakeCard, type FakeSite } from "./fake-lesson-site.ts"
 import { readPrivateReadings } from "./private-reading.ts"
 import { testRoot } from "./test-pack.ts"
