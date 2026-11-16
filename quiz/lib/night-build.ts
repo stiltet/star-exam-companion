@@ -173,7 +173,8 @@ export type BuildDeps = {
   voice?: () => Promise<string>
 }
 
-// Deletes the clips none of these readings uses in this voice. Called only with the readings of a build that just finished in full.
+// Deletes the clips none of these readings uses in this voice, and every clip made in another voice, which no reading in this voice uses. Called only
+// with the readings of a build that just finished in full.
 export async function pruneClips(dir: string, parts: readonly NightPart[], voice = ""): Promise<number> {
   const folder = path.join(dir, CLIPS_DIR)
   const used = new Set(parts.map((part) => path.basename(clipFile(dir, part.script, voice))))
@@ -209,9 +210,11 @@ export async function buildRecording(deps: BuildDeps): Promise<Extract<NightBuil
   const pairsFor = (voice: string) => deps.parts.map((part) => ({ part, file: clipFile(deps.dir, part.script, voice) }))
   // The voice is asked for only when a clip must be spoken or no voice is remembered yet (the first build, or a night folder that was cleared).
   // Every clip already there under the remembered voice means no speech is needed, so a restart or a damaged manifest never runs `say`, and a
-  // Mac that cannot be asked cannot stop such a build. A remembered voice may have gone stale (the owner changed it), which only costs a re-speak.
+  // Mac that cannot be asked cannot stop such a build. A voice the owner has changed since is noticed only when a clip must be spoken; until then
+  // the recording and its clips stay in the old voice, and the next build that must speak asks again and speaks every reading in the new one.
   const voiceFile = path.join(deps.dir, VOICE_FILE)
   let voice = ""
+  // With no voice asked for at all (tests) the clips carry no voice, so they may be deleted; with a voice, a clip may be deleted only once it is identified below.
   let identified = !deps.voice
   if (deps.voice) {
     const remembered = (await readFile(voiceFile, "utf8").catch(() => "")).trim()

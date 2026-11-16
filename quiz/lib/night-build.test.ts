@@ -578,6 +578,9 @@ test("a build that needs no speech and has no remembered voice asks for it once,
   assert.equal(asked, 1, "with no voice remembered the clips cannot be found without it")
   assert.deepEqual(spoken, ["One.", "Two."], "the clips found under the same voice are not spoken again")
   assert.equal(readFileSync(path.join(dir, VOICE_FILE), "utf8"), VOICE_A)
+  writeFileSync(path.join(dir, first.key, "manifest.json"), "{\"version\":1,")
+  await buildRecording({ dir, parts, render: speak(spoken), encode: encodeStub, voice: ask })
+  assert.equal(asked, 1, "once remembered, the voice is not asked for again while no speech is needed")
 })
 
 test("a build that needs no speech still deletes the clips no reading uses, under the remembered voice", async () => {
