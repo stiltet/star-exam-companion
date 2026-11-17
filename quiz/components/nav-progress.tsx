@@ -15,6 +15,11 @@ const UNLOCK_MS = 6000
 // page has loaded, so the button shows loading from the tap and returns to normal when you come back,
 // or after this long.
 const EXTERNAL_MS = 3000
+// A move made by the Back button or the browser's own back has no link to show it, so the page-sized loading box shows
+// when it is slow, and ends after this long even if the page never changed (a move that stayed on the same page).
+const BACK_GIVE_UP_MS = 8000
+// The Back button tells this component it was tapped.
+export const MOVING_EVENT = "quiz:moving"
 
 // The tapped link shows loading (globals.css draws it: its words go and the icon fills). The words are
 // gone from the screen, so the link keeps its name for a screen reader by aria-label, and says it is busy.
@@ -57,6 +62,8 @@ export function NavProgress() {
   // The header's links (logo, title, menu): the header never changes, so the page-sized loading box shows instead.
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
+  // The page React is showing, so a move by history (Back) can be compared with it.
+  const shown = useRef("")
 
   const finish = () => {
     timers.current.forEach((timer) => window.clearTimeout(timer))
@@ -129,9 +136,35 @@ export function NavProgress() {
   }, [])
 
   useEffect(() => {
+    shown.current = window.location.pathname + window.location.search
     // The page or its query changed: the move has arrived.
     if (from.current !== null && from.current !== window.location.pathname + window.location.search) finish()
   }, [pathname, search])
+
+  // Back: the floating Back button (it sends MOVING_EVENT) and the browser's own back or swipe (popstate). Both show the
+  // loading box when the page is slow, and the move ends when the page changes.
+  useEffect(() => {
+    const moving = () => {
+      if (locked.current) return
+      from.current = shown.current
+      locked.current = true
+      timers.current.push(window.setTimeout(() => setOverlay(true), SPINNER_AFTER_MS))
+      timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
+      timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
+    }
+    const popped = () => {
+      // Only a move to another page; a #hash step stays where it is.
+      if (window.location.pathname + window.location.search !== shown.current) moving()
+    }
+    window.addEventListener(MOVING_EVENT, moving)
+    window.addEventListener("popstate", popped)
+    return () => {
+      window.removeEventListener(MOVING_EVENT, moving)
+      window.removeEventListener("popstate", popped)
+    }
+    // finish and the refs are stable for the life of the component.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // A page restored from the back/forward cache must not come back still waiting.
   useEffect(() => {

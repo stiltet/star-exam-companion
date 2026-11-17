@@ -119,3 +119,17 @@ test("a menu item shows the page-sized loading box within 100 ms of the tap, and
   await expect(page).toHaveURL(/\/glossary$/, { timeout: 15_000 })
   await expect(box).toHaveCount(0)
 })
+
+test("the Back button shows the page-sized loading box when the page it goes to is slow", async ({ page }) => {
+  await page.context().addInitScript(() => {
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+  })
+  await page.route((url) => url.pathname === "/study", slow(3000))
+  await page.goto("/study/fundamentals")
+  await page.waitForSelector('[data-page-ready="true"]')
+  await page.getByLabel("Back", { exact: true }).click()
+  const box = page.getByRole("status", { name: "Loading" })
+  await expect(box, "the loading box shows while the page is slow").toBeVisible({ timeout: 2500 })
+  await expect(page).toHaveURL(/\/study$/, { timeout: 15_000 })
+  await expect(box).toHaveCount(0)
+})

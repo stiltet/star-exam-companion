@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 import { parentPath } from "@/lib/parent-path"
 import { cameFromApp, ENTRY_STATE_KEY, entryKey, LAST_ENTRY_KEY, parseEntry, serialiseEntry, type Entry } from "@/lib/scroll-memory"
 import { readStandalone, useStandalone } from "@/components/standalone"
+import { MOVING_EVENT } from "@/components/nav-progress"
 
 // A round Back button floating at the bottom left, only in the installed app, which has no browser
 // back button. In a browser tab the browser's own back is there, so this one is not shown.
@@ -233,6 +234,8 @@ export function BackButton() {
         // safety net for a move that never happens, and is long enough for a slow push.
         window.clearTimeout(tapTimer.current)
         tapTimer.current = window.setTimeout(() => { tapped.current = false }, 2000)
+        // Slow pages show the loading box, as a tapped link does.
+        window.dispatchEvent(new Event(MOVING_EVENT))
         const id = sync()
         const entry = id ? readEntry(id) : null
         if (entry?.prev) return router.back()
