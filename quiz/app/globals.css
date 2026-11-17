@@ -155,6 +155,10 @@
 }
 
 @layer base {
+  /* A link to an #anchor scrolls its target to just under the fixed header and breadcrumb (StackHeight sets the height). */
+  html {
+    scroll-padding-top: calc(var(--stack-height, 4rem) + 0.75rem);
+  }
   * {
     @apply border-border outline-ring/50;
     border-radius: 0 !important;

@@ -513,8 +513,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     )
   }
 
-  // Clears the stuck breadcrumbs, then the same room the control bar had when it alone stuck to the top.
-  const scrollMargin = { scrollMarginTop: stuck + 96 }
+  // The page already scrolls clear of the fixed stack (scroll-padding-top on <html>, stack height plus 0.75 rem); this is the control bar's room beyond that.
+  const scrollMargin = { scrollMarginTop: 84 }
   return (
     <div>
       {/* A page whose first line is its title shows that line once, there, and still reads it aloud. */}

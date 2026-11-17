@@ -57,3 +57,25 @@ for (const [name, viewport] of [["375 px", { width: 375, height: 844 }], ["1280 
     expect(all.some((m) => m.crumbTopMinusHeaderBottom !== null), "at least one page has a breadcrumb").toBe(true)
   })
 }
+
+test("a glossary section link scrolls its section to just under the fixed header, not behind it", async ({ page }) => {
+  await page.goto("/glossary")
+  await page.waitForSelector('[data-page-ready="true"]')
+  const links = page.locator('main a[href^="#"]')
+  const count = await links.count()
+  expect(count, "the glossary lists its sections").toBeGreaterThan(1)
+  for (const index of [1, count - 1]) {
+    const link = links.nth(index)
+    const id = (await link.getAttribute("href"))!.slice(1)
+    await link.click()
+    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+    await page.waitForTimeout(400)
+    const gap = await page.evaluate((anchor) => {
+      const stack = document.querySelector("[data-sticky-stack]")!.getBoundingClientRect()
+      const target = document.getElementById(anchor)!.getBoundingClientRect()
+      return Math.round(target.top - stack.bottom)
+    }, id)
+    expect(gap, `${id} starts just under the fixed header`).toBeGreaterThanOrEqual(0)
+    expect(gap, `${id} is not left far below it`).toBeLessThanOrEqual(40)
+  }
+})

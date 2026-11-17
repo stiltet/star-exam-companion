@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Breadcrumb, type Crumb } from "@/components/atoms/breadcrumb"
+import { StackHeight } from "@/components/stack-height"
 
 // The one layout of every page (owner, 17 Nov): the header and menu, then the breadcrumb where the page has one, both
 // fixed to the top while the page scrolls, on a phone and on a desktop alike; then the page; then the footer. A page
@@ -17,6 +18,7 @@ export function PageShell({ breadcrumb, variant = "default", children }: { bread
   return (
     <div className="min-h-screen flex flex-col">
       {/* One fixed stack: other fixed things (the Read Aloud control bar) read its height from data-sticky-stack. */}
+      <StackHeight />
       <div data-sticky-stack className="sticky top-0 z-40 w-full bg-background">
         <SiteHeader />
         {breadcrumb && (
