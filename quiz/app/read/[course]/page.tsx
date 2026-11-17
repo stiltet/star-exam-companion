@@ -23,8 +23,8 @@ export default async function CourseReadingsPage({ params }: Props) {
   const noText = pack.noReading.find((entry) => entry.id === id)
   if (!course && noText) {
     return (
-      <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${noText.id}` }]}>
-                <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
+      <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${noText.id}` }]} variant="reading">
+        <PageNav kind="course" previous={previous} next={next} placement="mb-6" />
         <Heading variant="title" placement="mb-6">{noText.title}</Heading>
         <Text variant="muted" placement="mb-6">{noText.why}</Text>
         <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
@@ -36,8 +36,8 @@ export default async function CourseReadingsPage({ params }: Props) {
   const loaded = await courseBundle(course)
 
   return (
-    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}` }]}>
-            <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
+    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}` }]} variant="reading">
+      <PageNav kind="course" previous={previous} next={next} placement="mb-6" />
       <Heading variant="title" placement="mb-6">{course.title}</Heading>
       {course.provider === "private" && (
         <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>

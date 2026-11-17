@@ -43,8 +43,8 @@ export default async function ReadingPage({ params }: Props) {
   const following = nextReading(course, list, pageId, ordered)
 
   return (
-    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}`, href: `/read/${course.id}` }, { label: `${at + 1} of ${list.length}` }]}>
-      <PageNav kind="lesson" previous={previous} next={following} placement="mt-4 mb-6" />
+    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}`, href: `/read/${course.id}` }, { label: `${at + 1} of ${list.length}` }]} variant="reading">
+      <PageNav kind="lesson" previous={previous} next={following} placement="mb-6" />
       <ReadAloud
         key={`${course.id}/${pageId}`}
         place={`${course.id}/${pageId}`}
