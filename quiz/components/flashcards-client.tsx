@@ -59,7 +59,11 @@ export function FlashcardsClient({ glossary }: Props) {
     )
   }, [isStarted, selectedCategory, shuffledCards, currentIndex, knownCards])
 
+  // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
+  const [finished, setFinished] = useState(false)
+
   const startSession = () => {
+    setFinished(false)
     const filtered = selectedCategory === "all" ? glossary : glossary.filter((g) => g.category === selectedCategory)
     setShuffledCards([...filtered].sort(() => Math.random() - 0.5))
     setCurrentIndex(0)
@@ -76,6 +80,7 @@ export function FlashcardsClient({ glossary }: Props) {
       else next.delete(key)
       return next
     })
+    if (currentIndex === shuffledCards.length - 1) setFinished(true)
     void saveAnswer("flashcard", [key], know ? [] : [key]).then((kept) => {
       if (!kept) setUnsaved((count) => count + 1)
     })
@@ -94,6 +99,7 @@ export function FlashcardsClient({ glossary }: Props) {
   }
 
   const handlePrev = () => {
+    setFinished(false)
     setShowDefinition(false)
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
@@ -101,6 +107,7 @@ export function FlashcardsClient({ glossary }: Props) {
   }
 
   const handleReset = () => {
+    setFinished(false)
     setIsStarted(false)
     setCurrentIndex(0)
     setShowDefinition(false)
@@ -157,7 +164,7 @@ export function FlashcardsClient({ glossary }: Props) {
 
   const card = shuffledCards[currentIndex]
   const progress = Math.round((currentIndex / shuffledCards.length) * 100)
-  const isComplete = currentIndex === shuffledCards.length - 1 && showDefinition
+  const isComplete = finished
 
   return (
     <div>
@@ -198,7 +205,7 @@ export function FlashcardsClient({ glossary }: Props) {
       </div>
 
       {/* Actions */}
-      {showDefinition && !isComplete && (
+      {showDefinition && !finished && (
         <div className="flex gap-4 mb-6">
           <button onClick={handleDontKnow} className="flex-1 border-2 border-foreground p-3 hover:bg-muted">
             DON&apos;T KNOW
@@ -228,7 +235,7 @@ export function FlashcardsClient({ glossary }: Props) {
         kind="card"
         previous={{ onClick: handlePrev, disabled: currentIndex === 0 }}
         next={{ onClick: handleNext, disabled: currentIndex === shuffledCards.length - 1 }}
-        middle={<StepMiddle onClick={handleReset}>END SESSION</StepMiddle>}
+        middle={<StepMiddle onClick={handleReset} label="End session" short="END">END SESSION</StepMiddle>}
         placement="items-center"
       />
       {unsaved > 0 && <p role="alert" className="mt-6 font-bold">{unsaved === 1 ? "1 mark was" : `${unsaved} marks were`} not saved. This device could not keep it and the Mac could not be reached.</p>}

@@ -77,3 +77,16 @@ test("Study topic opens its filtered practice questions", async ({ page }) => {
   await expect(page).toHaveURL(/\/practice\?topic=gemini-vs-gemma$/)
   await expect(page.getByRole("button", { name: /^A\./ })).toBeEnabled()
 })
+
+test("Flashcards: the last card can be marked known, and only then is the session complete", async ({ page }) => {
+  await page.goto("/flashcards")
+  await page.getByRole("button", { name: /START SESSION/ }).click()
+  const total = Number((await page.getByText(/^Card 1 \/ \d+$/).textContent())!.split("/")[1])
+  for (let card = 1; card < total; card += 1) await page.getByRole("button", { name: /^Next card/ }).click()
+  await page.getByText(/CLICK TO REVEAL/).click()
+  await expect(page.getByRole("button", { name: /KNOW ✓/ }), "the last card can be marked").toBeVisible()
+  await expect(page.getByText("SESSION COMPLETE")).toHaveCount(0)
+  await page.getByRole("button", { name: /KNOW ✓/ }).click()
+  await expect(page.getByText("SESSION COMPLETE")).toBeVisible()
+  await expect(page.getByText(new RegExp(`You marked 1 / ${total} cards as known`))).toBeVisible()
+})

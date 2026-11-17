@@ -46,7 +46,12 @@ function Half({ direction, kind, step }: { direction: "previous" | "next"; kind:
   )
 }
 
-// The button between the two (Reset, End session): the same size as Previous and Next.
-export function StepMiddle({ onClick, children }: { onClick: () => void; children: ReactNode }) {
-  return <ActionButton variant="step" onClick={onClick}>{children}</ActionButton>
+// The button between the two (Reset, End session): the same size as Previous and Next, but no minimum width, so three
+// fit side by side on a phone. short: the word it shows on a phone, when the full one does not fit; label: its name.
+export function StepMiddle({ onClick, label, short, children }: { onClick: () => void; label?: string; short?: string; children: ReactNode }) {
+  return (
+    <ActionButton variant="step" placement="min-w-0 sm:min-w-0" aria-label={label} onClick={onClick}>
+      {short ? <><span className="sm:hidden">{short}</span><span className="hidden sm:inline">{children}</span></> : children}
+    </ActionButton>
+  )
 }
