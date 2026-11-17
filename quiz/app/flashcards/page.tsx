@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { FlashcardsClient } from "@/components/flashcards-client"
 import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { loadPlay } from "@/lib/load"
@@ -22,15 +21,9 @@ export default async function FlashcardsPage() {
       }))
     : []
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        <UnfinishedNotice need="glossary" />
-        <FlashcardsClient glossary={glossary} />
-      </main>
-
-      <SiteFooter />
-    </div>
+    <PageShell>
+      <UnfinishedNotice need="glossary" />
+      <FlashcardsClient glossary={glossary} />
+    </PageShell>
   )
 }
