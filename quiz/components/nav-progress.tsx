@@ -54,7 +54,7 @@ export function NavProgress() {
   const from = useRef<string | null>(null)
   const link = useRef<HTMLAnchorElement | null>(null)
   const locked = useRef(false)
-  // The logo and title link: the header never changes, so the page-sized loading box shows instead.
+  // The header's links (logo, title, menu): the header never changes, so the page-sized loading box shows instead.
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
 
@@ -93,6 +93,8 @@ export function NavProgress() {
       if (locked.current && (event.target as Element | null)?.closest?.("a")) {
         event.preventDefault()
         event.stopPropagation()
+        // A tap that is refused is never silent (owner, 17 Nov): the page-sized loading box shows, as the move is still coming.
+        setOverlay(true)
         return
       }
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -107,8 +109,9 @@ export function NavProgress() {
       if (url.origin !== window.location.origin) return
       // The same page again (only the #hash differs) is no move.
       if (url.pathname === window.location.pathname && url.search === window.location.search) return
-      // The logo and title link never changes itself (owner, 16 Nov): the loading box is shown over the page.
-      const logo = target.matches("header a:has(img)")
+      // A link in the header or its menu (owner, 17 Nov): the menu closes and the header never changes itself, so the
+      // page-sized loading box shows at once, on every tap, with no 200 ms wait that could make the tap look dead.
+      const inHeader = target.closest("header") !== null
       // A button still waiting after being unlocked stays loading, and the new tap waits beside it.
       if (from.current !== null) {
         timers.current.forEach((timer) => window.clearTimeout(timer))
@@ -117,10 +120,8 @@ export function NavProgress() {
       link.current = target
       from.current = window.location.pathname + window.location.search
       locked.current = true
-      timers.current.push(window.setTimeout(() => {
-        if (logo) return setOverlay(true)
-        markBusy(target)
-      }, SPINNER_AFTER_MS))
+      if (inHeader) setOverlay(true)
+      else timers.current.push(window.setTimeout(() => markBusy(target), SPINNER_AFTER_MS))
       timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
     }
     document.addEventListener("click", onClick, true)

@@ -94,3 +94,28 @@ test("a move that changes only the query (a Practice filter) loads the tapped li
   await expect(page).toHaveURL(/section=1/, { timeout: 15_000 })
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
+
+test("a menu item shows the page-sized loading box within 100 ms of the tap, and a refused tap is never silent", async ({ page }) => {
+  await page.route(/\/glossary(\?|$)/, slow(4000))
+  await page.goto("/study")
+  await page.getByRole("button", { name: "Open menu" }).click()
+  const item = page.getByRole("link", { name: "GLOSSARY", exact: true })
+  await item.evaluate(() => {
+    const times: { click?: number; shown?: number } = {}
+    ;(window as unknown as { __menu: typeof times }).__menu = times
+    document.addEventListener("click", () => { times.click = performance.now() }, true)
+    new MutationObserver(() => {
+      if (document.querySelector('[role="status"][aria-label="Loading"]')) times.shown ??= performance.now()
+    }).observe(document.body, { childList: true, subtree: true })
+  })
+  await item.click()
+  const box = page.getByRole("status", { name: "Loading" })
+  await expect(box).toBeVisible()
+  const { click, shown } = await page.evaluate(() => (window as unknown as { __menu: { click: number; shown: number } }).__menu)
+  expect(shown - click, "the loading box shows at once, not after a wait").toBeLessThan(100)
+  // A second tap on any link while the page is coming is refused, but the loading box stays: it is never a dead tap.
+  await page.locator('a[href="/"]').first().click({ force: true })
+  await expect(box).toBeVisible()
+  await expect(page).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect(box).toHaveCount(0)
+})
