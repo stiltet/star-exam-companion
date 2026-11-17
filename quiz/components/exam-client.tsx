@@ -295,7 +295,8 @@ export function ExamClient({ questions, sections, length }: Props) {
       <div>
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
         {/* Timer Bar */}
-        <div className="border-2 border-foreground mb-6 sticky top-0 bg-background z-10">
+        {/* Fixed just under the header, not behind it. */}
+        <div style={{ top: "var(--stack-height, 0px)" }} className="border-2 border-foreground mb-6 sticky bg-background z-10">
           <div className="p-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
             <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(timeRemaining)}`}>{formatTime(timeRemaining)}</span>
             <span className="text-sm">
@@ -306,6 +307,13 @@ export function ExamClient({ questions, sections, length }: Props) {
             <div className="h-full bg-foreground" style={{ width: `${(timeRemaining / duration) * 100}%` }} />
           </div>
         </div>
+
+        <StepNav
+          kind="question"
+          previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
+          next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}
+          placement="mb-6"
+        />
 
         {/* Question */}
         <div className="border-2 border-foreground mb-6">

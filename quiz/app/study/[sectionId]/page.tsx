@@ -29,6 +29,12 @@ export default async function SectionPage({ params }: Props) {
 
   return (
     <PageShell breadcrumb={[{ label: "STUDY", href: "/study" }, { label: label.toUpperCase() }]}>
+      <StepNav
+        kind="section"
+        previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+        next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+        placement="mb-6"
+      />
       {/* Header */}
       <header className="border-2 border-foreground p-6 mb-6 bg-foreground text-background">
         <h1 className="text-2xl font-bold">{label}</h1>

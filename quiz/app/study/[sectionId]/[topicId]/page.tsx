@@ -36,6 +36,12 @@ export default async function TopicPage({ params }: Props) {
 
   return (
     <PageShell breadcrumb={[{ label: "STUDY", href: "/study" }, { label: label.toUpperCase(), href: `/study/${sectionId}` }, { label: topic.title.toUpperCase() }]}>
+      <StepNav
+        kind="topic"
+        previous={prevTopic ? { href: `/study/${sectionId}/${prevTopic.id}`, hint: prevTopic.title } : null}
+        next={nextTopic ? { href: `/study/${sectionId}/${nextTopic.id}`, hint: nextTopic.title } : null}
+        placement="mb-6"
+      />
       {/* Header */}
       <header className="border-2 border-foreground p-6 mb-6">
         <div className="text-sm text-muted-foreground mb-2">

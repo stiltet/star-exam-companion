@@ -72,6 +72,7 @@ export function PracticeQuestionClient({ questions, filter, sectionTitles }: Pro
 
   return (
     <div>
+      <StepNav kind="question" previous={{ onClick: handlePrev, disabled: currentIndex === 0 }} next={{ onClick: handleNext, disabled: currentIndex === questions.length - 1 }} placement="mb-6" />
       {/* Progress */}
       <div className="border-2 border-foreground p-4 mb-6">
         <div className="flex justify-between text-sm">

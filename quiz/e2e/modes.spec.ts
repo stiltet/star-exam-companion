@@ -2,7 +2,7 @@ import { test, expect, answerPractice } from "./fixtures"
 
 test("Practice explains the answer and moves to the next question", async ({ page }) => {
   await answerPractice(page)
-  await page.getByRole("button", { name: /^Next question/ }).click()
+  await page.getByRole("button", { name: /^Next question/ }).first().click()
   await expect(page.getByText(/^Question 2 of /)).toBeVisible()
   await expect(page.getByRole("button", { name: /^A\./ })).toBeEnabled()
 })

@@ -11,7 +11,7 @@ async function pair(page: Page, kind: string) {
   const measure = (el: typeof previous) => el.evaluate((node) => {
     const box = node.getBoundingClientRect()
     const style = getComputedStyle(node)
-    return { height: Math.round(box.height), left: Math.round(box.left), fontSize: style.fontSize, fontWeight: style.fontWeight, text: (node as HTMLElement).innerText.replace(/\s+/g, " ").trim() }
+    return { height: Math.round(box.height), left: Math.round(box.left), fontSize: style.fontSize, fontWeight: style.fontWeight, text: getComputedStyle(node.querySelector("[data-step-label]")!, "::before").content.replace(/"/g, "") }
   })
   return { previous: await measure(previous), next: await measure(next), nav }
 }
@@ -23,7 +23,7 @@ const PLACES: { path: string; kind: string; prepare?: (page: Page) => Promise<vo
   { path: "/flashcards", kind: "card", prepare: async (page) => { await page.getByRole("button", { name: /START SESSION/ }).click() } },
 ]
 
-for (const [name, viewport, prevText] of [["a phone", { width: 375, height: 844 }, "← Prev"], ["a desktop", { width: 1280, height: 800 }, "← Previous"]] as const) {
+for (const [name, viewport, prevText] of [["a phone", { width: 375, height: 844 }, "Prev"], ["a desktop", { width: 1280, height: 800 }, "Previous"]] as const) {
   test(`every section has the same Previous and Next pair on ${name}`, async ({ page }) => {
     await page.setViewportSize(viewport)
     const seen: { kind: string; height: number; fontSize: string; fontWeight: string }[] = []
@@ -41,7 +41,9 @@ for (const [name, viewport, prevText] of [["a phone", { width: 375, height: 844 
       await page.waitForSelector('[data-page-ready="true"]')
       await place.prepare?.(page)
       const { previous, next } = await pair(page, place.kind)
-      expect(next.text, `${place.kind}: Next reads the same everywhere`).toBe("Next →")
+      // Where the content is long the pair is at the top and at the bottom; a flashcard is short, so it has one.
+      expect(await page.getByRole("navigation", { name: `Previous and next ${place.kind}` }).count(), `${place.kind}: pairs on the page`).toBe(place.kind === "card" ? 1 : 2)
+      expect(next.text, `${place.kind}: Next reads the same everywhere`).toBe("Next")
       expect(previous.left, `${place.kind}: Previous is on the left of Next`).toBeLessThan(next.left)
       expect(previous.height, `${place.kind}: both halves are as tall`).toBe(next.height)
       seen.push({ kind: place.kind, ...previous })

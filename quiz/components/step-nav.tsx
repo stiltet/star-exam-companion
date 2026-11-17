@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { ActionButton, buttonClass } from "@/components/atoms/button"
 
 // One half of the pair. href: a link to another page. onClick: a button that steps here (disabled at an end).
@@ -28,12 +29,11 @@ function Half({ direction, kind, step }: { direction: "previous" | "next"; kind:
   const name = `${previous ? "Previous" : "Next"} ${kind}${step.hint ? `: ${step.hint}` : ""}`
   const text = (
     <>
-      {previous && <span aria-hidden="true">←</span>}
-      <span aria-hidden="true">
-        <span className="sm:hidden">{previous ? "Prev" : "Next"}</span>
-        <span className="hidden sm:inline">{previous ? "Previous" : "Next"}</span>
-      </span>
-      {!previous && <span aria-hidden="true">→</span>}
+      {previous && <ArrowLeft aria-hidden="true" size={18} />}
+      {/* The words are drawn by CSS and the name comes from aria-label ("Previous question"), so the short word Prev on a phone
+          is not a visible label that differs from the name (WCAG 2.5.3). data-step-label lets a test read what is drawn. */}
+      <span aria-hidden="true" data-step-label className={previous ? "before:content-['Prev'] sm:before:content-['Previous']" : "before:content-['Next']"} />
+      {!previous && <ArrowRight aria-hidden="true" size={18} />}
     </>
   )
   return (
