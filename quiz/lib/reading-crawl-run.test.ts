@@ -61,8 +61,14 @@ async function runCrawl(base: string, site: FakeSite, extra: Record<string, stri
     READING_SKIP_SIGNIN: "1",
     READING_PAUSE_MS: "0",
     READING_RETRY_BASE_MS: "50",
-    READING_SETTLE_MS: "1500",
-    READING_MIN_WATCH_MS: "2000",
+    READING_SETTLE_MS: "600",
+    // The lesson list is read again and again until the count holds; the command waits 1.5 s between reads. The tests that check that wait set their own.
+    READING_LIST_SETTLE_MS: "200",
+    // A page with no card is waited for 30 s, and a list still changing 30 s, by default; the fake site answers at once, so a short wait shows the same behaviour.
+    READING_LIST_WAIT_MS: "1500",
+    READING_LIST_MAX_MS: "5000",
+    // The settling lesson of the fake site changes its text after 800 ms, so the shortest watch stays well past that.
+    READING_MIN_WATCH_MS: "1500",
     READING_EMPTY_AFTER_MS: "2500",
   }
   // A shell that is set up for the real capture must not change a test: the account and the debug setting are the tests' own to give.
