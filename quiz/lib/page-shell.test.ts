@@ -44,3 +44,14 @@ test("the checks catch a bad example", () => {
   assert.equal(loadingProblems("<p>Loading the course text from Google…</p>").length, 1)
   assert.deepEqual(loadingProblems("export default function L() { return <LoadingBox /> }"), [])
 })
+
+// Previous and Next are the app's one pair, StepNav (owner, 17 Nov): no component draws its own.
+test("no component hand-draws a Previous or Next pair", () => {
+  const dirs = [appDir, new URL("../components", import.meta.url).pathname]
+  for (const dir of dirs) {
+    for (const file of files(dir, /\.tsx$/)) {
+      if (file.includes("/components/ui/") || file.endsWith("step-nav.tsx") || file.endsWith("voice-quiz.tsx")) continue
+      assert.doesNotMatch(readFileSync(file, "utf8"), /←\s*(PREV|Prev)|(NEXT|Next)\s*→/, `${file} draws its own Previous or Next: use StepNav`)
+    }
+  }
+})

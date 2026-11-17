@@ -1,5 +1,6 @@
 "use client"
 
+import { StepNav } from "@/components/step-nav"
 import { usePageReady } from "@/components/page-gate"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { keepAnswer } from "@/components/outbox"
@@ -329,14 +330,12 @@ export function ExamClient({ questions, sections, length }: Props) {
         </div>
 
         {/* Navigation */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <ActionButton variant="outlined" disabled={currentIndex === 0} aria-disabled={currentIndex === 0} onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}>
-            ← Prev
-          </ActionButton>
-          <ActionButton variant="outlined" disabled={currentIndex === examQuestions.length - 1} aria-disabled={currentIndex === examQuestions.length - 1} onClick={() => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1))}>
-            Next →
-          </ActionButton>
-        </div>
+        <StepNav
+          kind="question"
+          previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
+          next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}
+          placement="mb-3"
+        />
         <div className="flex flex-wrap gap-2 mb-6">
           <ActionButton variant="toggle" disabled={nextFlagged === null} onClick={() => goTo(nextFlagged)}>
             Next flagged ({flagged.size})

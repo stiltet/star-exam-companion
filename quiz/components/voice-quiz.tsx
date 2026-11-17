@@ -336,17 +336,17 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
         {jumps.previous !== null && (
           <div className="absolute left-0">
             <ControlButton key="previous-section" aria-label="Previous section" icon={<ArrowLeft aria-hidden="true" size={18} />} onClick={() => openSection(jumps.previous)}>
-              <span className="hidden sm:inline">Previous section</span>
+              <span className="sm:hidden">Prev</span><span className="hidden sm:inline">Previous</span>
             </ControlButton>
           </div>
         )}
-        <Heading variant="group" placement="px-16 sm:px-44">
+        <Heading variant="group" placement="px-24 sm:px-44">
           {sectionTitle(position, sections)}
         </Heading>
         {jumps.next !== null && (
           <div className="absolute right-0">
             <ControlButton key="next-section" aria-label="Next section" icon={<ArrowRight aria-hidden="true" size={18} />} onClick={() => openSection(jumps.next)} iconEnd>
-              <span className="hidden sm:inline">Next section</span>
+              <span className="sm:hidden">Next</span><span className="hidden sm:inline">Next</span>
             </ControlButton>
           </div>
         )}
@@ -410,7 +410,7 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
           <span className="hidden sm:inline">Hint</span>
         </ControlButton>
         <ControlButton disabled={index >= round.length - 1} onClick={() => goTo(index + 1)} aria-label="Next" icon={<ArrowRight aria-hidden="true" size={18} />} iconEnd>
-          <span className="hidden sm:inline">Next</span>
+          <span>Next</span>
         </ControlButton>
       </div>
       {hintOpen && <p className="mb-6 text-lg">{item.constraint}</p>}

@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/organisms/page-shell"
 import { activePack } from "@/lib/pack"
 import { sectionLabel } from "@/lib/progress"
+import { StepNav } from "@/components/step-nav"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -58,22 +59,12 @@ export default async function SectionPage({ params }: Props) {
       </section>
 
       {/* Section Navigation */}
-      <nav className="border-t-2 border-foreground pt-6 flex justify-between">
-        {prevSection ? (
-          <Link href={`/study/${prevSection.id}`} className="text-sm">
-            ← {sectionLabel(sectionIndex, prevSection.weight)}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {nextSection ? (
-          <Link href={`/study/${nextSection.id}`} className="text-sm">
-            {sectionLabel(sectionIndex + 2, nextSection.weight)} →
-          </Link>
-        ) : (
-          <span />
-        )}
-      </nav>
+      <StepNav
+        kind="section"
+        previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+        next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+        placement="border-t-2 border-foreground pt-6"
+      />
     </PageShell>
   )
 }

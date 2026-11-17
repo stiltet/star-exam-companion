@@ -1,5 +1,6 @@
 "use client"
 
+import { StepNav, StepMiddle } from "@/components/step-nav"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Names } from "@/components/names"
 import { saveAnswer } from "@/components/outbox"
@@ -223,25 +224,13 @@ export function FlashcardsClient({ glossary }: Props) {
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between gap-4">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className="border-2 border-foreground px-4 py-2 disabled:opacity-50 hover:bg-foreground hover:text-background disabled:hover:bg-background disabled:hover:text-foreground"
-        >
-          ← PREV
-        </button>
-        <button onClick={handleReset} className="border-2 border-foreground px-4 py-2 hover:bg-muted">
-          END SESSION
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={currentIndex === shuffledCards.length - 1}
-          className="border-2 border-foreground px-4 py-2 disabled:opacity-50 hover:bg-foreground hover:text-background disabled:hover:bg-background disabled:hover:text-foreground"
-        >
-          NEXT →
-        </button>
-      </div>
+      <StepNav
+        kind="card"
+        previous={{ onClick: handlePrev, disabled: currentIndex === 0 }}
+        next={{ onClick: handleNext, disabled: currentIndex === shuffledCards.length - 1 }}
+        middle={<StepMiddle onClick={handleReset}>END SESSION</StepMiddle>}
+        placement="items-center"
+      />
       {unsaved > 0 && <p role="alert" className="mt-6 font-bold">{unsaved === 1 ? "1 mark was" : `${unsaved} marks were`} not saved. This device could not keep it and the Mac could not be reached.</p>}
     </div>
   )

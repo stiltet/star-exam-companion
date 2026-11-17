@@ -2,6 +2,7 @@ import { PageShell } from "@/components/organisms/page-shell"
 import { activePack } from "@/lib/pack"
 import { writtenQuestions } from "@/lib/questions"
 import { sectionLabel } from "@/lib/progress"
+import { StepNav } from "@/components/step-nav"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -140,22 +141,12 @@ export default async function TopicPage({ params }: Props) {
       )}
 
       {/* Navigation */}
-      <nav className="border-t-2 border-foreground pt-6 flex justify-between">
-        {prevTopic ? (
-          <Link href={`/study/${sectionId}/${prevTopic.id}`} className="text-sm">
-            ← {prevTopic.title}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {nextTopic ? (
-          <Link href={`/study/${sectionId}/${nextTopic.id}`} className="text-sm">
-            {nextTopic.title} →
-          </Link>
-        ) : (
-          <span />
-        )}
-      </nav>
+      <StepNav
+        kind="topic"
+        previous={prevTopic ? { href: `/study/${sectionId}/${prevTopic.id}`, hint: prevTopic.title } : null}
+        next={nextTopic ? { href: `/study/${sectionId}/${nextTopic.id}`, hint: nextTopic.title } : null}
+        placement="border-t-2 border-foreground pt-6"
+      />
     </PageShell>
   )
 }
