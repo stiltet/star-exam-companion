@@ -64,6 +64,44 @@ test.describe("in the installed app", () => {
     await expect.poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(5)
   })
 
+  test("Back from a review returns to Progress when Progress was reached by the menu, and Back again returns to where it came from", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/study")
+    await page.getByRole("button", { name: "Open menu" }).click()
+    await page.getByRole("link", { name: "PROGRESS", exact: true }).click()
+    await expect(page).toHaveURL(/\/progress$/)
+    await page.getByRole("link", { name: "Review →" }).first().click()
+    await expect(page).toHaveURL(/\/exam#/)
+    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+    await backButton(page).click()
+    await expect(page, "Back from a review is Progress, never Home").toHaveURL(/\/progress$/)
+    await backButton(page).click()
+    await expect(page).toHaveURL(/\/study$/)
+  })
+
+  test("Back from a review returns to Progress after a second review was opened", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/progress")
+    await page.getByRole("link", { name: "Review →" }).nth(1).click()
+    await expect(page).toHaveURL(/\/exam#/)
+    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+    await backButton(page).click()
+    await expect(page).toHaveURL(/\/progress$/)
+    await page.getByRole("link", { name: "Review →" }).nth(2).click()
+    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+    await backButton(page).click()
+    await expect(page).toHaveURL(/\/progress$/)
+  })
+
+  test("Back from a review opened on the Test exam page stays inside the app, never Home", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/exam")
+    await page.getByRole("link", { name: "Review →" }).first().click()
+    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+    await backButton(page).click()
+    await expect(page, "Back from a review is the Test exam page, not Home").not.toHaveURL(/\/$/)
+  })
+
   test("the Back button sits 2rem from the left and bottom edges", async ({ page }) => {
     await page.goto("/progress")
     const box = await backButton(page).boundingBox()
