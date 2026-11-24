@@ -35,18 +35,29 @@ if [ -e "$OUT" ] && [ ! -f "$OUT/.nojekyll" ] && [ -n "$(ls -A "$OUT" 2>/dev/nul
   exit 1
 fi
 
-work="$(mktemp -d)"
+# The build folder sits inside the repository (git ignores it) so the installed dependencies, linked in below, are inside
+# the folder Next treats as its root; Next refuses to compile through a link that leaves it.
+mkdir -p "$ROOT/.pages-work"
+work="$(mktemp -d "$ROOT/.pages-work/build.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
 rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude 'active-exam.json' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
 cp -R "$ROOT/exams" "$work/exams"
-cp "$ROOT/package.json" "$ROOT/pnpm-lock.yaml" "$ROOT/pnpm-workspace.yaml" "$work/"
 
 # The demo's pages replace the three that need the local server; what needs a server goes.
 cp -R "$ROOT/pages-static/." "$work/quiz/"
 rm -rf "$work/quiz/app/api" "$work/quiz/app/sw.js" "$work/quiz/app/read/[course]" "$work/quiz/app/read/night" "$work/quiz/app/read/loading.tsx"
 
-pnpm --dir "$work" install --frozen-lockfile --silent
+# Dependencies: the ones this checkout has installed are linked in (same lockfile, no second install), and the repository's
+# own package files stay the root. Where they are not installed, the copy gets its own package files and installs from the
+# lockfile. Next runs directly, as quiz's `build` script does: `pnpm build` would reinstall a linked node_modules.
+if [ -d "$ROOT/node_modules" ] && [ -d "$ROOT/quiz/node_modules" ]; then
+  ln -s "$ROOT/node_modules" "$work/node_modules"
+  ln -s "$ROOT/quiz/node_modules" "$work/quiz/node_modules"
+else
+  cp "$ROOT/package.json" "$ROOT/pnpm-lock.yaml" "$ROOT/pnpm-workspace.yaml" "$work/"
+  pnpm --dir "$work" install --frozen-lockfile --silent
+fi
 
 # The default exam: quiz/lib/pack.ts DEFAULT_EXAM. The packs, as "id=Title" pairs for the demo's links.
 DEFAULT_EXAM="generative-ai-leader"
@@ -61,20 +72,41 @@ done
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
+# Every pack is built at the same time, each in its own copy of quiz/ (Next writes next-env.d.ts and the
+# TypeScript cache next to the source, so two builds in one folder would race). The copies hold links into
+# the shared node_modules, which stay valid because the copies sit beside quiz/ in the same temporary folder.
+# Each build's output goes to its own log, which is printed in pack order when it is done.
+ids=""
+pids=""
 for dir in "$ROOT"/exams/*/; do
   id="$(basename "$dir")"
   [ -f "$dir/pack.json" ] || continue
-  if [ "$id" = "$DEFAULT_EXAM" ]; then base="$BASE"; dest="$OUT"; else base="$BASE/$id"; dest="$OUT/$id"; fi
+  if [ "$id" = "$DEFAULT_EXAM" ]; then base="$BASE"; else base="$BASE/$id"; fi
+  cp -R "$work/quiz" "$work/quiz-$id"
   (
-    cd "$work/quiz"
+    cd "$work/quiz-$id"
     QUIZ_EXAM="$id" QUIZ_STATIC=1 NEXT_PUBLIC_QUIZ_STATIC=1 QUIZ_BASE_PATH="$base" QUIZ_DIST_DIR="out-$id" \
       NEXT_PUBLIC_DEMO_ROOT="$BASE" NEXT_PUBLIC_DEMO_CURRENT="$id" NEXT_PUBLIC_DEMO_DEFAULT="$DEFAULT_EXAM" NEXT_PUBLIC_DEMO_PACKS="$packs" NEXT_TELEMETRY_DISABLED=1 \
       QUIZ_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" \
-      pnpm build
-  )
-  [ -f "$work/quiz/out-$id/index.html" ] || { echo "build-pages: the export for $id has no index.html" >&2; exit 1; }
+      ./node_modules/.bin/next build
+  ) > "$work/build-$id.log" 2>&1 &
+  ids="$ids $id"
+  pids="$pids $!"
+done
+failed=""
+set -- $pids
+for id in $ids; do
+  pid="$1"; shift
+  if wait "$pid"; then :; else failed="$failed $id"; fi
+  echo "== build of $id"
+  cat "$work/build-$id.log"
+done
+[ -z "$failed" ] || { echo "build-pages: the build failed for:$failed" >&2; exit 1; }
+for id in $ids; do
+  [ -f "$work/quiz-$id/out-$id/index.html" ] || { echo "build-pages: the export for $id has no index.html" >&2; exit 1; }
+  if [ "$id" = "$DEFAULT_EXAM" ]; then dest="$OUT"; else dest="$OUT/$id"; fi
   mkdir -p "$dest"
-  cp -R "$work/quiz/out-$id/." "$dest/"
+  cp -R "$work/quiz-$id/out-$id/." "$dest/"
 done
 # Tells GitHub Pages to serve the files as they are, and marks this folder as ours to replace.
 touch "$OUT/.nojekyll"
