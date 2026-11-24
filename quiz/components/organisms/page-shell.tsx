@@ -14,7 +14,7 @@ export function PageShell({ breadcrumb, variant = "default", children }: { bread
   const main = {
     default: "py-8",
     centered: "py-8 flex flex-col items-center justify-center",
-    fill: "flex flex-col pt-2 sm:pt-8 pb-6",
+    fill: "flex flex-col pt-4 sm:pt-8 pb-6",
     reading: "pt-4 pb-6",
   }[variant]
   return (

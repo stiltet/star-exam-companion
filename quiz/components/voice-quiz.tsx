@@ -332,24 +332,24 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
   return (
     <div className="flex flex-1 flex-col">
       <Heading variant="page" placement="sr-only">Voice Quiz</Heading>
-      <div className="relative mb-2 flex min-h-11 items-center justify-center sm:mb-4">
-        {jumps.previous !== null && (
-          <div className="absolute left-0">
+      <div className="mb-4 flex min-h-11 items-center justify-between gap-3">
+        <div className="shrink-0">
+          {jumps.previous !== null && (
             <ControlButton key="previous-section" aria-label="Previous section" icon={<ArrowLeft aria-hidden="true" size={18} />} onClick={() => openSection(jumps.previous)}>
               <span className="sm:hidden">Prev</span><span className="hidden sm:inline">Previous</span>
             </ControlButton>
-          </div>
-        )}
-        <Heading variant="group" placement="px-24 sm:px-44">
+          )}
+        </div>
+        <Heading variant="group" placement="min-w-0 flex-1">
           {sectionTitle(position, sections)}
         </Heading>
-        {jumps.next !== null && (
-          <div className="absolute right-0">
+        <div className="shrink-0">
+          {jumps.next !== null && (
             <ControlButton key="next-section" aria-label="Next section" icon={<ArrowRight aria-hidden="true" size={18} />} onClick={() => openSection(jumps.next)} iconEnd>
-              <span className="sm:hidden">Next</span><span className="hidden sm:inline">Next</span>
+              <span>Next</span>
             </ControlButton>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <Heading variant="chapter" placement="mb-4" ref={questionHeading}>
         Question {position ? position.number : index + 1} of {position ? position.count : round.length}
