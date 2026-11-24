@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { flushSync } from "react-dom"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
 import { canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, watchStep } from "@/lib/last-page"
@@ -50,6 +51,8 @@ const marked = (): number | null => {
 let watching = 0
 // The setter of the slow-page box, so whichever watch finishes last can take the box down.
 let lastSlow: ((on: boolean) => void) | undefined
+// When the slow-page box came up, so a newer watch keeps its 500 ms too. Null while no box shows.
+let slowShownAt: number | null = null
 
 // Takes the cover off once `ready` says so and it has shown 500 ms. 3 s after it was drawn it goes whatever happens, which
 // is the same limit as the failsafe in globals.css (it works with no script). The restore of the place, and the start of
@@ -66,20 +69,20 @@ function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boo
   const drawnAt = marked()
   const startedAt = drawnAt ?? Date.now()
   let covered = drawnAt !== null
-  let slowFrom: number | null = null
   const timer = watching = window.setInterval(() => {
     const now = Date.now()
     const isReady = ready()
     // Held: the launch cover has shown its 500 ms (when one was drawn), and the slow-page box, if it came, has shown its own.
-    const held = (drawnAt === null || loadingRemaining(startedAt, now) === 0) && loadingRemaining(slowFrom, now) === 0
+    const held = (drawnAt === null || loadingRemaining(startedAt, now) === 0) && loadingRemaining(slowShownAt, now) === 0
     const step = watchStep(now - startedAt, covered, isReady, held)
     if (step.endCover) {
       covered = false
-      endCover()
-      if (restore && !isReady) {
-        slowFrom = now
-        slow?.(true)
+      // The box is drawn in this very frame, before the cover goes, so home is never seen bare between the two.
+      if (restore && !isReady && slowShownAt === null) {
+        slowShownAt = now
+        flushSync(() => slow?.(true))
       }
+      endCover()
     }
     if (!step.finish) return
     const gaveUp = step.finish === "gave-up"
@@ -92,6 +95,7 @@ function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boo
       // The saved page never came: saving starts again with the next page the visitor opens, never with home at the top.
       else resuming = false
       endCover()
+      slowShownAt = null
       slow?.(false)
     })
   }, 50)
