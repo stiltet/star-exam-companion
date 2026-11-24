@@ -88,7 +88,7 @@ export function FlashcardsClient({ glossary }: Props) {
     handleNext()
   }
 
-  // At the end of a section's cards, Next opens the next section's (not after All, which has no next).
+  // At the end of a section's cards, Next opens the next section's; after the last section, or after All, it ends the session.
   const sections = categories.filter((category) => category !== "all")
   const nextCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) + 1] ?? null)
 
@@ -239,7 +239,7 @@ export function FlashcardsClient({ glossary }: Props) {
       <StepNav
         kind="card"
         previous={{ onClick: handlePrev, disabled: currentIndex === 0 }}
-        next={{ onClick: currentIndex === shuffledCards.length - 1 && nextCategory ? () => startSession(nextCategory) : handleNext, disabled: currentIndex === shuffledCards.length - 1 && !nextCategory }}
+        next={{ onClick: currentIndex === shuffledCards.length - 1 ? (nextCategory ? () => startSession(nextCategory) : handleReset) : handleNext }}
         middle={<StepMiddle onClick={handleReset} label="End session" short="END">END SESSION</StepMiddle>}
         placement="items-center"
       />
