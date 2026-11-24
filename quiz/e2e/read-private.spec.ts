@@ -14,10 +14,10 @@ test.describe("Private readings in Read Aloud", () => {
   test.beforeEach(async ({ page, baseURL }) => {
     expect((await page.request.post("/api/exam", { headers: { origin: baseURL! }, data: { exam: "agentic-architect" } })).ok()).toBe(true)
   })
-  test.afterEach(async ({ page, context, baseURL }) => {
+  test.afterEach(async ({ page, context, baseURL, scratchPort }) => {
     // Remove what the test captured, keeping the server's own synthetic fixture: a stray page would change the
     // Night script, and the seeded recording for it would no longer match.
-    const course = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "8")
+    const course = path.join(e2eScratch(scratchPort), "private-reading", "agentic-architect", "8")
     // Course 4 holds nothing in the test server, so anything saved there (the full-course test) is removed whole.
     await rm(path.join(path.dirname(course), "4"), { recursive: true, force: true })
     for (const name of await readdir(course)) {
@@ -37,8 +37,8 @@ test.describe("Private readings in Read Aloud", () => {
   })
 
 
-  test("a damaged private copy says to remove that file, with both ways on", async ({ page }) => {
-    const course4 = path.join(e2eScratch(Number(process.env.QUIZ_E2E_PORT ?? 47822)), "private-reading", "agentic-architect", "4")
+  test("a damaged private copy says to remove that file, with both ways on", async ({ page, scratchPort }) => {
+    const course4 = path.join(e2eScratch(scratchPort), "private-reading", "agentic-architect", "4")
     await mkdir(course4, { recursive: true })
     await writeFile(path.join(course4, "damaged.json"), "{ not json at all")
     try {

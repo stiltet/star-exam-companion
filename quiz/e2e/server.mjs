@@ -1,15 +1,16 @@
 import { createHash } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
 import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
-import { createServer } from "node:net"
+import { connect, createServer } from "node:net"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
 import { seedNight } from "./night-fixture.mjs"
 import { seedVoice } from "./voice-fixture.mjs"
-import { browserServerEnv, e2eScratch } from "./server-env.mjs"
+import { browserServerEnv, e2eBasePort, e2eScratch } from "./server-env.mjs"
 
-const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
+// This server's own port: the one its QUIZ_E2E_PORT names (the second worker's server is started with the next port).
+const port = e2eBasePort()
 async function checkPort() {
   const probe = createServer()
   try {
@@ -18,11 +19,27 @@ async function checkPort() {
       probe.listen(port, "localhost", resolve)
     })
   } catch (error) {
-    throw new Error(`E2E port ${port} is unavailable. Set QUIZ_E2E_PORT to an unused port.`, { cause: error })
+    throw new Error(`E2E port ${port} is unavailable. Set QUIZ_E2E_PORT to a free base port; the port after it must also be free (the second worker's server).`, { cause: error })
   }
   await new Promise((resolve, reject) => probe.close((error) => error ? reject(error) : resolve()))
 }
 await checkPort()
+
+// The second and later servers do not build: they start from the first server's build, once it is listening.
+const buildPort = process.env.QUIZ_E2E_BUILD_PORT ? Number(process.env.QUIZ_E2E_BUILD_PORT) : undefined
+async function waitForBuild() {
+  const deadline = Date.now() + 295_000
+  while (Date.now() < deadline) {
+    const up = await new Promise((resolve) => {
+      const socket = connect(buildPort, "localhost")
+      socket.once("connect", () => { socket.destroy(); resolve(true) })
+      socket.once("error", () => resolve(false))
+    })
+    if (up) return
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error(`The server on port ${buildPort} that builds the app never started listening.`)
+}
 
 // A fixed scratch folder per port (the port check above stops two servers sharing one), so the tests also know where
 // the server keeps its private readings.
@@ -134,7 +151,8 @@ try {
   // The seeded Night recording must be for the same readings the server will see, private fixture included.
   process.env.QUIZ_PRIVATE_DIR = env.QUIZ_PRIVATE_DIR
   await seedNight()
-  await run(["build"])
+  if (buildPort === undefined) await run(["build"])
+  else await waitForBuild()
   const built = path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e")
   let leaked = false
   for (const fixtureText of [privateText, ...twoParagraphs.split("\n")]) leaked = leaked || await containsText(built, fixtureText)

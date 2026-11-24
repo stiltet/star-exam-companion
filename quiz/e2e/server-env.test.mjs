@@ -5,7 +5,7 @@ import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import test from "node:test"
-import { browserServerEnv } from "./server-env.mjs"
+import { browserServerEnv, E2E_DEFAULT_PORT, E2E_WORKERS, e2eBasePort, e2ePortFor } from "./server-env.mjs"
 
 test("the browser server keeps inherited and .env.local score overrides out of its scratch instance", () => {
   const scratch = mkdtempSync(path.join(tmpdir(), "quiz-e2e-env-"))
@@ -50,4 +50,15 @@ test("the browser server isolates OS-temp speech pools from inherited temp setti
   } finally {
     rmSync(scratch, { recursive: true, force: true })
   }
+})
+
+test("the base port is QUIZ_E2E_PORT, or the default when it is not set", () => {
+  assert.equal(e2eBasePort({}), E2E_DEFAULT_PORT)
+  assert.equal(e2eBasePort({ QUIZ_E2E_PORT: "47850" }), 47850)
+})
+
+test("every worker's server has its own port, counted up from the base port", () => {
+  const ports = Array.from({ length: E2E_WORKERS }, (_, index) => e2ePortFor(47850, index))
+  assert.equal(new Set(ports).size, E2E_WORKERS)
+  assert.equal(ports[0], 47850)
 })
