@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { Breadcrumb, type Crumb } from "@/components/atoms/breadcrumb"
+import type { Crumb } from "@/components/atoms/breadcrumb"
+import { CrumbBar, CrumbProvider } from "@/components/crumb-slot"
 import { StackHeight } from "@/components/stack-height"
 
 // The one layout of every page (owner, 17 Nov): the header and menu, then the breadcrumb where the page has one, both
@@ -18,21 +19,17 @@ export function PageShell({ breadcrumb, variant = "default", children }: { bread
     reading: "pt-4 pb-6",
   }[variant]
   return (
+    <CrumbProvider initial={breadcrumb}>
     <div className="min-h-screen flex flex-col">
       {/* One fixed stack: other fixed things (the Read Aloud control bar) read its height from data-sticky-stack. */}
       <StackHeight />
       <div data-sticky-stack className="sticky top-0 z-40 w-full bg-background">
         <SiteHeader />
-        {breadcrumb && (
-          <div className="border-b border-border">
-            <div className="max-w-4xl mx-auto px-4 py-2">
-              <Breadcrumb trail={breadcrumb} />
-            </div>
-          </div>
-        )}
+        <CrumbBar />
       </div>
       <main className={`flex-1 max-w-4xl mx-auto px-4 w-full ${main}`}>{children}</main>
       <SiteFooter flush={variant === "fill"} />
     </div>
+    </CrumbProvider>
   )
 }

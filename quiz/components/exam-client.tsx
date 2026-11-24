@@ -296,15 +296,13 @@ export function ExamClient({ questions, sections, length }: Props) {
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
         {/* Timer Bar */}
         {/* Fixed just under the header, not behind it. */}
-        <div style={{ top: "var(--stack-height, 0px)" }} className="-mx-4 border-b-2 border-foreground mb-6 sticky bg-background z-10">
-          <div className="px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
+        <div style={{ top: "var(--stack-height, 0px)" }} className="-mx-4 -mt-8 mb-6 sticky bg-background z-10 border-b-2 border-foreground">
+          {/* Time left is shown as a fill behind the text, so the strip has the same full-width border as the header, and the strip starts right under the header (-mt-8 cancels the page top padding). */}
+          <div className="px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1 bg-no-repeat" style={{ backgroundImage: "linear-gradient(color-mix(in srgb, var(--foreground) 14%, transparent), color-mix(in srgb, var(--foreground) 14%, transparent))", backgroundSize: `${(timeRemaining / duration) * 100}% 100%` }}>
             <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(timeRemaining)}`}>{formatTime(timeRemaining)}</span>
             <span className="text-sm">
               {currentIndex + 1}/{examQuestions.length} · Unanswered: {unansweredCount} · Flagged: {flagged.size}
             </span>
-          </div>
-          <div className="h-1 bg-muted">
-            <div className="h-full bg-foreground" style={{ width: `${(timeRemaining / duration) * 100}%` }} />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { StepNav, StepMiddle } from "@/components/step-nav"
+import { useBreadcrumb } from "@/components/crumb-slot"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Names } from "@/components/names"
 import { saveAnswer } from "@/components/outbox"
@@ -62,12 +63,12 @@ export function FlashcardsClient({ glossary }: Props) {
   // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
   const [finished, setFinished] = useState(false)
 
-  const startSession = (category: string = selectedCategory) => {
+  const startSession = (category: string = selectedCategory, atEnd = false) => {
     setFinished(false)
     setSelectedCategory(category)
     const filtered = category === "all" ? glossary : glossary.filter((g) => g.category === category)
     setShuffledCards([...filtered].sort(() => Math.random() - 0.5))
-    setCurrentIndex(0)
+    setCurrentIndex(atEnd ? Math.max(filtered.length - 1, 0) : 0)
     setShowDefinition(false)
     setKnownCards(new Set())
     setIsStarted(true)
@@ -90,6 +91,7 @@ export function FlashcardsClient({ glossary }: Props) {
 
   // At the end of a section's cards, Next opens the next section's; after the last section, or after All, it ends the session.
   const sections = categories.filter((category) => category !== "all")
+  const previousCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) - 1] ?? null)
   const nextCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) + 1] ?? null)
 
   const handleKnow = () => mark(true)
@@ -118,6 +120,9 @@ export function FlashcardsClient({ glossary }: Props) {
     setShowDefinition(false)
     setKnownCards(new Set())
   }
+
+  // Once a session starts, the same fixed breadcrumb as the other pages: FLASHCARDS / the section. FLASHCARDS ends the session.
+  useBreadcrumb(isStarted ? [{ label: "FLASHCARDS", onClick: handleReset }, { label: selectedCategory === "all" ? "ALL" : selectedCategory.toUpperCase() }] : null)
 
   if (!isStarted) {
     return (
@@ -238,7 +243,7 @@ export function FlashcardsClient({ glossary }: Props) {
       {/* Navigation */}
       <StepNav
         kind="card"
-        previous={{ onClick: handlePrev, disabled: currentIndex === 0 }}
+        previous={currentIndex === 0 ? (previousCategory ? { onClick: () => startSession(previousCategory, true) } : { onClick: handlePrev, disabled: true }) : { onClick: handlePrev }}
         next={{ onClick: currentIndex === shuffledCards.length - 1 ? (nextCategory ? () => startSession(nextCategory) : handleReset) : handleNext }}
         middle={<StepMiddle onClick={handleReset} label="End session" short="END">END SESSION</StepMiddle>}
         placement="items-center"

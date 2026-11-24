@@ -50,23 +50,8 @@ export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; 
     expect(reset.ok(), "Reset only the server's scratch scores before each test").toBe(true)
     await use()
     await context.setOffline(false)
-    if (!page.isClosed()) {
-      // Best effort, and bounded: each test has its own browser context, so this only tidies up. A page still busy
-      // storing the voice clips can leave this call waiting for a minute and would use up the test's whole time.
-      let giveUp: ReturnType<typeof setTimeout> | undefined
-      await Promise.race([
-        page
-          .evaluate(async () => {
-            const workers = await navigator.serviceWorker.getRegistrations()
-            await Promise.all(workers.map((worker) => worker.unregister()))
-          })
-          .catch(() => undefined),
-        new Promise((resolve) => {
-          giveUp = setTimeout(resolve, 10_000)
-        }),
-      ])
-      clearTimeout(giveUp)
-    }
+    // No service worker is unregistered here: each test has its own browser context, which is thrown away when the test ends, and
+    // taking the worker down by hand cost 2.2 s per test, over 190 s of the browser part (24 Nov).
     expect(errors, "Uncaught browser errors").toEqual([])
   }, { auto: true }],
 })

@@ -17,10 +17,10 @@ export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "togg
 const BASE = "inline-flex max-w-full min-w-0 items-center justify-center gap-6 border-2 border-foreground px-4 py-3 text-base font-bold uppercase no-underline"
 
 // The Voice Quiz controls, the same size as Back and Next rather than the large uppercase actions.
-const CONTROL = "inline-flex max-w-full min-w-0 items-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base no-underline disabled:opacity-40"
+const CONTROL = "inline-flex max-w-full shrink-0 items-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base no-underline disabled:opacity-40"
 
-// Previous and Next, in every section (owner, 17 Nov): one size, one weight, a minimum width so the two halves match.
-const STEP = "inline-flex max-w-full min-w-28 sm:min-w-36 items-center justify-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base font-bold whitespace-nowrap no-underline hover:bg-foreground hover:text-background disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background disabled:hover:text-foreground"
+// Previous and Next, in every section (owner, 17 Nov): the same small size and weight as the Voice Quiz controls, everywhere.
+const STEP = "inline-flex max-w-full items-center justify-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base whitespace-nowrap no-underline hover:bg-foreground hover:text-background disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background disabled:hover:text-foreground"
 
 // Small on/off controls, the size of the Voice Quiz controls. aria-pressed marks them on.
 const TOGGLE = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground px-3 py-2 text-sm font-bold uppercase whitespace-nowrap no-underline disabled:opacity-40"

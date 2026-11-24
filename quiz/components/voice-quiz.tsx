@@ -334,21 +334,22 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
       <Heading variant="page" placement="sr-only">Voice Quiz</Heading>
       <div className="mb-4 flex min-h-11 items-center justify-between gap-3">
         <div className="shrink-0">
-          {jumps.previous !== null && (
+          {/* With no section on this side the button is kept, invisible, so the name stays in the middle. */}
+          <div className={jumps.previous === null ? "invisible" : undefined} aria-hidden={jumps.previous === null ? true : undefined} inert={jumps.previous === null}>
             <ControlButton key="previous-section" aria-label="Previous section" icon={<ArrowLeft aria-hidden="true" size={18} />} onClick={() => openSection(jumps.previous)}>
               <span className="sm:hidden">Prev</span><span className="hidden sm:inline">Previous</span>
             </ControlButton>
-          )}
+          </div>
         </div>
         <Heading variant="group" placement="min-w-0 flex-1">
           {sectionTitle(position, sections)}
         </Heading>
         <div className="shrink-0">
-          {jumps.next !== null && (
+          <div className={jumps.next === null ? "invisible" : undefined} aria-hidden={jumps.next === null ? true : undefined} inert={jumps.next === null}>
             <ControlButton key="next-section" aria-label="Next section" icon={<ArrowRight aria-hidden="true" size={18} />} onClick={() => openSection(jumps.next)} iconEnd>
               <span>Next</span>
             </ControlButton>
-          )}
+          </div>
         </div>
       </div>
       <Heading variant="chapter" placement="mb-4" ref={questionHeading}>
@@ -384,11 +385,11 @@ export function VoiceQuiz({ round, total, namesChecked, voice, sections }: Props
           </button>
         ))}
       </div>
-      <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between gap-2 mb-6">
         <ControlButton disabled={index === 0} onClick={() => goTo(index - 1)} aria-label="Back" icon={<ArrowLeft aria-hidden="true" size={18} />}>
           <span className="hidden sm:inline">Back</span>
         </ControlButton>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <ControlButton onClick={() => speakQuestion(item)} aria-label="Read again" icon={<Repeat aria-hidden="true" size={18} />}>
             <span className="hidden sm:inline">Read again</span>
           </ControlButton>
