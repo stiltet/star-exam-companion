@@ -503,7 +503,7 @@ node --test
 pnpm build
 ```
 
-`node --test` runs every unit test; `pnpm build` also type-checks the app.
+`node --test` runs every unit test; `pnpm build` also type-checks the app. The tests of the crawl command are split into ten files (`quiz/lib/reading-crawl-run-*.test.ts`) that share their set-up in `quiz/lib/crawl-run-helpers.ts`, so they run at the same time.
 
 Install the browser test engines once after installing dependencies:
 
