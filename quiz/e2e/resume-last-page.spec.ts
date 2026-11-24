@@ -103,9 +103,10 @@ test("a loading box that has shown stays 500 ms even when the page arrives at on
   await expect(page).toHaveURL(/\/$/, { timeout: 15_000 })
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
   // A tap on the logo is a move inside the app: the page, and this observer, stay while the new page comes.
+  // The box may still be on its hold when the page is ready, so wait for it to go.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __box: { gone?: number } }).__box.gone), { message: "the box went", timeout: 10_000 }).toBeDefined()
   const { shown, gone } = await page.evaluate(() => (window as unknown as { __box: { shown?: number; gone?: number } }).__box)
   expect(shown, "the box showed").toBeDefined()
-  expect(gone, "and went").toBeDefined()
   expect(gone! - shown!, "after at least 500 ms").toBeGreaterThanOrEqual(480)
 })
 
