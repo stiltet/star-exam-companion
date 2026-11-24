@@ -12,7 +12,9 @@ test.beforeEach(async ({ page }) => {
 // A page that stays where it is has shown itself: the gate is open, which comes after the launch has had every chance to move.
 const opened = async (page: Page) => {
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
-  await page.waitForTimeout(300)
+  // A page that stays is proved by nothing happening, so this window is deliberate: the move would start in the first
+  // tens of milliseconds after hydration, and the gate above only opens after it. One second is far more than it needs.
+  await page.waitForTimeout(1000)
 }
 
 test("a launch on home goes to the last page left less than 24 hours ago", async ({ page, context }) => {
@@ -105,4 +107,19 @@ test("a loading box that has shown stays 500 ms even when the page arrives at on
   expect(shown, "the box showed").toBeDefined()
   expect(gone, "and went").toBeDefined()
   expect(gone! - shown!, "after at least 500 ms").toBeGreaterThanOrEqual(480)
+})
+
+test("a launch the early script did not cover still opens the saved page at its place, once the page is there", async ({ page, context }) => {
+  await page.goto("/glossary")
+  await expect(page.locator("main")).toBeVisible()
+  await page.evaluate(() => window.scrollTo(0, 500))
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(500)
+  // The mark the early script puts on the page is taken off at once, as if it had never been drawn.
+  await context.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => document.documentElement.removeAttribute("data-resuming"))
+  })
+  const launch = await context.newPage()
+  await launch.goto("/")
+  await expect(launch).toHaveURL(/\/glossary$/)
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY)), "the place is restored on the page it opens, not on home").toBe(500)
 })

@@ -4,8 +4,10 @@
 // Every box that shows over a visible page (neither delayed, which sits over a page the gate already hides, nor the
 // launch cover, which has its own rule) also hides the page behind it (globals.css, loading-full), so the header
 // and the bars can never be seen beside it, whatever the phone does with stacking.
-export function LoadingBox({ delayed = false, cover = false }: { delayed?: boolean; cover?: boolean }) {
-  const kind = delayed ? "page-loading " : cover ? "" : "loading-full "
+// route: the fallback of a route that can take many seconds (a course fetched from Google): it shows after 200 ms,
+// hides the page behind it from then on, and stays until the page is there, with no 5 s hide.
+export function LoadingBox({ delayed = false, cover = false, route = false }: { delayed?: boolean; cover?: boolean; route?: boolean }) {
+  const kind = route ? "loading-route " : delayed ? "page-loading " : cover ? "" : "loading-full "
   return (
     <div role="status" aria-label="Loading" className={`${kind}pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-background`}>
       <div data-loading="true" className="loading-box relative h-12 w-56 overflow-hidden border-2 border-foreground text-foreground" />

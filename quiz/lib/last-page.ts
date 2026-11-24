@@ -10,8 +10,8 @@ export type LastPage = { path: string; at: number; scroll: number }
 // A path to record: inside the app, and not an API route or a file. Home is recorded too, so that
 // leaving the app on home opens home again and not an older page.
 export function rememberable(path: string): boolean {
-  // A backslash is read as a slash by a browser, so "/\\host" would be another origin.
-  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return false
+  // A browser reads a backslash as a slash and drops a tab or a line break inside a URL, so "/\\host" and "/<tab>/host" would be another origin.
+  if (!path.startsWith("/") || path.startsWith("//") || /[\\\t\n\r]/.test(path)) return false
   const bare = path.split(/[?#]/)[0]
   if (bare === "") return false
   if (bare === "/api" || bare.startsWith("/api/")) return false

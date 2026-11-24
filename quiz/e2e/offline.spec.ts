@@ -584,7 +584,8 @@ test("the installed app reopens the last page offline when the device holds it, 
   const second = await context.newPage()
   await second.goto("/")
   await expect(second.locator('[data-page-ready="true"]')).toHaveCount(1)
-  await second.waitForTimeout(300)
+  // Staying put is proved by nothing happening: a deliberate window, far longer than the cache look-up and the move take.
+  await second.waitForTimeout(1000)
   await expect(second).toHaveURL(/\/$/)
   await expect(second.locator("h1")).not.toBeEmpty()
 })

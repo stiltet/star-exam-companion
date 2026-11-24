@@ -5,7 +5,7 @@ import { canOpenPage, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPa
 const now = 1_000_000_000_000
 
 test("api routes, files and other origins are not remembered", () => {
-  for (const path of ["/api/speak", "//evil.test/x", "https://evil.test/", "/\\evil.test", "/a\\b", "/sw.js", "/icon.png", ""]) assert.equal(rememberable(path), false, path)
+  for (const path of ["/api/speak", "//evil.test/x", "https://evil.test/", "/\\evil.test", "/a\\b", "/\t/evil.test", "/\n/evil.test", "/\r/evil.test", "/sw.js", "/icon.png", ""]) assert.equal(rememberable(path), false, path)
   for (const path of ["/", "/practice?section=a", "/study/x/y", "/read/night"]) assert.equal(rememberable(path), true, path)
 })
 

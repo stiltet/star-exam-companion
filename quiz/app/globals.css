@@ -259,6 +259,19 @@ html body:has(.loading-full) {
 .loading-full {
   visibility: visible;
 }
+/* The fallback of a slow route: the box appears at 200 ms, and from then on the page behind it is hidden, until the page arrives.
+   200 ms is LOADING_AFTER_MS in lib/loading-time.ts. */
+.loading-route {
+  visibility: visible;
+  opacity: 0;
+  animation: page-loading-show 0s linear 200ms forwards;
+}
+html body:has(.loading-route) {
+  animation: page-hide 0s linear 200ms forwards;
+}
+@keyframes page-hide {
+  to { visibility: hidden; }
+}
 /* 200 ms here is LOADING_AFTER_MS in lib/loading-time.ts, and 5 s is SHOW_ANYWAY_MS in components/page-gate.tsx: CSS cannot import them.
    The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
 .page-loading {

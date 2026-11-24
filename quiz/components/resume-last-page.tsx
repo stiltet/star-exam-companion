@@ -52,16 +52,11 @@ let watching = 0
 // 3 s is the same limit as the failsafe in globals.css, which works with no script.
 function uncover(ready: () => boolean, restore?: () => void) {
   window.clearInterval(watching)
-  const shownAt = marked()
-  if (shownAt === null) {
-    // No cover was drawn (the early script did not mark this launch): nothing to wait for, and saving starts.
-    restore?.()
-    resuming = false
-    saving = true
-    return endCover()
-  }
+  // With no cover drawn (the early script did not mark this launch) there is no minimum to keep, but the move is still waited for.
+  const drawnAt = marked()
+  const shownAt = drawnAt ?? Date.now()
   const timer = watching = window.setInterval(() => {
-    const done = Date.now() - shownAt > 3000 || (ready() && loadingRemaining(shownAt, Date.now()) === 0)
+    const done = Date.now() - shownAt > 3000 || (ready() && (drawnAt === null || loadingRemaining(shownAt, Date.now()) === 0))
     if (!done) return
     window.clearInterval(timer)
     void settled().then(() => {
