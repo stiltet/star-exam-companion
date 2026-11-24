@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
-import { acceptSpeak, clipsToEvict, MAX_CACHED_CLIPS, MAX_SPEAK_CHARS, speechFileName, speechKey, voiceKeys, voiceText } from "./speak.ts"
+import { acceptSpeak, clipsToEvict, MAX_CACHED_CLIPS, MAX_SPEAK_CHARS, speechFileName, speechKey, voiceIndex, voiceKeys, voiceText } from "./speak.ts"
 import { itemsFromGlossary } from "./round.ts"
 import { answerAloud, explanationParts, questionClips, saidHeading, speakable } from "./score.ts"
 import { parseGlossary } from "./sources.ts"
@@ -12,14 +12,17 @@ test("every line the Voice Quiz can say has a key, and only those lines do", () 
   if (!parsed.ok) throw new Error(`glossary row ${parsed.row}: ${parsed.error}`)
   const items = itemsFromGlossary(parsed.glossary, testPack.scenes)
   const keys = voiceKeys(items)
+  // voiceText builds the whole index on every call, so the loop reads one index built once; one call below keeps the wrapper covered.
+  const index = voiceIndex(items)
   for (const item of items) {
     for (const part of [...questionClips(item.stem, item.options).map((clip) => clip.text), item.constraint, ...explanationParts(item), "Correct.", answerAloud(true, item.options[item.correctIndex] ?? "")]) {
       const key = keys[speakable(part)]
       assert.ok(key, `${item.id}: ${part}`)
-      assert.equal(voiceText(items, key), speakable(part).trim())
+      assert.equal(index.get(key), speakable(part).trim())
     }
   }
   assert.equal(`${speechKey("Correct.")}.wav`, speechFileName("Correct."))
+  assert.equal(voiceText(items, speechKey("Correct.")), "Correct.")
   assert.equal(voiceText(items, speechKey("Say anything I like.")), undefined)
   assert.ok(Object.keys(keys).length * 2 < MAX_CACHED_CLIPS, "storing every line never evicts one")
 })

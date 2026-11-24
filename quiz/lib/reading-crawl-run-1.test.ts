@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import { readFile, readdir, rm } from "node:fs/promises"
 import path from "node:path"
-import test from "node:test"
+import test, { after as afterAll } from "node:test"
 import { browserMissing } from "./browser-test.ts"
 import { DOCUMENT, INTRO, PDF, REPEAT_ONE, REPEAT_TWO, SETTLED, after, browserClosed, noLessonText, runCrawl, saved, scratch } from "./crawl-run-helpers.ts"
-import { startFakeSite, type FakeCard } from "./fake-lesson-site.ts"
+import { startFakeSite, type FakeCard, type FakeSite } from "./fake-lesson-site.ts"
 
 // One of the files the crawl command's tests are split into, so `node --test` runs them at the same time. The shared set-up is crawl-run-helpers.ts.
 
@@ -87,8 +87,15 @@ test("the first crawl run saves every lesson, reports plainly and logs without l
   })
 })
 
-test("a second crawl run with nothing new changes nothing", { timeout: 240_000, skip: browserMissing }, async (t) => {
-  const base = await scratch()
+let sharedBase = ""
+let sharedSite: FakeSite | undefined
+afterAll(async () => {
+  await sharedSite?.close()
+  if (sharedBase) await rm(sharedBase, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
+})
+
+test("a second crawl run with nothing new changes nothing (set-up run)", { timeout: 240_000, skip: browserMissing }, async () => {
+  sharedBase = await scratch()
   const courses: Record<string, FakeCard[]> = {
     "9001": [
       { title: "Intro bundle", kind: "bundle", text: INTRO },
@@ -102,21 +109,19 @@ test("a second crawl run with nothing new changes nothing", { timeout: 240_000, 
       { title: "PDF lesson", kind: "pdf", text: PDF },
     ],
   }
-  const site = await startFakeSite(courses)
-  t.after(async () => {
-    await site.close()
-    await rm(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
-  })
-  const texts = [INTRO, REPEAT_ONE, REPEAT_TWO, SETTLED, DOCUMENT, PDF]
+  sharedSite = await startFakeSite(courses)
 
-  const first = await runCrawl(base, site)
+  const first = await runCrawl(sharedBase, sharedSite)
   assert.equal(first.code, 0, first.out)
+})
 
-  await t.test("a second run with nothing new changes nothing", async () => {
-    const run = await runCrawl(base, site)
-    assert.equal(run.code, 0, run.out)
-    assert.match(run.out, /✔ FINISHED/)
-    assert.match(run.out, /4 lessons: 0 new, 0 updated, 4 unchanged/)
-    assert.match(run.out, /2 lessons: 0 new, 0 updated, 2 unchanged/)
-  })
+test("a second crawl run with nothing new changes nothing", { timeout: 240_000, skip: browserMissing }, async () => {
+  assert.ok(sharedSite, "this test continues the set-up run before it: run the whole file, not this test alone")
+  const base = sharedBase
+  const site = sharedSite
+  const run = await runCrawl(base, site)
+  assert.equal(run.code, 0, run.out)
+  assert.match(run.out, /✔ FINISHED/)
+  assert.match(run.out, /4 lessons: 0 new, 0 updated, 4 unchanged/)
+  assert.match(run.out, /2 lessons: 0 new, 0 updated, 2 unchanged/)
 })
