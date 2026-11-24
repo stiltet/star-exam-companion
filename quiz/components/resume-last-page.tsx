@@ -48,20 +48,32 @@ const marked = (): number | null => {
 // One watch at a time: a second call (a new move while the cover is still up) takes the first one's place.
 let watching = 0
 
-// Takes the cover off once `ready` says so and it has shown 500 ms; 3 s after it was drawn whatever happens.
-// 3 s is the same limit as the failsafe in globals.css, which works with no script.
+// Takes the cover off once `ready` says so and it has shown 500 ms. 3 s after it was drawn it goes whatever happens, which
+// is the same limit as the failsafe in globals.css (it works with no script). The restore of the place, and the start of
+// saving, wait for the page itself, up to 30 s, so a page that is still coming is never saved as the place (home at the top).
 function uncover(ready: () => boolean, restore?: () => void) {
   window.clearInterval(watching)
   // With no cover drawn (the early script did not mark this launch) there is no minimum to keep, but the move is still waited for.
   const drawnAt = marked()
-  const shownAt = drawnAt ?? Date.now()
+  const startedAt = drawnAt ?? Date.now()
+  let covered = drawnAt !== null
   const timer = watching = window.setInterval(() => {
-    const done = Date.now() - shownAt > 3000 || (ready() && (drawnAt === null || loadingRemaining(shownAt, Date.now()) === 0))
-    if (!done) return
+    const now = Date.now()
+    if (covered && now - startedAt > 3000) {
+      covered = false
+      endCover()
+    }
+    const held = drawnAt === null || loadingRemaining(startedAt, now) === 0
+    const gaveUp = now - startedAt > 30_000
+    if (!(ready() && held) && !gaveUp) return
     window.clearInterval(timer)
     void settled().then(() => {
       // The page is drawn and hidden behind the cover: put it where it was left before the cover goes.
-      restore?.()
+      if (!gaveUp) restore?.()
+      else {
+        resuming = false
+        saving = true
+      }
       endCover()
     })
   }, 50)

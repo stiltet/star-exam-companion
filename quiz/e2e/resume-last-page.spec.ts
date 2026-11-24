@@ -123,3 +123,22 @@ test("a launch the early script did not cover still opens the saved page at its 
   await expect(launch).toHaveURL(/\/glossary$/)
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY)), "the place is restored on the page it opens, not on home").toBe(500)
 })
+
+test("leaving the app while the saved page is still coming keeps the saved place", async ({ page, context }) => {
+  await page.goto("/glossary")
+  await expect(page.locator("main")).toBeVisible()
+  await page.evaluate(() => window.scrollTo(0, 500))
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(500)
+  const launch = await context.newPage()
+  // The saved page takes 5 s to come, longer than the cover is kept (3 s).
+  await launch.route(/\/glossary(\?|$)/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await route.continue()
+  })
+  await launch.goto("/")
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/, { timeout: 6000 })
+  await launch.evaluate(() => window.dispatchEvent(new Event("pagehide")))
+  expect(await launch.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}")), "still the saved page and place").toMatchObject({ path: "/glossary", scroll: 500 })
+  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
+})
