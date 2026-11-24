@@ -227,6 +227,11 @@ export function BackButton() {
       type="button"
       aria-label="Back"
       onClick={() => {
+        // On a #hash step (a glossary section link) Back undoes the step, to the top of the same page, as a browser does.
+        if (window.location.hash && window.history.length > 1) {
+          window.history.back()
+          return
+        }
         // A double tap is one Back, not two.
         if (tapped.current) return
         tapped.current = true

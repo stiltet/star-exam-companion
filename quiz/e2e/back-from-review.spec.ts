@@ -102,6 +102,16 @@ test.describe("in the installed app", () => {
     await expect(page, "Back from a review is the Test exam page, not Home").not.toHaveURL(/\/$/)
   })
 
+  test("Back after a glossary section link returns to the top of the glossary, not Home", async ({ page }) => {
+    await page.goto("/glossary")
+    await page.waitForSelector('[data-page-ready="true"]')
+    await page.locator('main a[href^="#"]').nth(2).click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+    await backButton(page).click()
+    await expect(page).toHaveURL(/\/glossary$/)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(5)
+  })
+
   test("the Back button sits 2rem from the left and bottom edges", async ({ page }) => {
     await page.goto("/progress")
     const box = await backButton(page).boundingBox()
