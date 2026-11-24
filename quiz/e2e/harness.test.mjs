@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { spawn, spawnSync } from "node:child_process"
-import { mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync, statSync } from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -14,7 +14,7 @@ const quiz = fileURLToPath(new URL("../", import.meta.url))
 
 test("playwright.config.ts refuses unsafe ports before starting a server", () => {
   for (const port of ["3000", "0", "65536", "not-a-port"]) {
-    const result = spawnSync(process.execPath, [cli, "test", "--list"], {
+    const result = spawnSync(process.execPath, [cli, "test", "--list", "--reporter=list"], {
       cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: port }, encoding: "utf8",
     })
     assert.notEqual(result.status, 0)
@@ -23,10 +23,15 @@ test("playwright.config.ts refuses unsafe ports before starting a server", () =>
 })
 
 test("playwright.config.ts discovers every browser and width without nested or missing specs", () => {
-  const result = spawnSync(process.execPath, [cli, "test", "--list"], {
+  // Listing the tests must not overwrite the browser timing report that the Pre-push checks read (temp/gate/browser.json):
+  // the config writes the JSON report, and a listing run would replace a real run's report with one of 68 skipped tests.
+  const report = path.join(quiz, "..", "temp", "gate", "browser.json")
+  const before = existsSync(report) ? statSync(report).mtimeMs : undefined
+  const result = spawnSync(process.execPath, [cli, "test", "--list", "--reporter=list"], {
     cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: "47825" }, encoding: "utf8",
   })
   assert.equal(result.status, 0, result.stderr)
+  assert.equal(existsSync(report) ? statSync(report).mtimeMs : undefined, before, "listing the tests left the browser timing report alone")
   // Chromium runs the pages; WebKit only the offline worker (also with the Mac unreachable), the installed app's Back button and the About list.
   // Properties, not totals: a new spec must not break a test that proves nothing about the config.
   const chromium = result.stdout.split("\n").filter((line) => line.includes("[chromium-375]"))
@@ -184,18 +189,30 @@ test("server.mjs refuses an occupied port instead of reusing another quiz's scor
     })
     assert.notEqual(code, 0)
     assert.match(output, /EADDRINUSE/)
-    assert.match(output, /Set QUIZ_E2E_PORT to an unused port/)
+    assert.match(output, /Set QUIZ_E2E_PORT to a free base port; the port after it must also be free/)
     assert.doesNotMatch(output, /Starting|Creating an optimized/)
   } finally {
     await new Promise((resolve, reject) => occupied.close((error) => error ? reject(error) : resolve()))
   }
 })
 
-test("playwright.config.ts waits for its own server stdout, never a foreign HTTP response", () => {
+test("playwright.config.ts starts one server for each worker, each waiting for its own stdout, never a foreign HTTP response", () => {
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
     const { default: config } = await import("./playwright.config.ts")
-    if (config.webServer.url !== undefined) throw new Error("URL polling can accept another server")
-    if (!config.webServer.wait.stdout.test("Ready in 100ms")) throw new Error("Missing startup handshake")
+    const servers = config.webServer
+    if (!Array.isArray(servers) || servers.length !== config.workers) throw new Error("one server for each worker")
+    const ports = servers.map((server) => server.env.QUIZ_E2E_PORT)
+    if (new Set(ports).size !== servers.length) throw new Error("every server has its own port")
+    const first = Number(ports[0])
+    servers.forEach((server, index) => {
+      if (server.url !== undefined) throw new Error("URL polling can accept another server")
+      if (!server.wait.stdout.test("Ready in 100ms")) throw new Error("Missing startup handshake")
+      if (Number(server.env.QUIZ_E2E_PORT) !== first + index) throw new Error("the ports follow the worker index")
+      // Only the first server builds; the others start from its build once it listens.
+      // The first server builds, so it is given an empty QUIZ_E2E_BUILD_PORT: one set in the shell must not reach it and make it skip the build.
+      if ((index === 0) !== (server.env.QUIZ_E2E_BUILD_PORT === "")) throw new Error("only the first server builds, and it is told so with an empty value")
+      if (index > 0 && server.env.QUIZ_E2E_BUILD_PORT !== String(first)) throw new Error("the others wait for the first server")
+    })
   `], { cwd: quiz, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr)
 })

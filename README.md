@@ -517,7 +517,7 @@ Run the complete gate (unit tests, then the browser tests, which build and type-
 pnpm gate
 ```
 
-The same gate runs as two steps, for a runner that limits how long one command may take: `pnpm gate:unit`, then `pnpm gate:browser`.
+The same gate runs as two steps, for a runner that limits how long one command may take: `pnpm gate:unit`, then `pnpm gate:browser`. Both write a timing report under `temp/gate/`. No test may take more than 45 s and no test file more than 60 s, measured while the test files run together; a slow test is made faster, never listed as an exception.
 
 Or run just the browser suite:
 
@@ -528,8 +528,10 @@ pnpm e2e
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
 `http://localhost:47822`, and uses temporary scores, speech caches and night-reading storage. It never reuses
 a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
-`quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
-unused port:
+`quiz/.env.local`. The tests run on two workers, each with a server of its own, so they share no state: the first server
+builds the app, and the second starts from that build on the next port, 47823 (the suite sets
+`QUIZ_E2E_BUILD_PORT` to tell it which port builds). If these ports are in use, set `QUIZ_E2E_PORT`
+to another unused port (the second server uses the next one):
 
 ```bash
 QUIZ_E2E_PORT=47824 pnpm e2e
@@ -556,7 +558,7 @@ listed above, not every possible action or device behaviour: actual iPhone insta
 macOS voice generation, LAN certificates and Google's live course responses are not exercised.
 
 The online demo is a static export of the same app, built once for every exam. `bash scripts/build-pages.sh` builds it into
-`pages-out/` (the default exam at the root, every other exam under `pages-out/<exam id>/`); it works on a temporary copy, so `quiz/` is never changed. It replaces Voice Quiz,
+`pages-out/` (the default exam at the root, every other exam under `pages-out/<exam id>/`); it works on a temporary copy in the git-ignored `.pages-work/` folder (linking in the dependencies this checkout has installed, or installing its own where there are none), so `quiz/` is never changed. It replaces Voice Quiz,
 Read Aloud and Progress with a panel that says they need the local install, and filters Practice
 in the browser. Before exporting, it refuses private reading data in exams and verifies that the
 private store stays outside the repository. The workflow in `.github/workflows/pages.yml` publishes it on every push to `main`.

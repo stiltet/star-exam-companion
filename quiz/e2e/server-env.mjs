@@ -23,3 +23,20 @@ export function browserServerEnv(parent, scratch, root) {
     NIGHT_DIR: path.join(scratch, "night"),
   }
 }
+
+// The browser tests run on two workers, each with a server of its own: the server keeps the chosen exam, the scores, the
+// Night recording and the private readings, so two workers on one server would reset and switch each other's state.
+export const E2E_WORKERS = 2
+
+/** The port of the server that worker `index` uses: the base port, then the next one. */
+export function e2ePortFor(basePort, index) {
+  return basePort + index
+}
+
+/** The port the browser tests use when QUIZ_E2E_PORT is not set. */
+export const E2E_DEFAULT_PORT = 47822
+
+/** QUIZ_E2E_PORT, or the default. For the tests and the config it is the first worker's port; each server reads its own. */
+export function e2eBasePort(env = process.env) {
+  return Number(env.QUIZ_E2E_PORT ?? E2E_DEFAULT_PORT)
+}
