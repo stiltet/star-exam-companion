@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
+import { LOADING_AFTER_MS, loadingRemaining } from "@/lib/loading-time"
 
-const SPINNER_AFTER_MS = 200
+const SPINNER_AFTER_MS = LOADING_AFTER_MS
+const clock = () => performance.now()
 // After this long other links can be tapped again, so the app can never stay stuck. A button that
 // shows loading NEVER goes back to normal by itself (owner, 16 Nov): it stays until the page
 // arrives, because a button that returns to normal and navigates seconds later looks like a tap
@@ -57,8 +59,23 @@ export function NavProgress() {
   // The logo and title link: the header never changes, so the page-sized loading box shows instead.
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
+  // When the loading state appeared, and the end of a move that is waiting for it to have shown 500 ms.
+  const shownAt = useRef<number | null>(null)
+  const ending = useRef(0)
 
+  // The page has arrived. A loading state that has shown stays until it has shown 500 ms, so it never flashes.
   const finish = () => {
+    const wait = loadingRemaining(shownAt.current, clock())
+    if (wait <= 0) return finishNow()
+    timers.current.forEach((timer) => window.clearTimeout(timer))
+    timers.current = []
+    if (ending.current === 0) ending.current = window.setTimeout(finishNow, wait)
+  }
+
+  const finishNow = () => {
+    window.clearTimeout(ending.current)
+    ending.current = 0
+    shownAt.current = null
     timers.current.forEach((timer) => window.clearTimeout(timer))
     timers.current = []
     // The page has arrived (or come back from memory): only now do loading buttons go back to normal.
@@ -118,6 +135,7 @@ export function NavProgress() {
       from.current = window.location.pathname + window.location.search
       locked.current = true
       timers.current.push(window.setTimeout(() => {
+        shownAt.current = clock()
         if (logo) return setOverlay(true)
         markBusy(target)
       }, SPINNER_AFTER_MS))

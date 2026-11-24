@@ -2,6 +2,9 @@ import type React from "react"
 import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
 import { BackButton } from "@/components/back-button"
+import { ResumeLastPage } from "@/components/resume-last-page"
+import { LoadingBox } from "@/components/atoms/loading-box"
+import { RESUME_SCRIPT } from "@/lib/last-page"
 import { DevBadgeStyle } from "@/components/dev-badge-style"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { NavProgress } from "@/components/nav-progress"
@@ -62,11 +65,16 @@ export default async function RootLayout({
     // next-themes sets the theme class on <html> before React loads, so the server's copy differs.
     <html lang="en" suppressHydrationWarning data-exam={pack.id}>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: RESUME_SCRIPT }} />
+        <div className="resume-cover"><LoadingBox /></div>
         <noscript><style>{".page-loading{display:none}[data-page-ready]{visibility:visible!important}"}</style></noscript>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange enableColorScheme={false} storageKey="quiz-theme">
           <DemoBanner />
           <PageGate>{children}</PageGate>
           <BackButton />
+          <Suspense fallback={null}>
+            <ResumeLastPage />
+          </Suspense>
           <DevBadgeStyle />
           <OutboxSender />
           <OfflineShell />
