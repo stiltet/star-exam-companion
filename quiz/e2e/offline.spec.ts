@@ -580,8 +580,12 @@ test("the installed app reopens the last page offline when the device holds it, 
   await expect(launch.locator("h1")).not.toBeEmpty()
   // A page it never held would open the "not on this device" page: the launch stays on home instead.
   await launch.close()
-  await page.evaluate(() => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/never-opened-on-this-device", at: Date.now(), scroll: 0 })))
+  // The first tab saves its own place as it is used, so it is closed before the record is changed, or it could write /glossary back over it.
+  await page.close()
   const second = await context.newPage()
+  await second.addInitScript(() => {
+    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/never-opened-on-this-device", at: Date.now(), scroll: 0 }))
+  })
   await second.goto("/")
   await expect(second.locator('[data-page-ready="true"]')).toHaveCount(1)
   // Staying put is proved by nothing happening: a deliberate window, far longer than the cache look-up and the move take.
