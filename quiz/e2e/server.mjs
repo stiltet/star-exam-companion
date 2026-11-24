@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
 import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
-import { createServer } from "node:net"
+import { connect, createServer } from "node:net"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import "./content-fixture.mjs"
@@ -23,6 +23,22 @@ async function checkPort() {
   await new Promise((resolve, reject) => probe.close((error) => error ? reject(error) : resolve()))
 }
 await checkPort()
+
+// The second and later servers do not build: they start from the first server's build, once it is listening.
+const buildPort = process.env.QUIZ_E2E_BUILD_PORT ? Number(process.env.QUIZ_E2E_BUILD_PORT) : undefined
+async function waitForBuild() {
+  const deadline = Date.now() + 290_000
+  while (Date.now() < deadline) {
+    const up = await new Promise((resolve) => {
+      const socket = connect(buildPort, "localhost")
+      socket.once("connect", () => { socket.destroy(); resolve(true) })
+      socket.once("error", () => resolve(false))
+    })
+    if (up) return
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error(`The server on port ${buildPort} that builds the app never started listening.`)
+}
 
 // A fixed scratch folder per port (the port check above stops two servers sharing one), so the tests also know where
 // the server keeps its private readings.
@@ -134,7 +150,8 @@ try {
   // The seeded Night recording must be for the same readings the server will see, private fixture included.
   process.env.QUIZ_PRIVATE_DIR = env.QUIZ_PRIVATE_DIR
   await seedNight()
-  await run(["build"])
+  if (buildPort === undefined) await run(["build"])
+  else await waitForBuild()
   const built = path.join(path.dirname(fileURLToPath(import.meta.url)), "../.next-e2e")
   let leaked = false
   for (const fixtureText of [privateText, ...twoParagraphs.split("\n")]) leaked = leaked || await containsText(built, fixtureText)

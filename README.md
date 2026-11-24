@@ -528,8 +528,9 @@ pnpm e2e
 The browser suite builds a separate production instance in `quiz/.next-e2e`, starts it on
 `http://localhost:47822`, and uses temporary scores, speech caches and night-reading storage. It never reuses
 a running server or writes personal scores, even when `QUIZ_SCORES_FILE` is set in the shell or
-`quiz/.env.local`. If that port is in use, set `QUIZ_E2E_PORT` to another
-unused port:
+`quiz/.env.local`. The tests run on two workers, each with a server of its own (the second starts from the
+first's build on the next port, 47823, once `QUIZ_E2E_BUILD_PORT` names the port that builds, which the suite sets itself), so they share no state. If these ports are in use, set `QUIZ_E2E_PORT`
+to another unused port (the second server uses the next one):
 
 ```bash
 QUIZ_E2E_PORT=47824 pnpm e2e

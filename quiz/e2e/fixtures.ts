@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from "@playwright/test"
+import { e2ePortFor } from "./server-env.mjs"
 import { silentWav } from "./voice-fixture.mjs"
 
 // A page load that interrupts the page it replaces, as switching the exam does, makes WebKit report the requests and
@@ -8,7 +9,17 @@ const CUT_OFF = /^Context is stopped$|due to access control checks\.$/
 // The one address the Mac-unreachable test opens that the device has never seen: the offline helper answers it 503 on purpose.
 export const UNREACHABLE_PATH = "/never-opened-on-this-device"
 
-export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean }>({
+/** The port of the server the running worker uses (see server-env.mjs). */
+export const serverPort = (parallelIndex: number) => e2ePortFor(Number(process.env.QUIZ_E2E_PORT ?? 47822), parallelIndex)
+
+export const test = base.extend<{ browserChecks: void; offlineNetwork: boolean; navigationCutOff: boolean; expectedWrongExam: boolean; scratchPort: number }>({
+  // Each worker's tests open its own server, so nothing one test changes on the server reaches a test on the other worker.
+  baseURL: async ({}, use, testInfo) => {
+    await use(`http://localhost:${serverPort(testInfo.parallelIndex)}`)
+  },
+  scratchPort: async ({}, use, testInfo) => {
+    await use(serverPort(testInfo.parallelIndex))
+  },
   offlineNetwork: [false, { option: true }],
   navigationCutOff: [false, { option: true }],
   expectedWrongExam: [false, { option: true }],

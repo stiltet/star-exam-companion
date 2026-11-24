@@ -191,11 +191,22 @@ test("server.mjs refuses an occupied port instead of reusing another quiz's scor
   }
 })
 
-test("playwright.config.ts waits for its own server stdout, never a foreign HTTP response", () => {
+test("playwright.config.ts starts one server for each worker, each waiting for its own stdout, never a foreign HTTP response", () => {
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
     const { default: config } = await import("./playwright.config.ts")
-    if (config.webServer.url !== undefined) throw new Error("URL polling can accept another server")
-    if (!config.webServer.wait.stdout.test("Ready in 100ms")) throw new Error("Missing startup handshake")
+    const servers = config.webServer
+    if (!Array.isArray(servers) || servers.length !== config.workers) throw new Error("one server for each worker")
+    const ports = servers.map((server) => server.env.QUIZ_E2E_PORT)
+    if (new Set(ports).size !== servers.length) throw new Error("every server has its own port")
+    const first = Number(ports[0])
+    servers.forEach((server, index) => {
+      if (server.url !== undefined) throw new Error("URL polling can accept another server")
+      if (!server.wait.stdout.test("Ready in 100ms")) throw new Error("Missing startup handshake")
+      if (Number(server.env.QUIZ_E2E_PORT) !== first + index) throw new Error("the ports follow the worker index")
+      // Only the first server builds; the others start from its build once it listens.
+      if ((index === 0) !== (server.env.QUIZ_E2E_BUILD_PORT === undefined)) throw new Error("only the first server builds")
+      if (index > 0 && server.env.QUIZ_E2E_BUILD_PORT !== String(first)) throw new Error("the others wait for the first server")
+    })
   `], { cwd: quiz, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr)
 })
