@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { LAST_PAGE_KEY, parseLastPage, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage } from "@/lib/last-page"
+import { isLaunch, LAST_PAGE_KEY, parseLastPage, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage } from "@/lib/last-page"
 import { loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 import { readStandalone } from "@/components/standalone"
@@ -30,13 +30,12 @@ const marked = (): number | null => {
   return value === null ? null : Number(value)
 }
 
-// Takes the cover off once `ready` says so and it has shown 500 ms; after 5 s whatever happens.
+// Takes the cover off once `ready` says so and it has shown 500 ms; 3 s after it was drawn whatever happens.
 function uncover(ready: () => boolean) {
   const shownAt = marked()
   if (shownAt === null) return
-  const started = Date.now()
   const timer = window.setInterval(() => {
-    const done = Date.now() - started > 5000 || (ready() && loadingRemaining(shownAt, Date.now()) === 0)
+    const done = Date.now() - shownAt > 3000 || (ready() && loadingRemaining(shownAt, Date.now()) === 0)
     if (!done) return
     window.clearInterval(timer)
     void settled().then(() => document.documentElement.removeAttribute(RESUME_MARK))
@@ -56,7 +55,8 @@ export function ResumeLastPage() {
       return
     }
     try {
-      const firstLoad = !launched
+      const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
+      const firstLoad = !launched && isLaunch(document.referrer, navigation?.type)
       launched = true
       const target = resumeTarget(parseLastPage(window.localStorage.getItem(LAST_PAGE_KEY)), Date.now(), pathname, firstLoad)
       if (target) {

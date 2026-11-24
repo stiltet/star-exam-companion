@@ -44,6 +44,13 @@ export function resumeTarget(saved: LastPage | null, now: number, currentPath: s
 // Runs in the page before it is drawn, so a launch that is about to move to the last page shows the
 // loading screen from the first frame instead of the home page for a moment. It only marks <html>
 // data-resuming with the time; ResumeLastPage takes the mark off once the other page is ready.
-// Keep it in step with resumeTarget (it is tested against it).
+// A launch has no referrer and is a plain navigation: a reload, Back, or a full page load made by a tap on a link inside
+// the app is not one, so tapping Home can never be sent back to the page it left. Keep it in step with
+// resumeTarget (it is tested against it) and with isLaunch.
 export const RESUME_MARK = "data-resuming"
-export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){}`
+export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){}`
+
+// The same test as the script's, for the component.
+export function isLaunch(referrer: string, navigationType: string | undefined): boolean {
+  return referrer === "" && (navigationType === undefined || navigationType === "navigate")
+}

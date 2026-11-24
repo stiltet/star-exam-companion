@@ -41,3 +41,11 @@ test("leaving the app on home opens home again, not an older page", async ({ pag
   await launch.waitForTimeout(800)
   await expect(launch).toHaveURL(/\/$/)
 })
+
+test("a full page load of home made from inside the app is not a launch", async ({ page }) => {
+  await page.goto("/progress")
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("quiz-last-page"))).toContain("/progress")
+  await page.goto("/", { referer: new URL("/progress", page.url()).href })
+  await page.waitForTimeout(800)
+  await expect(page).toHaveURL(/\/$/)
+})

@@ -232,13 +232,17 @@ a[data-loading] * {
 }
 
 /* A launch that is about to move to the last page (see RESUME_SCRIPT) shows the loading box from the first
-   frame. The CSS failsafe hides it after 5 s even if no script ever arrives. */
+   frame. The CSS failsafe hides it after 3 s even if no script ever arrives. */
 .resume-cover {
   display: none;
 }
 html[data-resuming] .resume-cover {
   display: block;
-  animation: page-loading-hide 0s linear 5s forwards;
+  animation: page-loading-hide 0s linear 3s forwards;
+}
+/* Above the sticky header and the player, so the cover never shows as a half screen. */
+.resume-cover > [role="status"] {
+  z-index: 60;
 }
 
 /* The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */

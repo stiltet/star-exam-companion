@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPage, rememberable, resumeTarget, serialiseLastPage } from "./last-page.ts"
+import { isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPage, rememberable, resumeTarget, serialiseLastPage } from "./last-page.ts"
 
 const now = 1_000_000_000_000
 
@@ -33,11 +33,11 @@ test("an old, future, missing, non-first or non-home case stays put", () => {
 })
 
 // The script that marks the page before it is drawn must agree with resumeTarget.
-function marked(saved: string | null, pathname: string, standalone: boolean, at = Date.now()): boolean {
+function marked(saved: string | null, pathname: string, standalone: boolean, at = Date.now(), referrer = "", navType = "navigate"): boolean {
   const attrs: Record<string, string> = {}
-  const doc = { documentElement: { setAttribute: (k: string, v: string) => { attrs[k] = v } } }
+  const doc = { referrer, documentElement: { setAttribute: (k: string, v: string) => { attrs[k] = v } } }
   const store = { getItem: () => (saved === null ? null : saved.replace("%AT%", String(at))) }
-  new Function("document", "navigator", "matchMedia", "location", "localStorage", RESUME_SCRIPT)(doc, { standalone }, () => ({ matches: false }), { pathname }, store)
+  new Function("document", "navigator", "matchMedia", "location", "localStorage", "performance", RESUME_SCRIPT)(doc, { standalone }, () => ({ matches: false }), { pathname }, store, { getEntriesByType: () => [{ type: navType }] })
   return "data-resuming" in attrs
 }
 
@@ -50,4 +50,12 @@ test("the early script marks exactly the launches resumeTarget moves", () => {
   assert.equal(marked(page, "/", true, Date.now() - LAST_PAGE_MAX_AGE_MS - 5000), false)
   assert.equal(marked(null, "/", true), false)
   assert.equal(marked("junk", "/", true), false)
+  // A tap on a link inside the app that loads the whole page, a reload and Back are not launches.
+  assert.equal(marked(page, "/", true, Date.now(), "https://quiz.test/read/1"), false)
+  assert.equal(marked(page, "/", true, Date.now(), "", "reload"), false)
+  assert.equal(marked(page, "/", true, Date.now(), "", "back_forward"), false)
+  assert.equal(isLaunch("", "navigate"), true)
+  assert.equal(isLaunch("", undefined), true)
+  assert.equal(isLaunch("https://quiz.test/x", "navigate"), false)
+  assert.equal(isLaunch("", "reload"), false)
 })
