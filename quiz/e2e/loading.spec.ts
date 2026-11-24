@@ -97,3 +97,46 @@ test("a move that changes only the query (a Practice filter) loads the tapped li
   await expect(page).toHaveURL(/section=1/, { timeout: 15_000 })
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
+
+test("Read Aloud shows only the app's own loading box while a course loads, with no text, and the page gate takes over without a gap", async ({ page }) => {
+  // Only the move itself is held, not the app's background fetch of the page, which would leave nothing to show at the tap.
+  await page.route(/\/read\/1(\?|$)/, async (route) => {
+    if (route.request().headers()["next-router-prefetch"]) return route.continue()
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await route.continue()
+  })
+  await page.goto("/read")
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await page.waitForTimeout(1500)
+  await page.evaluate(() => {
+    const seen = { route: false, firstAt: 0, lastAt: 0, gap: false, texts: [] as string[] }
+    ;(window as unknown as { __hand: typeof seen }).__hand = seen
+    const frame = () => {
+      // The hidden launch cover is always in the page, so it is not a box that shows.
+      const box = [...document.querySelectorAll('[role="status"][aria-label="Loading"]')].find((el) => !el.closest(".resume-cover"))
+      const now = performance.now()
+      if (box) {
+        seen.firstAt ||= now
+        seen.lastAt = now
+        if (box.classList.contains("loading-route")) seen.route = true
+        if (box.textContent?.trim()) seen.texts.push(box.textContent.trim())
+      } else if (seen.firstAt && (location.pathname === "/read" || document.querySelector('[data-page-ready="false"]'))) {
+        // A moment with the move still under way and no box on screen.
+        seen.gap = true
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+  await page.locator('main a[href="/read/1"]').first().click()
+  await expect(page).toHaveURL(/\/read\/1$/, { timeout: 15_000 })
+  // The route box stays until the course page is there, then the page gate's own box (if the page is not yet shown) takes over.
+  await expect(page.locator(".loading-route")).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await expect(page.locator('[role="status"][aria-label="Loading"].loading-full, .page-loading')).toHaveCount(0)
+  const seen = await page.evaluate(() => (window as unknown as { __hand: { route: boolean; firstAt: number; lastAt: number; gap: boolean; texts: string[] } }).__hand)
+  expect(seen.route, "the Read Aloud box showed while the course came").toBe(true)
+  expect(seen.texts, "and held no text").toEqual([])
+  expect(seen.gap, "the box was never gone while the move was under way").toBe(false)
+  expect(seen.lastAt - seen.firstAt, "a loading screen that showed stayed at least 500 ms").toBeGreaterThanOrEqual(500)
+})
