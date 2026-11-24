@@ -71,6 +71,8 @@ export function BackButton() {
   const tapped = useRef(false)
   const tapTimer = useRef(0)
   const standalone = useStandalone()
+  // The last link to a place on this same page: where the reader was, and whether the link added a history step.
+  const anchorJump = useRef<{ path: string; y: number; pushed: boolean } | null>(null)
 
   // Names the entry the page is on. One without an id is new: a move forward by a link or the router,
   // whose state Next.js just wrote. It is stamped, and remembers the entry it came from.
@@ -194,6 +196,16 @@ export function BackButton() {
     const onHide = () => {
       if (document.visibilityState === "hidden") save()
     }
+    const onAnchor = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a")
+      const href = link?.getAttribute("href")
+      if (!href || !href.startsWith("#")) return
+      const before = { length: window.history.length, hash: window.location.hash, y: currentScrollY(), path: window.location.pathname }
+      window.setTimeout(() => {
+        anchorJump.current = { path: before.path, y: before.y, pushed: window.history.length > before.length || window.location.hash !== before.hash }
+      }, 50)
+    }
+    document.addEventListener("click", onAnchor, true)
     window.addEventListener("scroll", onScroll, { passive: true })
     document.addEventListener("click", save, true)
     window.addEventListener("popstate", onPop)
@@ -202,6 +214,7 @@ export function BackButton() {
     return () => {
       flushScroll()
       window.clearTimeout(tapTimer.current)
+      document.removeEventListener("click", onAnchor, true)
       window.removeEventListener("scroll", onScroll)
       document.removeEventListener("click", save, true)
       window.removeEventListener("popstate", onPop)
@@ -227,7 +240,15 @@ export function BackButton() {
       type="button"
       aria-label="Back"
       onClick={() => {
-        // On a #hash step (a glossary section link) Back undoes the step, to the top of the same page, as a browser does.
+        // After a link to a place on the same page (a glossary section link) Back returns to where the reader was: it undoes
+        // the step when the link made one (a #hash in the address, or a longer history), and scrolls back when it made none.
+        const jump = anchorJump.current
+        if (jump && jump.path === window.location.pathname) {
+          anchorJump.current = null
+          if (jump.pushed || window.location.hash) window.history.back()
+          else window.scrollTo(0, jump.y)
+          return
+        }
         if (window.location.hash && window.history.length > 1) {
           window.history.back()
           return
