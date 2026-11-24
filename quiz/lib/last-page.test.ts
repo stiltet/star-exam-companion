@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { canOpenPage, COVER_LIMIT_MS, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, WATCH_GIVE_UP_MS, parseLastPage, placeToRestore, rememberable, resumeTarget, serialiseLastPage, watchStep } from "./last-page.ts"
+import { canOpenPage, COVER_LIMIT_MS, finishActions, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, WATCH_GIVE_UP_MS, parseLastPage, placeToRestore, rememberable, resumeTarget, serialiseLastPage, watchStep } from "./last-page.ts"
 
 const now = 1_000_000_000_000
 
@@ -94,4 +94,9 @@ test("the launch watch ends the cover at its limit, finishes when the page is re
   assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 1, false, false, true), { endCover: false, finish: "gave-up" })
   // A page that is ready after 30 s is still ready: its place is restored.
   assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 5000, false, true, true), { endCover: false, finish: "ready" })
+})
+
+test("a watch that gave up restores no place and ends the move, and one that finished restores the place and leaves the move to its own end", () => {
+  assert.deepEqual(finishActions("ready"), { restore: true, endResuming: false })
+  assert.deepEqual(finishActions("gave-up"), { restore: false, endResuming: true })
 })

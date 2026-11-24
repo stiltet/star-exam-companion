@@ -165,3 +165,74 @@ test("a saved page that is slow is covered by a full-screen loading box after th
   // The hidden launch cover stays in the page, so only a box that shows (loading-full) is counted.
   await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toHaveCount(0)
 })
+
+type Seen = { covered: boolean; shown?: number; gone?: number; bare: number }
+
+// Watches every frame of a launching page: when the loading box that hides the page showed and went, and every frame in which home was
+// bare, that is the launch cover already gone, no box, and the saved page not yet there.
+const watchFrames = (page: Page) =>
+  page.addInitScript(() => {
+    const seen: Seen = { covered: false, bare: 0 }
+    ;(window as unknown as { __frames: Seen }).__frames = seen
+    const frame = () => {
+      const box = [...document.querySelectorAll('[role="status"][aria-label="Loading"].loading-full')].find((el) => !el.closest(".resume-cover"))
+      const now = performance.now()
+      if (box) {
+        seen.shown ??= now
+        seen.gone = undefined
+      } else if (seen.shown !== undefined) seen.gone ??= now
+      if (document.documentElement.hasAttribute("data-resuming")) seen.covered = true
+      else if (seen.covered && !box && location.pathname === "/") seen.bare++
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+const framesOf = (page: Page) => page.evaluate(() => (window as unknown as { __frames: Seen }).__frames)
+
+const leaveGlossaryAt = async (page: Page, y: number) => {
+  await page.goto("/glossary")
+  await expect(page.locator("main")).toBeVisible()
+  await page.evaluate((to) => window.scrollTo(0, to), y)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(y)
+}
+
+test("the slow-page box stays 500 ms once shown even when the saved page comes right after it, and home is never bare between the cover and the box", async ({ page, context }) => {
+  await leaveGlossaryAt(page, 500)
+  const launch = await context.newPage()
+  await watchFrames(launch)
+  // The saved page is held until the test has seen the box, then let go 100 ms later: only the hold keeps the box up.
+  let release = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await launch.route(/\/glossary(\?|$)/, async (route) => {
+    await held
+    await route.continue()
+  })
+  await launch.goto("/")
+  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toBeVisible({ timeout: 8000 })
+  await launch.waitForTimeout(100)
+  release()
+  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect.poll(async () => (await framesOf(launch)).gone, { message: "the box went", timeout: 10_000 }).toBeDefined()
+  const seen = await framesOf(launch)
+  expect(seen.covered, "the launch cover was drawn").toBe(true)
+  expect(seen.gone! - seen.shown!, "the box stayed at least 500 ms").toBeGreaterThanOrEqual(480)
+  expect(seen.bare, "no frame of bare home between the cover and the box").toBe(0)
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
+})
+
+test("a saved page that comes before the cover limit shows no slow-page box at all", async ({ page, context }) => {
+  await leaveGlossaryAt(page, 500)
+  const launch = await context.newPage()
+  await watchFrames(launch)
+  await launch.route(/\/glossary(\?|$)/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    await route.continue()
+  })
+  await launch.goto("/")
+  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
+  const seen = await framesOf(launch)
+  expect(seen.shown, "no box of the slow-page kind came up").toBeUndefined()
+  expect(seen.bare, "and home was never bare").toBe(0)
+})
