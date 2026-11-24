@@ -38,3 +38,9 @@ test("the online demo sends nothing, so its answers stay on the device", () => {
   assert.equal(out.called, false)
   assert.equal(out.result, null)
 })
+
+test("the demo names itself with DEMO first and the real app does not", async () => {
+  const { appNames } = await import("./static-demo.ts")
+  assert.deepEqual(appNames(true), { name: "DEMO - Star Exam Companion", short: "DEMO - Star Exam" })
+  assert.deepEqual(appNames(false), { name: "Star Exam Companion", short: "Star Exam" })
+})

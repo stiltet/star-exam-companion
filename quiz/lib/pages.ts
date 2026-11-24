@@ -1,6 +1,8 @@
 // The quiz's pages, in menu order. The header, the home navigation and the missing-page
 // list all read this, so a page cannot be in one of them and absent from the others.
 
+import { APP_NAME } from "./static-demo.ts"
+
 export type SitePage = {
   href: string
   menu: string
@@ -43,5 +45,5 @@ export function phoneTitle(pathname: string): string {
   if (OTHER_TITLES[pathname]) return OTHER_TITLES[pathname]
   if (pathname.startsWith("/study/")) return "Study"
   if (pathname.startsWith("/read/")) return "Read Aloud"
-  return "Star Exam Companion"
+  return APP_NAME
 }

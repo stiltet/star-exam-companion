@@ -148,7 +148,7 @@ describe('pnpm runs from the root', () => {
       assert.equal(top[name], `pnpm --dir quiz ${name}`, name);
     }
     for (const name of ['gate', 'gate:unit', 'gate:browser']) assert.equal(quiz[name], `cd .. && pnpm ${name}`, name);
-    assert.equal(top['gate:unit'], 'node --test');
+    assert.match(top['gate:unit'], /^mkdir -p temp\/gate && node --test /, 'gate:unit runs node --test and writes its timing report');
     assert.equal(top['gate:browser'], 'pnpm e2e');
     assert.equal(top.gate, 'pnpm gate:unit && pnpm gate:browser');
   });

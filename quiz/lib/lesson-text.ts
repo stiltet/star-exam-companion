@@ -39,11 +39,19 @@ export function isNoiseLine(raw: string): boolean {
   return false
 }
 
+// A link in the middle of a sentence is captured as a line break, so the rest of the sentence arrives as its own line that starts with
+// the punctuation that follows the link (". While it works…"). That line belongs to the line before it. ".NET" and "...", which are
+// not that, stay apart.
+const CONTINUES_PREVIOUS_LINE = /^[.,;:!?)](?=\s|$)/
+
 export function cleanLessonText(text: string): string {
-  return text
-    .split(/\r?\n/)
-    .filter((line) => !isNoiseLine(line))
-    .map((line) => line.trimEnd())
-    .join("\n")
-    .trim()
+  const lines: string[] = []
+  for (const raw of text.split(/\r?\n/)) {
+    if (isNoiseLine(raw)) continue
+    const line = raw.trimEnd()
+    const previous = lines.length - 1
+    if (previous >= 0 && CONTINUES_PREVIOUS_LINE.test(line.trimStart())) lines[previous] = `${lines[previous]!.trimEnd()}${line.trimStart()}`
+    else lines.push(line)
+  }
+  return lines.join("\n").trim()
 }

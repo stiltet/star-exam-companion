@@ -13,7 +13,7 @@
     "e2e:install": "pnpm --dir quiz e2e:install",
     "gate": "pnpm gate:unit && pnpm gate:browser",
     "gate:unit": "mkdir -p temp/gate && node --test --test-reporter=spec --test-reporter=./quiz/e2e/time-reporter.mjs --test-reporter-destination=stdout --test-reporter-destination=temp/gate/unit.json",
-    "gate:browser": "mkdir -p temp/gate && PLAYWRIGHT_JSON_OUTPUT_NAME=\"$PWD/temp/gate/browser.json\" pnpm e2e --reporter=list,json",
+    "gate:browser": "pnpm e2e",
     "lint": "pnpm --dir quiz lint",
     "reading:crawl": "pnpm --dir quiz reading:crawl",
     "reading:list": "pnpm --dir quiz reading:list",

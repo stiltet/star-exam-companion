@@ -15,7 +15,7 @@ import { AudioUnlock } from "@/components/audio"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DemoBanner } from "@/components/demo-banner"
 import { InstallHint } from "@/components/install-hint"
-import { BASE_PATH, STATIC_DEMO } from "@/lib/static-demo"
+import { APP_NAME, APP_SHORT_NAME, BASE_PATH, STATIC_DEMO } from "@/lib/static-demo"
 import { connection } from "next/server"
 
 // Next does not add a sub-path to these links itself. Empty everywhere except the online demo,
@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!STATIC_DEMO) await connection()
   const pack = activePack().meta
   return {
-    title: "Star Exam Companion",
+    title: APP_NAME,
     description: `Open-source exam preparation for the ${pack.certification} certification. Brutalist. Minimal. Exam Focused.`,
     keywords: ["Google Cloud", ...(pack.keywords ?? []), "Certification", "Exam Prep", pack.title],
     icons: {
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     appleWebApp: {
       capable: true,
-      title: "Star Exam",
+      title: APP_SHORT_NAME,
       statusBarStyle: "default",
     },
   }
