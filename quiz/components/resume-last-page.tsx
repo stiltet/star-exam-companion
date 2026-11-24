@@ -78,9 +78,9 @@ function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boo
     if (step.endCover) {
       covered = false
       // The box is drawn in this very frame, before the cover goes, so home is never seen bare between the two.
-      if (restore && !isReady && slowShownAt === null) {
+      if (restore && slow && !isReady && slowShownAt === null) {
         slowShownAt = now
-        flushSync(() => slow?.(true))
+        flushSync(() => slow(true))
       }
       endCover()
     }
