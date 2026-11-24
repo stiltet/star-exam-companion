@@ -4,6 +4,16 @@
 // The literal process.env name is needed: Next replaces it with the value when it builds.
 export const STATIC_DEMO = process.env.NEXT_PUBLIC_QUIZ_STATIC === "1"
 
+// What the app calls itself in the tab, the installed app and the header. The demo says DEMO first,
+// so nobody takes it for the real app.
+export function appNames(demo: boolean): { name: string; short: string } {
+  const prefix = demo ? "DEMO - " : ""
+  return { name: `${prefix}Star Exam Companion`, short: `${prefix}Star Exam` }
+}
+
+export const APP_NAME = appNames(STATIC_DEMO).name
+export const APP_SHORT_NAME = appNames(STATIC_DEMO).short
+
 // Where the demo's setup instructions live.
 export const SETUP_URL = "https://github.com/stiltet/star-exam-companion#full-local-setup"
 
