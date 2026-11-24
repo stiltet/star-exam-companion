@@ -16,7 +16,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   retries: 0,
   forbidOnly: Boolean(process.env.CI),
-  // The JSON report is the timing record the Pre-push checks read (temp/gate/browser.json, resolved from this folder).
+  // The json report is what the Pre-push checks read to refuse a slow test; it is written beside the unit test report.
   reporter: [["list"], ["json", { outputFile: "../temp/gate/browser.json" }]],
   use: {
     baseURL: `http://localhost:${port}`,

@@ -85,3 +85,70 @@ test("a private video lesson is its title and a video stop, and no transcript", 
   assert.deepEqual(video?.paragraphs.map((paragraph) => paragraph.text), ["A made-up video"], "a video reads only its title")
   assert.deepEqual(video?.videoAt, [1], "the video stop comes after the title")
 })
+
+// Google's page is the only source of order: the crawl manifest is its saved copy, and nothing else (capture time, page id) may decide.
+async function orderSetup(t: import("node:test").TestContext, manifestOrder: string[] | null, trusted = true) {
+  const { mkdtemp, rm } = await import("node:fs/promises")
+  const { tmpdir } = await import("node:os")
+  const path = await import("node:path")
+  const { savePrivateReading, privateReadingRoot } = await import("./private-reading.ts")
+  const { manifestFile, writeManifest, LISTING_VERSION } = await import("./reading-crawl.ts")
+  const base = await mkdtemp(path.join(tmpdir(), "order-provider-"))
+  const before = process.env.QUIZ_PRIVATE_DIR
+  process.env.QUIZ_PRIVATE_DIR = path.join(base, "private")
+  t.after(async () => {
+    if (before === undefined) delete process.env.QUIZ_PRIVATE_DIR
+    else process.env.QUIZ_PRIVATE_DIR = before
+    await rm(base, { recursive: true, force: true })
+  })
+  // Saved in this order, which is deliberately not any course order.
+  for (const id of ["31", "12", "20", "45"]) {
+    await savePrivateReading("order-test", "1", { pageId: id, title: `Made-up lesson ${id}`, text: `Made-up lesson ${id} has a sentence that is long enough to count.` })
+  }
+  if (manifestOrder) {
+    await writeManifest(manifestFile(privateReadingRoot(), "order-test", "1"), {
+      checkedAt: "2026-01-01T00:00:00.000Z",
+      listing: LISTING_VERSION,
+      complete: trusted,
+      lessons: manifestOrder.map((id) => ({ title: `Made-up lesson ${id}`, href: `/course_templates/9/html_bundles/${id}`, pageId: id, hash: "x" })),
+    })
+  }
+  return { ...loadPack(testRoot, "agentic-architect").courses[0]!, id: "1", packId: "order-test", provider: "private" as const }
+}
+
+test("private lessons follow the manifest order, whatever order they were saved in", async (t) => {
+  const course = await orderSetup(t, ["20", "45", "12", "31"])
+  const loaded = await courseBundle(course)
+  assert.equal(loaded.ok, true)
+  if (!loaded.ok) return
+  assert.deepEqual(loaded.pages.map((page) => page.id), ["20", "45", "12", "31"])
+  assert.equal(loaded.orderUnchecked, undefined)
+})
+
+test("reversing the manifest reverses the lessons, so nothing but the manifest decides", async (t) => {
+  const course = await orderSetup(t, ["31", "12", "45", "20"].reverse())
+  const loaded = await courseBundle(course)
+  assert.equal(loaded.ok, true)
+  if (!loaded.ok) return
+  assert.deepEqual(loaded.pages.map((page) => page.id), ["20", "45", "12", "31"])
+})
+
+test("a saved lesson the manifest does not list is kept, after the listed ones", async (t) => {
+  const course = await orderSetup(t, ["45", "20"])
+  const loaded = await courseBundle(course)
+  assert.equal(loaded.ok, true)
+  if (!loaded.ok) return
+  assert.deepEqual(loaded.pages.map((page) => page.id).slice(0, 2), ["45", "20"])
+  assert.equal(loaded.pages.length, 4)
+})
+
+for (const [name, manifest] of [["no manifest", null], ["an unfinished manifest", ["20", "45", "12", "31"]]] as const) {
+  test(`with ${name} the order is flagged as not checked against Google`, async (t) => {
+    const course = await orderSetup(t, manifest ? [...manifest] : null, false)
+    const loaded = await courseBundle(course)
+    assert.equal(loaded.ok, true)
+    if (!loaded.ok) return
+    assert.equal(loaded.orderUnchecked, true)
+    assert.equal(loaded.pages.length, 4)
+  })
+}

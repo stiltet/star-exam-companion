@@ -21,3 +21,13 @@ test("real lines stay: headings, short words, code and sentences", () => {
   }
   assert.equal(cleanLessonText("Alpha line\n\nBeta line"), "Alpha line\nBeta line")
 })
+
+test("the rest of a sentence after a link rejoins the line before it", () => {
+  assert.equal(cleanLessonText("It uses a made-up tool\n. While it helps, it is slow.\nNext line."), "It uses a made-up tool. While it helps, it is slow.\nNext line.")
+  assert.equal(cleanLessonText("See the made-up page\n, which is short.\n; and more."), "See the made-up page, which is short.; and more.")
+})
+
+test("lines that only look like a continuation stay apart", () => {
+  assert.equal(cleanLessonText("Made-up intro\n.NET is a made-up name\n...and so on"), "Made-up intro\n.NET is a made-up name\n...and so on")
+  assert.equal(cleanLessonText(". Starts the text"), ". Starts the text")
+})

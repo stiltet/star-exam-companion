@@ -44,14 +44,29 @@ function privateBundle(records: Awaited<ReturnType<typeof readPrivateReadings>>,
   return bundle
 }
 
+// The saved readings in the order the manifest lists them. A reading the manifest does not list is kept, after the listed ones.
+// No manifest: the saved order is left as it is.
+export function orderByManifest<T extends { pageId: string }>(records: T[], manifest: { lessons: { pageId: string }[] } | null): T[] {
+  if (!manifest) return records
+  const rank = new Map<string, number>()
+  manifest.lessons.forEach((lesson, index) => { if (!rank.has(lesson.pageId)) rank.set(lesson.pageId, index) })
+  const unlisted = manifest.lessons.length
+  return records
+    .map((record, index) => ({ record, index }))
+    .sort((a, b) => (rank.get(a.record.pageId) ?? unlisted) - (rank.get(b.record.pageId) ?? unlisted) || a.index - b.index)
+    .map(({ record }) => record)
+}
+
 export const privateReadingProvider: ReadingProvider = {
   async load(course) {
     try {
       const records = await readPrivateReadings(course.packId, course.id)
       const manifest = await readManifest(manifestFile(privateReadingRoot(), course.packId, course.id)).catch(() => null)
-      const bundle = privateBundle(records, new Set((manifest?.lessons ?? []).filter((lesson) => lesson.kind === "video").map((lesson) => lesson.pageId)))
+      const trusted = manifest && manifestProblem(manifest) === null ? manifest : null
+      // Google's page is the only source of order, and the crawl manifest is its saved copy. Without a trusted one no order can be proven.
+      const bundle = privateBundle(orderByManifest(records, trusted), new Set((manifest?.lessons ?? []).filter((lesson) => lesson.kind === "video").map((lesson) => lesson.pageId)))
       // No ids: a private page's id is made by the capture, not by Google, so a link built from it would not exist.
-      return { ok: true, bundle, pages: pageList(bundle), ids: [] }
+      return { ok: true, bundle, pages: pageList(bundle), ids: [], ...(trusted ? {} : { orderUnchecked: true as const }) }
     } catch (error) {
       // One damaged file must not take down the Read Aloud overview or the offline worker; the message names no text.
       return {
