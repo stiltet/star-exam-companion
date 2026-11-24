@@ -18,7 +18,13 @@ test("a launch on home goes to the last page left less than 24 hours ago", async
 
 test("a launch after 24 hours opens home, and so does Home tapped inside the app", async ({ page, context }) => {
   await page.goto("/progress")
-  await page.evaluate(() => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/progress", at: Date.now() - 25 * 60 * 60 * 1000 })))
+  // The old stamp is written by the launching page itself, as it starts: the first page also saves its own place when
+  // another page opens beside it, which would replace a stamp set from outside.
+  await context.addInitScript(() => {
+    if (location.pathname !== "/" || document.referrer || sessionStorage.getItem("seeded")) return
+    sessionStorage.setItem("seeded", "1")
+    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/progress", at: Date.now() - 25 * 60 * 60 * 1000 }))
+  })
   const launch = await context.newPage()
   await launch.goto("/")
   await launch.waitForTimeout(800)
