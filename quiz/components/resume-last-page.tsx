@@ -40,6 +40,13 @@ async function canOpen(path: string): Promise<boolean> {
   }
 }
 
+// The launch cover is done. Its box stops being a loading element too, so nothing on the page says it is loading
+// when it is not (the hidden cover is still in the page).
+function endCover() {
+  document.documentElement.removeAttribute(RESUME_MARK)
+  document.querySelector(".resume-cover [data-loading]")?.removeAttribute("data-loading")
+}
+
 const marked = (): number | null => {
   const value = document.documentElement.getAttribute(RESUME_MARK)
   return value === null ? null : Number(value)
@@ -48,7 +55,7 @@ const marked = (): number | null => {
 // Takes the cover off once `ready` says so and it has shown 500 ms; 3 s after it was drawn whatever happens.
 function uncover(ready: () => boolean, restore?: () => void) {
   const shownAt = marked()
-  if (shownAt === null) return
+  if (shownAt === null) return endCover()
   const timer = window.setInterval(() => {
     const done = Date.now() - shownAt > 3000 || (ready() && loadingRemaining(shownAt, Date.now()) === 0)
     if (!done) return
@@ -56,7 +63,7 @@ function uncover(ready: () => boolean, restore?: () => void) {
     void settled().then(() => {
       // The page is drawn and hidden behind the cover: put it where it was left before the cover goes.
       restore?.()
-      document.documentElement.removeAttribute(RESUME_MARK)
+      endCover()
     })
   }, 50)
 }
@@ -70,7 +77,7 @@ export function ResumeLastPage() {
 
   useEffect(() => {
     if (!readStandalone()) {
-      document.documentElement.removeAttribute(RESUME_MARK)
+      endCover()
       return
     }
     try {
@@ -107,7 +114,7 @@ export function ResumeLastPage() {
       if (!resuming && rememberable(path)) window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path, at: Date.now(), scroll: 0 }))
     } catch {
       // Without storage the app simply opens on home.
-      document.documentElement.removeAttribute(RESUME_MARK)
+      endCover()
     }
   }, [pathname, search, router])
 
