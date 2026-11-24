@@ -66,13 +66,13 @@ export function NavProgress() {
   // The page has arrived. A loading state that has shown stays until it has shown 500 ms, so it never flashes.
   const finish = () => {
     const wait = loadingRemaining(shownAt.current, clock())
-    if (wait <= 0) return finishNow()
+    if (wait <= 0) return endMove()
     timers.current.forEach((timer) => window.clearTimeout(timer))
     timers.current = []
-    if (ending.current === 0) ending.current = window.setTimeout(finishNow, wait)
+    if (ending.current === 0) ending.current = window.setTimeout(endMove, wait)
   }
 
-  const finishNow = () => {
+  const endMove = () => {
     window.clearTimeout(ending.current)
     ending.current = 0
     shownAt.current = null
