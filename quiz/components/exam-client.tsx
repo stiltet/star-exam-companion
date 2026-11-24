@@ -296,8 +296,8 @@ export function ExamClient({ questions, sections, length }: Props) {
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
         {/* Timer Bar */}
         {/* Fixed just under the header, not behind it. */}
-        <div style={{ top: "var(--stack-height, 0px)" }} className="border-2 border-foreground mb-6 sticky bg-background z-10">
-          <div className="p-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
+        <div style={{ top: "var(--stack-height, 0px)" }} className="-mx-4 border-b-2 border-foreground mb-6 sticky bg-background z-10">
+          <div className="px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
             <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(timeRemaining)}`}>{formatTime(timeRemaining)}</span>
             <span className="text-sm">
               {currentIndex + 1}/{examQuestions.length} · Unanswered: {unansweredCount} · Flagged: {flagged.size}
