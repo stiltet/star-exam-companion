@@ -68,6 +68,8 @@ function uncover(ready: () => boolean, restore?: () => void) {
     if (!(ready() && held) && !gaveUp) return
     window.clearInterval(timer)
     void settled().then(() => {
+      // A newer move took over the watch while the page settled: it restores and ends the cover, not this one.
+      if (watching !== timer) return
       // The page is drawn and hidden behind the cover: put it where it was left before the cover goes.
       if (!gaveUp) restore?.()
       else {
