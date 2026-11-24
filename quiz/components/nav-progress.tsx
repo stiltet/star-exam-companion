@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
-import { LOADING_AFTER_MS, loadingRemaining } from "@/lib/loading-time"
+import { loadingRemaining } from "@/lib/loading-time"
 
-const SPINNER_AFTER_MS = LOADING_AFTER_MS
+const SPINNER_AFTER_MS = 200
 const clock = () => performance.now()
 // After this long other links can be tapped again, so the app can never stay stuck. A button that
 // shows loading NEVER goes back to normal by itself (owner, 16 Nov): it stays until the page
