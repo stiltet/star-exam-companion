@@ -240,11 +240,6 @@ html[data-resuming] .resume-cover {
   display: block;
   animation: page-loading-hide 0s linear 3s forwards;
 }
-/* Above the sticky header and the player, so the cover never shows as a half screen. */
-.resume-cover > [role="status"] {
-  z-index: 60;
-}
-
 /* The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
 .page-loading {
   opacity: 0;
