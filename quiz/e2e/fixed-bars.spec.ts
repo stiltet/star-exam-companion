@@ -22,15 +22,27 @@ test("the Voice quiz keeps its section name in the middle and its Next buttons o
   expect({ h: other.h, font: other.font, weight: other.weight, pad: other.pad }, "Previous and Next in the other sections are the Voice quiz's size").toEqual({ h: section.h, font: section.font, weight: section.weight, pad: section.pad })
 })
 
-test("the Test exam timer is one strip under the header with one line below it", async ({ page }) => {
+test("the Test exam timer is a full-width bar under the header, with the header's border, on a phone and on a desktop", async ({ page }) => {
   await page.goto("/exam")
   await page.getByRole("button", { name: /START.*EXAM/i }).click()
-  await page.waitForTimeout(400)
-  const strip = page.locator('[role="timer"]').locator("xpath=ancestor::div[contains(@class,'sticky')]")
-  const gap = await strip.evaluate((el) => Math.round(el.getBoundingClientRect().top - document.querySelector("header")!.getBoundingClientRect().bottom))
-  expect(gap, "the strip touches the header").toBe(0)
-  expect(await strip.evaluate((el) => getComputedStyle(el).borderBottomWidth), "the same 2px border as the header").toBe("2px")
-  expect(await strip.locator("div.h-0\\.5").count(), "no partial line").toBe(0)
+  const strip = page.locator("[data-sub-bar]")
+  await expect(strip.locator('[role="timer"]')).toBeVisible()
+  for (const viewport of [{ width: 375, height: 844 }, { width: 1280, height: 800 }]) {
+    await page.setViewportSize(viewport)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const { gap, width, viewportWidth, border } = await strip.evaluate((el) => ({
+      gap: Math.round(el.getBoundingClientRect().top - document.querySelector("header")!.getBoundingClientRect().bottom),
+      width: Math.round(el.getBoundingClientRect().width),
+      viewportWidth: document.documentElement.clientWidth,
+      border: getComputedStyle(el).borderBottomWidth,
+    }))
+    expect(gap, `${viewport.width} px: the bar touches the header`).toBe(0)
+    expect(width, `${viewport.width} px: the bar spans the whole width, like the breadcrumb bar`).toBe(viewportWidth)
+    expect(border, "the same 2px border as the header").toBe("2px")
+  }
+  await page.evaluate(() => window.scrollTo(0, 400))
+  await page.waitForTimeout(300)
+  expect(await strip.evaluate((el) => Math.round(el.getBoundingClientRect().top - document.querySelector("header")!.getBoundingClientRect().bottom)), "it stays under the header while scrolling").toBe(0)
 })
 
 test("a Flashcards session shows the section in the fixed breadcrumb only", async ({ page }) => {

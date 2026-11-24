@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import type { Crumb } from "@/components/atoms/breadcrumb"
-import { CrumbBar, CrumbProvider } from "@/components/crumb-slot"
+import { CrumbBar, CrumbProvider, SubBar } from "@/components/crumb-slot"
 import { StackHeight } from "@/components/stack-height"
 
 // The one layout of every page (owner, 17 Nov): the header and menu, then the breadcrumb where the page has one, both
@@ -26,6 +26,7 @@ export function PageShell({ breadcrumb, variant = "default", children }: { bread
       <div data-sticky-stack className="sticky top-0 z-40 w-full bg-background">
         <SiteHeader />
         <CrumbBar />
+        <SubBar />
       </div>
       <main className={`flex-1 max-w-4xl mx-auto px-4 w-full ${main}`}>{children}</main>
       <SiteFooter flush={variant === "fill"} />

@@ -260,6 +260,6 @@ a[data-loading] * {
 
 /* With a breadcrumb bar above it, every page starts the same distance below the bar (the Read Aloud pages' spacing), whichever
    page variant it is and whether the trail is fixed or set by the page's own state. */
-[data-sticky-stack]:has([data-crumb-bar]) + main {
+[data-sticky-stack]:has([data-crumb-bar], [data-sub-bar]) + main {
   padding-top: 1rem;
 }

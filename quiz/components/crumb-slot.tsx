@@ -7,14 +7,36 @@ import { Breadcrumb, type Crumb } from "@/components/atoms/breadcrumb"
 // state (Flashcards, once a session starts) sets it with useBreadcrumb, and the same fixed bar shows it.
 const Value = createContext<Crumb[] | null>(null)
 const Setter = createContext<(trail: Crumb[] | null) => void>(() => {})
+// A second bar under the breadcrumb or the header, full width like it (the Test exam's timer). It sits in the same fixed stack.
+const BarValue = createContext<ReactNode>(null)
+const BarSetter = createContext<(bar: ReactNode) => void>(() => {})
 
 export function CrumbProvider({ initial, children }: { initial?: Crumb[]; children: ReactNode }) {
   const [trail, setTrail] = useState<Crumb[] | null>(initial ?? null)
+  const [bar, setBar] = useState<ReactNode>(null)
   return (
     <Setter.Provider value={setTrail}>
-      <Value.Provider value={trail}>{children}</Value.Provider>
+      <Value.Provider value={trail}>
+        <BarSetter.Provider value={setBar}>
+          <BarValue.Provider value={bar}>{children}</BarValue.Provider>
+        </BarSetter.Provider>
+      </Value.Provider>
     </Setter.Provider>
   )
+}
+
+// The bar a page puts under the header (and its breadcrumb): full width, with its content in the page's container.
+export function SubBar() {
+  const bar = useContext(BarValue)
+  return bar ? <div data-sub-bar className="border-b-2 border-foreground">{bar}</div> : null
+}
+
+export function useSubBar(bar: ReactNode) {
+  const set = useContext(BarSetter)
+  useEffect(() => {
+    set(bar)
+  })
+  useEffect(() => () => set(null), [set])
 }
 
 export function CrumbBar() {

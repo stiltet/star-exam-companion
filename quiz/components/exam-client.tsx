@@ -9,6 +9,7 @@ import type { Question } from "@/lib/exam-data"
 import { examDuration, retakeIds, reviewHash, reviewId, shuffle } from "@/lib/exam-review"
 import { EXAM_TARGET } from "@/lib/learn"
 import { Text } from "@/components/atoms/text"
+import { useSubBar } from "@/components/crumb-slot"
 import { examHistory } from "@/lib/progress"
 import { EXAM_KEY, examOutcome, examResume, examSeconds, loadState, saveState, secondsLeft } from "@/lib/resume"
 import type { ExamLength } from "@/lib/score"
@@ -39,6 +40,23 @@ function setHash(id: string | null) {
   const url = `${window.location.pathname}${window.location.search}${id ? reviewHash(id) : ""}`
   window.history.replaceState(window.history.state, "", url)
   window.dispatchEvent(new HashChangeEvent("hashchange"))
+}
+
+// The Test exam's timer: a full-width bar in the fixed stack under the header, like the breadcrumb bar of other pages, with its
+// text in the page's container. The time left is a light fill behind the text.
+function ExamTimerBar({ time, duration, index, total, unanswered, flagged }: { time: number; duration: number; index: number; total: number; unanswered: number; flagged: number }) {
+  const fill = "color-mix(in srgb, var(--foreground) 14%, transparent)"
+  useSubBar(
+    <div className="bg-no-repeat" style={{ backgroundImage: `linear-gradient(${fill}, ${fill})`, backgroundSize: `${(time / duration) * 100}% 100%` }}>
+      <div className="max-w-4xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
+        <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(time)}`}>{formatTime(time)}</span>
+        <span className="text-sm">
+          {index + 1}/{total} · Unanswered: {unanswered} · Flagged: {flagged}
+        </span>
+      </div>
+    </div>,
+  )
+  return null
 }
 
 export function ExamClient({ questions, sections, length }: Props) {
@@ -294,17 +312,7 @@ export function ExamClient({ questions, sections, length }: Props) {
     return (
       <div>
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
-        {/* Timer Bar */}
-        {/* Fixed just under the header, not behind it. */}
-        <div style={{ top: "var(--stack-height, 0px)" }} className="-mx-4 -mt-8 mb-6 sticky bg-background z-10 border-b-2 border-foreground">
-          {/* Time left is shown as a fill behind the text, so the strip has the same full-width border as the header, and the strip starts right under the header (-mt-8 cancels the page top padding). */}
-          <div className="px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1 bg-no-repeat" style={{ backgroundImage: "linear-gradient(color-mix(in srgb, var(--foreground) 14%, transparent), color-mix(in srgb, var(--foreground) 14%, transparent))", backgroundSize: `${(timeRemaining / duration) * 100}% 100%` }}>
-            <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(timeRemaining)}`}>{formatTime(timeRemaining)}</span>
-            <span className="text-sm">
-              {currentIndex + 1}/{examQuestions.length} · Unanswered: {unansweredCount} · Flagged: {flagged.size}
-            </span>
-          </div>
-        </div>
+        <ExamTimerBar time={timeRemaining} duration={duration} index={currentIndex} total={examQuestions.length} unanswered={unansweredCount} flagged={flagged.size} />
 
         <StepNav
           kind="question"
