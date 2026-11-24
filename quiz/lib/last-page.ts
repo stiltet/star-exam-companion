@@ -4,7 +4,8 @@
 export const LAST_PAGE_KEY = "quiz-last-page"
 export const LAST_PAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
-export type LastPage = { path: string; at: number }
+// scroll: how far down the page was, in whole pixels, so the launch opens at the same place.
+export type LastPage = { path: string; at: number; scroll: number }
 
 // A path to record: inside the app, and not an API route or a file. Home is recorded too, so that
 // leaving the app on home opens home again and not an older page.
@@ -23,9 +24,10 @@ export function parseLastPage(raw: string | null): LastPage | null {
   try {
     const value: unknown = JSON.parse(raw)
     if (typeof value !== "object" || value === null) return null
-    const { path, at } = value as { path?: unknown; at?: unknown }
+    const { path, at, scroll } = value as { path?: unknown; at?: unknown; scroll?: unknown }
     if (typeof path !== "string" || typeof at !== "number" || !Number.isFinite(at)) return null
-    return rememberable(path) ? { path, at } : null
+    const y = typeof scroll === "number" && Number.isFinite(scroll) && scroll >= 0 && scroll <= 9_999_999 ? Math.round(scroll) : 0
+    return rememberable(path) ? { path, at, scroll: y } : null
   } catch {
     // Not JSON: nothing this app wrote.
     return null

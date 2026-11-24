@@ -10,26 +10,29 @@ test("api routes, files and other origins are not remembered", () => {
 })
 
 test("a stored page round-trips and junk is no page", () => {
-  const page = { path: "/study/a", at: now }
+  const page = { path: "/study/a", at: now, scroll: 1234 }
   assert.deepEqual(parseLastPage(serialiseLastPage(page)), page)
+  // A record without a usable scroll opens at the top.
+  assert.equal(parseLastPage('{"path":"/study/a","at":1}')?.scroll, 0)
+  assert.equal(parseLastPage('{"path":"/study/a","at":1,"scroll":-5}')?.scroll, 0)
   for (const raw of [null, "x", "[]", '{"path":1,"at":2}', '{"path":"/a"}']) assert.equal(parseLastPage(raw), null, String(raw))
 })
 
 test("a first load on home resumes a page younger than 24 hours", () => {
-  const saved = { path: "/practice?topic=t", at: now - 60_000 }
+  const saved = { path: "/practice?topic=t", at: now - 60_000, scroll: 0 }
   assert.equal(resumeTarget(saved, now, "/", true), "/practice?topic=t")
   assert.equal(resumeTarget({ ...saved, at: now - LAST_PAGE_MAX_AGE_MS }, now, "/", true), saved.path)
 })
 
 test("an old, future, missing, non-first or non-home case stays put", () => {
-  const saved = { path: "/study/a", at: now - 1000 }
+  const saved = { path: "/study/a", at: now - 1000, scroll: 0 }
   assert.equal(resumeTarget({ ...saved, at: now - LAST_PAGE_MAX_AGE_MS - 1 }, now, "/", true), null)
   assert.equal(resumeTarget({ ...saved, at: now + 5000 }, now, "/", true), null)
   assert.equal(resumeTarget(null, now, "/", true), null)
   assert.equal(resumeTarget(saved, now, "/", false), null)
   assert.equal(resumeTarget(saved, now, "/progress", true), null)
   // Left on home: a launch opens home, not an older page.
-  assert.equal(resumeTarget({ path: "/", at: now - 1000 }, now, "/", true), null)
+  assert.equal(resumeTarget({ path: "/", at: now - 1000, scroll: 0 }, now, "/", true), null)
 })
 
 // The script that marks the page before it is drawn must agree with resumeTarget.
