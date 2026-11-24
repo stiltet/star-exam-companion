@@ -73,7 +73,8 @@ export const WATCH_GIVE_UP_MS = 30_000
 
 // One tick of the launch watch, `elapsed` ms after the cover was drawn. The cover goes at the limit whatever happens. The watch
 // is over when the other page is ready and the loading box has stayed its minimum, or, if that never comes, at the give-up limit.
-// A page that is ready after the give-up limit still counts as ready, so its place is restored.
+// A page that is ready on the very tick after the give-up limit still counts as ready, so its place is restored; once the watch has
+// given up it is over, and a page that comes later is shown where it opens.
 export function watchStep(elapsed: number, covered: boolean, ready: boolean, held: boolean): { endCover: boolean; finish: "ready" | "gave-up" | null } {
   return {
     endCover: covered && elapsed > COVER_LIMIT_MS,

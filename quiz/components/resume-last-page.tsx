@@ -48,6 +48,8 @@ const marked = (): number | null => {
 
 // One watch at a time: a second call (a new move while the cover is still up) takes the first one's place.
 let watching = 0
+// The setter of the slow-page box, so whichever watch finishes last can take the box down.
+let lastSlow: ((on: boolean) => void) | undefined
 
 // Takes the cover off once `ready` says so and it has shown 500 ms. 3 s after it was drawn it goes whatever happens, which
 // is the same limit as the failsafe in globals.css (it works with no script). The restore of the place, and the start of
@@ -55,8 +57,11 @@ let watching = 0
 // When the cover goes at the limit with the saved page still not there, a loading box of the usual kind (over the whole page,
 // hiding it) takes its place, so home is never seen bare while the saved page is coming. `slow` shows and hides it, and
 // it too stays 500 ms once shown.
-function uncover(ready: () => boolean, restore?: () => void, slow?: (on: boolean) => void) {
+function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boolean) => void) {
   window.clearInterval(watching)
+  // The newest watch also ends a box an older one showed, even when it was not given the setter itself.
+  const slow = showSlow ?? lastSlow
+  lastSlow = slow
   // With no cover drawn (the early script did not mark this launch) there is no minimum to keep, but the move is still waited for.
   const drawnAt = marked()
   const startedAt = drawnAt ?? Date.now()
@@ -65,6 +70,7 @@ function uncover(ready: () => boolean, restore?: () => void, slow?: (on: boolean
   const timer = watching = window.setInterval(() => {
     const now = Date.now()
     const isReady = ready()
+    // Held: the launch cover has shown its 500 ms (when one was drawn), and the slow-page box, if it came, has shown its own.
     const held = (drawnAt === null || loadingRemaining(startedAt, now) === 0) && loadingRemaining(slowFrom, now) === 0
     const step = watchStep(now - startedAt, covered, isReady, held)
     if (step.endCover) {
