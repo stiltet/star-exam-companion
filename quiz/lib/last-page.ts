@@ -50,7 +50,7 @@ export function resumeTarget(saved: LastPage | null, now: number, currentPath: s
 // the app is not one, so tapping Home can never be sent back to the page it left. Keep it in step with
 // resumeTarget (it is tested against it) and with isLaunch.
 export const RESUME_MARK = "data-resuming"
-export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){}`
+export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){/*no readable record: the app opens home*/}`
 
 // The same test as the script's, for the component.
 export function isLaunch(referrer: string, navigationType: string | undefined): boolean {

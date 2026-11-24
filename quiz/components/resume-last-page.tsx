@@ -36,6 +36,7 @@ async function canOpen(path: string): Promise<boolean> {
   try {
     return (await caches.match(path)) !== undefined
   } catch {
+    // The cache cannot be read: treat the page as not on the device, so the app stays on home.
     return false
   }
 }
