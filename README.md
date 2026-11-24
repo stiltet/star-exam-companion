@@ -96,6 +96,7 @@ The app is built to be accessible and neuro-friendly, so that anyone can study w
   `quiz/scores-<exam>.jsonl` on your machine. Your answers are sent nowhere else.
 - Speech comes from the **macOS text-to-speech voice** (`say`), rendered on your machine and cached.
 - A **service worker** stores the pages, so the installed app works offline.
+- The installed app **reopens the last page you were on, at the place you had scrolled to**, if you left it less than 24 hours ago (otherwise it opens Home); a loading screen covers the page until it is fully drawn.
 
 ## Requirements
 
