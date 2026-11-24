@@ -14,7 +14,7 @@ afterAll(async () => {
   if (sharedBase) await rm(sharedBase, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
 })
 
-test("a lesson that Google changed is read again and saved over the old copy, first run", { timeout: 240_000, skip: browserMissing }, async () => {
+test("a lesson that Google changed is read again and saved over the old copy (set-up run)", { timeout: 240_000, skip: browserMissing }, async () => {
   sharedBase = await scratch()
   const courses: Record<string, FakeCard[]> = {
     "9001": [
@@ -31,13 +31,14 @@ test("a lesson that Google changed is read again and saved over the old copy, fi
   }
   sharedSite = await startFakeSite(courses)
 
-  const first = await runCrawl(sharedBase, sharedSite as FakeSite)
+  const first = await runCrawl(sharedBase, sharedSite)
   assert.equal(first.code, 0, first.out)
 })
 
 test("a lesson that Google changed is read again and saved over the old copy", { timeout: 240_000, skip: browserMissing }, async () => {
+  assert.ok(sharedSite, "this test continues the set-up run before it: run the whole file, not this test alone")
   const base = sharedBase
-  const site = sharedSite as FakeSite
+  const site = sharedSite
   const changed = "Synthetic changed intro text that is long enough to be a reading."
   site.setText("Intro bundle", changed)
   const run = await runCrawl(base, site)

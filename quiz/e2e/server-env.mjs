@@ -32,3 +32,11 @@ export const E2E_WORKERS = 2
 export function e2ePortFor(basePort, index) {
   return basePort + index
 }
+
+/** The port the browser tests use when QUIZ_E2E_PORT is not set. */
+export const E2E_DEFAULT_PORT = 47822
+
+/** QUIZ_E2E_PORT, or the default. For the tests and the config it is the first worker's port; each server reads its own. */
+export function e2eBasePort(env = process.env) {
+  return Number(env.QUIZ_E2E_PORT ?? E2E_DEFAULT_PORT)
+}

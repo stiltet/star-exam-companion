@@ -94,7 +94,7 @@ afterAll(async () => {
   if (sharedBase) await rm(sharedBase, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
 })
 
-test("a second crawl run with nothing new changes nothing, first run", { timeout: 240_000, skip: browserMissing }, async () => {
+test("a second crawl run with nothing new changes nothing (set-up run)", { timeout: 240_000, skip: browserMissing }, async () => {
   sharedBase = await scratch()
   const courses: Record<string, FakeCard[]> = {
     "9001": [
@@ -111,13 +111,14 @@ test("a second crawl run with nothing new changes nothing, first run", { timeout
   }
   sharedSite = await startFakeSite(courses)
 
-  const first = await runCrawl(sharedBase, sharedSite as FakeSite)
+  const first = await runCrawl(sharedBase, sharedSite)
   assert.equal(first.code, 0, first.out)
 })
 
 test("a second crawl run with nothing new changes nothing", { timeout: 240_000, skip: browserMissing }, async () => {
+  assert.ok(sharedSite, "this test continues the set-up run before it: run the whole file, not this test alone")
   const base = sharedBase
-  const site = sharedSite as FakeSite
+  const site = sharedSite
   const run = await runCrawl(base, site)
   assert.equal(run.code, 0, run.out)
   assert.match(run.out, /✔ FINISHED/)

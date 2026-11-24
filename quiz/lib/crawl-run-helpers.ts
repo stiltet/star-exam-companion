@@ -107,6 +107,7 @@ export async function browserClosed(port: number): Promise<boolean> {
     try {
       await fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(1_000) })
     } catch {
+      // A refused connection is the answer this waits for: nothing listens on the port, so the browser is gone.
       return true
     }
     await new Promise((resolve) => setTimeout(resolve, 500))

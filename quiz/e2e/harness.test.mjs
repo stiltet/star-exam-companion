@@ -184,7 +184,7 @@ test("server.mjs refuses an occupied port instead of reusing another quiz's scor
     })
     assert.notEqual(code, 0)
     assert.match(output, /EADDRINUSE/)
-    assert.match(output, /Set QUIZ_E2E_PORT to an unused port/)
+    assert.match(output, /Set QUIZ_E2E_PORT to a free base port; the port after it must also be free/)
     assert.doesNotMatch(output, /Starting|Creating an optimized/)
   } finally {
     await new Promise((resolve, reject) => occupied.close((error) => error ? reject(error) : resolve()))

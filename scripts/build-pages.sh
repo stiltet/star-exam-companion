@@ -35,11 +35,25 @@ if [ -e "$OUT" ] && [ ! -f "$OUT/.nojekyll" ] && [ -n "$(ls -A "$OUT" 2>/dev/nul
   exit 1
 fi
 
-# The build folder sits inside the repository (git ignores it) so the installed dependencies, linked in below, are inside
-# the folder Next treats as its root; Next refuses to compile through a link that leaves it.
+# The build folder sits inside the repository (git ignores it). Next takes the folder that holds pnpm-lock.yaml as its root,
+# and with no lockfile in the build folder that is the repository, which holds the installed dependencies linked in below;
+# Next refuses to compile through a link that leaves its root.
 mkdir -p "$ROOT/.pages-work"
 work="$(mktemp -d "$ROOT/.pages-work/build.XXXXXX")"
-trap 'rm -rf "$work"' EXIT
+# The builds below run in the background, each in a process group of its own (set -m). An interrupt, a hang-up, a TERM or an
+# error stops them, and waits for them to end, before their folder is removed. A KILL of the script cannot be caught.
+set -m
+ids=()
+pids=()
+cleanup() {
+  for pid in ${pids[@]+"${pids[@]}"}; do kill -TERM -- "-$pid" 2>/dev/null || true; done
+  for pid in ${pids[@]+"${pids[@]}"}; do wait "$pid" 2>/dev/null || true; done
+  rm -rf "$work"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 129' HUP
+trap 'exit 143' TERM
 
 rsync -a --exclude node_modules --exclude '.next*' --exclude 'scores*' --exclude 'active-exam.json' --exclude '.env*' "$ROOT/quiz/" "$work/quiz/"
 cp -R "$ROOT/exams" "$work/exams"
@@ -76,8 +90,6 @@ mkdir -p "$OUT"
 # TypeScript cache next to the source, so two builds in one folder would race). The copies hold links into
 # the shared node_modules, which stay valid because the copies sit beside quiz/ in the same temporary folder.
 # Each build's output goes to its own log, which is printed in pack order when it is done.
-ids=""
-pids=""
 for dir in "$ROOT"/exams/*/; do
   id="$(basename "$dir")"
   [ -f "$dir/pack.json" ] || continue
@@ -89,20 +101,19 @@ for dir in "$ROOT"/exams/*/; do
       NEXT_PUBLIC_DEMO_ROOT="$BASE" NEXT_PUBLIC_DEMO_CURRENT="$id" NEXT_PUBLIC_DEMO_DEFAULT="$DEFAULT_EXAM" NEXT_PUBLIC_DEMO_PACKS="$packs" NEXT_TELEMETRY_DISABLED=1 \
       QUIZ_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" \
       ./node_modules/.bin/next build
-  ) > "$work/build-$id.log" 2>&1 &
-  ids="$ids $id"
-  pids="$pids $!"
+  ) > "$work/build-$id.log" 2>&1 < /dev/null &
+  ids+=("$id")
+  pids+=("$!")
 done
 failed=""
-set -- $pids
-for id in $ids; do
-  pid="$1"; shift
-  if wait "$pid"; then :; else failed="$failed $id"; fi
+for index in "${!ids[@]}"; do
+  id="${ids[$index]}"
+  if wait "${pids[$index]}"; then :; else failed="$failed $id"; fi
   echo "== build of $id"
   cat "$work/build-$id.log"
 done
 [ -z "$failed" ] || { echo "build-pages: the build failed for:$failed" >&2; exit 1; }
-for id in $ids; do
+for id in "${ids[@]}"; do
   [ -f "$work/quiz-$id/out-$id/index.html" ] || { echo "build-pages: the export for $id has no index.html" >&2; exit 1; }
   if [ "$id" = "$DEFAULT_EXAM" ]; then dest="$OUT"; else dest="$OUT/$id"; fi
   mkdir -p "$dest"

@@ -106,7 +106,7 @@ test(
       text: privateText,
       savedAt: '2026-01-01T00:00:00.000Z',
     }));
-        const privateEnv = { QUIZ_BASE_PATH: '/demo-test', QUIZ_PRIVATE_DIR: privateRoot };
+    const privateEnv = { QUIZ_BASE_PATH: '/demo-test', QUIZ_PRIVATE_DIR: privateRoot };
     const first = build(out, privateEnv);
     assert.equal(first.status, 0, first.stderr + first.stdout.slice(-2000));
 
@@ -197,6 +197,26 @@ test(
     }
     assert.match(home, /href="\/demo-test\/"[^>]*aria-current="page"[^>]*>Generative AI Leader</);
     assert.match(otherHome, /href="\/demo-test\/agentic-architect\/"[^>]*aria-current="page"[^>]*>Professional Agentic Architect</);
+
+    // The default exam is the one the script serves at the root.
+    const scriptDefault = /^DEFAULT_EXAM="([^"]+)"/m.exec(readFileSync(path.join(root, 'scripts/build-pages.sh'), 'utf8'));
+    assert.ok(scriptDefault, 'scripts/build-pages.sh sets DEFAULT_EXAM="..." on a line of its own');
+    const defaultExam = scriptDefault[1]!;
+    // The script's copy must be the app's own default exam, the one quiz/lib/scope.ts serves at the root.
+    const appDefault = /export const DEFAULT_EXAM = "([^"]+)"/.exec(readFileSync(path.join(root, 'quiz/lib/scope.ts'), 'utf8'));
+    assert.ok(appDefault, 'quiz/lib/scope.ts exports DEFAULT_EXAM');
+    assert.equal(defaultExam, appDefault[1], 'the demo builds the exam the app serves by default at the root');
+    // Every exam under exams/ is exported under its own folder with its own base path, and the default exam's home links it.
+    const examIds = readdirSync(path.join(root, 'exams'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(path.join(root, 'exams', entry.name, 'pack.json')))
+      .map((entry) => entry.name);
+    assert.ok(examIds.length >= 3, 'the demo has at least its three exams');
+    for (const id of examIds.filter((name) => name !== defaultExam)) {
+      const examHome = path.join(out, id, 'index.html');
+      assert.ok(existsSync(examHome), `${id} has its own demo`);
+      assert.match(readFileSync(examHome, 'utf8'), new RegExp(`href="/demo-test/${id}/favicon\\.png"`), `${id} carries its own base path`);
+      assert.match(home, new RegExp(`href="/demo-test/${id}/"`), `the default exam's home links ${id}`);
+    }
 
     // The folder that was there before the build was its own output, so it was replaced, not refused.
     assert.equal(existsSync(path.join(out, 'stale.txt')), false, 'the earlier output is replaced');

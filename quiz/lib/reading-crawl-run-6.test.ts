@@ -31,7 +31,8 @@ test("a first full run saves both courses", { timeout: 240_000, skip: browserMis
 })
 
 test("a course page still changing after the longest wait is reported as unsettled, and nothing is pruned for it", { timeout: 240_000, skip: browserMissing }, async () => {
-  const run = await runCrawl(base, slow as FakeSite, { READING_LIST_SETTLE_MS: "1500", READING_LIST_MAX_MS: "3000" })
+  assert.ok(base && slow, "this test continues the set-up run before it: run the whole file, not this test alone")
+  const run = await runCrawl(base, slow, { READING_LIST_SETTLE_MS: "1500", READING_LIST_MAX_MS: "3000" })
   assert.equal(run.code, 1, run.out)
   assert.match(run.out, /the lesson list may be short: run it again/)
   assert.doesNotMatch(run.out, /Removed \d+ saved lesson/)
@@ -41,7 +42,8 @@ test("a course page still changing after the longest wait is reported as unsettl
 })
 
 test("the run after an untrusted run does not blame Google for what the short list missed", { timeout: 240_000, skip: browserMissing }, async () => {
-  const run = await runCrawl(base, plain as FakeSite)
+  assert.ok(base && plain, "this test continues the runs before it: run the whole file, not this test alone")
+  const run = await runCrawl(base, plain)
   assert.equal(run.code, 0, run.out)
   assert.match(run.out, /✔ 2\. Second Course/)
   assert.doesNotMatch(run.out, /Google changed this course: .*added/, "the baseline of the untrusted run was not used")

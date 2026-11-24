@@ -1,9 +1,9 @@
 import { defineConfig } from "@playwright/test"
-import { E2E_WORKERS, e2ePortFor } from "./e2e/server-env.mjs"
+import { E2E_WORKERS, e2eBasePort, e2ePortFor } from "./e2e/server-env.mjs"
 
-const port = Number(process.env.QUIZ_E2E_PORT ?? 47822)
+const port = e2eBasePort()
 if (!Number.isInteger(port) || port < 1024 || port + E2E_WORKERS - 1 > 65535 || port === 3000 || (port < 3000 && port + E2E_WORKERS - 1 >= 3000)) {
-  throw new Error("QUIZ_E2E_PORT must be an unprivileged port other than the normal quiz port 3000")
+  throw new Error("QUIZ_E2E_PORT must be an unprivileged port other than the normal quiz port 3000, and so must the next port, which the second worker's server uses")
 }
 
 const WEBKIT_SPECS = ["**/offline.spec.ts", "**/offline-unreachable.spec.ts", "**/back-*.spec.ts", "**/about-webkit.spec.ts"]
