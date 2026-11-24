@@ -2,8 +2,7 @@
 
 import { useLayoutEffect } from "react"
 
-// Tells the page how tall the fixed stack (header and breadcrumb) is, as --stack-height on <html>, so a link to
-// an #anchor scrolls the target to just below the stack and not under it (globals.css reads it as scroll-padding-top).
+// Tells the page how tall the fixed stack (header and breadcrumb) is, as --stack-height on <html>, so an #anchor link scrolls below it.
 export function StackHeight() {
   useLayoutEffect(() => {
     const stack = document.querySelector("[data-sticky-stack]")

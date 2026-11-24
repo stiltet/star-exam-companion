@@ -25,7 +25,6 @@ export function CrumbProvider({ initial, children }: { initial?: Crumb[]; childr
   )
 }
 
-// The bar a page puts under the header (and its breadcrumb): full width, with its content in the page's container.
 export function SubBar() {
   const bar = useContext(BarValue)
   return bar ? <div data-sub-bar className="border-b-2 border-foreground">{bar}</div> : null

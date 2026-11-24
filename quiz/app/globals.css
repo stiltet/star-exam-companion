@@ -258,8 +258,7 @@ a[data-loading] * {
   --spinner: currentColor;
 }
 
-/* With a breadcrumb bar above it, every page starts the same distance below the bar (the Read Aloud pages' spacing), whichever
-   page variant it is and whether the trail is fixed or set by the page's own state. */
+/* Every page starts the same distance below a breadcrumb bar or sub bar, whatever its variant. */
 [data-sticky-stack]:has([data-crumb-bar], [data-sub-bar]) + main {
   padding-top: 1rem;
 }

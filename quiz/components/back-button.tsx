@@ -260,7 +260,6 @@ export function BackButton() {
         // safety net for a move that never happens, and is long enough for a slow push.
         window.clearTimeout(tapTimer.current)
         tapTimer.current = window.setTimeout(() => { tapped.current = false }, 2000)
-        // Slow pages show the loading box, as a tapped link does.
         window.dispatchEvent(new Event(MOVING_EVENT))
         const id = sync()
         const entry = id ? readEntry(id) : null

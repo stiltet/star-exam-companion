@@ -1,8 +1,7 @@
 import type { Page } from "@playwright/test"
 import { test, expect } from "./fixtures"
 
-// One layout for every page (owner, 17 Nov): the same header, fixed at the top while the page scrolls, the breadcrumb fixed
-// right under it where a page has one, and the same container, margins and text size. Run at 375 px and at 1280 px.
+// One layout for every page (owner, 17 Nov), at 375 px and at 1280 px.
 const PAGES = ["/", "/study", "/study/fundamentals", "/practice", "/exam", "/flashcards", "/voice", "/progress", "/glossary", "/read", "/about"]
 
 type Measure = { path: string; headerHeight: number; headerTopAfterScroll: number; crumbTopMinusHeaderBottom: number | null; mainLeft: number; mainWidth: number; fontSize: string; fontFamily: string; scrolled: boolean }

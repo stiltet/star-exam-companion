@@ -1,8 +1,7 @@
 import type { Page } from "@playwright/test"
 import { test, expect, answerPractice } from "./fixtures"
 
-// One Previous and Next pair in every section (owner, 17 Nov): "← Prev" and "Next →" on a phone, "← Previous" and "Next →" from
-// 640 px up, the same size, weight and height everywhere, and Previous on the left, Next on the right.
+// One Previous and Next pair in every section (owner, 17 Nov): the same size everywhere, Previous left, Next right.
 async function pair(page: Page, kind: string) {
   const nav = page.getByRole("navigation", { name: `Previous and next ${kind}` }).first()
   await expect(nav, `${kind}: the pair is on the page`).toBeVisible()

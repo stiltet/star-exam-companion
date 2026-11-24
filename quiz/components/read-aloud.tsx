@@ -513,7 +513,6 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     )
   }
 
-  // The page already scrolls clear of the fixed stack (scroll-padding-top on <html>, stack height plus 0.75 rem); this is the control bar's room beyond that.
   const scrollMargin = { scrollMarginTop: 84 }
   return (
     <div>

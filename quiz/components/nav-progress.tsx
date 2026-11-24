@@ -18,7 +18,6 @@ const EXTERNAL_MS = 3000
 // A move made by the Back button or the browser's own back has no link to show it, so the page-sized loading box shows
 // when it is slow, and ends after this long even if the page never changed (a move that stayed on the same page).
 const BACK_GIVE_UP_MS = 8000
-// The Back button tells this component it was tapped.
 export const MOVING_EVENT = "quiz:moving"
 
 // The tapped link shows loading (globals.css draws it: its words go and the icon fills). The words are
@@ -62,7 +61,6 @@ export function NavProgress() {
   // The header's links (logo, title, menu): the header never changes, so the page-sized loading box shows instead.
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
-  // The page React is showing, so a move by history (Back) can be compared with it.
   const shown = useRef("")
 
   const finish = () => {
@@ -153,7 +151,6 @@ export function NavProgress() {
       timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
     }
     const popped = () => {
-      // Only a move to another page; a #hash step stays where it is.
       if (window.location.pathname + window.location.search !== shown.current) moving()
     }
     window.addEventListener(MOVING_EVENT, moving)
@@ -162,7 +159,6 @@ export function NavProgress() {
       window.removeEventListener(MOVING_EVENT, moving)
       window.removeEventListener("popstate", popped)
     }
-    // finish and the refs are stable for the life of the component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

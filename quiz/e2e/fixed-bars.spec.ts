@@ -1,7 +1,6 @@
 import { test, expect, openVoice } from "./fixtures"
 
-// What the owner saw on the phone (17 to 24 Nov): the Voice quiz's section name is centred whether or not there is a section on
-// each side, and the Test exam's timer is one strip under the header, with one line below it.
+// What the owner saw on the phone (17 to 24 Nov), checked.
 
 test("the Voice quiz keeps its section name in the middle and its Next buttons one size, the size every section uses", async ({ page }) => {
   await openVoice(page)

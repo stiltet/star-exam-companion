@@ -3,15 +3,12 @@ import type { ReactNode } from "react"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { ActionButton, buttonClass } from "@/components/atoms/button"
 
-// One half of the pair. href: a link to another page. onClick: a button that steps here (disabled at an end).
-// null: nothing at this end, and the half stays empty so the other keeps its side. hint: a line under the button,
-// such as the title of the topic it goes to.
+// One half of the pair: href (a link) or onClick (a button, disabled at an end); null keeps the other half on its side.
 export type Step = { href: string; hint?: string } | { onClick: () => void; disabled?: boolean; hint?: string } | null
 
 // A molecule (it composes the step button): Previous and Next, the same pair in every section of the app (owner,
 // 17 Nov). A phone reads "← Prev" and "Next →"; from sm up it reads "← Previous" and "Next →". kind says what is
 // stepped through, so a screen reader hears "Previous lesson". middle: a button between the two, such as Reset.
-// The parent places it (spacing above and below) as placement (rule 20).
 export function StepNav({ kind, previous, next, middle, placement }: { kind: string; previous: Step; next: Step; middle?: ReactNode; placement?: string }) {
   if (!previous && !next && !middle) return null
   return (
