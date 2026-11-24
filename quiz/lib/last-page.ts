@@ -10,11 +10,25 @@ export type LastPage = { path: string; at: number; scroll: number }
 // A path to record: inside the app, and not an API route or a file. Home is recorded too, so that
 // leaving the app on home opens home again and not an older page.
 export function rememberable(path: string): boolean {
-  if (!path.startsWith("/") || path.startsWith("//")) return false
+  // A backslash is read as a slash by a browser, so "/\\host" would be another origin.
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return false
   const bare = path.split(/[?#]/)[0]
   if (bare === "") return false
   if (bare === "/api" || bare.startsWith("/api/")) return false
   return !/\.[a-z0-9]+$/i.test(bare)
+}
+
+// Whether the saved page can be opened now. Online the app asks the server (and the offline worker answers from its
+// copy when the Mac cannot be reached, which Next.js loads in full). Offline only a page the device holds opens, so
+// the "not on this device" page is never the result of a launch. A cache that cannot be read counts as not held.
+export async function canOpenPage(online: boolean, held: () => Promise<boolean>): Promise<boolean> {
+  if (online) return true
+  try {
+    return await held()
+  } catch {
+    // The copy cannot be looked up: treat the page as not on the device, so the app stays on home.
+    return false
+  }
 }
 
 export const serialiseLastPage = (page: LastPage): string => JSON.stringify(page)

@@ -251,10 +251,16 @@ html[data-resuming] body {
 html[data-resuming] body {
   animation: page-open 0s linear 3s forwards;
 }
+/* After the launch failsafe above, so a box raised while the launch cover is still counting down still hides the page. */
+html body:has(.loading-full) {
+  visibility: hidden;
+  animation: none;
+}
 .loading-full {
   visibility: visible;
 }
-/* The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
+/* 200 ms here is LOADING_AFTER_MS in lib/loading-time.ts, and 5 s is SHOW_ANYWAY_MS in components/page-gate.tsx: CSS cannot import them.
+   The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
 .page-loading {
   opacity: 0;
   animation: page-loading-show 0s linear 200ms forwards, page-loading-hide 0s linear 5s forwards;

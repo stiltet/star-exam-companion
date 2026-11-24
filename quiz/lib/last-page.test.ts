@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPage, rememberable, resumeTarget, serialiseLastPage } from "./last-page.ts"
+import { canOpenPage, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPage, rememberable, resumeTarget, serialiseLastPage } from "./last-page.ts"
 
 const now = 1_000_000_000_000
 
 test("api routes, files and other origins are not remembered", () => {
-  for (const path of ["/api/speak", "//evil.test/x", "https://evil.test/", "/sw.js", "/icon.png", ""]) assert.equal(rememberable(path), false, path)
+  for (const path of ["/api/speak", "//evil.test/x", "https://evil.test/", "/\\evil.test", "/a\\b", "/sw.js", "/icon.png", ""]) assert.equal(rememberable(path), false, path)
   for (const path of ["/", "/practice?section=a", "/study/x/y", "/read/night"]) assert.equal(rememberable(path), true, path)
 })
 
@@ -61,4 +61,11 @@ test("the early script marks exactly the launches resumeTarget moves", () => {
   assert.equal(isLaunch("", undefined), true)
   assert.equal(isLaunch("https://quiz.test/x", "navigate"), false)
   assert.equal(isLaunch("", "reload"), false)
+})
+
+test("offline, only a page the device holds opens; online it always does; a cache that fails counts as not held", async () => {
+  assert.equal(await canOpenPage(true, async () => false), true)
+  assert.equal(await canOpenPage(false, async () => true), true)
+  assert.equal(await canOpenPage(false, async () => false), false)
+  assert.equal(await canOpenPage(false, async () => { throw new Error("no cache") }), false)
 })

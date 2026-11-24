@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { isLaunch, LAST_PAGE_KEY, parseLastPage, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage } from "@/lib/last-page"
+import { canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage } from "@/lib/last-page"
 import { loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 import { readStandalone } from "@/components/standalone"
@@ -31,15 +31,7 @@ function save(path?: string) {
   }
 }
 
-async function canOpen(path: string): Promise<boolean> {
-  if (navigator.onLine) return true
-  try {
-    return (await caches.match(path)) !== undefined
-  } catch {
-    // The cache cannot be read: treat the page as not on the device, so the app stays on home.
-    return false
-  }
-}
+const canOpen = (path: string) => canOpenPage(navigator.onLine, async () => (await caches.match(path)) !== undefined)
 
 // The launch cover is done. Its box stops being a loading element too, so nothing on the page says it is loading
 // when it is not (the hidden cover is still in the page).
@@ -53,11 +45,22 @@ const marked = (): number | null => {
   return value === null ? null : Number(value)
 }
 
+// One watch at a time: a second call (a new move while the cover is still up) takes the first one's place.
+let watching = 0
+
 // Takes the cover off once `ready` says so and it has shown 500 ms; 3 s after it was drawn whatever happens.
+// 3 s is the same limit as the failsafe in globals.css, which works with no script.
 function uncover(ready: () => boolean, restore?: () => void) {
+  window.clearInterval(watching)
   const shownAt = marked()
-  if (shownAt === null) return endCover()
-  const timer = window.setInterval(() => {
+  if (shownAt === null) {
+    // No cover was drawn (the early script did not mark this launch): nothing to wait for, and saving starts.
+    restore?.()
+    resuming = false
+    saving = true
+    return endCover()
+  }
+  const timer = watching = window.setInterval(() => {
     const done = Date.now() - shownAt > 3000 || (ready() && loadingRemaining(shownAt, Date.now()) === 0)
     if (!done) return
     window.clearInterval(timer)
@@ -112,7 +115,8 @@ export function ResumeLastPage() {
       if (!resuming) uncover(pageReady)
       const path = pathname + (search ? `?${search}` : "")
       // While the move to the saved page is under way its record, scroll included, is left alone.
-      if (!resuming && rememberable(path)) window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path, at: Date.now(), scroll: 0 }))
+      // The same page again (a reload) keeps the place it was left at, until the scroll is saved afresh.
+      if (!resuming && rememberable(path)) window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path, at: Date.now(), scroll: saved?.path === path ? saved.scroll : 0 }))
     } catch {
       // Without storage the app simply opens on home.
       endCover()
