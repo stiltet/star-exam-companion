@@ -105,14 +105,29 @@ for dir in "$ROOT"/exams/*/; do
   ids+=("$id")
   pids+=("$!")
 done
-failed=""
-for index in "${!ids[@]}"; do
-  id="${ids[$index]}"
-  if wait "${pids[$index]}"; then :; else failed="$failed $id"; fi
+# Wait for the builds as they end, not in pack order, so the first failure is seen at once: it stops the others (the cleanup
+# on exit ends their process groups) instead of waiting for a build that may hang. bash 3.2 has no `wait -n`, hence the poll.
+finished=()
+remaining=${#ids[@]}
+while [ "$remaining" -gt 0 ]; do
+  for index in "${!ids[@]}"; do
+    [ "${finished[$index]:-}" = 1 ] && continue
+    kill -0 "${pids[$index]}" 2>/dev/null && continue
+    finished[$index]=1
+    remaining=$((remaining - 1))
+    if ! wait "${pids[$index]}"; then
+      echo "== build of ${ids[$index]}"
+      cat "$work/build-${ids[$index]}.log"
+      echo "build-pages: the build of ${ids[$index]} failed; stopping the others" >&2
+      exit 1
+    fi
+  done
+  [ "$remaining" -eq 0 ] || sleep 0.2
+done
+for id in "${ids[@]}"; do
   echo "== build of $id"
   cat "$work/build-$id.log"
 done
-[ -z "$failed" ] || { echo "build-pages: the build failed for:$failed" >&2; exit 1; }
 for id in "${ids[@]}"; do
   [ -f "$work/quiz-$id/out-$id/index.html" ] || { echo "build-pages: the export for $id has no index.html" >&2; exit 1; }
   if [ "$id" = "$DEFAULT_EXAM" ]; then dest="$OUT"; else dest="$OUT/$id"; fi
