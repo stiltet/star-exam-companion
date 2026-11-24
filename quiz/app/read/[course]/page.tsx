@@ -52,6 +52,9 @@ export default async function CourseReadingsPage({ params }: Props) {
         {course.provider === "private" && (
           <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>
         )}
+        {loaded.ok && loaded.orderUnchecked && (
+          <Text variant="note" placement="mb-6">Order not checked against Google yet: run pnpm reading:crawl so the lessons follow Google&apos;s page.</Text>
+        )}
         {loaded.ok ? (
           <ReadingList
             course={course.id}

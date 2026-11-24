@@ -18,7 +18,8 @@ export const FAILED_MS = 30 * 1000
 type Entry = { at: number; bundle: Bundle; pages: PageSummary[]; ids: string[]; idsAt: number }
 
 // problem: only a private course says what kind of failure it was, a saved file ("record") or the folder itself ("folder").
-export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[] } | { ok: false; error: string; problem?: CourseProblem }
+// orderUnchecked: a private course whose lesson order could not be checked against Google's saved list (no trusted crawl manifest yet).
+export type Loaded = { ok: true; bundle: Bundle; pages: PageSummary[]; ids: string[]; orderUnchecked?: true } | { ok: false; error: string; problem?: CourseProblem }
 
 const cache = new Map<string, Entry>()
 const failed = new Map<string, { at: number; error: string }>()
