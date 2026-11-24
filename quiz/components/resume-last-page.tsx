@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage } from "@/lib/last-page"
+import { LoadingBox } from "@/components/atoms/loading-box"
+import { canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, watchStep } from "@/lib/last-page"
 import { loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 import { readStandalone } from "@/components/standalone"
@@ -51,21 +52,31 @@ let watching = 0
 // Takes the cover off once `ready` says so and it has shown 500 ms. 3 s after it was drawn it goes whatever happens, which
 // is the same limit as the failsafe in globals.css (it works with no script). The restore of the place, and the start of
 // saving, wait for the page itself, up to 30 s, so a page that is still coming is never saved as the place (home at the top).
-function uncover(ready: () => boolean, restore?: () => void) {
+// When the cover goes at the limit with the saved page still not there, a loading box of the usual kind (over the whole page,
+// hiding it) takes its place, so home is never seen bare while the saved page is coming. `slow` shows and hides it, and
+// it too stays 500 ms once shown.
+function uncover(ready: () => boolean, restore?: () => void, slow?: (on: boolean) => void) {
   window.clearInterval(watching)
   // With no cover drawn (the early script did not mark this launch) there is no minimum to keep, but the move is still waited for.
   const drawnAt = marked()
   const startedAt = drawnAt ?? Date.now()
   let covered = drawnAt !== null
+  let slowFrom: number | null = null
   const timer = watching = window.setInterval(() => {
     const now = Date.now()
-    if (covered && now - startedAt > 3000) {
+    const isReady = ready()
+    const held = (drawnAt === null || loadingRemaining(startedAt, now) === 0) && loadingRemaining(slowFrom, now) === 0
+    const step = watchStep(now - startedAt, covered, isReady, held)
+    if (step.endCover) {
       covered = false
       endCover()
+      if (restore && !isReady) {
+        slowFrom = now
+        slow?.(true)
+      }
     }
-    const held = drawnAt === null || loadingRemaining(startedAt, now) === 0
-    const gaveUp = now - startedAt > 30_000
-    if (!(ready() && held) && !gaveUp) return
+    if (!step.finish) return
+    const gaveUp = step.finish === "gave-up"
     window.clearInterval(timer)
     void settled().then(() => {
       // A newer call took over the watch while the page settled: it restores and ends the cover, not this one.
@@ -75,6 +86,7 @@ function uncover(ready: () => boolean, restore?: () => void) {
       // The saved page never came: saving starts again with the next page the visitor opens, never with home at the top.
       else resuming = false
       endCover()
+      slow?.(false)
     })
   }, 50)
 }
@@ -85,6 +97,8 @@ export function ResumeLastPage() {
   const pathname = usePathname()
   const search = useSearchParams().toString()
   const router = useRouter()
+  // True while the saved page is still coming after the launch cover has gone.
+  const [slow, setSlow] = useState(false)
 
   useEffect(() => {
     if (!readStandalone()) {
@@ -107,10 +121,11 @@ export function ResumeLastPage() {
             // The cover stays until the other page is ready: the home page's own gate is still the one in the DOM until then.
             uncover(() => window.location.pathname !== "/" && pageReady(), () => {
               // Only on the saved page itself: a visitor who tapped on to another page meanwhile keeps that page's own place.
-              if (window.location.pathname + window.location.search === target) window.scrollTo(0, saved?.scroll ?? 0)
+              const place = placeToRestore(window.location.pathname + window.location.search, target, saved?.scroll)
+              if (place !== null) window.scrollTo(0, place)
               resuming = false
               saving = true
-            })
+            }, setSlow)
           } else {
             resuming = false
             saving = true
@@ -157,5 +172,5 @@ export function ResumeLastPage() {
     }
   }, [])
 
-  return null
+  return slow ? <LoadingBox /> : null
 }

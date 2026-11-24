@@ -66,6 +66,27 @@ export function resumeTarget(saved: LastPage | null, now: number, currentPath: s
 export const RESUME_MARK = "data-resuming"
 export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){/*no readable record: the app opens home*/}`
 
+// How long the launch cover is kept at most (the same limit as the CSS failsafe, which works with no script), and how long the
+// launch watch waits for the saved page before it gives up on it.
+export const COVER_LIMIT_MS = 3000
+export const WATCH_GIVE_UP_MS = 30_000
+
+// One tick of the launch watch, `elapsed` ms after the cover was drawn. The cover goes at the limit whatever happens. The watch
+// is over when the other page is ready and the loading box has stayed its minimum, or, if that never comes, at the give-up limit.
+// A page that is ready after the give-up limit still counts as ready, so its place is restored.
+export function watchStep(elapsed: number, covered: boolean, ready: boolean, held: boolean): { endCover: boolean; finish: "ready" | "gave-up" | null } {
+  return {
+    endCover: covered && elapsed > COVER_LIMIT_MS,
+    finish: ready && held ? "ready" : elapsed > WATCH_GIVE_UP_MS ? "gave-up" : null,
+  }
+}
+
+// The scroll place to restore once the saved page is on screen, or null when the page on screen is not the saved one (the
+// visitor tapped on meanwhile): that page keeps its own place.
+export function placeToRestore(here: string, target: string, scroll: number | undefined): number | null {
+  return here === target ? (scroll ?? 0) : null
+}
+
 // The same test as the script's, for the component.
 export function isLaunch(referrer: string, navigationType: string | undefined): boolean {
   return referrer === "" && (navigationType === undefined || navigationType === "navigate")

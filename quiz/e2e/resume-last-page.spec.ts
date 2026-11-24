@@ -143,3 +143,25 @@ test("leaving the app while the saved page is still coming keeps the saved place
   await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
 })
+
+test("a saved page that is slow is covered by a full-screen loading box after the cover limit, never by a bare home, and the place is restored", async ({ page, context }) => {
+  await page.goto("/glossary")
+  await expect(page.locator("main")).toBeVisible()
+  await page.evaluate(() => window.scrollTo(0, 500))
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(500)
+  const launch = await context.newPage()
+  // The saved page takes 5 s, past the 3 s the launch cover is kept.
+  await launch.route(/\/glossary(\?|$)/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await route.continue()
+  })
+  await launch.goto("/")
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/, { timeout: 6000 })
+  // The cover has gone and the page is still not there: a loading box over the whole page takes over, and home is hidden behind it.
+  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toBeVisible()
+  await expect(launch.locator("header")).toBeHidden()
+  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
+  // The hidden launch cover stays in the page, so only a box that shows (loading-full) is counted.
+  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toHaveCount(0)
+})

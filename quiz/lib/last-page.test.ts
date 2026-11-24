@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { canOpenPage, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, parseLastPage, rememberable, resumeTarget, serialiseLastPage } from "./last-page.ts"
+import { canOpenPage, COVER_LIMIT_MS, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, WATCH_GIVE_UP_MS, parseLastPage, placeToRestore, rememberable, resumeTarget, serialiseLastPage, watchStep } from "./last-page.ts"
 
 const now = 1_000_000_000_000
 
@@ -68,4 +68,30 @@ test("offline, only a page the device holds opens; online it always does; a cach
   assert.equal(await canOpenPage(false, async () => true), true)
   assert.equal(await canOpenPage(false, async () => false), false)
   assert.equal(await canOpenPage(false, async () => { throw new Error("no cache") }), false)
+})
+
+test("the saved place is restored only on the saved page itself, and a missing place is the top", () => {
+  assert.equal(placeToRestore("/glossary", "/glossary", 600), 600)
+  assert.equal(placeToRestore("/glossary?topic=a", "/glossary?topic=a", undefined), 0)
+  // The visitor tapped on to another page, or to the same page with another query, while the saved page was coming.
+  assert.equal(placeToRestore("/progress", "/glossary", 600), null)
+  assert.equal(placeToRestore("/glossary?topic=b", "/glossary?topic=a", 600), null)
+  assert.equal(placeToRestore("/", "/glossary", 600), null)
+})
+
+test("the launch watch ends the cover at its limit, finishes when the page is ready and held, and gives up at 30 s", () => {
+  // Nothing ready: the cover stays until its limit, the watch carries on.
+  assert.deepEqual(watchStep(100, true, false, false), { endCover: false, finish: null })
+  assert.deepEqual(watchStep(COVER_LIMIT_MS, true, false, false), { endCover: false, finish: null })
+  assert.deepEqual(watchStep(COVER_LIMIT_MS + 1, true, false, false), { endCover: true, finish: null })
+  // The cover is ended once: a watch whose cover is already gone does not end it again.
+  assert.deepEqual(watchStep(10_000, false, false, false), { endCover: false, finish: null })
+  // Ready but the loading box has not yet stayed its 500 ms: wait.
+  assert.deepEqual(watchStep(300, true, true, false), { endCover: false, finish: null })
+  assert.deepEqual(watchStep(600, true, true, true), { endCover: false, finish: "ready" })
+  // The saved page never comes: the watch gives up only after 30 s, and not a moment before.
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS, false, false, true), { endCover: false, finish: null })
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 1, false, false, true), { endCover: false, finish: "gave-up" })
+  // A page that is ready after 30 s is still ready: its place is restored.
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 5000, false, true, true), { endCover: false, finish: "ready" })
 })
