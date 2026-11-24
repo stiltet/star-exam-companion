@@ -50,7 +50,7 @@ test("Test exam resumes its answer, submits and saves a review", async ({ page }
   )
   await page.getByRole("dialog").getByRole("button", { name: "Submit", exact: true }).click()
   expect((await saved).ok()).toBe(true)
-  await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS", exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
   const response = await page.request.get("/api/snapshot")
   const body = await response.json()
   expect(body).toMatchObject({ ok: true, snapshot: { lines: [expect.objectContaining({ mode: "exam" })] } })

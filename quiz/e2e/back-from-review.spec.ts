@@ -7,7 +7,7 @@ const standalone = () => {
   Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
 }
 
-async function saveExams(page: Page, origin: string) {
+async function saveExams(page: Page, origin: string): Promise<string[]> {
   // Real question ids, since the server refuses an exam that asks one it does not know.
   const snapshot = (await (await page.request.get("/api/snapshot")).json()) as { snapshot: { items: { id: string }[] } }
   const [first, second] = snapshot.snapshot.items.map((item) => item.id)
@@ -21,6 +21,7 @@ async function saveExams(page: Page, origin: string) {
   }))
   const saved = await page.request.post("/api/scores", { headers: { origin }, data: { answers: exams } })
   expect(await saved.json()).toMatchObject({ ok: true, rejected: [] })
+  return exams.map((exam) => exam.id)
 }
 
 const backButton = (page: Page) => page.getByLabel("Back", { exact: true })
@@ -58,10 +59,35 @@ test.describe("in the installed app", () => {
 
     await last.click()
     await expect(page).toHaveURL(/\/exam#/)
-    await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => window.scrollY), { message: "the review starts at the top, in WebKit too" }).toBe(0)
     await backButton(page).click()
     await expect(page).toHaveURL(/\/progress$/)
     await expect.poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(5)
+  })
+
+  test("a review opened from far down the Test exam page starts at the top", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/exam")
+    const link = page.getByRole("link", { name: "Review →" }).nth(8)
+    await link.scrollIntoViewIfNeeded()
+    await waitForScrollToSettle(page)
+    expect(await page.evaluate(() => window.scrollY), "the list is scrolled down before the click").toBeGreaterThan(300)
+    await link.click()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => window.scrollY), { message: "the review starts at the top, in WebKit too" }).toBe(0)
+  })
+
+  test("an address that names two reviews opens the last one and is made single", async ({ page, baseURL }) => {
+    const ids = await saveExams(page, baseURL!)
+    await page.goto(`/exam#review=${ids[0]}#review=${ids[1]}`)
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect(page.getByText("is not on this device yet")).toHaveCount(0)
+    await expect.poll(() => new URL(page.url()).hash).toBe(`#review=${ids[1]}`)
+    // A trailing # after the last review is dropped too.
+    await page.goto(`/exam#review=${ids[0]}#review=${ids[1]}#`)
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect.poll(() => new URL(page.url()).hash).toBe(`#review=${ids[1]}`)
   })
 
   test("the Back button sits 2rem from the left and bottom edges", async ({ page }) => {
@@ -90,7 +116,7 @@ test.describe("in the installed app", () => {
       await context.setOffline(true)
       await page.getByRole("link", { name: "Review →" }).last().click()
       await expect(page).toHaveURL(/\/exam#/)
-      await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
       await backButton(page).click()
       await expect(page).toHaveURL(/\/progress$/)
     })

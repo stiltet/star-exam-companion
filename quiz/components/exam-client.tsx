@@ -111,7 +111,14 @@ export function ExamClient({ questions, sections, length }: Props) {
 
   // The exam under review follows the hash.
   useEffect(() => {
-    const follow = () => setReviewing(reviewId(window.location.hash))
+    const follow = () => {
+      const id = reviewId(window.location.hash)
+      // A doubled hash is made single, so a reload and Back act on the one review shown.
+      if (id && window.location.hash !== reviewHash(id)) {
+        window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}${reviewHash(id)}`)
+      }
+      setReviewing(id)
+    }
     follow()
     window.addEventListener("hashchange", follow)
     return () => window.removeEventListener("hashchange", follow)
@@ -404,7 +411,7 @@ export function ExamClient({ questions, sections, length }: Props) {
     if (!exam) {
       return (
         <div>
-          <Heading variant="page" placement="mb-6">TEST EXAM RESULTS</Heading>
+          <Heading variant="page" placement="mb-6">RESULTS</Heading>
           <p className="border-2 border-foreground p-4 mb-6">This exam is not on this device yet. It appears once this device has fetched your results from the Mac.</p>
           <ActionButton variant="outlined" onClick={close}>Back</ActionButton>
         </div>
