@@ -238,7 +238,21 @@ a[data-loading] * {
 }
 html[data-resuming] .resume-cover {
   display: block;
+  visibility: visible;
   animation: page-loading-hide 0s linear 3s forwards;
+}
+/* A loading box over a visible page hides everything behind it, so no part of the page is ever seen beside the box.
+   The box itself is shown again (visibility is inherited, and a child can say visible). The launch cover does the
+   same while it is up, with the same 3 s failsafe. */
+body:has(.loading-full),
+html[data-resuming] body {
+  visibility: hidden;
+}
+html[data-resuming] body {
+  animation: page-open 0s linear 3s forwards;
+}
+.loading-full {
+  visibility: visible;
 }
 /* The page that is not ready yet: invisible for the first 200 ms, so a quick page never shows it. */
 .page-loading {

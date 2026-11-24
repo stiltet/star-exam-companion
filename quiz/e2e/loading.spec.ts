@@ -67,6 +67,9 @@ test("the logo link never changes itself: a page-sized loading box shows instead
   const box = page.getByRole("status", { name: "Loading" })
   await expect(box).toBeVisible()
   await expect(logo, "the header keeps its look").not.toHaveAttribute("data-loading", /.*/)
+  // Owner, 24 Nov: never half a page. Nothing of the page is seen beside the box, so the header and bars are not either.
+  await expect(page.locator("header").first(), "the page behind the box is not seen").toBeHidden()
+  await expect(page.locator("main").first()).toBeHidden()
   await expect(page).toHaveURL(/localhost:\d+\/$/, { timeout: 15_000 })
   await expect(box).toHaveCount(0)
 })
