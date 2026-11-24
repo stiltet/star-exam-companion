@@ -1,3 +1,4 @@
+import { RouteHold } from "@/components/route-hold"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
@@ -19,7 +20,7 @@ export default async function ReadPage() {
   const loaded = await Promise.all(courses.map((course) => courseBundle(course)))
   const completion = readingCompletion(pack, loaded)
   return (
-    <div className="min-h-screen flex flex-col">
+    <RouteHold className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <Heading variant="page" placement="sr-only">Read Aloud</Heading>
@@ -50,6 +51,6 @@ export default async function ReadPage() {
         )}
       </main>
       <SiteFooter />
-    </div>
+    </RouteHold>
   )
 }

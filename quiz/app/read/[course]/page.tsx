@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { RouteHold } from "@/components/route-hold"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ActionLink } from "@/components/atoms/button"
@@ -25,7 +26,7 @@ export default async function CourseReadingsPage({ params }: Props) {
   const noText = pack.noReading.find((entry) => entry.id === id)
   if (!course && noText) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <RouteHold className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
           <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="pb-2" />
@@ -36,14 +37,14 @@ export default async function CourseReadingsPage({ params }: Props) {
           <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
         </main>
         <SiteFooter />
-      </div>
+      </RouteHold>
     )
   }
   if (!course) notFound()
   const loaded = await courseBundle(course)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <RouteHold className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
         <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="pb-2" />
@@ -72,6 +73,6 @@ export default async function CourseReadingsPage({ params }: Props) {
         <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
       </main>
       <SiteFooter />
-    </div>
+    </RouteHold>
   )
 }

@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures"
+import type { Page } from "@playwright/test"
 
 // The loading feedback the owner agreed: the tapped link shows loading after 200 ms, every other link is refused
 // until the page arrives, a loading button never goes back to normal by itself, the logo link shows a page-sized box
@@ -98,23 +99,25 @@ test("a move that changes only the query (a Practice filter) loads the tapped li
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
 
-test("Read Aloud shows only the app's own loading box while a course loads, with no text, and the page gate takes over without a gap", async ({ page }) => {
+const handOver = async (page: Page, delay: number) => {
   // Only the move itself is held, not the app's background fetch of the page, which would leave nothing to show at the tap.
   await page.route(/\/read\/1(\?|$)/, async (route) => {
     if (route.request().headers()["next-router-prefetch"]) return route.continue()
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, delay))
     await route.continue()
   })
   await page.goto("/read")
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
   await page.waitForTimeout(1500)
   await page.evaluate(() => {
-    const seen = { route: false, firstAt: 0, lastAt: 0, gap: false, texts: [] as string[] }
+    const seen = { route: false, firstAt: 0, lastAt: 0, gap: false, texts: [] as string[], timeline: [] as string[] }
     ;(window as unknown as { __hand: typeof seen }).__hand = seen
     const frame = () => {
       // The hidden launch cover is always in the page, so it is not a box that shows.
       const box = [...document.querySelectorAll('[role="status"][aria-label="Loading"]')].find((el) => !el.closest(".resume-cover"))
       const now = performance.now()
+      const kind = box ? (box.classList.contains("loading-route") ? "route" : box.classList.contains("page-loading") ? "gate" : "other") : "none"
+      if (seen.timeline[seen.timeline.length - 1]?.split("@")[0] !== kind) seen.timeline.push(`${kind}@${Math.round(now)}`)
       if (box) {
         seen.firstAt ||= now
         seen.lastAt = now
@@ -134,9 +137,18 @@ test("Read Aloud shows only the app's own loading box while a course loads, with
   await expect(page.locator(".loading-route")).toHaveCount(0, { timeout: 15_000 })
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
   await expect(page.locator('[role="status"][aria-label="Loading"].loading-full, .page-loading')).toHaveCount(0)
-  const seen = await page.evaluate(() => (window as unknown as { __hand: { route: boolean; firstAt: number; lastAt: number; gap: boolean; texts: string[] } }).__hand)
+  const seen = await page.evaluate(() => (window as unknown as { __hand: { route: boolean; firstAt: number; lastAt: number; gap: boolean; texts: string[]; timeline: string[] } }).__hand)
   expect(seen.route, "the Read Aloud box showed while the course came").toBe(true)
   expect(seen.texts, "and held no text").toEqual([])
   expect(seen.gap, "the box was never gone while the move was under way").toBe(false)
-  expect(seen.lastAt - seen.firstAt, "a loading screen that showed stayed at least 500 ms").toBeGreaterThanOrEqual(500)
+  expect(seen.lastAt - seen.firstAt, `a loading screen that showed stayed at least 500 ms (${seen.timeline.join(" ")})`).toBeGreaterThanOrEqual(500)
+}
+
+test("Read Aloud shows only the app's own loading box while a course loads, with no text, and the page gate takes over without a gap", async ({ page }) => {
+  await handOver(page, 2000)
+})
+
+test("a course that comes quickly, after the box has just shown, still keeps a loading screen up for 500 ms", async ({ page }) => {
+  // The box shows at 200 ms and the course is there at 400 ms: what keeps the screen up to 500 ms is the page gate's own hold.
+  await handOver(page, 400)
 })

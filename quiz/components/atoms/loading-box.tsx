@@ -6,8 +6,8 @@
 // and the bars can never be seen beside it, whatever the phone does with stacking.
 // route: the fallback of a route that can take many seconds (a course fetched from Google): it shows after 200 ms,
 // hides the page behind it from then on, and stays until the page is there, with no 5 s hide.
-// It cannot time itself (it is gone the moment the page is there); the page gate, which wraps every page, then shows its own
-// box and keeps it to the 500 ms minimum, so the two read as one loading screen.
+// It cannot time itself (it is gone the moment the page is there): RouteBoxMark tells when it mounted, and the page that replaces it
+// (RouteHold) keeps itself behind an ordinary loading box for the rest of the 500 ms minimum, so the two read as one loading screen.
 export function LoadingBox({ delayed = false, cover = false, route = false }: { delayed?: boolean; cover?: boolean; route?: boolean }) {
   const kind = route ? "loading-route " : delayed ? "page-loading " : cover ? "" : "loading-full "
   return (

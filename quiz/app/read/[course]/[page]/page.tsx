@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { RouteHold } from "@/components/route-hold"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { CourseTextError } from "@/components/course-text-error"
@@ -26,13 +27,13 @@ export default async function ReadingPage({ params }: Props) {
 
   if (!loaded.ok) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <RouteHold className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
           <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
         </main>
         <SiteFooter />
-      </div>
+      </RouteHold>
     )
   }
 
@@ -48,7 +49,7 @@ export default async function ReadingPage({ params }: Props) {
   const following = nextReading(course, list, pageId, ordered)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <RouteHold className="min-h-screen flex flex-col">
       <SiteHeader />
       {/* Only the course links stay put. The title row above scrolls away. */}
       <div data-read-sticky className="sticky top-0 z-40 w-full bg-background">
@@ -78,6 +79,6 @@ export default async function ReadingPage({ params }: Props) {
         <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
       </main>
       <SiteFooter />
-    </div>
+    </RouteHold>
   )
 }
