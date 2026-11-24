@@ -26,7 +26,9 @@ export default async function ReadingPage({ params }: Props) {
   if (!loaded.ok) {
     return (
       <PageShell>
-        <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
+        <>
+          <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
+        </>
       </PageShell>
     )
   }
@@ -44,21 +46,23 @@ export default async function ReadingPage({ params }: Props) {
 
   return (
     <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}`, href: `/read/${course.id}` }, { label: `${at + 1} of ${list.length}` }]} variant="reading">
-      <PageNav kind="lesson" previous={previous} next={following} placement="mb-6" />
-      <ReadAloud
-        key={`${course.id}/${pageId}`}
-        place={`${course.id}/${pageId}`}
-        title={page.title}
-        paragraphs={page.paragraphs}
-        next={following}
-        review={page.review ? google : null}
-        reviewAt={page.reviewAt}
-        video={page.videoAt.length > 0 ? watch : null}
-        videoAt={page.videoAt}
-      />
-      {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
-      <ActionLink variant="outlined" placement="mt-6 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
-      <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
+      <>
+        <PageNav kind="lesson" previous={previous} next={following} where="top" placement="mb-6" />
+        <ReadAloud
+          key={`${course.id}/${pageId}`}
+          place={`${course.id}/${pageId}`}
+          title={page.title}
+          paragraphs={page.paragraphs}
+          next={following}
+          review={page.review ? google : null}
+          reviewAt={page.reviewAt}
+          video={page.videoAt.length > 0 ? watch : null}
+          videoAt={page.videoAt}
+        />
+        {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
+        <ActionLink variant="outlined" placement="mt-6 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
+        <PageNav kind="lesson" previous={previous} next={following} where="bottom" placement="mt-6" />
+      </>
     </PageShell>
   )
 }

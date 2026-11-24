@@ -9,10 +9,11 @@ export type Step = { href: string; hint?: string } | { onClick: () => void; disa
 // A molecule (it composes the step button): Previous and Next, the same pair in every section of the app (owner,
 // 17 Nov). A phone reads "← Prev" and "Next →"; from sm up it reads "← Previous" and "Next →". kind says what is
 // stepped through, so a screen reader hears "Previous lesson". middle: a button between the two, such as Reset.
-export function StepNav({ kind, previous, next, middle, placement }: { kind: string; previous: Step; next: Step; middle?: ReactNode; placement?: string }) {
+// where: a page that shows the pair twice names which one, so the two landmarks are told apart.
+export function StepNav({ kind, previous, next, middle, placement, where }: { kind: string; previous: Step; next: Step; middle?: ReactNode; placement?: string; where?: "top" | "bottom" }) {
   if (!previous && !next && !middle) return null
   return (
-    <nav aria-label={`Previous and next ${kind}`} className={["flex items-start justify-between gap-3", placement].filter(Boolean).join(" ")}>
+    <nav aria-label={`Previous and next ${kind}${where ? `, ${where}` : ""}`} className={["flex items-start justify-between gap-3", placement].filter(Boolean).join(" ")}>
       <Half direction="previous" kind={kind} step={previous} />
       {middle}
       <Half direction="next" kind={kind} step={next} />

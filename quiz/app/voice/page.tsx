@@ -6,8 +6,10 @@ import { UnfinishedNotice } from "@/components/unfinished-notice"
 export default function VoicePage() {
   return (
     <PageShell variant="fill">
-      <UnfinishedNotice need="scenes" />
-      <VoiceRound />
+      <>
+        <UnfinishedNotice need="scenes" />
+        <VoiceRound />
+      </>
     </PageShell>
   )
 }

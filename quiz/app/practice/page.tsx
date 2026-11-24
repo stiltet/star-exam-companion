@@ -38,52 +38,54 @@ export default async function PracticePage({ searchParams }: Props) {
 
   return (
     <PageShell>
-      <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
-      <UnfinishedNotice need="questions" />
-      <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
-      {/* Filter */}
-      <div className="border-2 border-foreground p-4 mb-6">
-        <h2 className="font-bold mb-2">FILTER BY SECTION</h2>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={link({}, onlyUnanswered)}
-            className={`border border-foreground px-3 py-1 text-sm no-underline ${
-              !section && !topic ? "bg-foreground text-background" : "hover:bg-muted"
-            }`}
-          >
-            ALL ({onlyUnanswered ? <UnansweredCount ids={questions.map((q) => q.id)} /> : questions.length})
-          </Link>
-          <Link
-            href={link(place, !onlyUnanswered)}
-            aria-current={onlyUnanswered ? "true" : undefined}
-            className={`border border-foreground px-3 py-1 text-sm no-underline ${
-              onlyUnanswered ? "bg-foreground text-background" : "hover:bg-muted"
-            }`}
-          >
-            UNANSWERED
-          </Link>
-          {sections.map((s) => (
+      <>
+        <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
+        <UnfinishedNotice need="questions" />
+        <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
+        {/* Filter */}
+        <div className="border-2 border-foreground p-4 mb-6">
+          <h2 className="font-bold mb-2">FILTER BY SECTION</h2>
+          <div className="flex flex-wrap gap-2">
             <Link
-              key={s.id}
-              href={link({ section: s.id }, onlyUnanswered)}
+              href={link({}, onlyUnanswered)}
               className={`border border-foreground px-3 py-1 text-sm no-underline ${
-                section === s.id ? "bg-foreground text-background" : "hover:bg-muted"
+                !section && !topic ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
             >
-              {s.title} ({onlyUnanswered ? <UnansweredCount ids={s.ids} /> : s.ids.length})
+              ALL ({onlyUnanswered ? <UnansweredCount ids={questions.map((q) => q.id)} /> : questions.length})
             </Link>
-          ))}
+            <Link
+              href={link(place, !onlyUnanswered)}
+              aria-current={onlyUnanswered ? "true" : undefined}
+              className={`border border-foreground px-3 py-1 text-sm no-underline ${
+                onlyUnanswered ? "bg-foreground text-background" : "hover:bg-muted"
+              }`}
+            >
+              UNANSWERED
+            </Link>
+            {sections.map((s) => (
+              <Link
+                key={s.id}
+                href={link({ section: s.id }, onlyUnanswered)}
+                className={`border border-foreground px-3 py-1 text-sm no-underline ${
+                  section === s.id ? "bg-foreground text-background" : "hover:bg-muted"
+                }`}
+              >
+                {s.title} ({onlyUnanswered ? <UnansweredCount ids={s.ids} /> : s.ids.length})
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Questions */}
-      {onlyUnanswered ? (
-        <PracticeUnanswered key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
-      ) : filteredQuestions.length === 0 ? (
-        <Text variant="notice" role="status">No questions available for this filter.</Text>
-      ) : (
-        <PracticeQuestionClient key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
-      )}
+        {/* Questions */}
+        {onlyUnanswered ? (
+          <PracticeUnanswered key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
+        ) : filteredQuestions.length === 0 ? (
+          <Text variant="notice" role="status">No questions available for this filter.</Text>
+        ) : (
+          <PracticeQuestionClient key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
+        )}
+      </>
     </PageShell>
   )
 }

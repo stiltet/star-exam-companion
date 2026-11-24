@@ -133,3 +133,39 @@ test("the Back button shows the page-sized loading box when the page it goes to 
   await expect(page).toHaveURL(/\/study$/, { timeout: 15_000 })
   await expect(box).toHaveCount(0)
 })
+
+test("a header tap whose page never arrives does not leave the loading box over the page", async ({ page }) => {
+  await page.route(/\/glossary(\?|$)/, () => new Promise(() => {}))
+  await page.goto("/study")
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.getByRole("link", { name: "GLOSSARY", exact: true }).click()
+  const box = page.getByRole("status", { name: "Loading" })
+  await expect(box).toBeVisible()
+  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
+})
+
+test("a Back move whose page never arrives does not leave the loading box over the page", async ({ page }) => {
+  await page.context().addInitScript(() => {
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+  })
+  await page.route((url) => url.pathname === "/study", () => new Promise(() => {}))
+  await page.goto("/study/fundamentals")
+  await page.waitForSelector('[data-page-ready="true"]')
+  await page.getByLabel("Back", { exact: true }).click()
+  const box = page.getByRole("status", { name: "Loading" })
+  await expect(box).toBeVisible({ timeout: 2500 })
+  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
+})
+
+test("a refused tap gives up only the box: the link still waiting for its page stays loading", async ({ page }) => {
+  await page.route(/\/flashcards(\?|$)/, () => new Promise(() => {}))
+  await page.goto("/")
+  const study = page.locator('main a[href="/flashcards"]').first()
+  await study.click()
+  await expect(study).toHaveAttribute("data-loading", "true")
+  const box = page.getByRole("status", { name: "Loading" })
+  await page.locator('main a[href="/exam"]').first().click({ force: true })
+  await expect(box, "a refused tap is never silent").toBeVisible()
+  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
+  await expect(study, "the link still waits for its page, so it stays loading").toHaveAttribute("data-loading", "true")
+})

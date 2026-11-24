@@ -112,6 +112,17 @@ test.describe("in the installed app", () => {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(5)
   })
 
+  test("Back after tapping the same-page link twice stays on the page", async ({ page }) => {
+    await page.goto("/glossary")
+    await page.waitForSelector('[data-page-ready="true"]')
+    const link = page.locator('main a[href^="#"]').nth(2)
+    await link.click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+    await link.click()
+    await backButton(page).click()
+    await expect(page, "a link to the place already shown made no step, so Back does not leave").toHaveURL(/\/glossary#section-/)
+  })
+
   test("the Back button sits 2rem from the left and bottom edges", async ({ page }) => {
     await page.goto("/progress")
     const box = await backButton(page).boundingBox()

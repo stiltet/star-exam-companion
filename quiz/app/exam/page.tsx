@@ -24,8 +24,10 @@ export default async function ExamPage() {
   if (!play.ok) return <PageShell><Text variant="notice" role="alert">{play.error}</Text></PageShell>
   return (
     <PageShell>
-      <UnfinishedNotice need="questions" />
-      <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
+      <>
+        <UnfinishedNotice need="questions" />
+        <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
+      </>
     </PageShell>
   )
 }

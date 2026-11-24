@@ -5,7 +5,7 @@ export type Crumb = { label: string; href?: string; onClick?: () => void }
 // The quiz's breadcrumb atom: the way back through the list, then where the reader is, such as READ ALOUD / COURSE 3.
 export function Breadcrumb({ trail }: { trail: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+    <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground line-clamp-2">
       {trail.map((crumb, index) => (
         <span key={`${index}-${crumb.label}`}>
           {index > 0 && <span className="mx-2">/</span>}

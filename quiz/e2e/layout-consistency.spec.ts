@@ -78,3 +78,29 @@ test("a glossary section link scrolls its section to just under the fixed header
     expect(gap, `${id} is not left far below it`).toBeLessThanOrEqual(40)
   }
 })
+
+test("a long study topic title cannot make the fixed breadcrumb taller than two lines", async ({ page }) => {
+  await page.goto("/study")
+  await page.waitForSelector('[data-page-ready="true"]')
+  const links = await page.locator('main a[href^="/study/"]').evaluateAll((all) => all.map((link) => ({ href: (link as HTMLAnchorElement).getAttribute("href")!, text: link.textContent ?? "" })).filter((link) => link.href.split("/").length === 4))
+  await page.goto(links.sort((a, b) => b.text.length - a.text.length)[0].href)
+  const crumb = page.getByRole("navigation", { name: "Breadcrumb" })
+  const { height, line } = await crumb.evaluate((el) => ({ height: el.getBoundingClientRect().height, line: parseFloat(getComputedStyle(el).lineHeight) }))
+  expect(height, "at most two lines").toBeLessThanOrEqual(line * 2 + 1)
+})
+
+test("a Read Aloud paragraph scrolled into view lands below the fixed stack and the control bar", async ({ page }) => {
+  await page.goto("/read")
+  await page.locator('main a[href^="/read/"]').filter({ hasNotText: /night/i }).first().click()
+  await page.getByRole("link", { name: /Test reading one/ }).click()
+  const paragraph = page.locator("main button.block.w-full.text-left").first()
+  await expect(paragraph).toBeVisible()
+  const { top, stackBottom } = await paragraph.evaluate((el) => {
+    const spacer = document.createElement("div")
+    spacer.style.height = "3000px"
+    document.querySelector("footer")!.before(spacer)
+    el.scrollIntoView({ block: "start" })
+    return { top: el.getBoundingClientRect().top, stackBottom: document.querySelector("[data-sticky-stack]")!.getBoundingClientRect().bottom }
+  })
+  expect(top - stackBottom, "room for the control bar between the stack and the paragraph").toBeGreaterThanOrEqual(84)
+})

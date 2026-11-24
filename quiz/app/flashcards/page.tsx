@@ -22,8 +22,10 @@ export default async function FlashcardsPage() {
     : []
   return (
     <PageShell>
-      <UnfinishedNotice need="glossary" />
-      <FlashcardsClient glossary={glossary} />
+      <>
+        <UnfinishedNotice need="glossary" />
+        <FlashcardsClient glossary={glossary} />
+      </>
     </PageShell>
   )
 }

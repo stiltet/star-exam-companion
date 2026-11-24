@@ -22,7 +22,9 @@ export default function ProgressPage() {
 
   return (
     <PageShell>
-      <ProgressClient stats={stats} />
+      <>
+        <ProgressClient stats={stats} />
+      </>
     </PageShell>
   )
 }

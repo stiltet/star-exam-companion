@@ -55,3 +55,15 @@ for (const [name, viewport, prevText] of [["a phone", { width: 375, height: 844 
     }
   })
 }
+
+test("Previous reads Prev below 640 px and Previous from 640 px", async ({ page }) => {
+  await page.goto("/study")
+  await page.waitForSelector('[data-page-ready="true"]')
+  const hrefs = await page.locator('main a[href^="/study/"]').evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).getAttribute("href")!))
+  await page.goto(`/study/${[...new Set(hrefs.map((href) => href.split("/")[2]))][1]}`)
+  for (const [width, label] of [[639, "Prev"], [640, "Previous"]] as const) {
+    await page.setViewportSize({ width, height: 800 })
+    const { previous } = await pair(page, "section")
+    expect(previous.text, `${width} px`).toBe(label)
+  }
+})

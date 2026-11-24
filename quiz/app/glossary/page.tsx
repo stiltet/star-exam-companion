@@ -39,55 +39,57 @@ export default async function GlossaryPage() {
 
   return (
     <PageShell>
-      <h1 className="sr-only text-2xl font-bold mb-2">GLOSSARY</h1>
-      <UnfinishedNotice need="glossary" />
-      <p className="text-muted-foreground mb-8">
-        All terms for the {play.ok ? play.pack.meta.title : ""} exam, from official Google Cloud documentation. {GLOSSARY.length} entries.
-      </p>
+      <>
+        <h1 className="sr-only text-2xl font-bold mb-2">GLOSSARY</h1>
+        <UnfinishedNotice need="glossary" />
+        <p className="text-muted-foreground mb-8">
+          All terms for the {play.ok ? play.pack.meta.title : ""} exam, from official Google Cloud documentation. {GLOSSARY.length} entries.
+        </p>
 
-      {/* Quick Nav */}
-      <div className="border-2 border-foreground p-4 mb-6">
-        <h2 className="font-bold mb-2 text-sm">CATEGORIES</h2>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <a
-              key={cat}
-              href={`#${anchorId(cat)}`}
-              className="text-sm border border-foreground px-2 py-1 hover:bg-muted"
-            >
-              {cat.toUpperCase()} ({grouped[cat].length})
-            </a>
-          ))}
+        {/* Quick Nav */}
+        <div className="border-2 border-foreground p-4 mb-6">
+          <h2 className="font-bold mb-2 text-sm">CATEGORIES</h2>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <a
+                key={cat}
+                href={`#${anchorId(cat)}`}
+                className="text-sm border border-foreground px-2 py-1 hover:bg-muted"
+              >
+                {cat.toUpperCase()} ({grouped[cat].length})
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Terms by Category */}
-      {categories.map((category) => (
-        <section key={category} id={anchorId(category)} className="mb-8">
-          <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
-          <dl className="border-2 border-foreground divide-y divide-foreground">
-            {grouped[category]
-              .sort((a, b) => plainNames(a.term).localeCompare(plainNames(b.term)))
-              .map((item) => (
-                <div key={item.term} className="p-4">
-                  <dt className="font-bold"><Names text={item.term} /></dt>
-                  <dd className="text-muted-foreground mt-1"><Names text={item.definition} /></dd>
-                </div>
-              ))}
-          </dl>
-        </section>
-      ))}
+        {/* Terms by Category */}
+        {categories.map((category) => (
+          <section key={category} id={anchorId(category)} className="mb-8">
+            <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
+            <dl className="border-2 border-foreground divide-y divide-foreground">
+              {grouped[category]
+                .sort((a, b) => plainNames(a.term).localeCompare(plainNames(b.term)))
+                .map((item) => (
+                  <div key={item.term} className="p-4">
+                    <dt className="font-bold"><Names text={item.term} /></dt>
+                    <dd className="text-muted-foreground mt-1"><Names text={item.definition} /></dd>
+                  </div>
+                ))}
+            </dl>
+          </section>
+        ))}
 
-      {/* Practice Link */}
-      <div className="border-2 border-foreground p-4 mt-8">
-        <p className="mb-2">Ready to test your knowledge?</p>
-        <Link
-          href="/flashcards"
-          className="inline-block border-2 border-foreground px-4 py-2 no-underline hover:bg-foreground hover:text-background"
-        >
-          PRACTICE WITH FLASHCARDS →
-        </Link>
-      </div>
+        {/* Practice Link */}
+        <div className="border-2 border-foreground p-4 mt-8">
+          <p className="mb-2">Ready to test your knowledge?</p>
+          <Link
+            href="/flashcards"
+            className="inline-block border-2 border-foreground px-4 py-2 no-underline hover:bg-foreground hover:text-background"
+          >
+            PRACTICE WITH FLASHCARDS →
+          </Link>
+        </div>
+      </>
     </PageShell>
   )
 }

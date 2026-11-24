@@ -72,7 +72,7 @@ export function BackButton() {
   const tapTimer = useRef(0)
   const standalone = useStandalone()
   // The last link to a place on this same page: where the reader was, and whether the link added a history step.
-  const anchorJump = useRef<{ path: string; y: number; pushed: boolean } | null>(null)
+  const anchorJump = useRef<{ path: string; y: number; length: number; hash: string } | null>(null)
 
   // Names the entry the page is on. One without an id is new: a move forward by a link or the router,
   // whose state Next.js just wrote. It is stamped, and remembers the entry it came from.
@@ -201,9 +201,7 @@ export function BackButton() {
       const href = link?.getAttribute("href")
       if (!href || !href.startsWith("#")) return
       const before = { length: window.history.length, hash: window.location.hash, y: currentScrollY(), path: window.location.pathname }
-      window.setTimeout(() => {
-        anchorJump.current = { path: before.path, y: before.y, pushed: window.history.length > before.length || window.location.hash !== before.hash }
-      }, 50)
+      anchorJump.current = { path: before.path, y: before.y, length: before.length, hash: before.hash }
     }
     document.addEventListener("click", onAnchor, true)
     window.addEventListener("scroll", onScroll, { passive: true })
@@ -240,17 +238,15 @@ export function BackButton() {
       type="button"
       aria-label="Back"
       onClick={() => {
-        // After a link to a place on the same page (a glossary section link) Back returns to where the reader was: it undoes
-        // the step when the link made one (a #hash in the address, or a longer history), and scrolls back when it made none.
+        // After a link to a place on the same page (a glossary section link) Back undoes the step the link made, or scrolls back to
+        // where the reader was when it made none (a link to the place already shown).
         const jump = anchorJump.current
         if (jump && jump.path === window.location.pathname) {
           anchorJump.current = null
-          if (jump.pushed || window.location.hash) window.history.back()
+          // Read now, not when the link was tapped: the browser makes the step after the click, however busy it is.
+          const pushed = window.history.length > jump.length || window.location.hash !== jump.hash
+          if (pushed) window.history.back()
           else window.scrollTo(0, jump.y)
-          return
-        }
-        if (window.location.hash && window.history.length > 1) {
-          window.history.back()
           return
         }
         // A double tap is one Back, not two.

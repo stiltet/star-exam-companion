@@ -29,48 +29,50 @@ export default async function SectionPage({ params }: Props) {
 
   return (
     <PageShell breadcrumb={[{ label: "STUDY", href: "/study" }, { label: label.toUpperCase() }]}>
-      <StepNav
-        kind="section"
-        previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
-        next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
-        placement="mb-6"
-      />
-      {/* Header */}
-      <header className="border-2 border-foreground p-6 mb-6 bg-foreground text-background">
-        <h1 className="text-2xl font-bold">{label}</h1>
-        <p className="text-background/70 mt-1">{section.title}. {section.description}</p>
-      </header>
+      <>
+        <StepNav where="top"
+          kind="section"
+          previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+          next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+          placement="mb-6"
+        />
+        {/* Header */}
+        <header className="border-2 border-foreground p-6 mb-6 bg-foreground text-background">
+          <h1 className="text-2xl font-bold">{label}</h1>
+          <p className="text-background/70 mt-1">{section.title}. {section.description}</p>
+        </header>
 
-      {/* Topics */}
-      <section className="mb-8">
-        <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">TOPICS ({section.topics.length})</h2>
-        <div className="divide-y-2 divide-foreground border-2 border-foreground">
-          {section.topics.map((topic, index) => (
-            <Link
-              key={topic.id}
-              href={`/study/${sectionId}/${topic.id}`}
-              className="block p-4 no-underline hover:bg-muted"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-muted-foreground mr-2">{String(index + 1).padStart(2, "0")}.</span>
-                  <span className="font-medium">{topic.title}</span>
+        {/* Topics */}
+        <section className="mb-8">
+          <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">TOPICS ({section.topics.length})</h2>
+          <div className="divide-y-2 divide-foreground border-2 border-foreground">
+            {section.topics.map((topic, index) => (
+              <Link
+                key={topic.id}
+                href={`/study/${sectionId}/${topic.id}`}
+                className="block p-4 no-underline hover:bg-muted"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-muted-foreground mr-2">{String(index + 1).padStart(2, "0")}.</span>
+                    <span className="font-medium">{topic.title}</span>
+                  </div>
+                  <span className="text-muted-foreground">→</span>
                 </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1 ml-6">{Array.isArray(topic.concepts) ? topic.concepts.length : 0} concepts</p>
-            </Link>
-          ))}
-        </div>
-      </section>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">{Array.isArray(topic.concepts) ? topic.concepts.length : 0} concepts</p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
-      {/* Section Navigation */}
-      <StepNav
-        kind="section"
-        previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
-        next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
-        placement="border-t-2 border-foreground pt-6"
-      />
+        {/* Section Navigation */}
+        <StepNav where="bottom"
+          kind="section"
+          previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+          next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+          placement="border-t-2 border-foreground pt-6"
+        />
+      </>
     </PageShell>
   )
 }

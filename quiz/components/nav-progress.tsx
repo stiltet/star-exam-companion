@@ -100,6 +100,8 @@ export function NavProgress() {
         event.stopPropagation()
         // A tap that is refused is never silent (owner, 17 Nov): the page-sized loading box shows, as the move is still coming.
         setOverlay(true)
+        // Only the box is given up: the link still waiting for its page stays busy until the page arrives.
+        timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
         return
       }
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -125,8 +127,11 @@ export function NavProgress() {
       link.current = target
       from.current = window.location.pathname + window.location.search
       locked.current = true
-      if (inHeader) setOverlay(true)
-      else timers.current.push(window.setTimeout(() => markBusy(target), SPINNER_AFTER_MS))
+      if (inHeader) {
+        setOverlay(true)
+        // A move that never arrives must not leave the box over the page for good.
+        timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
+      } else timers.current.push(window.setTimeout(() => markBusy(target), SPINNER_AFTER_MS))
       timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
     }
     document.addEventListener("click", onClick, true)

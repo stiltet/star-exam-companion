@@ -91,8 +91,9 @@ export function FlashcardsClient({ glossary }: Props) {
 
   // At the end of a section's cards, Next opens the next section's; after the last section, or after All, it ends the session.
   const sections = categories.filter((category) => category !== "all")
-  const previousCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) - 1] ?? null)
-  const nextCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) + 1] ?? null)
+  const at = sections.indexOf(selectedCategory)
+  const previousCategory = at < 0 ? null : (sections[at - 1] ?? null)
+  const nextCategory = at < 0 ? null : (sections[at + 1] ?? null)
 
   const handleKnow = () => mark(true)
 

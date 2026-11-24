@@ -55,6 +55,7 @@ function ExamTimerBar({ time, duration, index, total, unanswered, flagged }: { t
         </span>
       </div>
     </div>,
+    [time, duration, index, total, unanswered, flagged],
   )
   return null
 }
@@ -314,7 +315,7 @@ export function ExamClient({ questions, sections, length }: Props) {
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
         <ExamTimerBar time={timeRemaining} duration={duration} index={currentIndex} total={examQuestions.length} unanswered={unansweredCount} flagged={flagged.size} />
 
-        <StepNav
+        <StepNav where="top"
           kind="question"
           previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
           next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}
@@ -344,7 +345,7 @@ export function ExamClient({ questions, sections, length }: Props) {
         </div>
 
         {/* Navigation */}
-        <StepNav
+        <StepNav where="bottom"
           kind="question"
           previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
           next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}

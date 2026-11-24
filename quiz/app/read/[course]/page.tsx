@@ -24,11 +24,13 @@ export default async function CourseReadingsPage({ params }: Props) {
   if (!course && noText) {
     return (
       <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${noText.id}` }]} variant="reading">
-        <PageNav kind="course" previous={previous} next={next} placement="mb-6" />
-        <Heading variant="title" placement="mb-6">{noText.title}</Heading>
-        <Text variant="muted" placement="mb-6">{noText.why}</Text>
-        <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
-        <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
+        <>
+          <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
+          <Heading variant="title" placement="mb-6">{noText.title}</Heading>
+          <Text variant="muted" placement="mb-6">{noText.why}</Text>
+          <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
+          <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
+        </>
       </PageShell>
     )
   }
@@ -37,29 +39,31 @@ export default async function CourseReadingsPage({ params }: Props) {
 
   return (
     <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}` }]} variant="reading">
-      <PageNav kind="course" previous={previous} next={next} placement="mb-6" />
-      <Heading variant="title" placement="mb-6">{course.title}</Heading>
-      {course.provider === "private" && (
-        <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>
-      )}
-      {loaded.ok && loaded.orderUnchecked && (
-        <Text variant="note" placement="mb-6">Order not checked against Google yet: run pnpm reading:crawl so the lessons follow Google&apos;s page.</Text>
-      )}
-      {loaded.ok ? (
-        <ReadingList
-          course={course.id}
-          pages={loaded.pages}
-          emptyLabel={course.provider === "private"
-            ? "No private copy is saved on this server yet."
-            : undefined}
-        />
-      ) : (
-        <CourseTextError detail={loaded.error} again={`/read/${course.id}`} problem={loaded.problem} />
-      )}
-      {course.provider === "private" && (
-        <ActionLink variant="filled" placement="mt-6" href={`https://www.skills.google/course_templates/${course.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
-      )}
-      <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
+      <>
+        <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
+        <Heading variant="title" placement="mb-6">{course.title}</Heading>
+        {course.provider === "private" && (
+          <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>
+        )}
+        {loaded.ok && loaded.orderUnchecked && (
+          <Text variant="note" placement="mb-6">Order not checked against Google yet: run pnpm reading:crawl so the lessons follow Google&apos;s page.</Text>
+        )}
+        {loaded.ok ? (
+          <ReadingList
+            course={course.id}
+            pages={loaded.pages}
+            emptyLabel={course.provider === "private"
+              ? "No private copy is saved on this server yet."
+              : undefined}
+          />
+        ) : (
+          <CourseTextError detail={loaded.error} again={`/read/${course.id}`} problem={loaded.problem} />
+        )}
+        {course.provider === "private" && (
+          <ActionLink variant="filled" placement="mt-6" href={`https://www.skills.google/course_templates/${course.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
+        )}
+        <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
+      </>
     </PageShell>
   )
 }

@@ -30,11 +30,11 @@ export function SubBar() {
   return bar ? <div data-sub-bar className="border-b-2 border-foreground">{bar}</div> : null
 }
 
-export function useSubBar(bar: ReactNode) {
+export function useSubBar(bar: ReactNode, inputs: unknown[]) {
   const set = useContext(BarSetter)
-  useEffect(() => {
-    set(bar)
-  })
+  // The bar is set again only when one of the values it shows changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => set(bar), [set, ...inputs])
   useEffect(() => () => set(null), [set])
 }
 
