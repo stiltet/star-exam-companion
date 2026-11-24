@@ -564,3 +564,27 @@ test.describe("reading aloud when the Mac cannot answer", () => {
     await expect.poll(() => clipRequests(page), { message: "a new Play asks the Mac again" }).toBe(2)
   })
 })
+
+test("the installed app reopens the last page offline when the device holds it, and stays on home when it does not", async ({ context, page }) => {
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+  })
+  await page.goto("/glossary")
+  await readyOffline(page)
+  await context.setOffline(true)
+  // A page the device holds: the launch goes to it.
+  await page.evaluate(() => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/glossary", at: Date.now(), scroll: 0 })))
+  const launch = await context.newPage()
+  await launch.goto("/")
+  await expect(launch).toHaveURL(/\/glossary$/)
+  await expect(launch.locator("h1")).not.toBeEmpty()
+  // A page it never held would open the "not on this device" page: the launch stays on home instead.
+  await launch.close()
+  await page.evaluate(() => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/never-opened-on-this-device", at: Date.now(), scroll: 0 })))
+  const second = await context.newPage()
+  await second.goto("/")
+  await expect(second.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await second.waitForTimeout(300)
+  await expect(second).toHaveURL(/\/$/)
+  await expect(second.locator("h1")).not.toBeEmpty()
+})
