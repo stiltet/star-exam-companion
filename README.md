@@ -517,7 +517,7 @@ Run the complete gate (unit tests, then the browser tests, which build and type-
 pnpm gate
 ```
 
-The same gate runs as two steps, for a runner that limits how long one command may take: `pnpm gate:unit`, then `pnpm gate:browser`.
+The same gate runs as two steps, for a runner that limits how long one command may take: `pnpm gate:unit`, then `pnpm gate:browser`. Both write a timing report under `temp/gate/`. No test may take more than 30 s and no test file more than 60 s, with every test file running at the same time; a slow test is made faster, never listed as an exception. The crawl command's tests are split into several files for that reason (`quiz/lib/reading-crawl-run-*.test.ts`, with their shared set-up in `quiz/lib/crawl-run-helpers.ts`).
 
 Or run just the browser suite:
 

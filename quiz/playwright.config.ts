@@ -16,7 +16,8 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   retries: 0,
   forbidOnly: Boolean(process.env.CI),
-  reporter: [["list"]],
+  // The JSON report is the timing record the Pre-push checks read (temp/gate/browser.json, resolved from this folder).
+  reporter: [["list"], ["json", { outputFile: "../temp/gate/browser.json" }]],
   use: {
     baseURL: `http://localhost:${port}`,
     trace: "retain-on-failure",
