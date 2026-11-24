@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { spawn, spawnSync } from "node:child_process"
-import { mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync, statSync } from "node:fs"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -14,7 +14,7 @@ const quiz = fileURLToPath(new URL("../", import.meta.url))
 
 test("playwright.config.ts refuses unsafe ports before starting a server", () => {
   for (const port of ["3000", "0", "65536", "not-a-port"]) {
-    const result = spawnSync(process.execPath, [cli, "test", "--list"], {
+    const result = spawnSync(process.execPath, [cli, "test", "--list", "--reporter=list"], {
       cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: port }, encoding: "utf8",
     })
     assert.notEqual(result.status, 0)
@@ -23,10 +23,15 @@ test("playwright.config.ts refuses unsafe ports before starting a server", () =>
 })
 
 test("playwright.config.ts discovers every browser and width without nested or missing specs", () => {
-  const result = spawnSync(process.execPath, [cli, "test", "--list"], {
+  // Listing the tests must not overwrite the browser timing report that the Pre-push checks read (temp/gate/browser.json):
+  // the config writes the JSON report, and a listing run would replace a real run's report with one of 68 skipped tests.
+  const report = path.join(quiz, "..", "temp", "gate", "browser.json")
+  const before = existsSync(report) ? statSync(report).mtimeMs : undefined
+  const result = spawnSync(process.execPath, [cli, "test", "--list", "--reporter=list"], {
     cwd: quiz, env: { ...process.env, QUIZ_E2E_PORT: "47825" }, encoding: "utf8",
   })
   assert.equal(result.status, 0, result.stderr)
+  assert.equal(existsSync(report) ? statSync(report).mtimeMs : undefined, before, "listing the tests left the browser timing report alone")
   // Chromium runs the pages; WebKit only the offline worker (also with the Mac unreachable), the installed app's Back button and the About list.
   // Properties, not totals: a new spec must not break a test that proves nothing about the config.
   const chromium = result.stdout.split("\n").filter((line) => line.includes("[chromium-375]"))
