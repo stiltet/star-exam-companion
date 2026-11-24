@@ -68,14 +68,12 @@ function uncover(ready: () => boolean, restore?: () => void) {
     if (!(ready() && held) && !gaveUp) return
     window.clearInterval(timer)
     void settled().then(() => {
-      // A newer move took over the watch while the page settled: it restores and ends the cover, not this one.
+      // A newer call took over the watch while the page settled: it restores and ends the cover, not this one.
       if (watching !== timer) return
       // The page is drawn and hidden behind the cover: put it where it was left before the cover goes.
       if (!gaveUp) restore?.()
-      else {
-        resuming = false
-        saving = true
-      }
+      // The saved page never came: saving starts again with the next page the visitor opens, never with home at the top.
+      else resuming = false
       endCover()
     })
   }, 50)
@@ -108,7 +106,8 @@ export function ResumeLastPage() {
             router.replace(target)
             // The cover stays until the other page is ready: the home page's own gate is still the one in the DOM until then.
             uncover(() => window.location.pathname !== "/" && pageReady(), () => {
-              window.scrollTo(0, saved?.scroll ?? 0)
+              // Only on the saved page itself: a visitor who tapped on to another page meanwhile keeps that page's own place.
+              if (window.location.pathname + window.location.search === target) window.scrollTo(0, saved?.scroll ?? 0)
               resuming = false
               saving = true
             })
