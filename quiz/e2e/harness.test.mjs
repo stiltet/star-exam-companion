@@ -204,7 +204,8 @@ test("playwright.config.ts starts one server for each worker, each waiting for i
       if (!server.wait.stdout.test("Ready in 100ms")) throw new Error("Missing startup handshake")
       if (Number(server.env.QUIZ_E2E_PORT) !== first + index) throw new Error("the ports follow the worker index")
       // Only the first server builds; the others start from its build once it listens.
-      if ((index === 0) !== (server.env.QUIZ_E2E_BUILD_PORT === undefined)) throw new Error("only the first server builds")
+      // The first server builds, so it is given an empty QUIZ_E2E_BUILD_PORT: one set in the shell must not reach it and make it skip the build.
+      if ((index === 0) !== (server.env.QUIZ_E2E_BUILD_PORT === "")) throw new Error("only the first server builds, and it is told so with an empty value")
       if (index > 0 && server.env.QUIZ_E2E_BUILD_PORT !== String(first)) throw new Error("the others wait for the first server")
     })
   `], { cwd: quiz, encoding: "utf8" })

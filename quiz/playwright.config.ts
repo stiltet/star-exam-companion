@@ -36,7 +36,8 @@ export default defineConfig({
     wait: { stdout: /Ready in/ },
     timeout: 300_000,
     reuseExistingServer: false,
-    // The first server builds the app; the others start from its build once it is listening.
-    env: { QUIZ_E2E_PORT: String(e2ePortFor(port, index)), QUIZ_NIGHT_PRELOAD: "1", ...(index > 0 ? { QUIZ_E2E_BUILD_PORT: String(port) } : {}) },
+    // The first server builds the app; the others start from its build once it is listening. The first is given an empty QUIZ_E2E_BUILD_PORT
+    // so that one set in the shell is not inherited, which would make it skip the build and serve an old one.
+    env: { QUIZ_E2E_PORT: String(e2ePortFor(port, index)), QUIZ_NIGHT_PRELOAD: "1", QUIZ_E2E_BUILD_PORT: index > 0 ? String(port) : "" },
   })),
 })
