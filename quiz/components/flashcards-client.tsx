@@ -62,9 +62,10 @@ export function FlashcardsClient({ glossary }: Props) {
   // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
   const [finished, setFinished] = useState(false)
 
-  const startSession = () => {
+  const startSession = (category: string = selectedCategory) => {
     setFinished(false)
-    const filtered = selectedCategory === "all" ? glossary : glossary.filter((g) => g.category === selectedCategory)
+    setSelectedCategory(category)
+    const filtered = category === "all" ? glossary : glossary.filter((g) => g.category === category)
     setShuffledCards([...filtered].sort(() => Math.random() - 0.5))
     setCurrentIndex(0)
     setShowDefinition(false)
@@ -86,6 +87,10 @@ export function FlashcardsClient({ glossary }: Props) {
     })
     handleNext()
   }
+
+  // At the end of a section's cards, Next opens the next section's (not after All, which has no next).
+  const sections = categories.filter((category) => category !== "all")
+  const nextCategory = selectedCategory === "all" ? null : (sections[sections.indexOf(selectedCategory) + 1] ?? null)
 
   const handleKnow = () => mark(true)
 
@@ -149,7 +154,7 @@ export function FlashcardsClient({ glossary }: Props) {
         </div>
 
         <button
-          onClick={startSession}
+          onClick={() => startSession()}
           className="w-full border-2 border-foreground p-4 font-bold hover:bg-foreground hover:text-background"
         >
           START SESSION (
@@ -234,7 +239,7 @@ export function FlashcardsClient({ glossary }: Props) {
       <StepNav
         kind="card"
         previous={{ onClick: handlePrev, disabled: currentIndex === 0 }}
-        next={{ onClick: handleNext, disabled: currentIndex === shuffledCards.length - 1 }}
+        next={{ onClick: currentIndex === shuffledCards.length - 1 && nextCategory ? () => startSession(nextCategory) : handleNext, disabled: currentIndex === shuffledCards.length - 1 && !nextCategory }}
         middle={<StepMiddle onClick={handleReset} label="End session" short="END">END SESSION</StepMiddle>}
         placement="items-center"
       />

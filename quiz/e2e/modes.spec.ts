@@ -90,3 +90,20 @@ test("Flashcards: the last card can be marked known, and only then is the sessio
   await expect(page.getByText("SESSION COMPLETE")).toBeVisible()
   await expect(page.getByText(new RegExp(`You marked 1 / ${total} cards as known`))).toBeVisible()
 })
+
+test("Flashcards: Next on the last card of a section opens the next section's cards", async ({ page }) => {
+  await page.goto("/flashcards")
+  const categories = page.locator("main button").filter({ hasText: /\(\d+\)\s*$/ })
+  expect(await categories.count(), "All and at least two sections").toBeGreaterThan(2)
+  await categories.nth(1).click()
+  await page.getByRole("button", { name: /START SESSION/ }).click()
+  const header = async () => (await page.getByText(/CLICK TO (REVEAL|HIDE)/).locator("xpath=preceding-sibling::span").textContent())!
+  const first = await header()
+  const total = Number((await page.getByText(/^Card 1 \/ \d+$/).textContent())!.split("/")[1])
+  for (let card = 1; card < total; card += 1) await page.getByRole("button", { name: /^Next card/ }).first().click()
+  const next = page.getByRole("button", { name: /^Next card/ }).first()
+  await expect(next, "Next is on at the last card of a section").toBeEnabled()
+  await next.click()
+  await expect(page.getByText(/^Card 1 \/ \d+$/)).toBeVisible()
+  expect(await header(), "the next section's cards").not.toBe(first)
+})
