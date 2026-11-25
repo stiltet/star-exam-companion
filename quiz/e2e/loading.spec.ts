@@ -392,4 +392,27 @@ test.describe("a move that never arrives", () => {
     await page.waitForTimeout(3500)
     await expect(box, "the earlier move's give-up did not hide the Back move's box").toBeVisible()
   })
+
+  test("a Back move made after a header tap whose page never came keeps its box and its lock past the header tap's give-up", async ({ page }) => {
+    await page.route(/\/glossary(\?|$)/, () => new Promise(() => {}))
+    await page.goto("/study")
+    await page.getByRole("button", { name: "Open menu" }).click()
+    await page.getByRole("link", { name: "GLOSSARY", exact: true }).click()
+    const box = page.getByRole("status", { name: "Loading" })
+    await expect(box).toBeVisible()
+    // After the 6 s unlock a Back move starts (the Back button sends this event); the header tap's own give-up is due at 8 s, the Back move's at about 14.5 s.
+    await page.waitForTimeout(6500)
+    await page.evaluate(() => window.dispatchEvent(new Event("quiz:moving")))
+    await page.waitForTimeout(3500)
+    await expect(box, "the header tap's give-up did not hide the Back move's box").toBeVisible()
+    // The Back move's lock (until about 12.5 s) still refuses a tap, so the header tap's give-up did not free it.
+    const tap = () => page.locator("main a[href^='/']").first().evaluate((link) => (link as HTMLElement).click())
+    await tap()
+    await page.waitForTimeout(500)
+    await expect(page).toHaveURL(/\/study$/)
+    // The same tap opens its page once the Back move has given up (about 14.5 s): the probe does navigate when nothing locks it.
+    await expect(box).toHaveCount(0, { timeout: 12_000 })
+    await tap()
+    await expect(page).not.toHaveURL(/\/study$/, { timeout: 15_000 })
+  })
 })
