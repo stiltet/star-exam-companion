@@ -13,7 +13,8 @@ async function saveExams(page: Page, origin: string): Promise<string[]> {
   const [first, second] = snapshot.snapshot.items.map((item) => item.id)
   const exams = Array.from({ length: 12 }, (_, index) => ({
     id: crypto.randomUUID(),
-    at: new Date(Date.UTC(2026, 0, 1 + index)).toISOString(),
+    // Days back from now, since the Mac refuses an answer older than 400 days (OLDEST_MS in lib/score.ts).
+    at: new Date(Date.now() - (12 - index) * 86_400_000).toISOString(),
     mode: "exam",
     asked: [first, second],
     missed: [first],
@@ -76,6 +77,39 @@ test.describe("in the installed app", () => {
     await link.click()
     await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
     await expect.poll(() => page.evaluate(() => window.scrollY), { message: "the review starts at the top, in WebKit too" }).toBe(0)
+  })
+
+  test("Back from a review opened far down the Test exam page returns the list at the same scroll", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/exam")
+    const link = page.getByRole("link", { name: "Review →" }).nth(8)
+    await link.scrollIntoViewIfNeeded()
+    await waitForScrollToSettle(page)
+    const scrollBefore = await page.evaluate(() => window.scrollY)
+    expect(scrollBefore).toBeGreaterThan(300)
+    await link.click()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await page.goBack()
+    await expect(page.getByRole("link", { name: "Review →" }).first()).toBeVisible()
+    await expect.poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(5)
+  })
+
+  test("a review reached again with a reload or with Forward still starts at the top", async ({ page, baseURL }) => {
+    await saveExams(page, baseURL!)
+    await page.goto("/exam")
+    const link = page.getByRole("link", { name: "Review →" }).nth(8)
+    await link.scrollIntoViewIfNeeded()
+    await waitForScrollToSettle(page)
+    await link.click()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => window.scrollY), { message: "after a reload" }).toBe(0)
+    await page.goBack()
+    await expect(page.getByRole("link", { name: "Review →" }).first()).toBeVisible()
+    await page.goForward()
+    await expect(page.getByRole("heading", { name: "RESULTS", exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => window.scrollY), { message: "after Forward" }).toBe(0)
   })
 
   test("an address that names two reviews opens the last one and is made single", async ({ page, baseURL }) => {
