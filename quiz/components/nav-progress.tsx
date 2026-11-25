@@ -187,6 +187,9 @@ export function NavProgress() {
   useEffect(() => {
     const moving = () => {
       if (locked.current) return
+      // An earlier move's give-up timers (a refused tap's, a header tap's) must not end this move's box or lock.
+      timers.current.forEach((timer) => window.clearTimeout(timer))
+      timers.current = []
       dropHold()
       from.current = shown.current
       locked.current = true

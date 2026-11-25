@@ -376,4 +376,20 @@ test.describe("a move that never arrives", () => {
     await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
     await expect(study, "the link still waits for its page, so it stays loading").toHaveAttribute("data-loading", "true")
   })
+
+  test("a Back move made after a refused tap keeps its own box: the refused tap's give-up does not hide it", async ({ page }) => {
+    await page.route(/\/flashcards(\?|$)/, () => new Promise(() => {}))
+    await page.goto("/")
+    await page.locator('main a[href="/flashcards"]').first().click()
+    await page.waitForTimeout(1000)
+    // Refused: its box gives up 8 s from now (at about 9 s).
+    await page.locator('main a[href="/exam"]').first().click({ force: true })
+    // After the 6 s unlock a Back move starts (the Back button sends this event); its own box gives up 8 s later.
+    await page.waitForTimeout(5500)
+    await page.evaluate(() => window.dispatchEvent(new Event("quiz:moving")))
+    const box = page.getByRole("status", { name: "Loading" })
+    // Past the refused tap's give-up the Back move's box is still there.
+    await page.waitForTimeout(3500)
+    await expect(box, "the earlier move's give-up did not hide the Back move's box").toBeVisible()
+  })
 })
