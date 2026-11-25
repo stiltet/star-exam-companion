@@ -25,4 +25,7 @@ test("the page after a Read Aloud box keeps what is left of the box's 500 ms, an
   // The box showed for 200 ms and the page is there: 300 ms are left.
   assert.equal(routeRemaining(1000, 1400), 300)
   assert.equal(routeRemaining(1000, 1000 + LOADING_AFTER_MS + LOADING_MIN_MS), 0)
+  // The moment the box was really seen (its animation ended) wins over the mount time plus 200 ms.
+  assert.equal(routeRemaining(1000, 1400, 1230), 330)
+  assert.equal(routeRemaining(1000, 1800, 1230), 0)
 })

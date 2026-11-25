@@ -14,8 +14,10 @@ export function gateRemaining(startedAt: number, now: number): number {
   return elapsed < LOADING_AFTER_MS ? 0 : loadingRemaining(startedAt + LOADING_AFTER_MS, now)
 }
 
-// The same for the Read Aloud route box, which mounted at `mountedAt` and shows LOADING_AFTER_MS later. It is gone the moment its
-// page is there, so the page gate that follows keeps the rest of its 500 ms. Null, or the page there before the box showed: nothing is held.
-export function routeRemaining(mountedAt: number | null, now: number): number {
+// The same for the Read Aloud route box, which mounted at `mountedAt` and shows LOADING_AFTER_MS later (its CSS animation, whose end
+// is `shownAt` when it has been seen). It is gone the moment its page is there, so the page that follows keeps the rest of its 500 ms.
+// Null, or the page there before the box showed: nothing is held.
+export function routeRemaining(mountedAt: number | null, now: number, shownAt: number | null = null): number {
+  if (shownAt !== null) return loadingRemaining(shownAt, now)
   return mountedAt === null || now < mountedAt + LOADING_AFTER_MS ? 0 : loadingRemaining(mountedAt + LOADING_AFTER_MS, now)
 }
