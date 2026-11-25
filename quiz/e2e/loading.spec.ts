@@ -108,9 +108,11 @@ const handOver = async (page: Page, delay: number, { path = "/read/1", blockMs =
     await new Promise((resolve) => setTimeout(resolve, delay))
     await route.continue()
   })
+  // The app fetches the page ahead in the background once the link is on screen; the tap is made after that, or there would be nothing held to show.
+  const fetchedAhead = page.waitForResponse((response) => response.url().includes(path) && response.request().headers()["next-router-prefetch"] !== undefined)
   await page.goto("/read")
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
-  await page.waitForTimeout(1500)
+  await Promise.race([fetchedAhead, page.waitForTimeout(1500)])
   await page.evaluate((block) => {
     if (block > 0) {
       new MutationObserver((records) => {
