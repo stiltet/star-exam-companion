@@ -199,6 +199,31 @@ test("a tapped link that shows loading keeps it for 500 ms when the page comes r
   expect(gone! - shown!, "the tapped link stayed loading at least 500 ms, within one frame").toBeGreaterThanOrEqual(480)
 })
 
+test("a link tapped while the previous move's loading state is still held opens: the page has arrived, so taps are not refused", async ({ page }) => {
+  // The page is there 300 ms after the tap, so its loading state (shown at 200 ms) is held until 700 ms. A tap in that time must work.
+  await page.route(/\/practice\?section=1(&|$)/, slow(300))
+  await page.goto("/practice")
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  // In the page, tapped the moment the new page is there while its loading state is still held, so the timing is not left to the test's own round trips.
+  await page.evaluate(() => {
+    const result: { heldAtTap?: boolean } = {}
+    ;(window as unknown as { __tap: typeof result }).__tap = result
+    const frame = () => {
+      const unanswered = [...document.querySelectorAll<HTMLAnchorElement>("main a")].find((a) => a.textContent?.trim().toLowerCase() === "unanswered")
+      if (window.location.search === "?section=1" && unanswered) {
+        result.heldAtTap = document.querySelector("a[data-loading]") !== null
+        unanswered.click()
+        return
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+  await page.locator('main a[href="/practice?section=1"]').first().click()
+  await expect(page).toHaveURL(/section=1&unanswered=1$/, { timeout: 5_000 })
+  expect(await page.evaluate(() => (window as unknown as { __tap: { heldAtTap: boolean } }).__tap.heldAtTap), "the tap came while the loading state was still held").toBe(true)
+})
+
 test("a page that is ready before its box shows but settles after it keeps the box 500 ms from when it showed", async ({ page }) => {
   await page.addInitScript(() => {
     // The fonts are reported loaded only 300 ms after they are asked for, so the next page settles after its box has shown (200 ms).

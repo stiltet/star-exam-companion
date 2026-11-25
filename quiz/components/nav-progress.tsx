@@ -67,6 +67,8 @@ export function NavProgress() {
   const finish = () => {
     const wait = loadingRemaining(shownAt.current, clock())
     if (wait <= 0) return endMove()
+    // The page is here, so other links work again at once; only the loading state is held for its 500 ms.
+    locked.current = false
     timers.current.forEach((timer) => window.clearTimeout(timer))
     timers.current = []
     if (ending.current === 0) ending.current = window.setTimeout(endMove, wait)
@@ -131,6 +133,10 @@ export function NavProgress() {
         timers.current.forEach((timer) => window.clearTimeout(timer))
         timers.current = []
       }
+      // The previous move's hold must not end this move's loading early.
+      window.clearTimeout(ending.current)
+      ending.current = 0
+      shownAt.current = null
       link.current = target
       from.current = window.location.pathname + window.location.search
       locked.current = true
