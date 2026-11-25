@@ -109,7 +109,10 @@ const handOver = async (page: Page, delay: number, { path = "/read/1", blockMs =
     await route.continue()
   })
   // The app fetches the page ahead in the background once the link is on screen; the tap is made after that, or there would be nothing held to show.
-  const fetchedAhead = page.waitForResponse((response) => response.url().includes(path) && response.request().headers()["next-router-prefetch"] !== undefined)
+  const fetchedAhead = page
+    .waitForResponse((response) => response.url().includes(path) && response.request().headers()["next-router-prefetch"] !== undefined)
+    // When the 1.5 s below wins, this wait is left pending and would end in an error when the page closes: that is not a failure.
+    .catch(() => undefined)
   await page.goto("/read")
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
   await Promise.race([fetchedAhead, page.waitForTimeout(1500)])

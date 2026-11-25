@@ -249,6 +249,7 @@ test("a saved page that never comes is given up after 30 s: no place is restored
   await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
   await launch.clock.resume()
   await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full'), "the slow-page box goes when the watch gives up").toHaveCount(0)
+  expect(await launch.evaluate(() => Math.round(window.scrollY)), "no place is restored: home stays where it is").toBe(0)
   // The visitor opens another page: it is saved as the place to come back to, which only happens once the move to the saved page is over.
   await launch.locator('main a[href="/exam"]').first().click()
   await expect(launch).toHaveURL(/\/exam$/, { timeout: 15_000 })
