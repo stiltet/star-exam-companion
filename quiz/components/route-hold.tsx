@@ -38,7 +38,7 @@ export function RouteHold({ className, children }: { className?: string; childre
   }, [remaining])
   return (
     <>
-      <div className={className} style={held ? { visibility: "hidden" } : undefined}>{children}</div>
+      <div className={className} style={held ? { visibility: "hidden" } : undefined} data-route-hold={held ? "true" : undefined}>{children}</div>
       {held && <LoadingBox />}
     </>
   )

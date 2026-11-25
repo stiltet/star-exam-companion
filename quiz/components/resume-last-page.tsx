@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
-import { applyFinish, canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, watchStep } from "@/lib/last-page"
+import { applyFinish, canOpenPage, heldKeys, isLaunch, LAST_PAGE_KEY, locationPath, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, stillOnHome, watchStep } from "@/lib/last-page"
 import { loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 import { readStandalone } from "@/components/standalone"
@@ -22,18 +22,26 @@ let saving = false
 // True from the decision to move to the saved page until it is back in place.
 let resuming = false
 
+// The exam this page belongs to, which a saved place names so that it is only opened again in the same exam.
+const currentExam = () => document.documentElement.dataset.exam ?? ""
+
 function save(path?: string) {
   if (!saving || !readStandalone()) return
-  const here = window.location.pathname + window.location.search
+  const here = locationPath(window.location)
   if (!rememberable(here) || (path !== undefined && path !== here)) return
   try {
-    window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path: here, at: Date.now(), scroll: Math.round(window.scrollY) }))
+    window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path: here, at: Date.now(), scroll: Math.round(window.scrollY), exam: currentExam() }))
   } catch {
     // Without storage the app simply opens at the top.
   }
 }
 
-const canOpen = (path: string) => canOpenPage(navigator.onLine, async () => (await caches.match(path)) !== undefined)
+// The worker's own lookup: the page by its path and query, then by its path alone.
+const holds = async (path: string) => {
+  for (const key of heldKeys(path)) if ((await caches.match(key)) !== undefined) return true
+  return false
+}
+const canOpen = (path: string) => canOpenPage(navigator.onLine, () => holds(path))
 
 // The launch cover is done. Its box stops being a loading element too, so nothing on the page says it is loading
 // when it is not (the hidden cover is still in the page).
@@ -102,7 +110,9 @@ function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boo
   }, 50)
 }
 
-const pageReady = () => document.querySelector("[data-page-ready]")?.getAttribute("data-page-ready") === "true"
+// The page is ready when its gate is open and no Read Aloud route box, or the hold that keeps its page behind a box, is still up:
+// the gate is open while that box shows, but the page is not there yet, so a place restored then would be clamped to the top.
+const pageReady = () => document.querySelector("[data-page-ready]")?.getAttribute("data-page-ready") === "true" && document.querySelector(".loading-route, [data-route-hold]") === null
 
 export function ResumeLastPage() {
   const pathname = usePathname()
@@ -116,23 +126,32 @@ export function ResumeLastPage() {
       endCover()
       return
     }
+    // Set when the visitor moves on while the device is asked whether it holds the saved page.
+    let cancelled = false
     try {
       const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
       const firstLoad = !launched && isLaunch(document.referrer, navigation?.type)
       launched = true
       const saved = parseLastPage(window.localStorage.getItem(LAST_PAGE_KEY))
-      const target = resumeTarget(saved, Date.now(), pathname, firstLoad)
+      const target = resumeTarget(saved, Date.now(), pathname, firstLoad, currentExam())
       if (!target && !resuming) saving = true
       if (target) resuming = true
       if (target) {
         // Offline, a page the device does not hold would open the "not on this device" page: stay on home then.
         void canOpen(target).then((ok) => {
+          // The visitor moved on while the device was asked: the saved page is not opened over where they went.
+          if (cancelled || !stillOnHome(window.location.pathname)) {
+            endCover()
+            resuming = false
+            saving = true
+            return
+          }
           if (ok) {
             router.replace(target)
             // The cover stays until the other page is ready: the home page's own gate is still the one in the DOM until then.
             uncover(() => window.location.pathname !== "/" && pageReady(), () => {
               // Only on the saved page itself: a visitor who tapped on to another page meanwhile keeps that page's own place.
-              const place = placeToRestore(window.location.pathname + window.location.search, target, saved?.scroll)
+              const place = placeToRestore(locationPath(window.location), target, saved?.scroll)
               if (place !== null) window.scrollTo(0, place)
               resuming = false
               saving = true
@@ -143,14 +162,16 @@ export function ResumeLastPage() {
             uncover(pageReady)
           }
         })
-        return
+        return () => {
+          cancelled = true
+        }
       }
       // A launch that stays (a stamp too old, home was last): the cover goes once the page is ready.
       if (!resuming) uncover(pageReady)
-      const path = pathname + (search ? `?${search}` : "")
+      const path = locationPath(window.location)
       // While the move to the saved page is under way its record, scroll included, is left alone.
       // The same page again (a reload) keeps the place it was left at, until the scroll is saved afresh.
-      if (!resuming && rememberable(path)) window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path, at: Date.now(), scroll: saved?.path === path ? saved.scroll : 0 }))
+      if (!resuming && rememberable(path)) window.localStorage.setItem(LAST_PAGE_KEY, serialiseLastPage({ path, at: Date.now(), scroll: saved?.path === path ? saved.scroll : 0, exam: currentExam() }))
     } catch {
       // Without storage the app simply opens on home.
       endCover()
@@ -162,7 +183,7 @@ export function ResumeLastPage() {
     let timer = 0
     const onScroll = () => {
       window.clearTimeout(timer)
-      const at = window.location.pathname + window.location.search
+      const at = locationPath(window.location)
       timer = window.setTimeout(() => save(at), 200)
     }
     const flush = () => {
@@ -174,11 +195,14 @@ export function ResumeLastPage() {
     }
     window.addEventListener("scroll", onScroll, { passive: true })
     window.addEventListener("pagehide", flush)
+    // The hash names a view of the page (an exam under review): a change of it is a new place.
+    window.addEventListener("hashchange", flush)
     document.addEventListener("visibilitychange", onHide)
     return () => {
       window.clearTimeout(timer)
       window.removeEventListener("scroll", onScroll)
       window.removeEventListener("pagehide", flush)
+      window.removeEventListener("hashchange", flush)
       document.removeEventListener("visibilitychange", onHide)
     }
   }, [])

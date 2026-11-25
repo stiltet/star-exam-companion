@@ -5,7 +5,8 @@ export const LAST_PAGE_KEY = "quiz-last-page"
 export const LAST_PAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
 // scroll: how far down the page was, in whole pixels, so the launch opens at the same place.
-export type LastPage = { path: string; at: number; scroll: number }
+// exam: the exam the page was left in. A path of one exam is not opened in another, so a record that names none is never resumed.
+export type LastPage = { path: string; at: number; scroll: number; exam: string }
 
 // A path to record: inside the app, and not an API route or a file. Home is recorded too, so that
 // leaving the app on home opens home again and not an older page.
@@ -38,10 +39,10 @@ export function parseLastPage(raw: string | null): LastPage | null {
   try {
     const value: unknown = JSON.parse(raw)
     if (typeof value !== "object" || value === null) return null
-    const { path, at, scroll } = value as { path?: unknown; at?: unknown; scroll?: unknown }
+    const { path, at, scroll, exam } = value as { path?: unknown; at?: unknown; scroll?: unknown; exam?: unknown }
     if (typeof path !== "string" || typeof at !== "number" || !Number.isFinite(at)) return null
     const y = typeof scroll === "number" && Number.isFinite(scroll) && scroll >= 0 && scroll <= 9_999_999 ? Math.round(scroll) : 0
-    return rememberable(path) ? { path, at, scroll: y } : null
+    return rememberable(path) ? { path, at, scroll: y, exam: typeof exam === "string" ? exam : "" } : null
   } catch {
     // Not JSON: nothing this app wrote.
     return null
@@ -49,12 +50,31 @@ export function parseLastPage(raw: string | null): LastPage | null {
 }
 
 // Where a launch should go. Only the first load of a session that lands on home is moved, and only
-// to a page left less than 24 hours ago (a stamp from the future counts as stale).
-export function resumeTarget(saved: LastPage | null, now: number, currentPath: string, firstLoad: boolean): string | null {
+// to a page of the current exam left less than 24 hours ago (a stamp from the future counts as stale).
+export function resumeTarget(saved: LastPage | null, now: number, currentPath: string, firstLoad: boolean, exam: string): string | null {
   if (!saved || !firstLoad || currentPath !== "/" || saved.path.split(/[?#]/)[0] === "/") return null
+  if (saved.exam === "" || saved.exam !== exam) return null
   const age = now - saved.at
-  if (age < 0 || age > LAST_PAGE_MAX_AGE_MS) return null
+  if (age < 0 || age >= LAST_PAGE_MAX_AGE_MS) return null
   return saved.path
+}
+
+// The place a page is at, as it is saved and opened again: path, query and hash (an exam under review is named by its hash).
+export function locationPath(location: { pathname: string; search: string; hash: string }): string {
+  return location.pathname + location.search + location.hash
+}
+
+// The keys the offline worker keeps a page under, in the order it looks them up: the path with its query, then the path alone.
+// Never the hash, which the browser does not send.
+export function heldKeys(path: string): string[] {
+  const withQuery = path.split("#")[0]
+  const bare = withQuery.split("?")[0]
+  return withQuery === bare ? [bare] : [withQuery, bare]
+}
+
+// A move to the saved page goes ahead only while the visitor is still on home: one who tapped on while it was being looked up stays.
+export function stillOnHome(pathname: string): boolean {
+  return pathname === "/"
 }
 
 // Runs in the page before it is drawn, so a launch that is about to move to the last page shows the
@@ -64,7 +84,9 @@ export function resumeTarget(saved: LastPage | null, now: number, currentPath: s
 // the app is not one, so tapping Home can never be sent back to the page it left. Keep it in step with
 // resumeTarget (it is tested against it) and with isLaunch.
 export const RESUME_MARK = "data-resuming"
-export const RESUME_SCRIPT = `try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem(${JSON.stringify(LAST_PAGE_KEY)}));var a=Date.now()-v.at;if(typeof v.path==="string"&&v.path.split(/[?#]/)[0]!=="/"&&a>=0&&a<=${LAST_PAGE_MAX_AGE_MS})d.setAttribute(${JSON.stringify(RESUME_MARK)},String(Date.now()))}}catch(e){/*no readable record: the app opens home*/}`
+// The two names it builds in (LAST_PAGE_KEY and RESUME_MARK) are plain letters, which a unit test keeps true, so they go into the code as
+// they are and nothing has to be escaped. The path rules here are rememberable's.
+export const RESUME_SCRIPT = String.raw`try{var d=document.documentElement;if((navigator.standalone===true||matchMedia("(display-mode: standalone)").matches)&&location.pathname==="/"&&!document.referrer&&(function(){var n=performance.getEntriesByType("navigation")[0];return!n||n.type==="navigate"})()){var v=JSON.parse(localStorage.getItem("${LAST_PAGE_KEY}"));var p=v.path;var b=typeof p==="string"?p.split(/[?#]/)[0]:"";var a=Date.now()-v.at;if(b!==""&&b!=="/"&&p.charAt(0)==="/"&&p.charAt(1)!=="/"&&!/[\\\t\n\r]/.test(p)&&b!=="/api"&&b.indexOf("/api/")!==0&&!/\.[a-z0-9]+$/i.test(b)&&typeof v.exam==="string"&&v.exam!==""&&v.exam===d.dataset.exam&&a>=0&&a<${LAST_PAGE_MAX_AGE_MS})d.setAttribute("${RESUME_MARK}",String(Date.now()))}}catch(e){/*no readable record: the app opens home*/}`
 
 // How long the launch cover is kept at most (the same limit as the CSS failsafe, which works with no script), and how long the
 // launch watch waits for the saved page before it gives up on it.
