@@ -66,7 +66,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning data-exam={pack.id}>
       <body>
         <script dangerouslySetInnerHTML={{ __html: RESUME_SCRIPT }} />
-        <div className="resume-cover"><LoadingBox cover /></div>
+        <div className="resume-cover"><LoadingBox kind="cover" /></div>
         <noscript><style>{".page-loading{display:none}[data-page-ready]{visibility:visible!important}"}</style></noscript>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange enableColorScheme={false} storageKey="quiz-theme">
           <DemoBanner />

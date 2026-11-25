@@ -60,10 +60,13 @@ function Gate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready || revealed) return
     let cancelled = false
-    const wait = gateRemaining(startedAt, performance.now())
-    void Promise.all([new Promise((resolve) => window.setTimeout(resolve, wait)), settled()]).then(() => {
-      if (!cancelled) setRevealed(true)
-    })
+    // The box shows 200 ms after the gate started, so what is left of its 500 ms is worked out once the page has settled: a page that
+    // was ready just before 200 ms but took longer to settle would otherwise be revealed the moment its box appeared.
+    void settled()
+      .then(() => new Promise((resolve) => window.setTimeout(resolve, gateRemaining(startedAt, performance.now()))))
+      .then(() => {
+        if (!cancelled) setRevealed(true)
+      })
     return () => {
       cancelled = true
     }
@@ -73,7 +76,7 @@ function Gate({ children }: { children: React.ReactNode }) {
     <Hold.Provider value={hold}>
       <div style={shown ? undefined : { visibility: "hidden" }} data-page-ready={shown ? "true" : "false"}>{children}</div>
       {!shown && (
-        <LoadingBox delayed />
+        <LoadingBox kind="delayed" />
       )}
     </Hold.Provider>
   )

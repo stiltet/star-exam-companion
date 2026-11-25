@@ -6,7 +6,7 @@ import { RouteBoxMark } from "@/components/route-hold"
 export default function ReadLoading() {
   return (
     <>
-      <LoadingBox route />
+      <LoadingBox kind="route" />
       <RouteBoxMark />
     </>
   )
