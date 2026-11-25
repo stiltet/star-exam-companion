@@ -82,10 +82,11 @@ export function watchStep(elapsed: number, covered: boolean, ready: boolean, hel
   }
 }
 
-// What the watch does when it ends. A page that came in time is put where it was left; a page that never came is not restored
-// (the visitor is elsewhere by then), and the move is over, so saving starts again with the next page opened.
-export function finishActions(finish: "ready" | "gave-up"): { restore: boolean; endResuming: boolean } {
-  return { restore: finish === "ready", endResuming: finish === "gave-up" }
+// What the watch does when it ends. A page that came in time is put where it was left (`restore`); a page that never came is not
+// restored (the visitor is elsewhere by then), and the move is over (`endResuming`), so saving starts again with the next page opened.
+export function applyFinish(finish: "ready" | "gave-up", restore: (() => void) | undefined, endResuming: () => void): void {
+  if (finish === "ready") restore?.()
+  else endResuming()
 }
 
 // The scroll place to restore once the saved page is on screen, or null when the page on screen is not the saved one (the

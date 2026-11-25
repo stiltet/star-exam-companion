@@ -118,12 +118,13 @@ const handOver = async (page: Page, delay: number) => {
       const now = performance.now()
       const kind = box ? (box.classList.contains("loading-route") ? "route" : box.classList.contains("page-loading") ? "gate" : "other") : "none"
       if (seen.timeline[seen.timeline.length - 1]?.split("@")[0] !== kind) seen.timeline.push(`${kind}@${Math.round(now)}`)
-      if (box) {
+      // The route box is in the page from the start but shows only after 200 ms (its opacity): time it from when it can be seen.
+      if (box && getComputedStyle(box).opacity === "1") {
         seen.firstAt ||= now
         seen.lastAt = now
         if (box.classList.contains("loading-route")) seen.route = true
         if (box.textContent?.trim()) seen.texts.push(box.textContent.trim())
-      } else if (seen.firstAt && (location.pathname === "/read" || document.querySelector('[data-page-ready="false"]'))) {
+      } else if (!box && seen.firstAt && (location.pathname === "/read" || document.querySelector('[data-page-ready="false"]'))) {
         // A moment with the move still under way and no box on screen.
         seen.gap = true
       }
@@ -141,7 +142,7 @@ const handOver = async (page: Page, delay: number) => {
   expect(seen.route, "the Read Aloud box showed while the course came").toBe(true)
   expect(seen.texts, "and held no text").toEqual([])
   expect(seen.gap, "the box was never gone while the move was under way").toBe(false)
-  expect(seen.lastAt - seen.firstAt, `a loading screen that showed stayed at least 500 ms (${seen.timeline.join(" ")})`).toBeGreaterThanOrEqual(500)
+  expect(seen.lastAt - seen.firstAt, `a loading screen that showed stayed at least 500 ms on screen, within one frame (${seen.timeline.join(" ")})`).toBeGreaterThanOrEqual(480)
 }
 
 test("Read Aloud shows only the app's own loading box while a course loads, with no text, and the page gate takes over without a gap", async ({ page }) => {
@@ -151,4 +152,29 @@ test("Read Aloud shows only the app's own loading box while a course loads, with
 test("a course that comes quickly, after the box has just shown, still keeps a loading screen up for 500 ms", async ({ page }) => {
   // The box shows at 200 ms and the course is there at 400 ms: what keeps the screen up to 500 ms is the page gate's own hold.
   await handOver(page, 400)
+})
+
+test("a tapped link that shows loading keeps it for 500 ms when the page comes right after", async ({ page }) => {
+  // The page is there 300 ms after the tap: the link shows loading at 200 ms, so only the hold keeps it past the page.
+  await page.route(/\/practice\?section=1(&|$)/, slow(300))
+  await page.goto("/practice")
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await page.evaluate(() => {
+    const seen: { shown?: number; gone?: number } = {}
+    ;(window as unknown as { __link: typeof seen }).__link = seen
+    const frame = () => {
+      const now = performance.now()
+      if (document.querySelector("a[data-loading]")) {
+        seen.shown ??= now
+        seen.gone = undefined
+      } else if (seen.shown !== undefined) seen.gone ??= now
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+  await page.locator('main a[href="/practice?section=1"]').first().click()
+  await expect(page).toHaveURL(/section=1/, { timeout: 15_000 })
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __link: { gone?: number } }).__link.gone), { message: "the loading link went", timeout: 10_000 }).toBeDefined()
+  const { shown, gone } = await page.evaluate(() => (window as unknown as { __link: { shown?: number; gone?: number } }).__link)
+  expect(gone! - shown!, "the tapped link stayed loading at least 500 ms, within one frame").toBeGreaterThanOrEqual(480)
 })

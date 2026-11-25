@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
-import { canOpenPage, finishActions, isLaunch, LAST_PAGE_KEY, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, watchStep } from "@/lib/last-page"
+import { applyFinish, canOpenPage, isLaunch, LAST_PAGE_KEY, parseLastPage, placeToRestore, rememberable, RESUME_MARK, resumeTarget, serialiseLastPage, watchStep } from "@/lib/last-page"
 import { loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 import { readStandalone } from "@/components/standalone"
@@ -85,15 +85,16 @@ function uncover(ready: () => boolean, restore?: () => void, showSlow?: (on: boo
       endCover()
     }
     if (!step.finish) return
-    const actions = finishActions(step.finish)
+    const finish = step.finish
     window.clearInterval(timer)
     void settled().then(() => {
       // A newer call took over the watch while the page settled: it restores and ends the cover, not this one.
       if (watching !== timer) return
       // The page is drawn and hidden behind the cover: put it where it was left before the cover goes.
-      if (actions.restore) restore?.()
-      // The saved page never came: saving starts again with the next page the visitor opens, never with home at the top.
-      if (actions.endResuming) resuming = false
+      // A saved page that never came: saving starts again with the next page the visitor opens, never with home at the top.
+      applyFinish(finish, restore, () => {
+        resuming = false
+      })
       endCover()
       slowShownAt = null
       slow?.(false)

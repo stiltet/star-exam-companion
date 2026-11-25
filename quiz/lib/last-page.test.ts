@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { canOpenPage, COVER_LIMIT_MS, finishActions, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, WATCH_GIVE_UP_MS, parseLastPage, placeToRestore, rememberable, resumeTarget, serialiseLastPage, watchStep } from "./last-page.ts"
+import { applyFinish, canOpenPage, COVER_LIMIT_MS, isLaunch, LAST_PAGE_MAX_AGE_MS, RESUME_SCRIPT, WATCH_GIVE_UP_MS, parseLastPage, placeToRestore, rememberable, resumeTarget, serialiseLastPage, watchStep } from "./last-page.ts"
 
 const now = 1_000_000_000_000
 
@@ -96,7 +96,15 @@ test("the launch watch ends the cover at its limit, finishes when the page is re
   assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 5000, false, true, true), { endCover: false, finish: "ready" })
 })
 
-test("a watch that gave up restores no place and ends the move, and one that finished restores the place and leaves the move to its own end", () => {
-  assert.deepEqual(finishActions("ready"), { restore: true, endResuming: false })
-  assert.deepEqual(finishActions("gave-up"), { restore: false, endResuming: true })
+test("a watch that finished restores the place and leaves the move to the restore, and one that gave up restores nothing and ends the move", () => {
+  const calls: string[] = []
+  const restore = () => calls.push("restore")
+  const end = () => calls.push("end")
+  applyFinish("ready", restore, end)
+  assert.deepEqual(calls.splice(0), ["restore"])
+  applyFinish("gave-up", restore, end)
+  assert.deepEqual(calls.splice(0), ["end"])
+  // A watch with nothing to restore (the cover only) has no place to put back, and ends nothing it did not start.
+  applyFinish("ready", undefined, end)
+  assert.deepEqual(calls.splice(0), [])
 })
