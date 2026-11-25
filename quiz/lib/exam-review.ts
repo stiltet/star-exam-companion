@@ -48,7 +48,9 @@ export function reviewHash(id: string): string {
 }
 
 export function reviewId(hash: string): string | null {
-  const match = /^#review=(.+)$/.exec(hash)
+  // An address that names two reviews (`#review=A#review=B`, seen on Mac Chrome) opens the last one. An id never holds a raw `#`
+  // (encodeURIComponent writes `%23`), so trailing `#`s are dropped and an empty last review names nothing.
+  const match = /^#review=(?:.*#review=)?([^#]+)#*$/.exec(hash)
   if (!match?.[1]) return null
   try {
     return decodeURIComponent(match[1])

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Question } from "@/lib/exam-data"
 import { filterRows, reviewRows, type ReviewFilter, type ReviewRow, type SavedExam } from "@/lib/exam-review"
 import { EXAM_TARGET } from "@/lib/learn"
@@ -83,6 +83,10 @@ function ReviewCard({ row, question }: { row: ReviewRow; question: Question | un
 }
 
 export function ExamReview({ exam, bank, sections, unsaved, retakeCount, onRetake, onNewExam, onClose }: Props) {
+  // A review opens at its top, however far down Progress or the Test exam page was when its Review link was tapped.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
   const rows = reviewRows(bank, exam)
   const wrongFirst = rows.some((row) => row.status !== "right")
   const [filter, setFilter] = useState<ReviewFilter>(wrongFirst ? "wrong" : "all")
@@ -101,7 +105,7 @@ export function ExamReview({ exam, bank, sections, unsaved, retakeCount, onRetak
 
   return (
     <div>
-      <Heading variant="page" placement="mb-2">{exam.retake ? "RETAKE RESULTS" : "TEST EXAM RESULTS"}</Heading>
+      <Heading variant="page" placement="mb-2">{exam.retake ? "RETAKE RESULTS" : "RESULTS"}</Heading>
       <p className="text-muted-foreground mb-6">{exam.date} · {total} questions{exam.retake ? " · a retake, not counted as a test exam" : ""}</p>
       {unsaved && <p role="alert" className="mb-6 font-bold">This exam was not saved. This device could not keep it and the Mac could not be reached. It stays here until you leave this page.</p>}
 

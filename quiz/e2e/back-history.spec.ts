@@ -12,7 +12,8 @@ async function saveExams(page: Page, origin: string) {
   const [first, second] = snapshot.snapshot.items.map((item) => item.id)
   const exams = Array.from({ length: 12 }, (_, index) => ({
     id: crypto.randomUUID(),
-    at: new Date(Date.UTC(2026, 0, 1 + index)).toISOString(),
+    // Days back from now, since the Mac refuses an answer older than 400 days (OLDEST_MS in lib/score.ts).
+    at: new Date(Date.now() - (12 - index) * 86_400_000).toISOString(),
     mode: "exam",
     asked: [first, second],
     missed: [first],
