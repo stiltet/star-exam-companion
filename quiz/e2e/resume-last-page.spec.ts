@@ -321,3 +321,28 @@ test("a Read Aloud page that comes slowly is restored at its place once it is th
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY)), { message: "the place is restored on the page, not on the box before it", timeout: 15_000 }).toBe(300)
   await expect(launch.locator(".loading-route, [data-route-hold]")).toHaveCount(0)
 })
+
+test("a saved page is not opened over the page the visitor tapped to while the device was still being asked whether it holds it", async ({ page, context }) => {
+  await leaveGlossaryAt(page, 500)
+  const launch = await context.newPage()
+  await launch.addInitScript(() => {
+    // The app is told it is offline, so it asks the device for a copy, and the device answers "held" only after a second.
+    Object.defineProperty(navigator, "onLine", { value: false, configurable: true })
+    Object.defineProperty(caches, "match", {
+      value: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return new Response("held")
+      },
+      configurable: true,
+    })
+  })
+  await launch.goto("/")
+  await expect(launch.locator("html")).toHaveAttribute("data-resuming", /.*/)
+  // A tap made through the page, since home is still hidden behind the launch cover.
+  await launch.evaluate(() => (document.querySelector('main a[href="/exam"]') as HTMLElement).click())
+  await expect(launch).toHaveURL(/\/exam$/, { timeout: 15_000 })
+  // The answer comes and the saved page is not opened over the page the visitor went to.
+  await launch.waitForTimeout(2500)
+  await expect(launch).toHaveURL(/\/exam$/)
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
+})

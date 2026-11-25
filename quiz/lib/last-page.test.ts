@@ -45,11 +45,11 @@ test("an old, future, missing, non-first or non-home case stays put", () => {
 })
 
 // The script that marks the page before it is drawn must agree with resumeTarget.
-function marked(saved: string | null, pathname: string, standalone: boolean, at = Date.now(), referrer = "", navType = "navigate", exam = "e1"): boolean {
+function marked(saved: string | null, pathname: string, standalone: boolean, at = now, referrer = "", navType = "navigate", exam = "e1"): boolean {
   const attrs: Record<string, string> = {}
   const doc = { referrer, documentElement: { dataset: { exam }, setAttribute: (k: string, v: string) => { attrs[k] = v } } }
   const store = { getItem: () => (saved === null ? null : saved.replace("%AT%", String(at))) }
-  new Function("document", "navigator", "matchMedia", "location", "localStorage", "performance", RESUME_SCRIPT)(doc, { standalone }, () => ({ matches: false }), { pathname }, store, { getEntriesByType: () => [{ type: navType }] })
+  new Function("document", "navigator", "matchMedia", "location", "localStorage", "performance", "Date", RESUME_SCRIPT)(doc, { standalone }, () => ({ matches: false }), { pathname }, store, { getEntriesByType: () => [{ type: navType }] }, { now: () => now })
   return "data-resuming" in attrs
 }
 
@@ -59,17 +59,18 @@ test("the early script marks exactly the launches resumeTarget moves", () => {
   assert.equal(marked(page, "/", false), false)
   assert.equal(marked(page, "/progress", true), false)
   assert.equal(marked('{"path":"/","at":%AT%,"exam":"e1"}', "/", true), false)
-  assert.equal(marked(page, "/", true, Date.now() - LAST_PAGE_MAX_AGE_MS - 5000), false)
-  // Exactly 24 hours is old, as in resumeTarget.
-  assert.equal(marked(page, "/", true, Date.now() - LAST_PAGE_MAX_AGE_MS - 5), false)
+  assert.equal(marked(page, "/", true, now - LAST_PAGE_MAX_AGE_MS - 5000), false)
+  // Exactly 24 hours is old, as in resumeTarget, and a millisecond less is not.
+  assert.equal(marked(page, "/", true, now - LAST_PAGE_MAX_AGE_MS), false)
+  assert.equal(marked(page, "/", true, now - LAST_PAGE_MAX_AGE_MS + 1), true)
   // Another exam's page is not opened in this one.
-  assert.equal(marked(page, "/", true, Date.now(), "", "navigate", "e2"), false)
+  assert.equal(marked(page, "/", true, now, "", "navigate", "e2"), false)
   assert.equal(marked(null, "/", true), false)
   assert.equal(marked("junk", "/", true), false)
   // A tap on a link inside the app that loads the whole page, a reload and Back are not launches.
-  assert.equal(marked(page, "/", true, Date.now(), "https://quiz.test/read/1"), false)
-  assert.equal(marked(page, "/", true, Date.now(), "", "reload"), false)
-  assert.equal(marked(page, "/", true, Date.now(), "", "back_forward"), false)
+  assert.equal(marked(page, "/", true, now, "https://quiz.test/read/1"), false)
+  assert.equal(marked(page, "/", true, now, "", "reload"), false)
+  assert.equal(marked(page, "/", true, now, "", "back_forward"), false)
   assert.equal(isLaunch("", "navigate"), true)
   assert.equal(isLaunch("", undefined), true)
   assert.equal(isLaunch("https://quiz.test/x", "navigate"), false)
@@ -123,7 +124,7 @@ test("a watch that finished restores the place and leaves the move to the restor
 })
 
 test("the early script refuses the paths rememberable refuses, so no cover is drawn for a move that will not happen", () => {
-  for (const path of ["/api/speak", "//evil.test/x", "/\\evil.test", "/sw.js", "/icon.png", "/api"]) {
+  for (const path of ["/api/speak", "//evil.test/x", "/\\evil.test", "/\tevil.test", "/\nevil.test", "/\revil.test", "/sw.js", "/icon.png", "/api"]) {
     const record = JSON.stringify({ path, at: "%AT%", exam: "e1" }).replace('"%AT%"', "%AT%")
     assert.equal(marked(record, "/", true), false, path)
   }

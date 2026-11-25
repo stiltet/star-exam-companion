@@ -203,3 +203,35 @@ test("a tapped link that shows loading keeps it for 500 ms when the page comes r
   const { shown, gone } = await page.evaluate(() => (window as unknown as { __link: { shown?: number; gone?: number } }).__link)
   expect(gone! - shown!, "the tapped link stayed loading at least 500 ms, within one frame").toBeGreaterThanOrEqual(480)
 })
+
+test("a page that is ready before its box shows but settles after it keeps the box 500 ms from when it showed", async ({ page }) => {
+  await page.addInitScript(() => {
+    // The fonts are reported loaded only 300 ms after they are asked for, so the next page settles after its box has shown (200 ms).
+    Object.defineProperty(FontFaceSet.prototype, "ready", {
+      get: () => new Promise((resolve) => setTimeout(resolve, 300)),
+      configurable: true,
+    })
+  })
+  await page.goto("/")
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await page.evaluate(() => {
+    const seen: { firstAt?: number; lastAt?: number } = {}
+    ;(window as unknown as { __gate: typeof seen }).__gate = seen
+    const frame = () => {
+      const box = document.querySelector(".page-loading")
+      if (box && getComputedStyle(box).opacity === "1") {
+        const now = performance.now()
+        seen.firstAt ??= now
+        seen.lastAt = now
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+  await page.locator('main a[href="/study"]').first().click()
+  await expect(page).toHaveURL(/\/study$/, { timeout: 15_000 })
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  const seen = await page.evaluate(() => (window as unknown as { __gate: { firstAt?: number; lastAt?: number } }).__gate)
+  expect(seen.firstAt, "the box showed while the page settled").toBeDefined()
+  expect(seen.lastAt! - seen.firstAt!, "and stayed 500 ms from when it showed, within one frame").toBeGreaterThanOrEqual(480)
+})
