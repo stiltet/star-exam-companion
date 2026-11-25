@@ -17,6 +17,10 @@ const UNLOCK_MS = 6000
 // page has loaded, so the button shows loading from the tap and returns to normal when you come back,
 // or after this long.
 const EXTERNAL_MS = 3000
+// A move made by the Back button or the browser's own back has no link to show it, so the page-sized loading box shows
+// when it is slow, and ends after this long even if the page never changed (a move that stayed on the same page).
+const BACK_GIVE_UP_MS = 8000
+export const MOVING_EVENT = "quiz:moving"
 
 // The tapped link shows loading (globals.css draws it: its words go and the icon fills). The words are
 // gone from the screen, so the link keeps its name for a screen reader by aria-label, and says it is busy.
@@ -56,12 +60,17 @@ export function NavProgress() {
   const from = useRef<string | null>(null)
   const link = useRef<HTMLAnchorElement | null>(null)
   const locked = useRef(false)
-  // The logo and title link: the header never changes, so the page-sized loading box shows instead.
+  // The header's links (logo, title, menu): the header never changes, so the page-sized loading box shows instead.
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
+  const shown = useRef("")
   // When the loading state appeared, and the end of a move that is waiting for it to have shown 500 ms.
   const shownAt = useRef<number | null>(null)
   const ending = useRef(0)
+  const showBox = () => {
+    shownAt.current ??= clock()
+    setOverlay(true)
+  }
 
   // The page has arrived. A loading state that has shown stays until it has shown 500 ms, so it never flashes.
   const finish = () => {
@@ -112,6 +121,10 @@ export function NavProgress() {
       if (locked.current && (event.target as Element | null)?.closest?.("a")) {
         event.preventDefault()
         event.stopPropagation()
+        // A tap that is refused is never silent (owner, 17 Nov): the page-sized loading box shows, as the move is still coming.
+        showBox()
+        // Only the box is given up: the link still waiting for its page stays busy until the page arrives.
+        timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
         return
       }
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -126,25 +139,33 @@ export function NavProgress() {
       if (url.origin !== window.location.origin) return
       // The same page again (only the #hash differs) is no move.
       if (url.pathname === window.location.pathname && url.search === window.location.search) return
-      // The logo and title link never changes itself (owner, 16 Nov): the loading box is shown over the page.
-      const logo = target.matches("header a:has(img)")
+      // A link in the header or its menu (owner, 17 Nov): the menu closes and the header never changes itself, so the
+      // page-sized loading box shows at once, on every tap, with no 200 ms wait that could make the tap look dead.
+      const inHeader = target.closest("header") !== null
       // A button still waiting after being unlocked stays loading, and the new tap waits beside it.
       if (from.current !== null) {
         timers.current.forEach((timer) => window.clearTimeout(timer))
         timers.current = []
+        // The previous move's hold must not end this move's loading early.
+        window.clearTimeout(ending.current)
+        ending.current = 0
+        shownAt.current = null
+        // The box a replaced move left up still gives up on its own time.
+        timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
       }
-      // The previous move's hold must not end this move's loading early.
-      window.clearTimeout(ending.current)
-      ending.current = 0
-      shownAt.current = null
       link.current = target
       from.current = window.location.pathname + window.location.search
       locked.current = true
-      timers.current.push(window.setTimeout(() => {
-        shownAt.current = clock()
-        if (logo) return setOverlay(true)
-        markBusy(target)
-      }, SPINNER_AFTER_MS))
+      if (inHeader) {
+        showBox()
+        // A move that never arrives must not leave the box over the page for good.
+        timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
+      } else {
+        timers.current.push(window.setTimeout(() => {
+          shownAt.current ??= clock()
+          markBusy(target)
+        }, SPINNER_AFTER_MS))
+      }
       timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
     }
     document.addEventListener("click", onClick, true)
@@ -152,9 +173,33 @@ export function NavProgress() {
   }, [])
 
   useEffect(() => {
+    shown.current = window.location.pathname + window.location.search
     // The page or its query changed: the move has arrived.
     if (from.current !== null && from.current !== window.location.pathname + window.location.search) finish()
   }, [pathname, search])
+
+  // Back: the floating Back button (it sends MOVING_EVENT) and the browser's own back or swipe (popstate). Both show the
+  // loading box when the page is slow, and the move ends when the page changes.
+  useEffect(() => {
+    const moving = () => {
+      if (locked.current) return
+      from.current = shown.current
+      locked.current = true
+      timers.current.push(window.setTimeout(showBox, SPINNER_AFTER_MS))
+      timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
+      timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
+    }
+    const popped = () => {
+      if (window.location.pathname + window.location.search !== shown.current) moving()
+    }
+    window.addEventListener(MOVING_EVENT, moving)
+    window.addEventListener("popstate", popped)
+    return () => {
+      window.removeEventListener(MOVING_EVENT, moving)
+      window.removeEventListener("popstate", popped)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // A page restored from the back/forward cache must not come back still waiting.
   useEffect(() => {

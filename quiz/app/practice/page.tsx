@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import Link from "next/link"
 import { Text } from "@/components/atoms/text"
 import { UnfinishedNotice } from "@/components/unfinished-notice"
@@ -38,10 +37,8 @@ export default async function PracticePage({ searchParams }: Props) {
   }))
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <h1 className="sr-only text-2xl font-bold mb-2">PRACTICE QUESTIONS</h1>
         <UnfinishedNotice need="questions" />
         <p className="text-muted-foreground mb-6">Individual questions with detailed explanations. Filter by section.</p>
@@ -88,9 +85,7 @@ export default async function PracticePage({ searchParams }: Props) {
         ) : (
           <PracticeQuestionClient key={filter} questions={filteredQuestions} filter={filter} sectionTitles={Object.fromEntries(sections.map((s) => [s.id, s.title]))} />
         )}
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

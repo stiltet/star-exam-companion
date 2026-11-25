@@ -1,5 +1,6 @@
 "use client"
 
+import { StepNav } from "@/components/step-nav"
 import { useEffect, useRef, useState } from "react"
 import { ActionButton } from "@/components/atoms/button"
 import {
@@ -306,9 +307,8 @@ export function NightReader() {
             <div className="grid grid-cols-2 gap-3">
               <ActionButton variant="outlined" placement="self-stretch" wrap onClick={() => skip(-30)}>Back 30 seconds</ActionButton>
               <ActionButton variant="outlined" placement="self-stretch" wrap onClick={() => skip(30)}>Forward 30 seconds</ActionButton>
-              <ActionButton variant="outlined" placement="self-stretch" wrap onClick={() => chapterBy(-1)}>Previous chapter</ActionButton>
-              <ActionButton variant="outlined" placement="self-stretch" wrap onClick={() => chapterBy(1)}>Next chapter</ActionButton>
             </div>
+            <StepNav kind="chapter" previous={{ onClick: () => chapterBy(-1) }} next={{ onClick: () => chapterBy(1) }} />
           </>
         )}
       </div>

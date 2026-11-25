@@ -1,7 +1,7 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { activePack } from "@/lib/pack"
 import { sectionLabel } from "@/lib/progress"
+import { StepNav } from "@/components/step-nav"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -28,17 +28,14 @@ export default async function SectionPage({ params }: Props) {
   const nextSection = sectionIndex < activePack().study.sections.length - 1 ? activePack().study.sections[sectionIndex + 1] : null
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        {/* Breadcrumb */}
-        <nav className="text-sm mb-6 text-muted-foreground">
-          <Link href="/study">STUDY</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{label.toUpperCase()}</span>
-        </nav>
-
+    <PageShell breadcrumb={[{ label: "STUDY", href: "/study" }, { label: label.toUpperCase() }]}>
+      <>
+        <StepNav where="top"
+          kind="section"
+          previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+          next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+          placement="mb-6"
+        />
         {/* Header */}
         <header className="border-2 border-foreground p-6 mb-6 bg-foreground text-background">
           <h1 className="text-2xl font-bold">{label}</h1>
@@ -69,25 +66,13 @@ export default async function SectionPage({ params }: Props) {
         </section>
 
         {/* Section Navigation */}
-        <nav className="border-t-2 border-foreground pt-6 flex justify-between">
-          {prevSection ? (
-            <Link href={`/study/${prevSection.id}`} className="text-sm">
-              ← {sectionLabel(sectionIndex, prevSection.weight)}
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextSection ? (
-            <Link href={`/study/${nextSection.id}`} className="text-sm">
-              {sectionLabel(sectionIndex + 2, nextSection.weight)} →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </main>
-
-      <SiteFooter />
-    </div>
+        <StepNav where="bottom"
+          kind="section"
+          previous={prevSection ? { href: `/study/${prevSection.id}`, hint: sectionLabel(sectionIndex, prevSection.weight) } : null}
+          next={nextSection ? { href: `/study/${nextSection.id}`, hint: sectionLabel(sectionIndex + 2, nextSection.weight) } : null}
+          placement="border-t-2 border-foreground pt-6"
+        />
+      </>
+    </PageShell>
   )
 }

@@ -107,7 +107,7 @@ export function clearDeviceSessions(store: Pick<Storage, "length" | "key" | "rem
   for (const key of keys) store.removeItem(key)
 }
 
-export type CardsSaved = { category: string; order: string[]; index: number; known: string[] }
+export type CardsSaved = { category: string; order: string[]; index: number; known: string[]; finished: boolean }
 
 export function cardsResume(saved: unknown, terms: ReadonlySet<string>): CardsSaved | null {
   const cards = record(saved)
@@ -116,5 +116,5 @@ export function cardsResume(saved: unknown, terms: ReadonlySet<string>): CardsSa
   const known = names(cards.known, terms)
   if (!order || order.length === 0 || !known) return null
   if (!Number.isInteger(cards.index) || (cards.index as number) < 0 || (cards.index as number) >= order.length) return null
-  return { category: cards.category, order, index: cards.index as number, known }
+  return { category: cards.category, order, index: cards.index as number, known, finished: cards.finished === true }
 }

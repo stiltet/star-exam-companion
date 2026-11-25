@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation"
 import { RouteHold } from "@/components/route-hold"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { ActionLink } from "@/components/atoms/button"
-import { Breadcrumb } from "@/components/atoms/breadcrumb"
 import { Heading } from "@/components/atoms/heading"
 import { Text } from "@/components/atoms/text"
 import { courseBundle } from "@/lib/reading-provider"
@@ -26,17 +24,16 @@ export default async function CourseReadingsPage({ params }: Props) {
   const noText = pack.noReading.find((entry) => entry.id === id)
   if (!course && noText) {
     return (
-      <RouteHold className="min-h-screen flex flex-col">
-        <SiteHeader />
-        <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
-          <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${noText.id}`} placement="pb-2" />
-          <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
+      <RouteHold>
+      <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${noText.id}` }]} variant="reading">
+        <>
+          <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
           <Heading variant="title" placement="mb-6">{noText.title}</Heading>
           <Text variant="muted" placement="mb-6">{noText.why}</Text>
           <ActionLink variant="filled" href={`https://www.skills.google/course_templates/${noText.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
-          <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
-        </main>
-        <SiteFooter />
+          <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
+        </>
+      </PageShell>
       </RouteHold>
     )
   }
@@ -44,11 +41,10 @@ export default async function CourseReadingsPage({ params }: Props) {
   const loaded = await courseBundle(course)
 
   return (
-    <RouteHold className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <main className="flex-1 max-w-4xl mx-auto px-4 pt-6 pb-6 w-full">
-        <Breadcrumb back={{ href: "/read", label: "READ ALOUD" }} current={`COURSE ${course.id}`} placement="pb-2" />
-        <PageNav kind="course" previous={previous} next={next} placement="mt-4 mb-6" />
+    <RouteHold>
+    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}` }]} variant="reading">
+      <>
+        <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
         <Heading variant="title" placement="mb-6">{course.title}</Heading>
         {course.provider === "private" && (
           <Text variant="note" placement="mb-6">This course is read from private copies saved only on this server and on your devices for offline use. Night reading includes them too. They are never part of the project&apos;s files or the online demo.</Text>
@@ -70,9 +66,9 @@ export default async function CourseReadingsPage({ params }: Props) {
         {course.provider === "private" && (
           <ActionLink variant="filled" placement="mt-6" href={`https://www.skills.google/course_templates/${course.template}`} newTab>OPEN ON GOOGLE SKILLS</ActionLink>
         )}
-        <PageNav kind="course" previous={previous} next={next} placement="mt-6" />
-      </main>
-      <SiteFooter />
+        <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
+      </>
+    </PageShell>
     </RouteHold>
   )
 }

@@ -142,14 +142,14 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
   const shown = useRef<(HTMLElement | null)[]>([])
   const bar = useRef<HTMLDivElement | null>(null)
   const stopBlocks = useRef<(HTMLElement | null)[]>([])
-  // Height of the sticky breadcrumbs. The control bar sticks just under them. The title row scrolls away.
+  // Height of the fixed stack (header and breadcrumb). The control bar sticks just under them. The title row scrolls away.
   const [stuck, setStuck] = useState(0)
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration, so the server and first client render match
   useEffect(() => setCurrent(savedPlace(storeKey, paragraphs.length)), [storeKey, paragraphs.length])
 
   useLayoutEffect(() => {
-    const stack = document.querySelector("[data-read-sticky]")
+    const stack = document.querySelector("[data-sticky-stack]")
     if (!(stack instanceof HTMLElement)) return
     const apply = () => setStuck(Math.round(stack.getBoundingClientRect().height))
     apply()
@@ -513,8 +513,8 @@ export function ReadAloud({ place, title, paragraphs, next, review, reviewAt, vi
     )
   }
 
-  // Clears the stuck breadcrumbs, then the same room the control bar had when it alone stuck to the top.
-  const scrollMargin = { scrollMarginTop: stuck + 96 }
+  // scroll-padding-top on <html> already clears the fixed stack; this is the control bar's room beyond it.
+  const scrollMargin = { scrollMarginTop: 84 }
   return (
     <div>
       {/* A page whose first line is its title shows that line once, there, and still reads it aloud. */}
