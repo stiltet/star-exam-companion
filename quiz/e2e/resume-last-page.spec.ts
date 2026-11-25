@@ -236,3 +236,21 @@ test("a saved page that comes before the cover limit shows no slow-page box at a
   expect(seen.shown, "no box of the slow-page kind came up").toBeUndefined()
   expect(seen.bare, "and home was never bare").toBe(0)
 })
+
+test("a saved page that never comes is given up after 30 s: no place is restored, and the next page the visitor opens is saved again", async ({ page, context }) => {
+  await leaveGlossaryAt(page, 500)
+  const launch = await context.newPage()
+  // The saved page is held for good. The page's clock is moved past the 30 s the launch watch waits, instead of waiting them out.
+  await launch.clock.install()
+  await launch.route(/\/glossary(\?|$)/, () => new Promise(() => {}))
+  await launch.goto("/")
+  await expect(launch.locator("html")).toHaveAttribute("data-resuming", /.*/)
+  await launch.clock.fastForward(31_000)
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
+  await launch.clock.resume()
+  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full'), "the slow-page box goes when the watch gives up").toHaveCount(0)
+  // The visitor opens another page: it is saved as the place to come back to, which only happens once the move to the saved page is over.
+  await launch.locator('main a[href="/exam"]').first().click()
+  await expect(launch).toHaveURL(/\/exam$/, { timeout: 15_000 })
+  await expect.poll(() => launch.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").path), "saved again").toBe("/exam")
+})

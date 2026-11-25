@@ -99,9 +99,11 @@ test("a move that changes only the query (a Practice filter) loads the tapped li
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
 
-const handOver = async (page: Page, delay: number) => {
+// Taps the Read Aloud link to `path` while its page is held back `delay` ms, and samples every frame. `blockMs`: the first frame after the
+// route box mounts is made late by that much (the main thread is busy, as on a phone), so the box is seen later than it mounted.
+const handOver = async (page: Page, delay: number, { path = "/read/1", blockMs = 0 } = {}) => {
   // Only the move itself is held, not the app's background fetch of the page, which would leave nothing to show at the tap.
-  await page.route(/\/read\/1(\?|$)/, async (route) => {
+  await page.route(new RegExp(`${path.replace(/\//g, "\\/")}(\\?|$)`), async (route) => {
     if (route.request().headers()["next-router-prefetch"]) return route.continue()
     await new Promise((resolve) => setTimeout(resolve, delay))
     await route.continue()
@@ -109,7 +111,13 @@ const handOver = async (page: Page, delay: number) => {
   await page.goto("/read")
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
   await page.waitForTimeout(1500)
-  await page.evaluate(() => {
+  await page.evaluate((block) => {
+    if (block > 0) {
+      new MutationObserver((records) => {
+        const added = records.some((record) => [...record.addedNodes].some((node) => node instanceof Element && (node.matches(".loading-route") || node.querySelector(".loading-route"))))
+        if (added) for (const until = performance.now() + block; performance.now() < until; );
+      }).observe(document.body, { childList: true, subtree: true })
+    }
     const seen = { route: false, firstAt: 0, lastAt: 0, gap: false, texts: [] as string[], timeline: [] as string[] }
     ;(window as unknown as { __hand: typeof seen }).__hand = seen
     const frame = () => {
@@ -131,9 +139,9 @@ const handOver = async (page: Page, delay: number) => {
       requestAnimationFrame(frame)
     }
     requestAnimationFrame(frame)
-  })
-  await page.locator('main a[href="/read/1"]').first().click()
-  await expect(page).toHaveURL(/\/read\/1$/, { timeout: 15_000 })
+  }, blockMs)
+  await page.locator(`main a[href="${path}"]`).first().click()
+  await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, "\\/")}$`), { timeout: 15_000 })
   // The route box stays until the course page is there, then the page gate's own box (if the page is not yet shown) takes over.
   await expect(page.locator(".loading-route")).toHaveCount(0, { timeout: 15_000 })
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
@@ -152,6 +160,15 @@ test("Read Aloud shows only the app's own loading box while a course loads, with
 test("a course that comes quickly, after the box has just shown, still keeps a loading screen up for 500 ms", async ({ page }) => {
   // The box shows at 200 ms and the course is there at 400 ms: what keeps the screen up to 500 ms is the page gate's own hold.
   await handOver(page, 400)
+})
+
+test("the night reading page keeps the loading screen for 500 ms too when it comes quickly", async ({ page }) => {
+  await handOver(page, 400, { path: "/read/night" })
+})
+
+test("a loading box seen late keeps its 500 ms from when it was seen, not from when it mounted", async ({ page }) => {
+  // The first frame after the box mounts comes 100 ms late: counting from the mount would take the box away 100 ms early.
+  await handOver(page, 400, { blockMs: 100 })
 })
 
 test("a tapped link that shows loading keeps it for 500 ms when the page comes right after", async ({ page }) => {
