@@ -99,11 +99,14 @@ test("a move that changes only the query (a Practice filter) loads the tapped li
   await expect(page.locator("[data-loading]")).toHaveCount(0)
 })
 
+// A path as a regular expression that matches it exactly, with every character that has a meaning in one (the backslash too) escaped.
+const pathPattern = (path: string, tail: string) => new RegExp(`${path.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&")}${tail}`)
+
 // Taps the Read Aloud link to `path` while its page is held back `delay` ms, and samples every frame. `blockMs`: the first frame after the
 // route box mounts is made late by that much (the main thread is busy, as on a phone), so the box is seen later than it mounted.
 const handOver = async (page: Page, delay: number, { path = "/read/1", blockMs = 0 } = {}) => {
   // Only the move itself is held, not the app's background fetch of the page, which would leave nothing to show at the tap.
-  await page.route(new RegExp(`${path.replace(/\//g, "\\/")}(\\?|$)`), async (route) => {
+  await page.route(pathPattern(path, "(\\?|$)"), async (route) => {
     if (route.request().headers()["next-router-prefetch"]) return route.continue()
     await new Promise((resolve) => setTimeout(resolve, delay))
     await route.continue()
@@ -146,7 +149,7 @@ const handOver = async (page: Page, delay: number, { path = "/read/1", blockMs =
     requestAnimationFrame(frame)
   }, blockMs)
   await page.locator(`main a[href="${path}"]`).first().click()
-  await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, "\\/")}$`), { timeout: 15_000 })
+  await expect(page).toHaveURL(pathPattern(path, "$"), { timeout: 15_000 })
   // The route box stays until the course page is there, then the page gate's own box (if the page is not yet shown) takes over.
   await expect(page.locator(".loading-route")).toHaveCount(0, { timeout: 15_000 })
   await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)

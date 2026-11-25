@@ -571,9 +571,10 @@ test("the installed app reopens the last page offline when the device holds it, 
   })
   await page.goto("/glossary")
   await readyOffline(page)
+  const exam = await page.evaluate(() => document.documentElement.dataset.exam ?? "")
   await context.setOffline(true)
   // A page the device holds: the launch goes to it.
-  await page.evaluate(() => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/glossary", at: Date.now(), scroll: 0 })))
+  await page.evaluate((name) => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/glossary", at: Date.now(), scroll: 0, exam: name })), exam)
   const launch = await context.newPage()
   await launch.goto("/")
   await expect(launch).toHaveURL(/\/glossary$/)
@@ -583,13 +584,29 @@ test("the installed app reopens the last page offline when the device holds it, 
   // The first tab saves its own place as it is used, so it is closed before the record is changed, or it could write /glossary back over it.
   await page.close()
   const second = await context.newPage()
-  await second.addInitScript(() => {
-    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/never-opened-on-this-device", at: Date.now(), scroll: 0 }))
-  })
+  await second.addInitScript((name) => {
+    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/never-opened-on-this-device", at: Date.now(), scroll: 0, exam: name }))
+  }, exam)
   await second.goto("/")
   await expect(second.locator('[data-page-ready="true"]')).toHaveCount(1)
   // Staying put is proved by nothing happening: a deliberate window, far longer than the cache look-up and the move take.
   await second.waitForTimeout(1000)
   await expect(second).toHaveURL(/\/$/)
   await expect(second.locator("h1")).not.toBeEmpty()
+})
+
+test("the installed app reopens a saved page offline that the worker serves from its page without the query", async ({ context, page }) => {
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+  })
+  await page.goto("/glossary")
+  await readyOffline(page)
+  const exam = await page.evaluate(() => document.documentElement.dataset.exam ?? "")
+  await context.setOffline(true)
+  // The device holds /glossary, not this variant of it; the worker answers the variant from the page it holds, so the launch may open it.
+  await page.evaluate((name) => localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/glossary?from=resume", at: Date.now(), scroll: 0, exam: name })), exam)
+  const launch = await context.newPage()
+  await launch.goto("/")
+  await expect(launch).toHaveURL(/\/glossary\?from=resume$/)
+  await expect(launch.locator("h1")).not.toBeEmpty()
 })
