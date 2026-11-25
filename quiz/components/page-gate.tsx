@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react"
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
-import { gateRemaining } from "@/lib/loading-time"
+import { gateRemaining, loadingRemaining } from "@/lib/loading-time"
 import { settled } from "@/lib/settled"
 
 // A page is shown only when it is ready: hydrated, and every part that loads something after the
@@ -41,10 +41,20 @@ function Gate({ children }: { children: React.ReactNode }) {
   // True once the page may show. A box that has appeared (after 200 ms) stays 500 ms, so it never flashes.
   const [revealed, setRevealed] = useState(false)
   const [startedAt] = useState(gateStart)
+  // When the box was really seen: its CSS animation (which shows it 200 ms after it was drawn) ends then, a frame or so after startedAt + 200 ms.
+  const shownAt = useRef<number | null>(null)
   const [hold] = useState(() => () => {
     setPending((count) => count + 1)
     return () => setPending((count) => count - 1)
   })
+
+  useEffect(() => {
+    const seen = (event: Event) => {
+      if (event.target instanceof Element && event.target.classList.contains("page-loading")) shownAt.current = performance.now()
+    }
+    document.addEventListener("animationend", seen, true)
+    return () => document.removeEventListener("animationend", seen, true)
+  }, [])
 
   // Runs after every child's layout effect, so each part has registered before the page can show.
   useEffect(() => {
@@ -60,10 +70,13 @@ function Gate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready || revealed) return
     let cancelled = false
-    // The box shows 200 ms after the gate started, so what is left of its 500 ms is worked out once the page has settled: a page that
-    // was ready just before 200 ms but took longer to settle would otherwise be revealed the moment its box appeared.
+    // What is left of the box's 500 ms is worked out once the page has settled, from when the box was seen: a page that was ready just
+    // before 200 ms but took longer to settle would otherwise be revealed the moment its box appeared.
     void settled()
-      .then(() => new Promise((resolve) => window.setTimeout(resolve, gateRemaining(startedAt, performance.now()))))
+      .then(() => {
+        const now = performance.now()
+        return new Promise((resolve) => window.setTimeout(resolve, shownAt.current === null ? gateRemaining(startedAt, now) : loadingRemaining(shownAt.current, now)))
+      })
       .then(() => {
         if (!cancelled) setRevealed(true)
       })

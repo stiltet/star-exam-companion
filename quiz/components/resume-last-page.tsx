@@ -126,8 +126,6 @@ export function ResumeLastPage() {
       endCover()
       return
     }
-    // Set when the visitor moves on while the device is asked whether it holds the saved page.
-    let cancelled = false
     try {
       const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
       const firstLoad = !launched && isLaunch(document.referrer, navigation?.type)
@@ -139,8 +137,9 @@ export function ResumeLastPage() {
       if (target) {
         // Offline, a page the device does not hold would open the "not on this device" page: stay on home then.
         void canOpen(target).then((ok) => {
-          // The visitor moved on while the device was asked: the saved page is not opened over where they went.
-          if (cancelled || !stillOnHome(window.location.pathname)) {
+          // The visitor moved on while the device was asked: the saved page is not opened over where they went. The cover is ended here
+          // (nothing else will, since the move it was drawn for did not happen), and saving starts with the page they are on.
+          if (!stillOnHome(window.location.pathname)) {
             endCover()
             resuming = false
             saving = true
@@ -162,9 +161,7 @@ export function ResumeLastPage() {
             uncover(pageReady)
           }
         })
-        return () => {
-          cancelled = true
-        }
+        return
       }
       // A launch that stays (a stamp too old, home was last): the cover goes once the page is ready.
       if (!resuming) uncover(pageReady)
