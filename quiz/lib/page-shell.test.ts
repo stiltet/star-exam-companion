@@ -2,6 +2,12 @@ import assert from "node:assert/strict"
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
+import type { PageShell } from "../components/organisms/page-shell.tsx"
+
+// A server page cannot hand a function to the client breadcrumb, so the type refuses it (the build's type check runs this line).
+type Trail = NonNullable<Parameters<typeof PageShell>[0]["breadcrumb"]>
+// @ts-expect-error a crumb with an onClick is not allowed in a server page's trail
+export const refused: Trail = [{ label: "FLASHCARDS", onClick: () => {} }]
 
 // One layout for every page (owner, 17 Nov): a page gives its content to PageShell and never builds its own header, footer or
 // container, and a loading screen is the app's loading box, never text of its own.

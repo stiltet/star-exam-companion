@@ -134,38 +134,57 @@ test("the Back button shows the page-sized loading box when the page it goes to 
   await expect(box).toHaveCount(0)
 })
 
-test("a header tap whose page never arrives does not leave the loading box over the page", async ({ page }) => {
-  await page.route(/\/glossary(\?|$)/, () => new Promise(() => {}))
-  await page.goto("/study")
-  await page.getByRole("button", { name: "Open menu" }).click()
-  await page.getByRole("link", { name: "GLOSSARY", exact: true }).click()
-  const box = page.getByRole("status", { name: "Loading" })
-  await expect(box).toBeVisible()
-  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
-})
+test.describe("a move that never arrives", () => {
+  // No service worker here: its 2.5 s network timeout would answer a held request, and the move would arrive.
+  test.use({ serviceWorkers: "block" })
 
-test("a Back move whose page never arrives does not leave the loading box over the page", async ({ page }) => {
-  await page.context().addInitScript(() => {
-    Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+  test("a header tap whose page never arrives does not leave the loading box over the page", async ({ page }) => {
+    await page.route(/\/glossary(\?|$)/, () => new Promise(() => {}))
+    await page.goto("/study")
+    await page.getByRole("button", { name: "Open menu" }).click()
+    await page.getByRole("link", { name: "GLOSSARY", exact: true }).click()
+    const box = page.getByRole("status", { name: "Loading" })
+    await expect(box).toBeVisible()
+    await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
   })
-  await page.route((url) => url.pathname === "/study", () => new Promise(() => {}))
-  await page.goto("/study/fundamentals")
-  await page.waitForSelector('[data-page-ready="true"]')
-  await page.getByLabel("Back", { exact: true }).click()
-  const box = page.getByRole("status", { name: "Loading" })
-  await expect(box).toBeVisible({ timeout: 2500 })
-  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
-})
 
-test("a refused tap gives up only the box: the link still waiting for its page stays loading", async ({ page }) => {
-  await page.route(/\/flashcards(\?|$)/, () => new Promise(() => {}))
-  await page.goto("/")
-  const study = page.locator('main a[href="/flashcards"]').first()
-  await study.click()
-  await expect(study).toHaveAttribute("data-loading", "true")
-  const box = page.getByRole("status", { name: "Loading" })
-  await page.locator('main a[href="/exam"]').first().click({ force: true })
-  await expect(box, "a refused tap is never silent").toBeVisible()
-  await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
-  await expect(study, "the link still waits for its page, so it stays loading").toHaveAttribute("data-loading", "true")
+  test("a Back move whose page never arrives does not leave the loading box over the page", async ({ page }) => {
+    await page.context().addInitScript(() => {
+      Object.defineProperty(navigator, "standalone", { value: true, configurable: true })
+    })
+    await page.route((url) => url.pathname === "/study", () => new Promise(() => {}))
+    await page.goto("/study/fundamentals")
+    await page.waitForSelector('[data-page-ready="true"]')
+    await page.getByLabel("Back", { exact: true }).click()
+    const box = page.getByRole("status", { name: "Loading" })
+    await expect(box).toBeVisible({ timeout: 2500 })
+    await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
+  })
+
+  test("a tap that replaces a header move still waiting gives the loading box its own give-up", async ({ page }) => {
+    // Pages the app has not already fetched in the background (the glossary, and the Flashcards card near the bottom of Home), both held for good.
+    await page.route(/\/(glossary|flashcards)(\?|$)/, () => new Promise(() => {}))
+    await page.goto("/")
+    await page.getByRole("button", { name: "Open menu" }).click()
+    await page.getByRole("link", { name: "GLOSSARY", exact: true }).click()
+    const box = page.getByRole("status", { name: "Loading" })
+    await expect(box).toBeVisible()
+    // After the 6 s unlock another link is tapped while the first move still waits: the first move's give-up is replaced by this one's.
+    await page.waitForTimeout(6500)
+    await page.locator('main a[href="/flashcards"]').first().evaluate((link) => (link as HTMLElement).click())
+    await expect(box, "the replacing tap's own give-up hides the box").toHaveCount(0, { timeout: 12_000 })
+  })
+
+  test("a refused tap gives up only the box: the link still waiting for its page stays loading", async ({ page }) => {
+    await page.route(/\/flashcards(\?|$)/, () => new Promise(() => {}))
+    await page.goto("/")
+    const study = page.locator('main a[href="/flashcards"]').first()
+    await study.click()
+    await expect(study).toHaveAttribute("data-loading", "true")
+    const box = page.getByRole("status", { name: "Loading" })
+    await page.locator('main a[href="/exam"]').first().click({ force: true })
+    await expect(box, "a refused tap is never silent").toBeVisible()
+    await expect(box, "the box gives up after the Back give-up time").toHaveCount(0, { timeout: 12_000 })
+    await expect(study, "the link still waits for its page, so it stays loading").toHaveAttribute("data-loading", "true")
+  })
 })

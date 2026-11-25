@@ -99,6 +99,9 @@ test("Flashcards: the last card can be marked known, and only then is the sessio
   await page.getByRole("button", { name: /KNOW ✓/ }).click()
   await expect(page.getByText("SESSION COMPLETE")).toBeVisible()
   await expect(page.getByText(new RegExp(`You marked 1 / ${total} cards as known`))).toBeVisible()
+  // A reload after the last card is still a finished session, not an open one.
+  await page.reload()
+  await expect(page.getByText("SESSION COMPLETE"), "the finished session is restored as finished").toBeVisible()
 })
 
 test("Flashcards: Next on the last card of a section opens the next section's cards", async ({ page }) => {
@@ -121,11 +124,17 @@ test("Flashcards: Next on the last card of a section opens the next section's ca
 test("Flashcards: Previous on the first card of a section opens the last card of the section before", async ({ page }) => {
   await page.goto("/flashcards")
   const categories = page.locator("main button").filter({ hasText: /\(\d+\)\s*$/ })
+  const sectionName = async (index: number) => (await categories.nth(index).textContent())!.replace(/\s*\(\d+\)\s*$/, "").trim().toUpperCase()
+  const before = await sectionName(1)
+  const chosen = await sectionName(2)
   await categories.nth(2).click()
   await page.getByRole("button", { name: /START SESSION/ }).click()
+  const crumb = page.locator("[data-crumb-bar]")
+  await expect(crumb).toContainText(chosen)
   const previous = page.getByRole("button", { name: /^Previous card/ }).first()
   await expect(previous, "Previous is on at the first card of a later section").toBeEnabled()
   await previous.click()
   const position = (await page.getByText(/^Card \d+ \/ \d+$/).textContent())!.match(/(\d+) \/ (\d+)/)!
   expect(position[1], "it is the last card of the section before").toBe(position[2])
+  await expect(crumb, "the breadcrumb names the section before, not the one it left").toContainText(before)
 })

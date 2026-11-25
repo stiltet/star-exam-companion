@@ -123,6 +123,8 @@ export function NavProgress() {
       if (from.current !== null) {
         timers.current.forEach((timer) => window.clearTimeout(timer))
         timers.current = []
+        // The box a replaced move left up still gives up on its own time.
+        timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
       }
       link.current = target
       from.current = window.location.pathname + window.location.search

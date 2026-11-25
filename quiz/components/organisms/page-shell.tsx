@@ -8,7 +8,7 @@ import { StackHeight } from "@/components/stack-height"
 // The one layout of every page (owner, 17 Nov): header, menu and breadcrumb fixed to the top on every width, then the page, then
 // the footer. A page gives its content and its trail, never its own header, width or padding. Variants: "centered" (404), "fill"
 // (the voice quiz, flush footer) and "reading" (Read Aloud pages, less room above the first line).
-export function PageShell({ breadcrumb, variant = "default", children }: { breadcrumb?: Crumb[]; variant?: "default" | "centered" | "fill" | "reading"; children: ReactNode }) {
+export function PageShell({ breadcrumb, variant = "default", children }: { breadcrumb?: Omit<Crumb, "onClick">[]; variant?: "default" | "centered" | "fill" | "reading"; children: ReactNode }) {
   const main = {
     default: "py-8",
     centered: "py-8 flex flex-col items-center justify-center",
@@ -16,7 +16,7 @@ export function PageShell({ breadcrumb, variant = "default", children }: { bread
     reading: "pt-4 pb-6",
   }[variant]
   return (
-    <CrumbProvider initial={breadcrumb}>
+    <CrumbProvider key={JSON.stringify(breadcrumb ?? null)} initial={breadcrumb}>
     <div className="min-h-screen flex flex-col">
       {/* One fixed stack: other fixed things (the Read Aloud control bar) read its height from data-sticky-stack. */}
       <StackHeight />

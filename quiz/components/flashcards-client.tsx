@@ -35,6 +35,9 @@ export function FlashcardsClient({ glossary }: Props) {
   }, [glossary])
 
   // Reopens a session in progress, unless a term in it has left the glossary.
+  // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
+  const [finished, setFinished] = useState(false)
+
   useEffect(() => {
     const byKey = new Map(glossary.map((g) => [g.key, g]))
     const saved = cardsResume(loadState(window.localStorage, CARDS_KEY), new Set(byKey.keys()))
@@ -44,6 +47,7 @@ export function FlashcardsClient({ glossary }: Props) {
       setShuffledCards(saved.order.map((key) => byKey.get(key)).filter((g): g is GlossaryItem => g !== undefined))
       setCurrentIndex(saved.index)
       setKnownCards(new Set(saved.known))
+      setFinished(saved.finished)
       setIsStarted(true)
     }
     loaded.current = true
@@ -55,13 +59,10 @@ export function FlashcardsClient({ glossary }: Props) {
       window.localStorage,
       CARDS_KEY,
       isStarted && shuffledCards.length > 0
-        ? { category: selectedCategory, order: shuffledCards.map((g) => g.key), index: currentIndex, known: [...knownCards] }
+        ? { category: selectedCategory, order: shuffledCards.map((g) => g.key), index: currentIndex, known: [...knownCards], finished }
         : null,
     )
-  }, [isStarted, selectedCategory, shuffledCards, currentIndex, knownCards])
-
-  // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
-  const [finished, setFinished] = useState(false)
+  }, [isStarted, selectedCategory, shuffledCards, currentIndex, knownCards, finished])
 
   const startSession = (category: string = selectedCategory, atEnd = false) => {
     setFinished(false)

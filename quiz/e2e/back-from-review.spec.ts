@@ -99,7 +99,7 @@ test.describe("in the installed app", () => {
     await page.getByRole("link", { name: "Review →" }).first().click()
     await expect(page.getByRole("heading", { name: "TEST EXAM RESULTS" })).toBeVisible()
     await backButton(page).click()
-    await expect(page, "Back from a review is the Test exam page, not Home").not.toHaveURL(/\/$/)
+    await expect(page, "Back from a review is the Test exam page: not Home, and not still the review").toHaveURL(/\/exam$/)
   })
 
   test("Back after a glossary section link returns to the top of the glossary, not Home", async ({ page }) => {
@@ -121,6 +121,52 @@ test.describe("in the installed app", () => {
     await link.click()
     await backButton(page).click()
     await expect(page, "a link to the place already shown made no step, so Back does not leave").toHaveURL(/\/glossary#section-/)
+  })
+
+  test("Back after links to two glossary sections undoes them one at a time and never leaves the glossary", async ({ page }) => {
+    await page.goto("/glossary")
+    await page.waitForSelector('[data-page-ready="true"]')
+    const links = page.locator('main a[href^="#"]')
+    const first = await links.nth(2).getAttribute("href")
+    await links.nth(2).click()
+    await expect(page).toHaveURL(new RegExp(`/glossary${first}$`))
+    await links.nth(4).click()
+    await expect(page).not.toHaveURL(new RegExp(`/glossary${first}$`))
+    await backButton(page).click()
+    await expect(page, "the first Back undoes the second link").toHaveURL(new RegExp(`/glossary${first}$`))
+    await page.waitForTimeout(600)
+    await backButton(page).click()
+    await expect(page, "the second Back undoes the first link and stays on the glossary").toHaveURL(/\/glossary$/)
+  })
+
+  test("a quick second tap on Back after a section link is one Back, not two", async ({ page }) => {
+    await page.goto("/glossary")
+    await page.waitForSelector('[data-page-ready="true"]')
+    await page.locator('main a[href^="#"]').nth(2).click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+    // Both taps arrive before the step back has finished, however busy the machine is.
+    await backButton(page).evaluate((button) => { (button as HTMLElement).click(); (button as HTMLElement).click() })
+    await page.waitForTimeout(1500)
+    await expect(page, "one step back, still on the glossary").toHaveURL(/\/glossary$/)
+  })
+
+  test("a second tap on Back while the step back over a section link is still on its way is the same Back", async ({ page }) => {
+    // A slow device: the step back arrives well after the second tap.
+    await page.addInitScript(() => {
+      const back = window.history.back.bind(window.history)
+      window.history.back = () => void window.setTimeout(back, 3000)
+    })
+    await page.goto("/glossary")
+    await page.waitForSelector('[data-page-ready="true"]')
+    await page.locator('main a[href^="#"]').nth(2).click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+    await backButton(page).click()
+    await page.waitForTimeout(700)
+    await backButton(page).evaluate((button) => (button as HTMLElement).click())
+    await page.waitForTimeout(1500)
+    await expect(page, "the second tap did not start another move").toHaveURL(/\/glossary#section-/)
+    await page.waitForTimeout(2500)
+    await expect(page, "one step back, still on the glossary").toHaveURL(/\/glossary$/)
   })
 
   test("the Back button sits 2rem from the left and bottom edges", async ({ page }) => {

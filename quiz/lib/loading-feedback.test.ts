@@ -40,3 +40,11 @@ test("the logo and title link holds an image, so the loading box (not the header
   assert.match(nav, /if \(link\.hasAttribute\("data-loading"\)\) return/, "marking busy twice keeps the first label")
   assert.match(nav, /if \(!link\.hasAttribute\("data-loading"\)\) return/, "marking idle twice never strips the link's own label")
 })
+
+test("the section links Back undoes are kept as a list, dropped when the page is left or the browser moves on its own, and a quick second tap is one Back", () => {
+  const back = read("components/back-button.tsx")
+  assert.match(back, /anchorJumps = useRef</, "one entry per link followed, so two links are undone one at a time")
+  assert.match(back, /tapped\.current = false\n\s*anchorJumps\.current = \[\]/, "leaving the page drops the entries")
+  assert.match(back, /else if \(performance\.now\(\) - lastAnchorClick\.current > 400\) anchorJumps\.current = \[\]/, "a move the page did not make drops them")
+  assert.match(back, /performance\.now\(\) - lastAnchorBack\.current < 500\) return/, "a quick second tap is the same Back")
+})

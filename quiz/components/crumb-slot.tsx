@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { Breadcrumb, type Crumb } from "@/components/atoms/breadcrumb"
 
 // The breadcrumb bar of PageShell. A page whose trail never changes gives it to PageShell; a page whose trail follows its own
@@ -50,10 +50,12 @@ export function CrumbBar() {
 export function useBreadcrumb(trail: Crumb[] | null) {
   const set = useContext(Setter)
   const key = trail ? JSON.stringify(trail.map((crumb) => [crumb.label, crumb.href ?? null])) : ""
+  // The trail is set again only when its labels or links change; a crumb's onClick is read from the latest render when it is tapped.
+  const latest = useRef(trail)
+  useEffect(() => { latest.current = trail })
   useEffect(() => {
-    set(trail)
+    const now = latest.current
+    set(now ? now.map((crumb, at) => (crumb.onClick ? { ...crumb, onClick: () => latest.current?.[at]?.onClick?.() } : crumb)) : null)
     return () => set(null)
-    // A crumb's onClick only calls state setters, so the trail is set again only when its labels or links change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, set])
 }

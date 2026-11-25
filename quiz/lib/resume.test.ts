@@ -52,7 +52,8 @@ test("an exam whose time ran out while closed finishes with the answers given", 
 test("flashcards resume where they were, and start afresh if a term has gone", () => {
   const terms = new Set(["Grounding", "Gems"])
   const saved = { category: "all", order: ["Gems", "Grounding"], index: 1, known: ["Gems"] }
-  assert.deepEqual(cardsResume(saved, terms), saved)
+  assert.deepEqual(cardsResume(saved, terms), { ...saved, finished: false })
+  assert.equal(cardsResume({ ...saved, finished: true }, terms)?.finished, true, "a session finished before the reload is still finished")
   assert.equal(cardsResume({ ...saved, order: ["Gems", "Vertex AI"] }, terms), null)
   assert.equal(cardsResume({ ...saved, index: 2 }, terms), null)
   assert.equal(cardsResume({ ...saved, known: "Gems" }, terms), null)

@@ -89,6 +89,18 @@ test("a long study topic title cannot make the fixed breadcrumb taller than two 
   expect(height, "at most two lines").toBeLessThanOrEqual(line * 2 + 1)
 })
 
+test("the breadcrumb follows a move from one study topic to the next", async ({ page }) => {
+  await page.goto("/study")
+  await page.waitForSelector('[data-page-ready="true"]')
+  const links = await page.locator('main a[href^="/study/"]').evaluateAll((all) => all.map((link) => (link as HTMLAnchorElement).getAttribute("href")!).filter((href) => href.split("/").length === 4))
+  await page.goto(links[0])
+  await page.waitForSelector('[data-page-ready="true"]')
+  await page.getByRole("link", { name: /^Next topic/ }).first().click()
+  await expect(page).not.toHaveURL(new RegExp(`${links[0]}$`))
+  const title = (await page.getByRole("heading", { level: 1 }).first().textContent())!.trim().toUpperCase()
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }), "the new topic's title, not the one left").toContainText(title.slice(0, 24))
+})
+
 test("a Read Aloud paragraph scrolled into view lands below the fixed stack and the control bar", async ({ page }) => {
   await page.goto("/read")
   await page.locator('main a[href^="/read/"]').filter({ hasNotText: /night/i }).first().click()
