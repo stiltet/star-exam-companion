@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { RouteHold } from "@/components/route-hold"
 import { PageShell } from "@/components/organisms/page-shell"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
@@ -25,11 +26,13 @@ export default async function ReadingPage({ params }: Props) {
 
   if (!loaded.ok) {
     return (
+      <RouteHold>
       <PageShell>
         <>
           <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
         </>
       </PageShell>
+      </RouteHold>
     )
   }
 
@@ -45,6 +48,7 @@ export default async function ReadingPage({ params }: Props) {
   const following = nextReading(course, list, pageId, ordered)
 
   return (
+    <RouteHold>
     <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}`, href: `/read/${course.id}` }, { label: `${at + 1} of ${list.length}` }]} variant="reading">
       <>
         <PageNav kind="lesson" previous={previous} next={following} where="top" placement="mb-6" />
@@ -64,5 +68,6 @@ export default async function ReadingPage({ params }: Props) {
         <PageNav kind="lesson" previous={previous} next={following} where="bottom" placement="mt-6" />
       </>
     </PageShell>
+    </RouteHold>
   )
 }

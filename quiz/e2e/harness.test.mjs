@@ -32,13 +32,13 @@ test("playwright.config.ts discovers every browser and width without nested or m
   })
   assert.equal(result.status, 0, result.stderr)
   assert.equal(existsSync(report) ? statSync(report).mtimeMs : undefined, before, "listing the tests left the browser timing report alone")
-  // Chromium runs the pages; WebKit only the offline worker (also with the Mac unreachable), the installed app's Back button and the About list.
+  // Chromium runs the pages; WebKit only the offline worker (also with the Mac unreachable), the installed app's Back button, its launch on the last page and the About list.
   // Properties, not totals: a new spec must not break a test that proves nothing about the config.
   const chromium = result.stdout.split("\n").filter((line) => line.includes("[chromium-375]"))
   const webkit = result.stdout.split("\n").filter((line) => line.includes("[webkit-375]"))
   assert.ok(chromium.length > 0, "the Chromium project lists tests")
   assert.ok(webkit.length > 0, "the WebKit project lists tests")
-  assert.ok(webkit.every((line) => /offline(?:-unreachable)?\.spec|back-history\.spec|back-from-review\.spec|about-webkit\.spec/.test(line)), "WebKit runs only the offline, Mac-unreachable, Back and About list specs")
+  assert.ok(webkit.every((line) => /offline(?:-unreachable)?\.spec|back-history\.spec|back-from-review\.spec|about-webkit\.spec|resume-webkit\.spec/.test(line)), "WebKit runs only the offline, Mac-unreachable, Back, launch and About list specs")
   assert.ok(chromium.some((line) => /smoke\.spec/.test(line)), "Chromium runs the page smoke tests")
   assert.doesNotMatch(result.stdout, /\[(?!chromium-375|webkit-375)[a-z0-9-]+\] ›/, "no other project is configured")
   assert.match(result.stdout, /Total: \d+ tests in \d+ files/)

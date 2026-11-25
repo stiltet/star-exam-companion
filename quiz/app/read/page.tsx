@@ -1,3 +1,4 @@
+import { RouteHold } from "@/components/route-hold"
 import { PageShell } from "@/components/organisms/page-shell"
 import { ActionLink } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
@@ -18,6 +19,7 @@ export default async function ReadPage() {
   const loaded = await Promise.all(courses.map((course) => courseBundle(course)))
   const completion = readingCompletion(pack, loaded)
   return (
+    <RouteHold>
     <PageShell>
       <>
         <Heading variant="page" placement="sr-only">Read Aloud</Heading>
@@ -48,5 +50,6 @@ export default async function ReadPage() {
         )}
       </>
     </PageShell>
+    </RouteHold>
   )
 }

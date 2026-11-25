@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { RouteHold } from "@/components/route-hold"
 import { PageShell } from "@/components/organisms/page-shell"
 import { ActionLink } from "@/components/atoms/button"
 import { Heading } from "@/components/atoms/heading"
@@ -23,6 +24,7 @@ export default async function CourseReadingsPage({ params }: Props) {
   const noText = pack.noReading.find((entry) => entry.id === id)
   if (!course && noText) {
     return (
+      <RouteHold>
       <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${noText.id}` }]} variant="reading">
         <>
           <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
@@ -32,12 +34,14 @@ export default async function CourseReadingsPage({ params }: Props) {
           <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
         </>
       </PageShell>
+      </RouteHold>
     )
   }
   if (!course) notFound()
   const loaded = await courseBundle(course)
 
   return (
+    <RouteHold>
     <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}` }]} variant="reading">
       <>
         <PageNav kind="course" previous={previous} next={next} where="top" placement="mb-6" />
@@ -65,5 +69,6 @@ export default async function CourseReadingsPage({ params }: Props) {
         <PageNav kind="course" previous={previous} next={next} where="bottom" placement="mt-6" />
       </>
     </PageShell>
+    </RouteHold>
   )
 }

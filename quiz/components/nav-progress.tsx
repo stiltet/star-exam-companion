@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { LoadingBox } from "@/components/atoms/loading-box"
+import { loadingRemaining } from "@/lib/loading-time"
 
 const SPINNER_AFTER_MS = 200
+const clock = () => performance.now()
 // After this long other links can be tapped again, so the app can never stay stuck. A button that
 // shows loading NEVER goes back to normal by itself (owner, 16 Nov): it stays until the page
 // arrives, because a button that returns to normal and navigates seconds later looks like a tap
@@ -62,8 +64,36 @@ export function NavProgress() {
   const [overlay, setOverlay] = useState(false)
   const timers = useRef<number[]>([])
   const shown = useRef("")
+  // When the loading state appeared, and the end of a move that is waiting for it to have shown 500 ms.
+  const shownAt = useRef<number | null>(null)
+  const ending = useRef(0)
+  const showBox = () => {
+    shownAt.current ??= clock()
+    setOverlay(true)
+  }
 
+  // A new move (a link, or Back) cancels the previous move's pending hold, so it cannot end the new move's loading early.
+  const dropHold = () => {
+    window.clearTimeout(ending.current)
+    ending.current = 0
+    shownAt.current = null
+  }
+
+  // The page has arrived. A loading state that has shown stays until it has shown 500 ms, so it never flashes.
   const finish = () => {
+    const wait = loadingRemaining(shownAt.current, clock())
+    if (wait <= 0) return endMove()
+    // The page is here, so other links work again at once; only the loading state is held for its 500 ms.
+    locked.current = false
+    timers.current.forEach((timer) => window.clearTimeout(timer))
+    timers.current = []
+    if (ending.current === 0) ending.current = window.setTimeout(endMove, wait)
+  }
+
+  const endMove = () => {
+    window.clearTimeout(ending.current)
+    ending.current = 0
+    shownAt.current = null
     timers.current.forEach((timer) => window.clearTimeout(timer))
     timers.current = []
     // The page has arrived (or come back from memory): only now do loading buttons go back to normal.
@@ -99,7 +129,7 @@ export function NavProgress() {
         event.preventDefault()
         event.stopPropagation()
         // A tap that is refused is never silent (owner, 17 Nov): the page-sized loading box shows, as the move is still coming.
-        setOverlay(true)
+        showBox()
         // Only the box is given up: the link still waiting for its page stays busy until the page arrives.
         timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
         return
@@ -123,6 +153,7 @@ export function NavProgress() {
       if (from.current !== null) {
         timers.current.forEach((timer) => window.clearTimeout(timer))
         timers.current = []
+        dropHold()
         // The box a replaced move left up still gives up on its own time.
         timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
       }
@@ -130,10 +161,15 @@ export function NavProgress() {
       from.current = window.location.pathname + window.location.search
       locked.current = true
       if (inHeader) {
-        setOverlay(true)
+        showBox()
         // A move that never arrives must not leave the box over the page for good.
         timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
-      } else timers.current.push(window.setTimeout(() => markBusy(target), SPINNER_AFTER_MS))
+      } else {
+        timers.current.push(window.setTimeout(() => {
+          shownAt.current ??= clock()
+          markBusy(target)
+        }, SPINNER_AFTER_MS))
+      }
       timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
     }
     document.addEventListener("click", onClick, true)
@@ -151,9 +187,13 @@ export function NavProgress() {
   useEffect(() => {
     const moving = () => {
       if (locked.current) return
+      // An earlier move's give-up timers (a refused tap's, a header tap's) must not end this move's box or lock.
+      timers.current.forEach((timer) => window.clearTimeout(timer))
+      timers.current = []
+      dropHold()
       from.current = shown.current
       locked.current = true
-      timers.current.push(window.setTimeout(() => setOverlay(true), SPINNER_AFTER_MS))
+      timers.current.push(window.setTimeout(showBox, SPINNER_AFTER_MS))
       timers.current.push(window.setTimeout(() => { locked.current = false }, UNLOCK_MS))
       timers.current.push(window.setTimeout(finish, BACK_GIVE_UP_MS))
     }

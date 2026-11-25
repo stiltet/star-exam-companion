@@ -6,7 +6,7 @@ if (!Number.isInteger(port) || port < 1024 || port + E2E_WORKERS - 1 > 65535 || 
   throw new Error("QUIZ_E2E_PORT must be an unprivileged port other than the normal quiz port 3000, and so must the next port, which the second worker's server uses")
 }
 
-const WEBKIT_SPECS = ["**/offline.spec.ts", "**/offline-unreachable.spec.ts", "**/back-*.spec.ts", "**/about-webkit.spec.ts"]
+const WEBKIT_SPECS = ["**/offline.spec.ts", "**/offline-unreachable.spec.ts", "**/back-*.spec.ts", "**/about-webkit.spec.ts", "**/resume-webkit.spec.ts"]
 
 export default defineConfig({
   testDir: "./e2e",
@@ -26,7 +26,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   // Two projects: Chromium for the pages, WebKit (iPhone Safari's engine) only for what differs there,
-  // the offline worker, the installed app's Back button and the About page's list role. 375 px is the lowest phone width, and the only one tested.
+  // the offline worker, the installed app's Back button, its launch on the last page and the About page's list role. 375 px is the lowest phone width, and the only one tested.
   projects: [
     { name: "chromium-375", testIgnore: WEBKIT_SPECS, use: { browserName: "chromium", viewport: { width: 375, height: 844 } } },
     { name: "webkit-375", testMatch: WEBKIT_SPECS, use: { browserName: "webkit", viewport: { width: 375, height: 844 } } },
