@@ -228,6 +228,30 @@ test("a link tapped while the previous move's loading state is still held opens:
   expect(await page.evaluate(() => (window as unknown as { __tap: { heldAtTap: boolean } }).__tap.heldAtTap), "the tap came while the loading state was still held").toBe(true)
 })
 
+test("a Back move made while the previous move's loading state is still held keeps its own loading box", async ({ page }) => {
+  // The page is there 250 ms after the tap and its loading state is held until 700 ms. Back (the Back button sends this event) is
+  // pressed in that time, and nothing arrives for it: its box must stay, and the old hold must not end it.
+  await page.route(/\/practice\?section=1(&|$)/, slow(250))
+  await page.goto("/practice")
+  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
+  await page.evaluate(() => {
+    const frame = () => {
+      if (window.location.search === "?section=1") {
+        setTimeout(() => window.dispatchEvent(new Event("quiz:moving")), 50)
+        return
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  })
+  await page.locator('main a[href="/practice?section=1"]').first().click()
+  const box = page.getByRole("status", { name: "Loading" })
+  await expect(box, "the Back move's box shows").toBeVisible({ timeout: 3000 })
+  // Past the old move's hold (700 ms after the tap) the box is still there.
+  await page.waitForTimeout(1000)
+  await expect(box, "the old hold did not end the Back move's loading").toBeVisible()
+})
+
 test("a page that is ready before its box shows but settles after it keeps the box 500 ms from when it showed", async ({ page }) => {
   await page.addInitScript(() => {
     // The fonts are reported loaded only 300 ms after they are asked for, so the next page settles after its box has shown (200 ms).

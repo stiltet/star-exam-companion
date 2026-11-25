@@ -184,6 +184,23 @@ test("a slow saved page is covered by a full-screen box after the cover limit, n
   await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toHaveCount(0)
 })
 
+test("a saved page that comes before the cover limit shows no slow-page box at all", async ({ page, context }) => {
+  await leaveGlossaryAt(page, 500)
+  const launch = await context.newPage()
+  await watchFrames(launch)
+  await launch.route(/\/glossary(\?|$)/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    await route.continue()
+  })
+  await launch.goto("/")
+  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
+  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
+  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
+  const seen = await framesOf(launch)
+  expect(seen.shown, "no box of the slow-page kind came up").toBeUndefined()
+  expect(seen.bare, "and home was never bare").toBe(0)
+})
+
 test("a saved page that never comes is given up after 30 s: no place is restored, and the next page the visitor opens is saved again", async ({ page, context }) => {
   await leaveGlossaryAt(page, 500)
   const launch = await context.newPage()

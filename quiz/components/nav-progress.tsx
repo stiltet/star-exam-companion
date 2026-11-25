@@ -72,6 +72,13 @@ export function NavProgress() {
     setOverlay(true)
   }
 
+  // A new move (a link, or Back) cancels the previous move's pending hold, so it cannot end the new move's loading early.
+  const dropHold = () => {
+    window.clearTimeout(ending.current)
+    ending.current = 0
+    shownAt.current = null
+  }
+
   // The page has arrived. A loading state that has shown stays until it has shown 500 ms, so it never flashes.
   const finish = () => {
     const wait = loadingRemaining(shownAt.current, clock())
@@ -146,10 +153,7 @@ export function NavProgress() {
       if (from.current !== null) {
         timers.current.forEach((timer) => window.clearTimeout(timer))
         timers.current = []
-        // The previous move's hold must not end this move's loading early.
-        window.clearTimeout(ending.current)
-        ending.current = 0
-        shownAt.current = null
+        dropHold()
         // The box a replaced move left up still gives up on its own time.
         timers.current.push(window.setTimeout(() => setOverlay(false), BACK_GIVE_UP_MS))
       }
@@ -183,6 +187,7 @@ export function NavProgress() {
   useEffect(() => {
     const moving = () => {
       if (locked.current) return
+      dropHold()
       from.current = shown.current
       locked.current = true
       timers.current.push(window.setTimeout(showBox, SPINNER_AFTER_MS))

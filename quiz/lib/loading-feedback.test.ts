@@ -13,6 +13,7 @@ test("the tapped link shows the loading state after 200 ms and locks every other
   assert.match(nav, /showExternal\(target\)/, "a link to another site shows loading too")
   assert.match(nav, /target\.closest\("header"\) !== null/, "a link in the header (logo, title, menu) never changes itself, the page-sized box shows instead")
   assert.match(nav, /if \(inHeader\) \{\n\s*showBox\(\)/, "a header tap shows the box at once, and notes when it showed for its 500 ms hold")
+  assert.match(nav, /const showBox = \(\) => \{\n\s*shownAt\.current \?\?= clock\(\)\n\s*setOverlay\(true\)\n\s*\}/, "the box notes when it showed and then shows")
   assert.doesNotMatch(nav, /CLEAR_MS|setTimeout\(finish, (?!BACK_GIVE_UP_MS)/, "a loading button never goes back to normal by itself")
   assert.match(nav, /setTimeout\(finish, BACK_GIVE_UP_MS\)/, "only the page-sized box (a Back move, a header tap, a refused tap) gives up after a time; a loading button never does")
   assert.match(nav, /setTimeout\(\(\) => setOverlay\(false\), BACK_GIVE_UP_MS\)/, "a refused tap gives up only the box, never the busy link still waiting for its page")
