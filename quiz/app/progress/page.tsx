@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { activePack, listPacks } from "@/lib/pack"
 import { writtenPool } from "@/lib/questions"
 import { ProgressClient } from "@/components/progress-client"
@@ -22,14 +21,10 @@ export default function ProgressPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <ProgressClient stats={stats} />
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

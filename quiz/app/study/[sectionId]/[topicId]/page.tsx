@@ -1,8 +1,8 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { activePack } from "@/lib/pack"
 import { writtenQuestions } from "@/lib/questions"
 import { sectionLabel } from "@/lib/progress"
+import { StepNav } from "@/components/step-nav"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -35,19 +35,14 @@ export default async function TopicPage({ params }: Props) {
   const relatedQuestions = writtenQuestions(activePack().study.questions).filter((q) => q.topicId === topicId)
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
-        {/* Breadcrumb */}
-        <nav className="text-sm mb-6 text-muted-foreground">
-          <Link href="/study">STUDY</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/study/${sectionId}`}>{label.toUpperCase()}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{topic.title.toUpperCase()}</span>
-        </nav>
-
+    <PageShell breadcrumb={[{ label: "STUDY", href: "/study" }, { label: label.toUpperCase(), href: `/study/${sectionId}` }, { label: topic.title.toUpperCase() }]}>
+      <>
+        <StepNav where="top"
+          kind="topic"
+          previous={prevTopic ? { href: `/study/${sectionId}/${prevTopic.id}`, hint: prevTopic.title } : null}
+          next={nextTopic ? { href: `/study/${sectionId}/${nextTopic.id}`, hint: nextTopic.title } : null}
+          placement="mb-6"
+        />
         {/* Header */}
         <header className="border-2 border-foreground p-6 mb-6">
           <div className="text-sm text-muted-foreground mb-2">
@@ -153,25 +148,13 @@ export default async function TopicPage({ params }: Props) {
         )}
 
         {/* Navigation */}
-        <nav className="border-t-2 border-foreground pt-6 flex justify-between">
-          {prevTopic ? (
-            <Link href={`/study/${sectionId}/${prevTopic.id}`} className="text-sm">
-              ← {prevTopic.title}
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextTopic ? (
-            <Link href={`/study/${sectionId}/${nextTopic.id}`} className="text-sm">
-              {nextTopic.title} →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </main>
-
-      <SiteFooter />
-    </div>
+        <StepNav where="bottom"
+          kind="topic"
+          previous={prevTopic ? { href: `/study/${sectionId}/${prevTopic.id}`, hint: prevTopic.title } : null}
+          next={nextTopic ? { href: `/study/${sectionId}/${nextTopic.id}`, hint: nextTopic.title } : null}
+          placement="border-t-2 border-foreground pt-6"
+        />
+      </>
+    </PageShell>
   )
 }

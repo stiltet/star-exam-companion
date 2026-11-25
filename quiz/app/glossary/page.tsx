@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import Link from "next/link"
 import { loadPlay } from "@/lib/load"
 import { Names } from "@/components/names"
@@ -39,10 +38,8 @@ export default async function GlossaryPage() {
   const categories = Object.keys(grouped).sort()
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <h1 className="sr-only text-2xl font-bold mb-2">GLOSSARY</h1>
         <UnfinishedNotice need="glossary" />
         <p className="text-muted-foreground mb-8">
@@ -67,7 +64,7 @@ export default async function GlossaryPage() {
 
         {/* Terms by Category */}
         {categories.map((category) => (
-          <section key={category} id={anchorId(category)} className="mb-8 scroll-mt-[50px]">
+          <section key={category} id={anchorId(category)} className="mb-8">
             <h2 className="text-lg font-bold border-b-2 border-foreground pb-2 mb-4">{category.toUpperCase()}</h2>
             <dl className="border-2 border-foreground divide-y divide-foreground">
               {grouped[category]
@@ -92,9 +89,7 @@ export default async function GlossaryPage() {
             PRACTICE WITH FLASHCARDS →
           </Link>
         </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

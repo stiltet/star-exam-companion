@@ -1,5 +1,6 @@
 "use client"
 
+import { StepNav } from "@/components/step-nav"
 import { usePageReady } from "@/components/page-gate"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { keepAnswer } from "@/components/outbox"
@@ -8,6 +9,7 @@ import type { Question } from "@/lib/exam-data"
 import { examDuration, retakeIds, reviewHash, reviewId, shuffle } from "@/lib/exam-review"
 import { EXAM_TARGET } from "@/lib/learn"
 import { Text } from "@/components/atoms/text"
+import { useSubBar } from "@/components/crumb-slot"
 import { examHistory } from "@/lib/progress"
 import { EXAM_KEY, examOutcome, examResume, examSeconds, loadState, saveState, secondsLeft } from "@/lib/resume"
 import type { ExamLength } from "@/lib/score"
@@ -38,6 +40,24 @@ function setHash(id: string | null) {
   const url = `${window.location.pathname}${window.location.search}${id ? reviewHash(id) : ""}`
   window.history.replaceState(window.history.state, "", url)
   window.dispatchEvent(new HashChangeEvent("hashchange"))
+}
+
+// The Test exam's timer: a full-width bar in the fixed stack under the header, like the breadcrumb bar of other pages, with its
+// text in the page's container. The time left is a light fill behind the text.
+function ExamTimerBar({ time, duration, index, total, unanswered, flagged }: { time: number; duration: number; index: number; total: number; unanswered: number; flagged: number }) {
+  const fill = "color-mix(in srgb, var(--foreground) 14%, transparent)"
+  useSubBar(
+    <div className="bg-no-repeat" style={{ backgroundImage: `linear-gradient(${fill}, ${fill})`, backgroundSize: `${(time / duration) * 100}% 100%` }}>
+      <div className="max-w-4xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
+        <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(time)}`}>{formatTime(time)}</span>
+        <span className="text-sm">
+          {index + 1}/{total} · Unanswered: {unanswered} · Flagged: {flagged}
+        </span>
+      </div>
+    </div>,
+    [time, duration, index, total, unanswered, flagged],
+  )
+  return null
 }
 
 export function ExamClient({ questions, sections, length }: Props) {
@@ -300,18 +320,14 @@ export function ExamClient({ questions, sections, length }: Props) {
     return (
       <div>
         <Heading variant="page" placement="sr-only">TEST EXAM</Heading>
-        {/* Timer Bar */}
-        <div className="border-2 border-foreground mb-6 sticky top-0 bg-background z-10">
-          <div className="p-3 flex flex-wrap justify-between items-center gap-x-4 gap-y-1">
-            <span className="font-bold" role="timer" aria-label={`Time left ${formatTime(timeRemaining)}`}>{formatTime(timeRemaining)}</span>
-            <span className="text-sm">
-              {currentIndex + 1}/{examQuestions.length} · Unanswered: {unansweredCount} · Flagged: {flagged.size}
-            </span>
-          </div>
-          <div className="h-1 bg-muted">
-            <div className="h-full bg-foreground" style={{ width: `${(timeRemaining / duration) * 100}%` }} />
-          </div>
-        </div>
+        <ExamTimerBar time={timeRemaining} duration={duration} index={currentIndex} total={examQuestions.length} unanswered={unansweredCount} flagged={flagged.size} />
+
+        <StepNav where="top"
+          kind="question"
+          previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
+          next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}
+          placement="mb-6"
+        />
 
         {/* Question */}
         <div className="border-2 border-foreground mb-6">
@@ -336,14 +352,12 @@ export function ExamClient({ questions, sections, length }: Props) {
         </div>
 
         {/* Navigation */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <ActionButton variant="outlined" disabled={currentIndex === 0} aria-disabled={currentIndex === 0} onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}>
-            ← Prev
-          </ActionButton>
-          <ActionButton variant="outlined" disabled={currentIndex === examQuestions.length - 1} aria-disabled={currentIndex === examQuestions.length - 1} onClick={() => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1))}>
-            Next →
-          </ActionButton>
-        </div>
+        <StepNav where="bottom"
+          kind="question"
+          previous={{ onClick: () => setCurrentIndex(Math.max(0, currentIndex - 1)), disabled: currentIndex === 0 }}
+          next={{ onClick: () => setCurrentIndex(Math.min(examQuestions.length - 1, currentIndex + 1)), disabled: currentIndex === examQuestions.length - 1 }}
+          placement="mb-3"
+        />
         <div className="flex flex-wrap gap-2 mb-6">
           <ActionButton variant="toggle" disabled={nextFlagged === null} onClick={() => goTo(nextFlagged)}>
             Next flagged ({flagged.size})

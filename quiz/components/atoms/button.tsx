@@ -10,13 +10,17 @@ import type { ComponentProps, ReactNode } from "react"
 // toggle: a small on/off control, such as a review filter; on (aria-pressed) is inverted.
 // flag: the exam's FLAG control; on is the flag colour.
 // compact: a small action inside a table row (Send now, Update now), low enough that every row keeps one height.
-export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag" | "compact"
+// step: Previous and Next (and a button beside them, such as Reset), the same size in every section.
+export type ButtonVariant = "filled" | "outlined" | "danger" | "control" | "toggle" | "flag" | "compact" | "step"
 
 // One line, unless wrap is set: a long label ends in an ellipsis rather than wrapping.
 const BASE = "inline-flex max-w-full min-w-0 items-center justify-center gap-6 border-2 border-foreground px-4 py-3 text-base font-bold uppercase no-underline"
 
 // The Voice Quiz controls, the same size as Back and Next rather than the large uppercase actions.
-const CONTROL = "inline-flex max-w-full min-w-0 items-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base no-underline disabled:opacity-40"
+const CONTROL = "inline-flex max-w-full shrink-0 items-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base no-underline disabled:opacity-40"
+
+// Previous and Next, in every section (owner, 17 Nov): the same small size and weight as the Voice Quiz controls, everywhere.
+const STEP = "inline-flex max-w-full items-center justify-center gap-2 border-2 border-foreground bg-background px-4 py-2 text-base whitespace-nowrap no-underline hover:bg-foreground hover:text-background disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background disabled:hover:text-foreground"
 
 // Small on/off controls, the size of the Voice Quiz controls. aria-pressed marks them on.
 const TOGGLE = "inline-flex max-w-full min-w-0 items-center justify-center gap-2 border-2 border-foreground px-3 py-2 text-sm font-bold uppercase whitespace-nowrap no-underline disabled:opacity-40"
@@ -38,6 +42,7 @@ const VARIANTS: Record<"filled" | "outlined" | "danger", string> = {
 
 export function buttonClass(variant: ButtonVariant, placement = "", wrap = false): string {
   if (variant === "compact") return [COMPACT, placement].filter(Boolean).join(" ")
+  if (variant === "step") return [STEP, placement].filter(Boolean).join(" ")
   if (variant === "control") return [CONTROL, placement].filter(Boolean).join(" ")
   if (variant === "toggle" || variant === "flag") return [TOGGLE, TOGGLES[variant], placement].filter(Boolean).join(" ")
   return [BASE, wrap ? "whitespace-normal" : "whitespace-nowrap", VARIANTS[variant], placement].filter(Boolean).join(" ")

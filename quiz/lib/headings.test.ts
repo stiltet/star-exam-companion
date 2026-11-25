@@ -24,7 +24,7 @@ test("Previous section and Next section sit beside the section title and move fo
   assert.match(quiz, /<ControlButton key="next-section"[^\n]*openSection\(jumps\.next\)/)
   assert.match(quiz, /aria-label="Previous section"/)
   assert.match(quiz, /aria-label="Next section"/)
-  assert.match(quiz, /<Heading variant="group" placement="px-16 sm:px-44">/)
+  assert.match(quiz, /<Heading variant="group" placement="min-w-0 flex-1">/, "the section title sits between the two buttons, which are kept, invisible, when a side has none")
   assert.doesNotMatch(quiz, /Previous course|Next course|Chapter /)
   assert.match(quiz, /function openSection\([^)]*\) \{\s*if \(target === null\) return\s*focusQuestion\.current = true/)
   assert.match(quiz, /<Heading variant="chapter" placement="mb-4" ref=\{questionHeading\}>/)

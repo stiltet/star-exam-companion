@@ -1,6 +1,5 @@
-import { SiteHeader } from "@/components/site-header"
+import { PageShell } from "@/components/organisms/page-shell"
 import { Text } from "@/components/atoms/text"
-import { SiteFooter } from "@/components/site-footer"
 import { UnfinishedNotice } from "@/components/unfinished-notice"
 import { ExamClient } from "@/components/exam-client"
 import { loadPlay } from "@/lib/load"
@@ -22,15 +21,13 @@ export default async function ExamPage() {
     weight: play.ok ? (play.weights[id] ?? 0) : 0,
   }))
   // An exam that does not load has no exam to time, so the page shows none of it.
-  if (!play.ok) return <div className="min-h-screen flex flex-col"><SiteHeader /><main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full"><Text variant="notice" role="alert">{play.error}</Text></main><SiteFooter /></div>
+  if (!play.ok) return <PageShell><Text variant="notice" role="alert">{play.error}</Text></PageShell>
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <UnfinishedNotice need="questions" />
         <ExamClient questions={questions} sections={sections} length={play.pack.meta.exam} />
-      </main>
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

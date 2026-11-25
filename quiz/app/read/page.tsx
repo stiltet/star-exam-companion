@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { ActionLink } from "@/components/atoms/button"
 import { Text } from "@/components/atoms/text"
 import { Heading } from "@/components/atoms/heading"
@@ -19,9 +18,8 @@ export default async function ReadPage() {
   const loaded = await Promise.all(courses.map((course) => courseBundle(course)))
   const completion = readingCompletion(pack, loaded)
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <Heading variant="page" placement="sr-only">Read Aloud</Heading>
         {!pack.meta.reading && (
           <>
@@ -48,8 +46,7 @@ export default async function ReadPage() {
             <ActionLink variant="outlined" placement="self-stretch" href="/read/night">Night reading</ActionLink>
           </div>
         )}
-      </main>
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

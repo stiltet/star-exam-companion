@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import Link from "next/link"
 import { ActionLink } from "@/components/atoms/button"
 import { activePack } from "@/lib/pack"
@@ -7,10 +6,8 @@ import { sitePages } from "@/lib/pages"
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full flex flex-col items-center justify-center">
+    <PageShell variant="centered">
+      <>
         <div className="text-center">
           <h1 className="text-6xl font-bold mb-4">404</h1>
           <h2 className="text-2xl font-bold mb-2">PAGE NOT FOUND</h2>
@@ -32,9 +29,7 @@ export default function NotFound() {
             <ActionLink variant="filled" href="/study" arrow>Go to study</ActionLink>
           </div>
         </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }

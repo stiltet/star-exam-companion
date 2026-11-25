@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { ActionLink } from "@/components/atoms/button"
 import { Heading, HeroTitle } from "@/components/atoms/heading"
 import { GoogleCloudLogo } from "@/components/atoms/google-cloud-logo"
@@ -13,10 +12,8 @@ export default function HomePage() {
   const { meta, study } = activePack()
   const DOMAINS = study.sections
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         {/* Hero */}
         <section className="border-2 border-foreground p-6 mb-8">
           <h1 className="sr-only text-2xl font-bold mb-4">STAR EXAM COMPANION</h1>
@@ -114,9 +111,7 @@ export default function HomePage() {
             <li>→ No fluff: no gamification, no illustrations, no decorations</li>
           </ul>
         </section>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }
