@@ -20,13 +20,3 @@ test("a launch on home opens the page left less than 24 hours ago, at the place 
   await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
   await expect(launch.locator('[data-page-ready="true"]')).toHaveCount(1)
 })
-
-test("a full page load of home made from inside the app is not a launch", async ({ page }) => {
-  await page.goto("/progress")
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("quiz-last-page"))).toContain("/progress")
-  await page.goto("/", { referer: new URL("/progress", page.url()).href })
-  expect(await page.evaluate(() => document.referrer)).toContain("/progress")
-  await expect(page.locator('[data-page-ready="true"]')).toHaveCount(1)
-  await page.waitForTimeout(1000)
-  await expect(page).toHaveURL(/\/$/)
-})

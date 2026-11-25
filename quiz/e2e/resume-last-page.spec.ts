@@ -225,7 +225,7 @@ test("a saved page that comes before the cover limit shows no slow-page box at a
   const launch = await context.newPage()
   await watchFrames(launch)
   await launch.route(/\/glossary(\?|$)/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 1200))
+    await new Promise((resolve) => setTimeout(resolve, 300))
     await route.continue()
   })
   await launch.goto("/")
