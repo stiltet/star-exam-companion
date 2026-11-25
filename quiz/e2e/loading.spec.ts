@@ -165,11 +165,6 @@ test("Read Aloud shows only the app's own loading box while a course loads, with
   await handOver(page, 2000)
 })
 
-test("a course that comes quickly, after the box has just shown, still keeps a loading screen up for 500 ms", async ({ page }) => {
-  // The box shows at 200 ms and the course is there at 400 ms: what keeps the screen up to 500 ms is the page gate's own hold.
-  await handOver(page, 400)
-})
-
 test("the night reading page keeps the loading screen for 500 ms too when it comes quickly", async ({ page }) => {
   await handOver(page, 400, { path: "/read/night" })
 })

@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures"
-import type { Page } from "@playwright/test"
+import type { BrowserContext, Page } from "@playwright/test"
 
 // The installed app reopens on the page it was left on, within 24 hours. A new tab of the same context
 // stands for the launch after iOS ended the app: localStorage stays, sessionStorage starts empty.
@@ -16,14 +16,6 @@ const opened = async (page: Page) => {
   // tens of milliseconds after hydration, and the gate above only opens after it. One second is far more than it needs.
   await page.waitForTimeout(1000)
 }
-
-test("a launch on home goes to the last page left less than 24 hours ago", async ({ page, context }) => {
-  await page.goto("/progress")
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("quiz-last-page"))).toContain("/progress")
-  const launch = await context.newPage()
-  await launch.goto("/")
-  await expect(launch).toHaveURL(/\/progress$/)
-})
 
 test("a launch after 24 hours opens home, and so does Home tapped inside the app", async ({ page, context }) => {
   await page.goto("/progress")
@@ -68,16 +60,21 @@ test("a full page load of home made from inside the app is not a launch", async 
   await expect(page).toHaveURL(/\/$/)
 })
 
-test("a launch opens the page at the place it was left, and the place is saved as the page is scrolled", async ({ page, context }) => {
+test("a launch on home opens the page left less than 24 hours ago at its place and its hash, saved as the page is scrolled and the hash changes", async ({ page, context }) => {
   await page.goto("/glossary")
   await expect(page.locator("main")).toBeVisible()
   const height = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)
   expect(height, "the page is long enough to scroll").toBeGreaterThan(600)
   await page.evaluate(() => window.scrollTo(0, 600))
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll), "saved as it is scrolled").toBe(600)
+  // A view named by the hash (an exam under review) is part of the place, and a change of it is saved.
+  await page.evaluate(() => {
+    location.hash = "#view-1"
+  })
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").path), "saved with the hash").toBe("/glossary#view-1")
   const launch = await context.newPage()
   await launch.goto("/")
-  await expect(launch).toHaveURL(/\/glossary$/)
+  await expect(launch).toHaveURL(/\/glossary#view-1$/)
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY)), "opened where it was left").toBe(600)
   await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
   // Opening the page does not wipe the saved place before the visitor scrolls again.
@@ -126,47 +123,6 @@ test("a launch the early script did not cover still opens the saved page at its 
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY)), "the place is restored on the page it opens, not on home").toBe(500)
 })
 
-test("leaving the app while the saved page is still coming keeps the saved place", async ({ page, context }) => {
-  await page.goto("/glossary")
-  await expect(page.locator("main")).toBeVisible()
-  await page.evaluate(() => window.scrollTo(0, 500))
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(500)
-  const launch = await context.newPage()
-  // The saved page takes 5 s to come, longer than the cover is kept (3 s).
-  await launch.route(/\/glossary(\?|$)/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
-    await route.continue()
-  })
-  await launch.goto("/")
-  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/, { timeout: 6000 })
-  await launch.evaluate(() => window.dispatchEvent(new Event("pagehide")))
-  expect(await launch.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}")), "still the saved page and place").toMatchObject({ path: "/glossary", scroll: 500 })
-  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
-  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
-})
-
-test("a saved page that is slow is covered by a full-screen loading box after the cover limit, never by a bare home, and the place is restored", async ({ page, context }) => {
-  await page.goto("/glossary")
-  await expect(page.locator("main")).toBeVisible()
-  await page.evaluate(() => window.scrollTo(0, 500))
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(500)
-  const launch = await context.newPage()
-  // The saved page takes 5 s, past the 3 s the launch cover is kept.
-  await launch.route(/\/glossary(\?|$)/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
-    await route.continue()
-  })
-  await launch.goto("/")
-  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/, { timeout: 6000 })
-  // The cover has gone and the page is still not there: a loading box over the whole page takes over, and home is hidden behind it.
-  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toBeVisible()
-  await expect(launch.locator("header")).toBeHidden()
-  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
-  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
-  // The hidden launch cover stays in the page, so only a box that shows (loading-full) is counted.
-  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toHaveCount(0)
-})
-
 type Seen = { covered: boolean; shown?: number; gone?: number; bare: number }
 
 // Watches every frame of a launching page: when the loading box that hides the page showed and went, and every frame in which home was
@@ -197,7 +153,7 @@ const leaveGlossaryAt = async (page: Page, y: number) => {
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").scroll)).toBe(y)
 }
 
-test("the slow-page box stays 500 ms once shown even when the saved page comes right after it, and home is never bare between the cover and the box", async ({ page, context }) => {
+test("a slow saved page is covered by a full-screen box after the cover limit, never by a bare home; the box stays 500 ms once shown, and the place is kept and restored", async ({ page, context }) => {
   await leaveGlossaryAt(page, 500)
   const launch = await context.newPage()
   await watchFrames(launch)
@@ -209,7 +165,12 @@ test("the slow-page box stays 500 ms once shown even when the saved page comes r
     await route.continue()
   })
   await launch.goto("/")
+  // The cover has gone and the page is still not there: a loading box over the whole page takes over, and home is hidden behind it.
   await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toBeVisible({ timeout: 8000 })
+  await expect(launch.locator("header")).toBeHidden()
+  // Leaving the app now keeps the saved page and its place, not home at the top.
+  await launch.evaluate(() => window.dispatchEvent(new Event("pagehide")))
+  expect(await launch.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}")), "still the saved page and place").toMatchObject({ path: "/glossary", scroll: 500 })
   await launch.waitForTimeout(100)
   release()
   await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
@@ -219,23 +180,8 @@ test("the slow-page box stays 500 ms once shown even when the saved page comes r
   expect(seen.gone! - seen.shown!, "the box stayed at least 500 ms").toBeGreaterThanOrEqual(480)
   expect(seen.bare, "no frame of bare home between the cover and the box").toBe(0)
   await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
-})
-
-test("a saved page that comes before the cover limit shows no slow-page box at all", async ({ page, context }) => {
-  await leaveGlossaryAt(page, 500)
-  const launch = await context.newPage()
-  await watchFrames(launch)
-  await launch.route(/\/glossary(\?|$)/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    await route.continue()
-  })
-  await launch.goto("/")
-  await expect(launch).toHaveURL(/\/glossary$/, { timeout: 15_000 })
-  await expect.poll(() => launch.evaluate(() => Math.round(window.scrollY))).toBe(500)
-  await expect(launch.locator("html")).not.toHaveAttribute("data-resuming", /.*/)
-  const seen = await framesOf(launch)
-  expect(seen.shown, "no box of the slow-page kind came up").toBeUndefined()
-  expect(seen.bare, "and home was never bare").toBe(0)
+  // The hidden launch cover stays in the page, so only a box that shows (loading-full) is counted.
+  await expect(launch.locator('[role="status"][aria-label="Loading"].loading-full')).toHaveCount(0)
 })
 
 test("a saved page that never comes is given up after 30 s: no place is restored, and the next page the visitor opens is saved again", async ({ page, context }) => {
@@ -257,49 +203,30 @@ test("a saved page that never comes is given up after 30 s: no place is restored
   await expect.poll(() => launch.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").path), "saved again").toBe("/exam")
 })
 
-test("a launch opens the page with its hash, and the hash is saved when it changes", async ({ page, context }) => {
-  await page.goto("/glossary")
-  await expect(page.locator("main")).toBeVisible()
-  await page.evaluate(() => {
-    location.hash = "#view-1"
-  })
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("quiz-last-page") ?? "{}").path), "saved with the hash").toBe("/glossary#view-1")
+// A record the launch must not move to: it is written by the launching page itself, since the first page saves its own place as it closes.
+const launchStays = async (context: BrowserContext, record: { path: string; exam: string }) => {
   const launch = await context.newPage()
-  await launch.goto("/")
-  await expect(launch).toHaveURL(/\/glossary#view-1$/)
-})
-
-test("a page left in another exam is not opened by a launch", async ({ page, context }) => {
-  await page.goto("/progress")
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("quiz-last-page"))).toContain("/progress")
-  await page.close()
-  const launch = await context.newPage()
-  // The record names an exam the app is not showing now, as after the exam was switched. It is written by the launching page itself,
-  // since the first page saves its own place as it closes and would put the current exam back.
-  await launch.addInitScript(() => {
-    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/progress", at: Date.now(), scroll: 0, exam: "another-exam" }))
-  })
-  await launch.goto("/")
-  await opened(launch)
-  await expect(launch).toHaveURL(/\/$/)
-})
-
-test("a launch that moves does not cover home for a record the client refuses", async ({ page, context }) => {
-  await page.goto("/progress")
-  const exam = await page.evaluate(() => document.documentElement.dataset.exam ?? "")
-  await page.close()
-  const launch = await context.newPage()
-  await launch.addInitScript((name) => {
-    localStorage.setItem("quiz-last-page", JSON.stringify({ path: "/api/speak", at: Date.now(), scroll: 0, exam: name }))
+  await launch.addInitScript((value) => {
+    localStorage.setItem("quiz-last-page", JSON.stringify({ ...value, at: Date.now(), scroll: 0 }))
     // The early script marks the page in its first moments and the app takes the mark off soon after: watch for it ever being there.
     new MutationObserver(() => {
       if (document.documentElement.hasAttribute("data-resuming")) (window as unknown as { __marked: boolean }).__marked = true
     }).observe(document, { subtree: true, attributes: true, attributeFilter: ["data-resuming"] })
-  }, exam)
+  }, record)
   await launch.goto("/")
   await opened(launch)
   await expect(launch).toHaveURL(/\/$/)
   expect(await launch.evaluate(() => (window as unknown as { __marked?: boolean }).__marked ?? false), "no cover was drawn for a move that does not happen").toBe(false)
+  await launch.close()
+}
+
+test("a launch stays on home, with no cover, for a page left in another exam and for a path the client refuses", async ({ page, context }) => {
+  await page.goto("/progress")
+  const exam = await page.evaluate(() => document.documentElement.dataset.exam ?? "")
+  await page.close()
+  // The exam was switched since: the record names another one.
+  await launchStays(context, { path: "/progress", exam: "another-exam" })
+  await launchStays(context, { path: "/api/speak", exam })
 })
 
 test("a Read Aloud page that comes slowly is restored at its place once it is there, not while its route box shows", async ({ page, context }) => {

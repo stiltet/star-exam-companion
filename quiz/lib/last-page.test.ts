@@ -95,19 +95,21 @@ test("the saved place is restored only on the saved page itself, and a missing p
 
 test("the launch watch ends the cover at its limit, finishes when the page is ready and held, and gives up at 30 s", () => {
   // Nothing ready: the cover stays until its limit, the watch carries on.
-  assert.deepEqual(watchStep(100, true, false, false), { endCover: false, finish: null })
-  assert.deepEqual(watchStep(COVER_LIMIT_MS, true, false, false), { endCover: false, finish: null })
-  assert.deepEqual(watchStep(COVER_LIMIT_MS + 1, true, false, false), { endCover: true, finish: null })
+  assert.deepEqual(watchStep(100, true, false, false), { endCover: false, showSlow: false, finish: null })
+  assert.deepEqual(watchStep(COVER_LIMIT_MS, true, false, false), { endCover: false, showSlow: false, finish: null })
+  assert.deepEqual(watchStep(COVER_LIMIT_MS + 1, true, false, false), { endCover: true, showSlow: true, finish: null })
+  // The saved page is there when the cover goes: no slow-page box takes its place.
+  assert.deepEqual(watchStep(COVER_LIMIT_MS + 1, true, true, false), { endCover: true, showSlow: false, finish: null })
   // The cover is ended once: a watch whose cover is already gone does not end it again.
-  assert.deepEqual(watchStep(10_000, false, false, false), { endCover: false, finish: null })
+  assert.deepEqual(watchStep(10_000, false, false, false), { endCover: false, showSlow: false, finish: null })
   // Ready but the loading box has not yet stayed its 500 ms: wait.
-  assert.deepEqual(watchStep(300, true, true, false), { endCover: false, finish: null })
-  assert.deepEqual(watchStep(600, true, true, true), { endCover: false, finish: "ready" })
+  assert.deepEqual(watchStep(300, true, true, false), { endCover: false, showSlow: false, finish: null })
+  assert.deepEqual(watchStep(600, true, true, true), { endCover: false, showSlow: false, finish: "ready" })
   // The saved page never comes: the watch gives up only after 30 s, and not a moment before.
-  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS, false, false, true), { endCover: false, finish: null })
-  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 1, false, false, true), { endCover: false, finish: "gave-up" })
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS, false, false, true), { endCover: false, showSlow: false, finish: null })
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 1, false, false, true), { endCover: false, showSlow: false, finish: "gave-up" })
   // A page that is ready after 30 s is still ready: its place is restored.
-  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 5000, false, true, true), { endCover: false, finish: "ready" })
+  assert.deepEqual(watchStep(WATCH_GIVE_UP_MS + 5000, false, true, true), { endCover: false, showSlow: false, finish: "ready" })
 })
 
 test("a watch that finished restores the place and leaves the move to the restore, and one that gave up restores nothing and ends the move", () => {

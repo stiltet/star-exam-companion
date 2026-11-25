@@ -97,9 +97,12 @@ export const WATCH_GIVE_UP_MS = 30_000
 // is over when the other page is ready and the loading box has stayed its minimum, or, if that never comes, at the give-up limit.
 // A page that is ready on the very tick after the give-up limit still counts as ready, so its place is restored; once the watch has
 // given up it is over, and a page that comes later is shown where it opens.
-export function watchStep(elapsed: number, covered: boolean, ready: boolean, held: boolean): { endCover: boolean; finish: "ready" | "gave-up" | null } {
+export function watchStep(elapsed: number, covered: boolean, ready: boolean, held: boolean): { endCover: boolean; showSlow: boolean; finish: "ready" | "gave-up" | null } {
+  const endCover = covered && elapsed > COVER_LIMIT_MS
   return {
-    endCover: covered && elapsed > COVER_LIMIT_MS,
+    endCover,
+    // The slow-page box takes the cover's place only when the cover goes and the saved page is still not there.
+    showSlow: endCover && !ready,
     finish: ready && held ? "ready" : elapsed > WATCH_GIVE_UP_MS ? "gave-up" : null,
   }
 }
