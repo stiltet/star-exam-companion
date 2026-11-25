@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { CourseTextError } from "@/components/course-text-error"
 import { ReadAloud } from "@/components/read-aloud"
 import { PageNav } from "@/components/page-nav"
@@ -26,13 +25,11 @@ export default async function ReadingPage({ params }: Props) {
 
   if (!loaded.ok) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <SiteHeader />
-        <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+      <PageShell>
+        <>
           <CourseTextError detail={loaded.error} again={`/read/${course.id}/${pageId}`} problem={loaded.problem} />
-        </main>
-        <SiteFooter />
-      </div>
+        </>
+      </PageShell>
     )
   }
 
@@ -48,20 +45,9 @@ export default async function ReadingPage({ params }: Props) {
   const following = nextReading(course, list, pageId, ordered)
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      {/* Only the course links stay put. The title row above scrolls away. */}
-      <div data-read-sticky className="sticky top-0 z-40 w-full bg-background">
-        <nav className="max-w-4xl mx-auto px-4 pt-6 pb-2 text-sm text-muted-foreground">
-          <Link href="/read">READ ALOUD</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/read/${course.id}`}>COURSE {course.id}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{at + 1} of {list.length}</span>
-        </nav>
-      </div>
-      <main className="flex-1 max-w-4xl mx-auto px-4 pb-6 w-full">
-        <PageNav kind="lesson" previous={previous} next={following} placement="mt-4 mb-6" />
+    <PageShell breadcrumb={[{ label: "READ ALOUD", href: "/read" }, { label: `COURSE ${course.id}`, href: `/read/${course.id}` }, { label: `${at + 1} of ${list.length}` }]} variant="reading">
+      <>
+        <PageNav kind="lesson" previous={previous} next={following} where="top" placement="mb-6" />
         <ReadAloud
           key={`${course.id}/${pageId}`}
           place={`${course.id}/${pageId}`}
@@ -75,9 +61,8 @@ export default async function ReadingPage({ params }: Props) {
         />
         {/* Every lesson can be opened on Google Skills, where it is ticked off and its videos play. */}
         <ActionLink variant="outlined" placement="mt-6 w-full" href={google.url} newTab>OPEN IN GOOGLE SKILLS</ActionLink>
-        <PageNav kind="lesson" previous={previous} next={following} placement="mt-6" />
-      </main>
-      <SiteFooter />
-    </div>
+        <PageNav kind="lesson" previous={previous} next={following} where="bottom" placement="mt-6" />
+      </>
+    </PageShell>
   )
 }

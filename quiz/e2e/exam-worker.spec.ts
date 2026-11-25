@@ -93,11 +93,16 @@ async function allowWorkerUpdate(page: Page) {
 // These journeys exercise page fetching, not storing the thousands of unrelated voice clips.
 async function leaveVoiceDownloadsOut(page: Page) {
   await page.route("**/api/snapshot", async (route) => {
-    const response = await route.fetch()
-    if (!response.ok()) return route.fulfill({ response })
-    const body = await response.json() as { snapshot: { voice: Record<string, string> } }
-    body.snapshot.voice = {}
-    await route.fulfill({ response, json: body })
+    try {
+      const response = await route.fetch()
+      if (!response.ok()) return await route.fulfill({ response })
+      const body = await response.json() as { snapshot: { voice: Record<string, string> } }
+      body.snapshot.voice = {}
+      await route.fulfill({ response, json: body })
+    } catch (error) {
+      // The page can end while the snapshot is still coming (the response is then disposed): nothing is left to answer.
+      if (!/Response has been disposed|Target page, context or browser has been closed/i.test(String(error))) throw error
+    }
   })
 }
 

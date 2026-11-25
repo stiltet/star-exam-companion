@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 import { parentPath } from "@/lib/parent-path"
 import { cameFromApp, ENTRY_STATE_KEY, entryKey, LAST_ENTRY_KEY, parseEntry, serialiseEntry, type Entry } from "@/lib/scroll-memory"
 import { readStandalone, useStandalone } from "@/components/standalone"
+import { MOVING_EVENT } from "@/components/nav-progress"
 
 // A round Back button floating at the bottom left, only in the installed app, which has no browser
 // back button. In a browser tab the browser's own back is there, so this one is not shown.
@@ -70,6 +71,13 @@ export function BackButton() {
   const tapped = useRef(false)
   const tapTimer = useRef(0)
   const standalone = useStandalone()
+  // The last link to a place on this same page: where the reader was, and whether the link added a history step.
+  // One per link followed, newest last: Back undoes them one at a time. Cleared when the page is left or the browser moves on its own.
+  const anchorJumps = useRef<{ path: string; y: number; length: number; hash: string }[]>([])
+  const ownBack = useRef(false)
+  const ownBackTimer = useRef(0)
+  const lastAnchorBack = useRef(-Infinity)
+  const lastAnchorClick = useRef(-Infinity)
 
   // Names the entry the page is on. One without an id is new: a move forward by a link or the router,
   // whose state Next.js just wrote. It is stamped, and remembers the entry it came from.
@@ -186,6 +194,13 @@ export function BackButton() {
       // A scroll waiting to be saved belongs to the page just left: save it before the move is read.
       flushScroll()
       tapped.current = false
+      // Our own step back over a section link keeps the earlier ones; any other move through history makes them stale.
+      // A section link itself also fires popstate in some browsers, right after the click: a move within 400 ms of a link is that one.
+      if (ownBack.current) {
+        ownBack.current = false
+        window.clearTimeout(ownBackTimer.current)
+      }
+      else if (performance.now() - lastAnchorClick.current > 400) anchorJumps.current = []
       const id = sync()
       const entry = id ? readEntry(id) : null
       if (entry) restore(entry.scroll)
@@ -193,6 +208,15 @@ export function BackButton() {
     const onHide = () => {
       if (document.visibilityState === "hidden") save()
     }
+    const onAnchor = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a")
+      const href = link?.getAttribute("href")
+      if (!href || !href.startsWith("#")) return
+      const before = { length: window.history.length, hash: window.location.hash, y: currentScrollY(), path: window.location.pathname }
+      lastAnchorClick.current = performance.now()
+      anchorJumps.current.push({ path: before.path, y: before.y, length: before.length, hash: before.hash })
+    }
+    document.addEventListener("click", onAnchor, true)
     window.addEventListener("scroll", onScroll, { passive: true })
     document.addEventListener("click", save, true)
     window.addEventListener("popstate", onPop)
@@ -201,6 +225,7 @@ export function BackButton() {
     return () => {
       flushScroll()
       window.clearTimeout(tapTimer.current)
+      document.removeEventListener("click", onAnchor, true)
       window.removeEventListener("scroll", onScroll)
       document.removeEventListener("click", save, true)
       window.removeEventListener("popstate", onPop)
@@ -214,6 +239,7 @@ export function BackButton() {
   // A page was reached: name its entry. Next.js writes the history entry after this effect, so wait a tick.
   useEffect(() => {
     tapped.current = false
+    anchorJumps.current = []
     const timer = window.setTimeout(sync, 0)
     return () => window.clearTimeout(timer)
   }, [pathname, standalone])
@@ -226,6 +252,27 @@ export function BackButton() {
       type="button"
       aria-label="Back"
       onClick={() => {
+        // A step back over a section link is on its way (popstate has not come yet): a second tap is the same Back, never another.
+        if (ownBack.current) return
+        // After a link to a place on the same page (a glossary section link) Back undoes the step the link made, or scrolls back to
+        // where the reader was when it made none (a link to the place already shown).
+        const jump = anchorJumps.current[anchorJumps.current.length - 1]
+        if (jump && jump.path === window.location.pathname) {
+          // A quick second tap is the same Back, not another one.
+          if (performance.now() - lastAnchorBack.current < 500) return
+          lastAnchorBack.current = performance.now()
+          anchorJumps.current.pop()
+          // Read now, not when the link was tapped: the browser makes the step after the click, however busy it is.
+          const pushed = window.history.length > jump.length || window.location.hash !== jump.hash
+          if (pushed) {
+            ownBack.current = true
+            // The step back always fires popstate, which clears the mark; this only covers one that never comes.
+            window.clearTimeout(ownBackTimer.current)
+            ownBackTimer.current = window.setTimeout(() => { ownBack.current = false }, 5000)
+            window.history.back()
+          } else window.scrollTo(0, jump.y)
+          return
+        }
         // A double tap is one Back, not two.
         if (tapped.current) return
         tapped.current = true
@@ -233,6 +280,7 @@ export function BackButton() {
         // safety net for a move that never happens, and is long enough for a slow push.
         window.clearTimeout(tapTimer.current)
         tapTimer.current = window.setTimeout(() => { tapped.current = false }, 2000)
+        window.dispatchEvent(new Event(MOVING_EVENT))
         const id = sync()
         const entry = id ? readEntry(id) : null
         if (entry?.prev) return router.back()

@@ -1,5 +1,7 @@
 "use client"
 
+import { StepNav, StepMiddle } from "@/components/step-nav"
+import { useBreadcrumb } from "@/components/crumb-slot"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Names } from "@/components/names"
 import { saveAnswer } from "@/components/outbox"
@@ -33,6 +35,9 @@ export function FlashcardsClient({ glossary }: Props) {
   }, [glossary])
 
   // Reopens a session in progress, unless a term in it has left the glossary.
+  // True once the last card has been marked: only then is the session complete, so the last card can be marked like any other.
+  const [finished, setFinished] = useState(false)
+
   useEffect(() => {
     const byKey = new Map(glossary.map((g) => [g.key, g]))
     const saved = cardsResume(loadState(window.localStorage, CARDS_KEY), new Set(byKey.keys()))
@@ -42,6 +47,7 @@ export function FlashcardsClient({ glossary }: Props) {
       setShuffledCards(saved.order.map((key) => byKey.get(key)).filter((g): g is GlossaryItem => g !== undefined))
       setCurrentIndex(saved.index)
       setKnownCards(new Set(saved.known))
+      setFinished(saved.finished)
       setIsStarted(true)
     }
     loaded.current = true
@@ -53,15 +59,17 @@ export function FlashcardsClient({ glossary }: Props) {
       window.localStorage,
       CARDS_KEY,
       isStarted && shuffledCards.length > 0
-        ? { category: selectedCategory, order: shuffledCards.map((g) => g.key), index: currentIndex, known: [...knownCards] }
+        ? { category: selectedCategory, order: shuffledCards.map((g) => g.key), index: currentIndex, known: [...knownCards], finished }
         : null,
     )
-  }, [isStarted, selectedCategory, shuffledCards, currentIndex, knownCards])
+  }, [isStarted, selectedCategory, shuffledCards, currentIndex, knownCards, finished])
 
-  const startSession = () => {
-    const filtered = selectedCategory === "all" ? glossary : glossary.filter((g) => g.category === selectedCategory)
+  const startSession = (category: string = selectedCategory, atEnd = false) => {
+    setFinished(false)
+    setSelectedCategory(category)
+    const filtered = category === "all" ? glossary : glossary.filter((g) => g.category === category)
     setShuffledCards([...filtered].sort(() => Math.random() - 0.5))
-    setCurrentIndex(0)
+    setCurrentIndex(atEnd ? Math.max(filtered.length - 1, 0) : 0)
     setShowDefinition(false)
     setKnownCards(new Set())
     setIsStarted(true)
@@ -75,11 +83,18 @@ export function FlashcardsClient({ glossary }: Props) {
       else next.delete(key)
       return next
     })
+    if (currentIndex === shuffledCards.length - 1) setFinished(true)
     void saveAnswer("flashcard", [key], know ? [] : [key]).then((kept) => {
       if (!kept) setUnsaved((count) => count + 1)
     })
     handleNext()
   }
+
+  // At the end of a section's cards, Next opens the next section's; after the last section, or after All, it ends the session.
+  const sections = categories.filter((category) => category !== "all")
+  const at = sections.indexOf(selectedCategory)
+  const previousCategory = at < 0 ? null : (sections[at - 1] ?? null)
+  const nextCategory = at < 0 ? null : (sections[at + 1] ?? null)
 
   const handleKnow = () => mark(true)
 
@@ -93,6 +108,7 @@ export function FlashcardsClient({ glossary }: Props) {
   }
 
   const handlePrev = () => {
+    setFinished(false)
     setShowDefinition(false)
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
@@ -100,11 +116,15 @@ export function FlashcardsClient({ glossary }: Props) {
   }
 
   const handleReset = () => {
+    setFinished(false)
     setIsStarted(false)
     setCurrentIndex(0)
     setShowDefinition(false)
     setKnownCards(new Set())
   }
+
+  // Once a session starts, the same fixed breadcrumb as the other pages: FLASHCARDS / the section. FLASHCARDS ends the session.
+  useBreadcrumb(isStarted ? [{ label: "FLASHCARDS", onClick: handleReset }, { label: selectedCategory === "all" ? "ALL" : selectedCategory.toUpperCase() }] : null)
 
   if (!isStarted) {
     return (
@@ -141,7 +161,7 @@ export function FlashcardsClient({ glossary }: Props) {
         </div>
 
         <button
-          onClick={startSession}
+          onClick={() => startSession()}
           className="w-full border-2 border-foreground p-4 font-bold hover:bg-foreground hover:text-background"
         >
           START SESSION (
@@ -156,7 +176,7 @@ export function FlashcardsClient({ glossary }: Props) {
 
   const card = shuffledCards[currentIndex]
   const progress = Math.round((currentIndex / shuffledCards.length) * 100)
-  const isComplete = currentIndex === shuffledCards.length - 1 && showDefinition
+  const isComplete = finished
 
   return (
     <div>
@@ -197,7 +217,7 @@ export function FlashcardsClient({ glossary }: Props) {
       </div>
 
       {/* Actions */}
-      {showDefinition && !isComplete && (
+      {showDefinition && !finished && (
         <div className="flex gap-4 mb-6">
           <button onClick={handleDontKnow} className="flex-1 border-2 border-foreground p-3 hover:bg-muted">
             DON&apos;T KNOW
@@ -223,25 +243,13 @@ export function FlashcardsClient({ glossary }: Props) {
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between gap-4">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className="border-2 border-foreground px-4 py-2 disabled:opacity-50 hover:bg-foreground hover:text-background disabled:hover:bg-background disabled:hover:text-foreground"
-        >
-          ← PREV
-        </button>
-        <button onClick={handleReset} className="border-2 border-foreground px-4 py-2 hover:bg-muted">
-          END SESSION
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={currentIndex === shuffledCards.length - 1}
-          className="border-2 border-foreground px-4 py-2 disabled:opacity-50 hover:bg-foreground hover:text-background disabled:hover:bg-background disabled:hover:text-foreground"
-        >
-          NEXT →
-        </button>
-      </div>
+      <StepNav
+        kind="card"
+        previous={currentIndex === 0 ? (previousCategory ? { onClick: () => startSession(previousCategory, true) } : { onClick: handlePrev, disabled: true }) : { onClick: handlePrev }}
+        next={{ onClick: currentIndex === shuffledCards.length - 1 ? (nextCategory ? () => startSession(nextCategory) : handleReset) : handleNext }}
+        middle={<StepMiddle onClick={handleReset} label="End session" short="END">END SESSION</StepMiddle>}
+        placement="items-center"
+      />
       {unsaved > 0 && <p role="alert" className="mt-6 font-bold">{unsaved === 1 ? "1 mark was" : `${unsaved} marks were`} not saved. This device could not keep it and the Mac could not be reached.</p>}
     </div>
   )

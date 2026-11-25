@@ -1,5 +1,4 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { PageShell } from "@/components/organisms/page-shell"
 import { Heading } from "@/components/atoms/heading"
 import { Text } from "@/components/atoms/text"
 import { ActionLink } from "@/components/atoms/button"
@@ -18,10 +17,8 @@ const FEATURES: { name: string; what: string }[] = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+    <PageShell>
+      <>
         <Heading variant="title" placement="mb-3">About</Heading>
         <Text variant="muted" placement="mb-2">
           A free, open-source study companion for Google Cloud certification exams. Learn by listening, answering and revising, on your phone or your computer.
@@ -67,9 +64,7 @@ export default function AboutPage() {
             Started as a fork of <TextLink href="https://github.com/ludovicobesana/gail-exam-preparation">gail-exam-preparation</TextLink> by Ludovico Besana, MIT licence.
           </Text>
         </section>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </>
+    </PageShell>
   )
 }
