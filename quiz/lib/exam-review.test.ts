@@ -53,6 +53,13 @@ test("a shorter exam gets the same time per question as the full one", () => {
 test("a review is opened by its exam id in the address hash", () => {
   assert.equal(reviewHash("abc"), "#review=abc")
   assert.equal(reviewId("#review=abc"), "abc")
+  assert.equal(reviewId("#review=a#review=b"), "b", "an address that names two reviews opens the last")
+  assert.equal(reviewId("#review=a#review=b#review=c"), "c")
+  assert.equal(reviewId("#review="), null)
+  assert.equal(reviewId("#review=a#review="), null, "an empty last review names nothing")
+  assert.equal(reviewId("#review=a#review=b#"), "b", "a trailing # after the last review is dropped")
+  assert.equal(reviewId("#review=a#review=b##"), "b")
+  assert.equal(reviewId("#review=a#"), "a")
   assert.equal(reviewId("#other"), null)
   assert.equal(reviewId(""), null)
   assert.equal(reviewId("#review=%E0%A4%A"), null, "a broken hash opens nothing rather than failing")
