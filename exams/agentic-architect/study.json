@@ -21,10 +21,10 @@
           ],
           "concepts": [
             "State-based workflows: pages, transition routes and event handlers",
-            "Gemini Enterprise low-code tools: Agent Designer and Customer Experience Agent Studio (CX Agent Studio)",
+            "Gemini Enterprise low-code tools: Workflow Builder (formerly Agent Designer) and Customer Experience Agent Studio (CX Agent Studio)",
             "System instructions and in-console prompt templates, such as few-shot and chain-of-thought, that guide agent behavior"
           ],
-          "examFocus": "Know which low-code tool fits a workflow with fixed states and which fits a chat agent. Google's docs describe the Gemini Enterprise builder as Workflow Builder, so expect either name.",
+          "examFocus": "Know which low-code tool fits a workflow with fixed states and which fits a chat agent. The exam guide calls the Gemini Enterprise builder Workflow Builder (formerly Agent Designer), so expect either name.",
           "traps": [
             "Building it yourself when Google offers a managed, native feature that meets the requirement",
             "Choosing an option before finding the binding constraint in the scenario"
@@ -1061,7 +1061,7 @@
         "Few-shot and chain-of-thought prompt templates"
       ],
       "correctIndex": 3,
-      "explanation": "System instructions and in-console prompt templates, such as few-shot and chain-of-thought, guide agent behaviour in tools such as Agent Designer and CX Agent Studio.",
+      "explanation": "System instructions and in-console prompt templates, such as few-shot and chain-of-thought, guide agent behaviour in tools such as Workflow Builder and CX Agent Studio.",
       "whyOthersWrong": [
         "Sessions and Memory Bank store conversation history and memories; they do not shape prompts.",
         "Parallel and sequential are workflow shapes, not prompt templates.",
@@ -1350,12 +1350,12 @@
       "question": "Which Gemini Enterprise tools does the exam guide name for configuring state-based workflows with pages, transition routes and event handlers?",
       "options": [
         "Model Armor and Agent Gateway",
-        "Gemini Enterprise Agent Designer and Customer Experience Agent Studio (CX Agent Studio)",
+        "Gemini Enterprise Workflow Builder and Customer Experience Agent Studio (CX Agent Studio)",
         "Agents CLI and Agent Runtime",
         "Vector Search and RAG Engine"
       ],
       "correctIndex": 1,
-      "explanation": "Section 1.1 names configuring state-based workflows using Gemini Enterprise tools such as Gemini Enterprise Agent Designer and CX Agent Studio.",
+      "explanation": "Section 1.1 names configuring state-based workflows using Gemini Enterprise tools such as Gemini Enterprise Workflow Builder and CX Agent Studio.",
       "whyOthersWrong": [
         "Model Armor screens content and Agent Gateway governs traffic; neither builds workflows.",
         "Agents CLI and Agent Runtime build and run agents in code, not low-code state workflows.",

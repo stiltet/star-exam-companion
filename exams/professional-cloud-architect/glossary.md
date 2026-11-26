@@ -11,7 +11,7 @@ Meanings are short summaries in this repo's own words, checked against the page 
 Google renames a product, both names get a row that points to the other, as the Generative AI Leader
 pack's glossary explains. Learn the exam guide's name for each.
 
-Validated against Google docs: 2026-11-16
+Validated against Google docs: 2026-11-26
 
 ## Section 1 — Designing and planning a cloud solution architecture
 

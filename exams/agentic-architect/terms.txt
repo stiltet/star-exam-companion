@@ -1,6 +1,6 @@
 # Terms Google's exam guide names, one per line. The pack test checks each is the answer to a voice scene.
 # Every term here is the answer to at least one scene.
-Gemini Enterprise Agent Designer
+Workflow Builder
 Customer Experience Agent Studio (CX Agent Studio)
 Agent Development Kit (ADK)
 Agents CLI

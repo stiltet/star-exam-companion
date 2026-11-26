@@ -11,14 +11,14 @@ Meanings are short summaries in this repo's own words, checked against the page 
 Google renames a product, both names get a row that points to the other, as the Generative AI Leader
 pack's glossary explains. Learn the exam guide's name for each.
 
-Validated against Google docs: 2026-11-04
+Validated against Google docs: 2026-11-26
 
 ## Section 1 — Building agents using low-code tools
 
 | Term | Meaning | Guide | Source |
 |---|---|---|---|
-| Workflow Builder | An interactive no-code, low-code platform for creating, managing and turning on chat agents and workflows in the Gemini Enterprise web app. | 1.1 | [Google page](https://docs.cloud.google.com/gemini/enterprise/docs/workflow-builder) |
-| Gemini Enterprise Agent Designer | A Gemini Enterprise tool for creating and sharing agents with little or no code. | 1.1 | EG, [Google page](https://codelabs.developers.google.com/next26/dev-keynote/gemini-enterprise) |
+| Workflow Builder | An interactive no-code, low-code platform for creating, managing and turning on chat agents and workflows in the Gemini Enterprise web app. Formerly called Agent Designer. **Renamed:** Agent Designer => Workflow Builder. **Exam guide:** Workflow Builder. | 1.1 | EG, [Google page](https://docs.cloud.google.com/gemini/enterprise/docs/workflow-builder) |
+| Agent Designer | Now called Workflow Builder. **Renamed:** Agent Designer => Workflow Builder. **Exam guide:** Workflow Builder. | 1.1 | EG, [Google page](https://codelabs.developers.google.com/next26/dev-keynote/gemini-enterprise) |
 | Customer Experience Agent Studio (CX Agent Studio) | A low-code platform for building, evaluating and deploying multimodal conversational agents for customer experiences. | 1.1 | EG, [Google page](https://cloud.google.com/gemini-enterprise-cx/cx-agent-studio) |
 | Agent Search | Lets developers use Google's foundation models and its search and recommendation expertise to build search and question-answering applications. Formerly called Vertex AI Search. **Renamed:** Vertex AI Search => Agent Search. **Exam guide:** Agent Search. | 1.2 | EG, [Google page](https://docs.cloud.google.com/generative-ai-app-builder/docs) |
 | Vertex AI Search | Now called Agent Search. **Renamed:** Vertex AI Search => Agent Search. **Exam guide:** Agent Search. | — | [Google page](https://docs.cloud.google.com/generative-ai-app-builder/docs) |

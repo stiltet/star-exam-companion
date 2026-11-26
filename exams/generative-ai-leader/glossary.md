@@ -28,7 +28,7 @@ only as "also called" (exam guide first, then the newest name). Sub-products fol
 "Agent Platform X": Vertex AI Studio is now Agent Studio and Vertex AI RAG Engine is now RAG
 Engine. Google's full list is the naming table in the release notes.
 
-Validated against Google docs: 2026-11-24
+Validated against Google docs: 2026-11-26
 
 ## Section 1 — Fundamentals of gen AI
 

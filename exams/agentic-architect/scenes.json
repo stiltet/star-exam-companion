@@ -585,7 +585,7 @@
   },
   {
     "id": "enterprise-no-code-agent",
-    "correct": "Gemini Enterprise Agent Designer",
+    "correct": "Workflow Builder",
     "distractors": [
       "Customer Experience Agent Studio (CX Agent Studio)",
       "Agent Development Kit (ADK)",
@@ -598,7 +598,7 @@
     "id": "customer-conversation-builder",
     "correct": "Customer Experience Agent Studio (CX Agent Studio)",
     "distractors": [
-      "Gemini Enterprise Agent Designer",
+      "Workflow Builder",
       "Agent Registry",
       "Cloud Workstations"
     ],
